@@ -7,96 +7,116 @@ using System.Threading.Tasks;
 
 namespace dCompare
 {
-    public static class DirectoryComparer
+    public class DirectoryComparer
     {
-        public static List<(FileSystemNode Left, FileSystemNode Right)> CompareDirectories(string leftPath, string rightPath)
+        public class ComparisonItem
         {
-            var leftItems = FlattenDirectory(leftPath, 0);
-            var rightItems = FlattenDirectory(rightPath, 0);
+            public ComparisonStatus Status { get; set; }
+            public string TreeIndent { get; set; } = "";
 
-            var map = new Dictionary<string, (FileSystemNode, FileSystemNode)>();
+            public FileSystemNode? Left { get; set; }
+            public FileSystemNode? Right { get; set; }
+        }
 
-            foreach (var node in leftItems)
+        public List<ComparisonItem> Compare(string leftPath, string rightPath)
+        {
+            var leftRoot = BuildTree(leftPath, 0);
+            var rightRoot = BuildTree(rightPath, 0);
+            var result = new List<ComparisonItem>();
+            CompareNodes(leftRoot, rightRoot, result, "");
+            return result;
+        }
+
+        private FileSystemNode BuildTree(string path, int depth)
+        {
+            var root = new FileSystemNode
             {
-                map[node.FullPath.Replace(leftPath, "")] = (node, null);
-            }
+                Name = System.IO.Path.GetFileName(path),
+                FullPath = path,
+                IsDirectory = Directory.Exists(path),
+                Depth = depth
+            };
 
-            foreach (var node in rightItems)
+            if (root.IsDirectory)
             {
-                var key = node.FullPath.Replace(rightPath, "");
-                if (map.ContainsKey(key))
-                    map[key] = (map[key].Item1, node);
-                else
-                    map[key] = (null, node);
-            }
-
-            var result = new List<(FileSystemNode, FileSystemNode)>();
-
-            foreach (var kvp in map)
-            {
-                var left = kvp.Value.Item1;
-                var right = kvp.Value.Item2;
-
-                if (left != null && right != null)
+                root.ModifiedTime = Directory.GetLastWriteTime(path);
+                foreach (var dir in Directory.GetDirectories(path))
                 {
-                    if (left.Size == right.Size && left.Modified == right.Modified)
+                    root.Children.Add(BuildTree(dir, depth + 1));
+                }
+                foreach (var file in Directory.GetFiles(path))
+                {
+                    root.Children.Add(BuildTree(file, depth + 1));
+                }
+            }
+            else
+            {
+                var info = new FileInfo(path);
+                root.Size = info.Length;
+                root.ModifiedTime = info.LastWriteTime;
+            }
+
+            return root;
+        }
+
+        private void CompareNodes(FileSystemNode? left, FileSystemNode? right, List<ComparisonItem> result, string indent)
+        {
+            var names = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (left != null)
+                foreach (var child in left.Children)
+                    names.Add(child.Name);
+            if (right != null)
+                foreach (var child in right.Children)
+                    names.Add(child.Name);
+
+            foreach (var name in names)
+            {
+                var leftNode = left?.Children.Find(n => n.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+                var rightNode = right?.Children.Find(n => n.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+
+                var status = ComparisonStatus.Unknown;
+
+                if (leftNode != null && rightNode != null)
+                {
+                    if (leftNode.IsDirectory && rightNode.IsDirectory)
                     {
-                        left.Status = right.Status = ComparisonStatus.Identical;
+                        status = ComparisonStatus.Identical; // 先假設資料夾相同，之後可深入比較子項
+                    }
+                    else if (!leftNode.IsDirectory && !rightNode.IsDirectory)
+                    {
+                        if (leftNode.Size == rightNode.Size && Math.Abs((leftNode.ModifiedTime - rightNode.ModifiedTime).TotalSeconds) < 1)
+                            status = ComparisonStatus.Identical;
+                        else
+                            status = ComparisonStatus.Modified;
                     }
                     else
                     {
-                        left.Status = right.Status = ComparisonStatus.Modified;
+                        status = ComparisonStatus.Conflict;
                     }
                 }
-                else if (left != null)
+                else if (leftNode != null)
                 {
-                    left.Status = ComparisonStatus.OnlyInLeft;
+                    status = ComparisonStatus.LeftOnly;
                 }
-                else if (right != null)
+                else if (rightNode != null)
                 {
-                    right.Status = ComparisonStatus.OnlyInRight;
+                    status = ComparisonStatus.RightOnly;
                 }
 
-                result.Add((left, right));
-            }
-
-            return result.OrderBy(r => r.Item1?.FullPath ?? r.Item2?.FullPath).ToList();
-        }
-
-        private static List<FileSystemNode> FlattenDirectory(string path, int depth)
-        {
-            var result = new List<FileSystemNode>();
-
-            foreach (var dir in Directory.GetDirectories(path))
-            {
-                var info = new DirectoryInfo(dir);
-                result.Add(new FileSystemNode
+                result.Add(new ComparisonItem
                 {
-                    Name = info.Name,
-                    FullPath = info.FullName,
-                    Modified = info.LastWriteTime,
-                    Size = 0,
-                    IsDirectory = true,
-                    Depth = depth
+                    Status = status,
+                    TreeIndent = indent + (leftNode?.IsDirectory ?? rightNode?.IsDirectory ?? false ? "📁 " : "  ") + name,
+                    Left = leftNode,
+                    Right = rightNode
                 });
-                result.AddRange(FlattenDirectory(dir, depth + 1));
-            }
 
-            foreach (var file in Directory.GetFiles(path))
-            {
-                var info = new FileInfo(file);
-                result.Add(new FileSystemNode
+                // 如果是資料夾，遞迴比較子節點
+                if ((leftNode?.IsDirectory ?? false) || (rightNode?.IsDirectory ?? false))
                 {
-                    Name = info.Name,
-                    FullPath = info.FullName,
-                    Modified = info.LastWriteTime,
-                    Size = info.Length,
-                    IsDirectory = false,
-                    Depth = depth
-                });
+                    CompareNodes(leftNode, rightNode, result, indent + "    ");
+                }
             }
-
-            return result;
         }
     }
 }

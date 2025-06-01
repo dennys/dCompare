@@ -11,69 +11,52 @@
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
     </Window.Resources>
     <DockPanel>
+
+        <!-- 選擇資料夾路徑 -->
         <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="5">
-            <TextBox x:Name="LeftPathBox" Width="300" Margin="0,0,10,0" />
-            <TextBox x:Name="RightPathBox" Width="300" Margin="0,0,10,0" />
-            <Button Content="Compare" Click="Compare_Click" Margin="0,0,10,0"/>
-            <Button Content="Copy to Left" Click="CopyToLeft_Click" Margin="0,0,5,0"/>
-            <Button Content="Copy to Right" Click="CopyToRight_Click"/>
+            <TextBox x:Name="LeftPathBox" Width="400" Margin="5,0" />
+            <Button Content="Browse Left" Click="BrowseLeft_Click" Margin="2"/>
+            <TextBox x:Name="RightPathBox" Width="400" Margin="10,0,0,0"/>
+            <Button Content="Browse Right" Click="BrowseRight_Click" Margin="2"/>
+            <Button Content="Compare" Click="Compare_Click" Margin="10,0"/>
         </StackPanel>
 
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="5" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+        <!-- 同步按鈕 -->
+        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="5">
+            <Button Content="Copy to Left" Click="CopyToLeft_Click" Margin="5"/>
+            <Button Content="Copy to Right" Click="CopyToRight_Click" Margin="5"/>
+        </StackPanel>
 
-            <!-- Left Panel -->
-            <ListView x:Name="LeftListView" Grid.Column="0" ItemsSource="{Binding LeftItems}" SelectionMode="Extended">
-                <ListView.View>
-                    <GridView>
-                        <GridViewColumn Header=" " Width="20" DisplayMemberBinding="{Binding Symbol}" />
-                        <GridViewColumn Header="Name" Width="300" DisplayMemberBinding="{Binding DisplayName}" />
-                        <GridViewColumn Header="Size" Width="100">
-                            <GridViewColumn.CellTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Size}" TextAlignment="Right"/>
-                                </DataTemplate>
-                            </GridViewColumn.CellTemplate>
-                        </GridViewColumn>
-                        <GridViewColumn Header="Modified" Width="150" DisplayMemberBinding="{Binding Modified}" />
-                    </GridView>
-                </ListView.View>
-                <ListView.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Header="Copy to Right" Click="CopyToRight_Click"/>
-                    </ContextMenu>
-                </ListView.ContextMenu>
-            </ListView>
-
-            <!-- Splitter -->
-            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="Gray" />
-
-            <!-- Right Panel -->
-            <ListView x:Name="RightListView" Grid.Column="2" ItemsSource="{Binding RightItems}" SelectionMode="Extended">
-                <ListView.View>
-                    <GridView>
-                        <GridViewColumn Header=" " Width="20" DisplayMemberBinding="{Binding Symbol}" />
-                        <GridViewColumn Header="Name" Width="300" DisplayMemberBinding="{Binding DisplayName}" />
-                        <GridViewColumn Header="Size" Width="100">
-                            <GridViewColumn.CellTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Size}" TextAlignment="Right"/>
-                                </DataTemplate>
-                            </GridViewColumn.CellTemplate>
-                        </GridViewColumn>
-                        <GridViewColumn Header="Modified" Width="150" DisplayMemberBinding="{Binding Modified}" />
-                    </GridView>
-                </ListView.View>
+        <!-- 清單檢視 -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ListView x:Name="ResultListView"
+                      Margin="5"
+                      SelectionMode="Extended"
+                      ContextMenuOpening="ResultListView_ContextMenuOpening">
                 <ListView.ContextMenu>
                     <ContextMenu>
                         <MenuItem Header="Copy to Left" Click="CopyToLeft_Click"/>
+                        <MenuItem Header="Copy to Right" Click="CopyToRight_Click"/>
                     </ContextMenu>
                 </ListView.ContextMenu>
+
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Status" Width="60"
+                                        DisplayMemberBinding="{Binding StatusSymbol}" />
+                        <GridViewColumn Header="Name" Width="300"
+                                        DisplayMemberBinding="{Binding TreeIndent}" />
+                        <GridViewColumn Header="Size (L)" Width="80"
+                                        DisplayMemberBinding="{Binding LeftSize}" />
+                        <GridViewColumn Header="Date (L)" Width="140"
+                                        DisplayMemberBinding="{Binding LeftDate}" />
+                        <GridViewColumn Header="Size (R)" Width="80"
+                                        DisplayMemberBinding="{Binding RightSize}" />
+                        <GridViewColumn Header="Date (R)" Width="140"
+                                        DisplayMemberBinding="{Binding RightDate}" />
+                    </GridView>
+                </ListView.View>
             </ListView>
-        </Grid>
+        </ScrollViewer>
     </DockPanel>
 </Window>
