@@ -11,22 +11,35 @@ namespace dCompare
     {
         public static List<(FileSystemNode Left, FileSystemNode Right)> CompareDirectories(string leftPath, string rightPath)
         {
-            var leftItems = LoadDirectory(leftPath);
-            var rightItems = LoadDirectory(rightPath);
+            var leftItems = FlattenDirectory(leftPath, 0);
+            var rightItems = FlattenDirectory(rightPath, 0);
 
-            var results = new List<(FileSystemNode, FileSystemNode)>();
+            var map = new Dictionary<string, (FileSystemNode, FileSystemNode)>();
 
-            var allNames = new HashSet<string>(leftItems.Select(f => f.Name));
-            allNames.UnionWith(rightItems.Select(f => f.Name));
-
-            foreach (var name in allNames)
+            foreach (var node in leftItems)
             {
-                var left = leftItems.FirstOrDefault(f => f.Name == name);
-                var right = rightItems.FirstOrDefault(f => f.Name == name);
+                map[node.FullPath.Replace(leftPath, "")] = (node, null);
+            }
+
+            foreach (var node in rightItems)
+            {
+                var key = node.FullPath.Replace(rightPath, "");
+                if (map.ContainsKey(key))
+                    map[key] = (map[key].Item1, node);
+                else
+                    map[key] = (null, node);
+            }
+
+            var result = new List<(FileSystemNode, FileSystemNode)>();
+
+            foreach (var kvp in map)
+            {
+                var left = kvp.Value.Item1;
+                var right = kvp.Value.Item2;
 
                 if (left != null && right != null)
                 {
-                    if (left.Size == right.Size && left.Created == right.Created)
+                    if (left.Size == right.Size && left.Modified == right.Modified)
                     {
                         left.Status = right.Status = ComparisonStatus.Identical;
                     }
@@ -44,31 +57,46 @@ namespace dCompare
                     right.Status = ComparisonStatus.OnlyInRight;
                 }
 
-                results.Add((left, right));
+                result.Add((left, right));
             }
 
-            return results;
+            return result.OrderBy(r => r.Item1?.FullPath ?? r.Item2?.FullPath).ToList();
         }
 
-        private static List<FileSystemNode> LoadDirectory(string path)
+        private static List<FileSystemNode> FlattenDirectory(string path, int depth)
         {
-            var list = new List<FileSystemNode>();
-            if (!Directory.Exists(path)) return list;
+            var result = new List<FileSystemNode>();
+
+            foreach (var dir in Directory.GetDirectories(path))
+            {
+                var info = new DirectoryInfo(dir);
+                result.Add(new FileSystemNode
+                {
+                    Name = info.Name,
+                    FullPath = info.FullName,
+                    Modified = info.LastWriteTime,
+                    Size = 0,
+                    IsDirectory = true,
+                    Depth = depth
+                });
+                result.AddRange(FlattenDirectory(dir, depth + 1));
+            }
 
             foreach (var file in Directory.GetFiles(path))
             {
                 var info = new FileInfo(file);
-                list.Add(new FileSystemNode
+                result.Add(new FileSystemNode
                 {
                     Name = info.Name,
                     FullPath = info.FullName,
+                    Modified = info.LastWriteTime,
                     Size = info.Length,
-                    Created = info.CreationTime,
-                    IsDirectory = false
+                    IsDirectory = false,
+                    Depth = depth
                 });
             }
 
-            return list;
+            return result;
         }
     }
 }

@@ -15,83 +15,68 @@ using System.Windows.Shapes;
 
 namespace dCompare
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
-    public partial class MainWindow : Window, INotifyPropertyChanged
+    public partial class MainWindow : Window
     {
-        public ObservableCollection<FileSystemNode> LeftRoot { get; set; } = new();
-        public ObservableCollection<FileSystemNode> RightRoot { get; set; } = new();
-        public ObservableCollection<FileSystemNode> BaseRoot { get; set; } = new();
-
-        private bool _isThreeWay = false;
-        public bool IsThreeWay
-        {
-            get => _isThreeWay;
-            set { _isThreeWay = value; OnPropertyChanged(nameof(IsThreeWay)); }
-        }
+        public ObservableCollection<FileSystemNode> LeftItems { get; set; } = new();
+        public ObservableCollection<FileSystemNode> RightItems { get; set; } = new();
 
         public MainWindow()
         {
             InitializeComponent();
-            //DataContext = this;
-
-            //// Load sample directories here
-            //LoadDirectory("D:\\bin\\compress\\7-Zip", LeftRoot);
-            //LoadDirectory("D:\\bin\\compress\\PeaZIP", RightRoot);
-            //LoadDirectory("D:\\bin\\compress\\WinRAR", BaseRoot);
-            //IsThreeWay = true; // toggle this
+            DataContext = this;
         }
 
         private void Compare_Click(object sender, RoutedEventArgs e)
         {
-            string leftPath = "D:\\git\\dCompare";
-            string rightPath = "D:\\git\\dCompare_xx";
+            string leftPath = LeftPathBox.Text.Trim();
+            string rightPath = RightPathBox.Text.Trim();
 
-            var results = DirectoryComparer.CompareDirectories(leftPath, rightPath);
-
-            LeftList.ItemsSource = results.Select(r => r.Left ?? new FileSystemNode { Name = "", Status = ComparisonStatus.OnlyInRight });
-            RightList.ItemsSource = results.Select(r => r.Right ?? new FileSystemNode { Name = "", Status = ComparisonStatus.OnlyInLeft });
-        }
-
-        private void LoadDirectory(string path, ObservableCollection<FileSystemNode> target)
-        {
-            if (!Directory.Exists(path))
+            if (!Directory.Exists(leftPath) || !Directory.Exists(rightPath))
             {
-                MessageBox.Show($"Directory not found: {path}");
+                MessageBox.Show("Both directories must exist.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
-            target.Clear();
-            var root = BuildNode(path);
-            target.Add(root);
+            LeftItems.Clear();
+            RightItems.Clear();
+
+            var comparison = DirectoryComparer.CompareDirectories(leftPath, rightPath);
+
+            foreach (var (left, right) in comparison)
+            {
+                if (left != null) LeftItems.Add(left);
+                if (right != null) RightItems.Add(right);
+            }
         }
 
-        private FileSystemNode BuildNode(string path)
+        private void CopyToLeft_Click(object sender, RoutedEventArgs e)
         {
-            var node = new FileSystemNode
+            foreach (var item in RightListView.SelectedItems.Cast<FileSystemNode>())
             {
-                Name = System.IO.Path.GetFileName(path),
-                FullPath = path,
-                //Created = File.GetCreationTime(path),
-                Created = File.GetLastWriteTime(path),
-                Size = Directory.Exists(path) ? 0 : new FileInfo(path).Length,
-                IsDirectory = Directory.Exists(path)
-            };
-
-            if (node.IsDirectory)
-            {
-                foreach (var dir in Directory.GetDirectories(path))
-                    node.Children.Add(BuildNode(dir));
-                foreach (var file in Directory.GetFiles(path))
-                    node.Children.Add(BuildNode(file));
+                if (item.Status == ComparisonStatus.OnlyInRight || item.Status == ComparisonStatus.Modified)
+                {
+                    string target = item.FullPath.Replace(RightPathBox.Text.Trim(), LeftPathBox.Text.Trim());
+                    Directory.CreateDirectory(System.IO.Path.GetDirectoryName(target));
+                    File.Copy(item.FullPath, target, true);
+                }
             }
 
-            return node;
+            Compare_Click(null, null);
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged(string name) =>
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        private void CopyToRight_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (var item in LeftListView.SelectedItems.Cast<FileSystemNode>())
+            {
+                if (item.Status == ComparisonStatus.OnlyInLeft || item.Status == ComparisonStatus.Modified)
+                {
+                    string target = item.FullPath.Replace(LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
+                    Directory.CreateDirectory(System.IO.Path.GetDirectoryName(target));
+                    File.Copy(item.FullPath, target, true);
+                }
+            }
+
+            Compare_Click(null, null);
+        }
     }
 }

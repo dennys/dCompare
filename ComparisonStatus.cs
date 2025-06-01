@@ -8,14 +8,27 @@ namespace dCompare
 {
     public enum ComparisonStatus
     {
-        Identical,
-        OnlyInLeft,
-        OnlyInRight,
-        Modified,
-        Conflict,
-        Unknown
+        Identical,    // ' '
+        OnlyInLeft,   // '<'
+        OnlyInRight,  // '>'
+        Modified,     // '*'
+        Conflict,     // '!'
+        Unknown       // '?'
     }
-    public enum ComparisonStatus3
+    public static class ComparisonSymbol
+    {
+        public static string GetSymbol(ComparisonStatus status) => status switch
+        {
+            ComparisonStatus.Identical => " ",
+            ComparisonStatus.OnlyInLeft => "<",
+            ComparisonStatus.OnlyInRight => ">",
+            ComparisonStatus.Modified => "*",
+            ComparisonStatus.Conflict => "!",
+            ComparisonStatus.Unknown => "?",
+            _ => "?"
+        };
+    }
+        public enum ComparisonStatus3
     {
         Unknown,        // Default state, no comparison done
         Identical,      // Same file/folder in both directories

@@ -11,11 +11,13 @@ namespace dCompare
     {
         public string Name { get; set; }
         public string FullPath { get; set; }
-        public DateTime Created { get; set; }
         public long Size { get; set; }
+        public DateTime Modified { get; set; }
         public bool IsDirectory { get; set; }
-        public ComparisonStatus Status { get; set; } = ComparisonStatus.Unknown;
-        public ObservableCollection<FileSystemNode> Children { get; set; } = new();
-        //public ObservableCollection<FileSystemNode> Children { get; set; } = new ObservableCollection<FileSystemNode>();
+        public ComparisonStatus Status { get; set; }
+        public int Depth { get; set; }
+
+        public string DisplayName => new string(' ', Depth * 2) + (IsDirectory ? "📁 " : "📄 ") + Name;
+        public string Symbol => ComparisonSymbol.GetSymbol(Status);
     }
 }

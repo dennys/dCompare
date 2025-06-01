@@ -10,47 +10,70 @@
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
     </Window.Resources>
-
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-
-        <StackPanel Orientation="Horizontal" Margin="10">
-            <Button Content="Compare" Click="Compare_Click" Width="100"/>
+    <DockPanel>
+        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="5">
+            <TextBox x:Name="LeftPathBox" Width="300" Margin="0,0,10,0" />
+            <TextBox x:Name="RightPathBox" Width="300" Margin="0,0,10,0" />
+            <Button Content="Compare" Click="Compare_Click" Margin="0,0,10,0"/>
+            <Button Content="Copy to Left" Click="CopyToLeft_Click" Margin="0,0,5,0"/>
+            <Button Content="Copy to Right" Click="CopyToRight_Click"/>
         </StackPanel>
 
-        <Grid Grid.Row="1">
+        <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="5" />
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
             <!-- Left Panel -->
-            <ListView x:Name="LeftList" Grid.Column="0" ItemsSource="{Binding}">
+            <ListView x:Name="LeftListView" Grid.Column="0" ItemsSource="{Binding LeftItems}" SelectionMode="Extended">
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}" />
-                        <GridViewColumn Header="Size" DisplayMemberBinding="{Binding Size}" />
-                        <GridViewColumn Header="Created" DisplayMemberBinding="{Binding Created}" />
-                        <GridViewColumn Header="Status" DisplayMemberBinding="{Binding Status}" />
+                        <GridViewColumn Header=" " Width="20" DisplayMemberBinding="{Binding Symbol}" />
+                        <GridViewColumn Header="Name" Width="300" DisplayMemberBinding="{Binding DisplayName}" />
+                        <GridViewColumn Header="Size" Width="100">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Size}" TextAlignment="Right"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Header="Modified" Width="150" DisplayMemberBinding="{Binding Modified}" />
                     </GridView>
                 </ListView.View>
+                <ListView.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Copy to Right" Click="CopyToRight_Click"/>
+                    </ContextMenu>
+                </ListView.ContextMenu>
             </ListView>
+
+            <!-- Splitter -->
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="Gray" />
 
             <!-- Right Panel -->
-            <ListView x:Name="RightList" Grid.Column="1" ItemsSource="{Binding}">
+            <ListView x:Name="RightListView" Grid.Column="2" ItemsSource="{Binding RightItems}" SelectionMode="Extended">
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}" />
-                        <GridViewColumn Header="Size" DisplayMemberBinding="{Binding Size}" />
-                        <GridViewColumn Header="Created" DisplayMemberBinding="{Binding Created}" />
-                        <GridViewColumn Header="Status" DisplayMemberBinding="{Binding Status}" />
+                        <GridViewColumn Header=" " Width="20" DisplayMemberBinding="{Binding Symbol}" />
+                        <GridViewColumn Header="Name" Width="300" DisplayMemberBinding="{Binding DisplayName}" />
+                        <GridViewColumn Header="Size" Width="100">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Size}" TextAlignment="Right"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Header="Modified" Width="150" DisplayMemberBinding="{Binding Modified}" />
                     </GridView>
                 </ListView.View>
+                <ListView.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Copy to Left" Click="CopyToLeft_Click"/>
+                    </ContextMenu>
+                </ListView.ContextMenu>
             </ListView>
         </Grid>
-    </Grid>
-
+    </DockPanel>
 </Window>
