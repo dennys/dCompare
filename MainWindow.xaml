@@ -10,53 +10,101 @@
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
     </Window.Resources>
-    <DockPanel>
 
-        <!-- 選擇資料夾路徑 -->
-        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="5">
-            <TextBox x:Name="LeftPathBox" Width="400" Margin="5,0" />
-            <Button Content="Browse Left" Click="BrowseLeft_Click" Margin="2"/>
-            <TextBox x:Name="RightPathBox" Width="400" Margin="10,0,0,0"/>
-            <Button Content="Browse Right" Click="BrowseRight_Click" Margin="2"/>
-            <Button Content="Compare" Click="Compare_Click" Margin="10,0"/>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 路徑選擇區域 -->
+        <StackPanel Grid.Row="0" Margin="10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Label Grid.Column="0" Content="Left Path:" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="1" Name="LeftPathBox" Margin="5,0" VerticalAlignment="Center"/>
+                <Button Grid.Column="2" Name="BrowseLeftBtn" Content="Browse..." Click="BrowseLeft_Click" Padding="10,2"/>
+
+                <Label Grid.Column="4" Content="Right Path:" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="5" Name="RightPathBox" Margin="5,0" VerticalAlignment="Center"/>
+                <Button Grid.Column="6" Name="BrowseRightBtn" Content="Browse..." Click="BrowseRight_Click" Padding="10,2"/>
+            </Grid>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10">
+                <Button Name="CompareBtn" Content="Compare" Click="Compare_Click" Padding="20,5" Margin="5"/>
+                <Button Name="ExpandAllBtn" Content="Expand All" Click="ExpandAll_Click" Padding="20,5" Margin="5"/>
+                <Button Name="CollapseAllBtn" Content="Collapse All" Click="CollapseAll_Click" Padding="20,5" Margin="5"/>
+            </StackPanel>
         </StackPanel>
 
-        <!-- 同步按鈕 -->
-        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="5">
-            <Button Content="Copy to Left" Click="CopyToLeft_Click" Margin="5"/>
-            <Button Content="Copy to Right" Click="CopyToRight_Click" Margin="5"/>
+        <!-- 結果顯示區域 -->
+        <TreeView Grid.Row="1" Name="ResultTreeView" Margin="10">
+            <TreeView.Resources>
+                <!-- TreeViewItem 樣式 -->
+                <Style TargetType="TreeViewItem">
+                    <Setter Property="IsExpanded" Value="False"/>
+                </Style>
+            </TreeView.Resources>
+
+            <!-- TreeView Header -->
+            <TreeView.ItemTemplate>
+                <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="200"/>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="40"/>
+                            <ColumnDefinition Width="200"/>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="120"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" Text="{Binding LeftName}" Margin="2"/>
+                        <TextBlock Grid.Column="1" Text="{Binding LeftSize}" Margin="2" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="2" Text="{Binding LeftDate}" Margin="2"/>
+                        <TextBlock Grid.Column="3" Text="{Binding StatusSymbol}" Margin="2" HorizontalAlignment="Center" FontWeight="Bold">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding StatusSymbol}" Value="=">
+                                            <Setter Property="Foreground" Value="Green"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding StatusSymbol}" Value="≠">
+                                            <Setter Property="Foreground" Value="Orange"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding StatusSymbol}" Value="&lt;">
+                                            <Setter Property="Foreground" Value="Blue"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding StatusSymbol}" Value="&gt;">
+                                            <Setter Property="Foreground" Value="Red"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <TextBlock Grid.Column="4" Text="{Binding RightName}" Margin="2"/>
+                        <TextBlock Grid.Column="5" Text="{Binding RightSize}" Margin="2" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="6" Text="{Binding RightDate}" Margin="2"/>
+                    </Grid>
+                </HierarchicalDataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
+
+        <!-- 操作按鈕區域 -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+            <Button Name="CopyToLeftBtn" Content="Copy to Left" Click="CopyToLeft_Click" Padding="15,5" Margin="5"/>
+            <Button Name="CopyToRightBtn" Content="Copy to Right" Click="CopyToRight_Click" Padding="15,5" Margin="5"/>
         </StackPanel>
-
-        <!-- 清單檢視 -->
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <ListView x:Name="ResultListView"
-                      Margin="5"
-                      SelectionMode="Extended"
-                      ContextMenuOpening="ResultListView_ContextMenuOpening">
-                <ListView.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Header="Copy to Left" Click="CopyToLeft_Click"/>
-                        <MenuItem Header="Copy to Right" Click="CopyToRight_Click"/>
-                    </ContextMenu>
-                </ListView.ContextMenu>
-
-                <ListView.View>
-                    <GridView>
-                        <GridViewColumn Header="Status" Width="60"
-                                        DisplayMemberBinding="{Binding StatusSymbol}" />
-                        <GridViewColumn Header="Name" Width="300"
-                                        DisplayMemberBinding="{Binding TreeIndent}" />
-                        <GridViewColumn Header="Size (L)" Width="80"
-                                        DisplayMemberBinding="{Binding LeftSize}" />
-                        <GridViewColumn Header="Date (L)" Width="140"
-                                        DisplayMemberBinding="{Binding LeftDate}" />
-                        <GridViewColumn Header="Size (R)" Width="80"
-                                        DisplayMemberBinding="{Binding RightSize}" />
-                        <GridViewColumn Header="Date (R)" Width="140"
-                                        DisplayMemberBinding="{Binding RightDate}" />
-                    </GridView>
-                </ListView.View>
-            </ListView>
-        </ScrollViewer>
-    </DockPanel>
+    </Grid>
 </Window>

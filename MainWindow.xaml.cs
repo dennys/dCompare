@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.IO;
 using System.IO.Enumeration;
+using System.Reflection;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -17,143 +18,237 @@ namespace dCompare
 {
     public partial class MainWindow : Window
     {
-        ObservableCollection<CompareItem> compareResults = new ObservableCollection<CompareItem>();
+        private ObservableCollection<TreeNode> _treeNodes = new ObservableCollection<TreeNode>();
+        private DirectoryComparer _comparer = new DirectoryComparer();
 
         public MainWindow()
         {
             InitializeComponent();
-            ResultListView.ItemsSource = compareResults;
+            ResultTreeView.ItemsSource = _treeNodes;
         }
 
-        // 按鈕：左邊資料夾瀏覽
         private void BrowseLeft_Click(object sender, RoutedEventArgs e)
         {
-            //using var dlg = new FolderBrowserDialog();
-            //if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            //var dialog = new System.Windows.Forms.FolderBrowserDialog();
+            //if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             //{
-            //    LeftPathBox.Text = dlg.SelectedPath;
+            //    LeftPathBox.Text = dialog.SelectedPath;
             //}
         }
 
-        //// 按鈕：右邊資料夾瀏覽
         private void BrowseRight_Click(object sender, RoutedEventArgs e)
         {
-            //using var dlg = new FolderBrowserDialog();
-            //if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            //var dialog = new System.Windows.Forms.FolderBrowserDialog();
+            //if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             //{
-            //    RightPathBox.Text = dlg.SelectedPath;
+            //    RightPathBox.Text = dialog.SelectedPath;
             //}
         }
 
-        // 按鈕：開始比對
         private void Compare_Click(object sender, RoutedEventArgs e)
         {
-            compareResults.Clear();
+            _treeNodes.Clear();
 
             string leftDir = LeftPathBox.Text.Trim();
             string rightDir = RightPathBox.Text.Trim();
 
             if (!Directory.Exists(leftDir) || !Directory.Exists(rightDir))
             {
-                System.Windows.MessageBox.Show("請輸入有效的左右資料夾路徑");
+                MessageBox.Show("請輸入有效的左右資料夾路徑");
                 return;
             }
 
-            var leftFiles = ReadFilesRecursively(leftDir);
-            var rightFiles = ReadFilesRecursively(rightDir);
-
-            var allKeys = new SortedSet<string>(leftFiles.Keys);
-            allKeys.UnionWith(rightFiles.Keys);
-
-            foreach (var relativePath in allKeys)
+            try
             {
-                leftFiles.TryGetValue(relativePath, out var leftInfo);
-                rightFiles.TryGetValue(relativePath, out var rightInfo);
+                var comparisonResults = _comparer.Compare(leftDir, rightDir);
+                var rootNodes = BuildTreeStructure(comparisonResults, leftDir, rightDir);
 
-                var item = new CompareItem
+                foreach (var node in rootNodes)
                 {
-                    RelativePath = relativePath,
-                    LeftSize = leftInfo?.Length.ToString("N0") ?? "",
-                    LeftDate = leftInfo?.LastWriteTime.ToString("yyyy/MM/dd HH:mm:ss") ?? "",
-                    RightSize = rightInfo?.Length.ToString("N0") ?? "",
-                    RightDate = rightInfo?.LastWriteTime.ToString("yyyy/MM/dd HH:mm:ss") ?? ""
-                };
-
-                item.Status = GetStatus(leftInfo, rightInfo);
-                item.StatusSymbol = StatusToSymbol(item.Status);
-                item.TreeIndent = GetIndentedName(relativePath);
-
-                compareResults.Add(item);
+                    _treeNodes.Add(node);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"比較過程中發生錯誤: {ex.Message}");
             }
         }
 
-        // 讀取資料夾內所有檔案(包含子目錄)，回傳 relative path => FileInfo
-        private Dictionary<string, FileInfo> ReadFilesRecursively(string root)
+        private List<TreeNode> BuildTreeStructure(List<DirectoryComparer.ComparisonItem> items, string leftRoot, string rightRoot)
         {
-            var dict = new Dictionary<string, FileInfo>(StringComparer.OrdinalIgnoreCase);
-            var rootLen = root.EndsWith(System.IO.Path.DirectorySeparatorChar.ToString()) ? root.Length : root.Length + 1;
+            var nodeDict = new Dictionary<string, TreeNode>();
+            var rootNodes = new List<TreeNode>();
 
-            foreach (var filePath in Directory.GetFiles(root, "*", SearchOption.AllDirectories))
+            foreach (var item in items)
             {
-                string relativePath = filePath.Substring(rootLen);
-                var fi = new FileInfo(filePath);
-                dict[relativePath] = fi;
+                var relativePath = GetRelativePath(item, leftRoot, rightRoot);
+                if (string.IsNullOrEmpty(relativePath)) continue;
+
+                var pathParts = relativePath.Split(System.IO.Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
+                TreeNode currentParent = null;
+                string currentPath = "";
+
+                for (int i = 0; i < pathParts.Length; i++)
+                {
+                    if (i > 0) currentPath += System.IO.Path.DirectorySeparatorChar;
+                    currentPath += pathParts[i];
+
+                    if (!nodeDict.ContainsKey(currentPath))
+                    {
+                        var node = new TreeNode
+                        {
+                            Name = pathParts[i],
+                            RelativePath = currentPath,
+                            IsDirectory = i < pathParts.Length - 1 || (item.Left?.IsDirectory ?? item.Right?.IsDirectory ?? false)
+                        };
+
+                        // 如果是最後一層，設定詳細資訊
+                        if (i == pathParts.Length - 1)
+                        {
+                            SetNodeDetails(node, item, leftRoot, rightRoot);
+                        }
+                        else
+                        {
+                            // 中間層目錄，需要查找對應的比較項目來設定詳細資訊
+                            var dirItem = items.FirstOrDefault(x =>
+                                GetRelativePath(x, leftRoot, rightRoot) == currentPath);
+                            if (dirItem != null)
+                            {
+                                SetNodeDetails(node, dirItem, leftRoot, rightRoot);
+                            }
+                            else
+                            {
+                                // 預設為目錄存在於兩邊
+                                node.LeftName = node.RightName = pathParts[i];
+                                node.StatusSymbol = "=";
+                                node.Status = ComparisonStatus.Identical;
+                            }
+                        }
+
+                        nodeDict[currentPath] = node;
+
+                        if (currentParent == null)
+                        {
+                            rootNodes.Add(node);
+                        }
+                        else
+                        {
+                            currentParent.Children.Add(node);
+                        }
+                    }
+
+                    currentParent = nodeDict[currentPath];
+                }
             }
-            return dict;
+
+            return rootNodes;
         }
 
-        // 判斷檔案狀態
-        private FileStatus GetStatus(FileInfo left, FileInfo right)
+        private string GetRelativePath(DirectoryComparer.ComparisonItem item, string leftRoot, string rightRoot)
         {
-            if (left == null && right != null) return FileStatus.OnlyRight;
-            if (left != null && right == null) return FileStatus.OnlyLeft;
-            if (left != null && right != null)
+            string path = "";
+
+            if (item.Left != null)
             {
-                if (left.Length == right.Length &&
-                    left.LastWriteTime == right.LastWriteTime)
-                    return FileStatus.Identical;
-                else
-                    return FileStatus.Modified;
+                path = item.Left.FullPath.Substring(leftRoot.Length).TrimStart(System.IO.Path.DirectorySeparatorChar);
             }
-            return FileStatus.Unknown;
+            else if (item.Right != null)
+            {
+                path = item.Right.FullPath.Substring(rightRoot.Length).TrimStart(System.IO.Path.DirectorySeparatorChar);
+            }
+
+            return path;
         }
 
-        // 狀態轉符號
-        private string StatusToSymbol(FileStatus status)
+        private void SetNodeDetails(TreeNode node, DirectoryComparer.ComparisonItem item, string leftRoot, string rightRoot)
         {
-            return status switch
+            node.LeftNode = item.Left;
+            node.RightNode = item.Right;
+            node.Status = item.Status;
+
+            // 設定左邊資訊
+            if (item.Left != null)
             {
-                FileStatus.Identical => "=",       // 相同
-                FileStatus.Modified => "≠",        // 修改
-                FileStatus.OnlyLeft => "<",        // 只在左邊
-                FileStatus.OnlyRight => ">",       // 只在右邊
+                node.LeftName = item.Left.Name;
+                if (!item.Left.IsDirectory)
+                {
+                    node.LeftSize = FileSystemNode.FormatSize(item.Left.Size);
+                }
+                node.LeftDate = item.Left.ModifiedTime.ToString("yyyy/MM/dd HH:mm");
+            }
+
+            // 設定右邊資訊
+            if (item.Right != null)
+            {
+                node.RightName = item.Right.Name;
+                if (!item.Right.IsDirectory)
+                {
+                    node.RightSize = FileSystemNode.FormatSize(item.Right.Size);
+                }
+                node.RightDate = item.Right.ModifiedTime.ToString("yyyy/MM/dd HH:mm");
+            }
+
+            // 設定狀態符號
+            node.StatusSymbol = item.Status switch
+            {
+                ComparisonStatus.Identical => "=",
+                ComparisonStatus.Modified => "≠",
+                ComparisonStatus.LeftOnly => "<",
+                ComparisonStatus.RightOnly => ">",
+                ComparisonStatus.Conflict => "X",
                 _ => "?"
             };
         }
 
-        // 檔案名稱加縮排(用空白和 |-- 模擬樹狀結構)
-        private string GetIndentedName(string relativePath)
+        private void ExpandAll_Click(object sender, RoutedEventArgs e)
         {
-            var parts = relativePath.Split(System.IO.Path.DirectorySeparatorChar);
-            if (parts.Length == 0) return relativePath;
-
-            string indent = "";
-            for (int i = 0; i < parts.Length - 1; i++)
+            foreach (var node in _treeNodes)
             {
-                indent += "   ";
+                node.ExpandAll();
             }
-
-            // 用 ├─ 代替 -- 顯示樹狀結構感覺
-            return indent + "├─ " + parts[^1];
+            ExpandTreeViewItems(ResultTreeView);
         }
 
-        // 按鈕：Copy to Left
+        private void CollapseAll_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (var node in _treeNodes)
+            {
+                node.CollapseAll();
+            }
+            CollapseTreeViewItems(ResultTreeView);
+        }
+
+        private void ExpandTreeViewItems(ItemsControl itemsControl)
+        {
+            foreach (var item in itemsControl.Items)
+            {
+                var treeViewItem = itemsControl.ItemContainerGenerator.ContainerFromItem(item) as TreeViewItem;
+                if (treeViewItem != null)
+                {
+                    treeViewItem.IsExpanded = true;
+                    ExpandTreeViewItems(treeViewItem);
+                }
+            }
+        }
+
+        private void CollapseTreeViewItems(ItemsControl itemsControl)
+        {
+            foreach (var item in itemsControl.Items)
+            {
+                var treeViewItem = itemsControl.ItemContainerGenerator.ContainerFromItem(item) as TreeViewItem;
+                if (treeViewItem != null)
+                {
+                    treeViewItem.IsExpanded = false;
+                    CollapseTreeViewItems(treeViewItem);
+                }
+            }
+        }
+
         private void CopyToLeft_Click(object sender, RoutedEventArgs e)
         {
             CopySelectedFiles(toLeft: true);
         }
 
-        // 按鈕：Copy to Right
         private void CopyToRight_Click(object sender, RoutedEventArgs e)
         {
             CopySelectedFiles(toLeft: false);
@@ -161,68 +256,72 @@ namespace dCompare
 
         private void CopySelectedFiles(bool toLeft)
         {
-            if (compareResults.Count == 0) return;
-
-            var targetRoot = toLeft ? LeftPathBox.Text.Trim() : RightPathBox.Text.Trim();
-            var sourceRoot = toLeft ? RightPathBox.Text.Trim() : LeftPathBox.Text.Trim();
-
-            var selected = ResultListView.SelectedItems;
-            if (selected.Count == 0)
+            var selectedItems = GetSelectedTreeNodes();
+            if (selectedItems.Count == 0)
             {
-                System.Windows.MessageBox.Show("請選擇至少一個項目進行同步");
+                MessageBox.Show("請選擇至少一個項目進行同步");
                 return;
             }
 
-            foreach (CompareItem item in selected)
+            string targetRoot = toLeft ? LeftPathBox.Text.Trim() : RightPathBox.Text.Trim();
+            string sourceRoot = toLeft ? RightPathBox.Text.Trim() : LeftPathBox.Text.Trim();
+
+            int successCount = 0;
+            int errorCount = 0;
+
+            foreach (var node in selectedItems)
             {
-                string sourcePath = System.IO.Path.Combine(sourceRoot, item.RelativePath);
-                string targetPath = System.IO.Path.Combine(targetRoot, item.RelativePath);
+                if (node.IsDirectory) continue; // 跳過目錄
 
                 try
                 {
+                    string sourcePath = System.IO.Path.Combine(sourceRoot, node.RelativePath);
+                    string targetPath = System.IO.Path.Combine(targetRoot, node.RelativePath);
+
+                    // 確保目標目錄存在
                     var targetDir = System.IO.Path.GetDirectoryName(targetPath);
                     if (!Directory.Exists(targetDir))
                         Directory.CreateDirectory(targetDir);
 
-                    File.Copy(sourcePath, targetPath, true);
+                    // 只複製存在於來源端的檔案
+                    if (File.Exists(sourcePath))
+                    {
+                        File.Copy(sourcePath, targetPath, true);
+                        successCount++;
+                    }
                 }
                 catch (Exception ex)
                 {
-                    System.Windows.MessageBox.Show($"複製檔案失敗: {item.RelativePath}\n{ex.Message}");
+                    errorCount++;
+                    MessageBox.Show($"複製檔案失敗: {node.RelativePath}\n{ex.Message}");
                 }
             }
-            System.Windows.MessageBox.Show("同步完成");
-            Compare_Click(null, null); // 重新比對更新
+
+            MessageBox.Show($"同步完成\n成功: {successCount} 個檔案\n失敗: {errorCount} 個檔案");
+
+            // 重新比較更新結果
+            Compare_Click(null, null);
         }
 
-        // ContextMenu 開啟事件可選擇依需求擴充
-        private void ResultListView_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+        private List<TreeNode> GetSelectedTreeNodes()
         {
-            // 可加入動態判斷是否顯示某些項目
+            var selected = new List<TreeNode>();
+            // 這裡需要實現選擇邏輯，因為TreeView的選擇機制比較複雜
+            // 為了簡化，暫時返回所有節點中狀態不為Identical的節點
+            CollectNonIdenticalNodes(_treeNodes, selected);
+            return selected;
         }
-    }
 
-    // 比對結果物件
-    public class CompareItem : INotifyPropertyChanged
-    {
-        public string RelativePath { get; set; }
-        public FileStatus Status { get; set; }
-        public string StatusSymbol { get; set; }
-        public string TreeIndent { get; set; }
-        public string LeftSize { get; set; }
-        public string LeftDate { get; set; }
-        public string RightSize { get; set; }
-        public string RightDate { get; set; }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-    }
-
-    public enum FileStatus
-    {
-        Unknown,
-        Identical,
-        Modified,
-        OnlyLeft,
-        OnlyRight
+        private void CollectNonIdenticalNodes(IEnumerable<TreeNode> nodes, List<TreeNode> result)
+        {
+            foreach (var node in nodes)
+            {
+                if (node.Status != ComparisonStatus.Identical)
+                {
+                    result.Add(node);
+                }
+                CollectNonIdenticalNodes(node.Children, result);
+            }
+        }
     }
 }
