@@ -1,18 +1,14 @@
-﻿using System.Collections.ObjectModel;
+﻿
+using Microsoft.Win32;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
-using System.IO.Enumeration;
-using System.Reflection;
+using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace dCompare
 {
@@ -84,13 +80,13 @@ namespace dCompare
                 var relativePath = GetRelativePath(item, leftRoot, rightRoot);
                 if (string.IsNullOrEmpty(relativePath)) continue;
 
-                var pathParts = relativePath.Split(System.IO.Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
+                var pathParts = relativePath.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
                 TreeNode currentParent = null;
                 string currentPath = "";
 
                 for (int i = 0; i < pathParts.Length; i++)
                 {
-                    if (i > 0) currentPath += System.IO.Path.DirectorySeparatorChar;
+                    if (i > 0) currentPath += Path.DirectorySeparatorChar;
                     currentPath += pathParts[i];
 
                     if (!nodeDict.ContainsKey(currentPath))
@@ -99,7 +95,8 @@ namespace dCompare
                         {
                             Name = pathParts[i],
                             RelativePath = currentPath,
-                            IsDirectory = i < pathParts.Length - 1 || (item.Left?.IsDirectory ?? item.Right?.IsDirectory ?? false)
+                            IsDirectory = i < pathParts.Length - 1 || (item.Left?.IsDirectory ?? item.Right?.IsDirectory ?? false),
+                            Depth = i
                         };
 
                         // 如果是最後一層，設定詳細資訊
@@ -150,11 +147,11 @@ namespace dCompare
 
             if (item.Left != null)
             {
-                path = item.Left.FullPath.Substring(leftRoot.Length).TrimStart(System.IO.Path.DirectorySeparatorChar);
+                path = item.Left.FullPath.Substring(leftRoot.Length).TrimStart(Path.DirectorySeparatorChar);
             }
             else if (item.Right != null)
             {
-                path = item.Right.FullPath.Substring(rightRoot.Length).TrimStart(System.IO.Path.DirectorySeparatorChar);
+                path = item.Right.FullPath.Substring(rightRoot.Length).TrimStart(Path.DirectorySeparatorChar);
             }
 
             return path;
@@ -275,11 +272,11 @@ namespace dCompare
 
                 try
                 {
-                    string sourcePath = System.IO.Path.Combine(sourceRoot, node.RelativePath);
-                    string targetPath = System.IO.Path.Combine(targetRoot, node.RelativePath);
+                    string sourcePath = Path.Combine(sourceRoot, node.RelativePath);
+                    string targetPath = Path.Combine(targetRoot, node.RelativePath);
 
                     // 確保目標目錄存在
-                    var targetDir = System.IO.Path.GetDirectoryName(targetPath);
+                    var targetDir = Path.GetDirectoryName(targetPath);
                     if (!Directory.Exists(targetDir))
                         Directory.CreateDirectory(targetDir);
 
@@ -322,6 +319,191 @@ namespace dCompare
                 }
                 CollectNonIdenticalNodes(node.Children, result);
             }
+        }
+
+        // 將以下方法添加到 MainWindow.xaml.cs 類中
+
+        private void ContextMenu_Properties_Click(object sender, RoutedEventArgs e)
+        {
+            var selectedItem = ResultTreeView.SelectedItem as TreeNode;
+            if (selectedItem == null)
+            {
+                MessageBox.Show("請選擇一個項目");
+                return;
+            }
+
+            ShowPropertiesDialog(selectedItem);
+        }
+
+        private void ContextMenu_CopyToLeft_Click(object sender, RoutedEventArgs e)
+        {
+            var selectedItem = ResultTreeView.SelectedItem as TreeNode;
+            if (selectedItem == null)
+            {
+                MessageBox.Show("請選擇一個項目");
+                return;
+            }
+
+            CopySelectedItemTo(selectedItem, toLeft: true);
+        }
+
+        private void ContextMenu_CopyToRight_Click(object sender, RoutedEventArgs e)
+        {
+            var selectedItem = ResultTreeView.SelectedItem as TreeNode;
+            if (selectedItem == null)
+            {
+                MessageBox.Show("請選擇一個項目");
+                return;
+            }
+
+            CopySelectedItemTo(selectedItem, toLeft: false);
+        }
+
+        private void ContextMenu_OpenLeftLocation_Click(object sender, RoutedEventArgs e)
+        {
+            var selectedItem = ResultTreeView.SelectedItem as TreeNode;
+            if (selectedItem == null || selectedItem.LeftNode == null)
+            {
+                MessageBox.Show("左側路徑不存在");
+                return;
+            }
+
+            OpenFileLocation(selectedItem.LeftNode.FullPath);
+        }
+
+        private void ContextMenu_OpenRightLocation_Click(object sender, RoutedEventArgs e)
+        {
+            var selectedItem = ResultTreeView.SelectedItem as TreeNode;
+            if (selectedItem == null || selectedItem.RightNode == null)
+            {
+                MessageBox.Show("右側路徑不存在");
+                return;
+            }
+
+            OpenFileLocation(selectedItem.RightNode.FullPath);
+        }
+
+        // 輔助方法
+        private void ShowPropertiesDialog(TreeNode node)
+        {
+            var properties = new StringBuilder();
+            properties.AppendLine($"名稱: {node.Name}");
+            properties.AppendLine($"狀態: {GetStatusText(node.Status)}");
+            properties.AppendLine($"相對路徑: {node.RelativePath}");
+            properties.AppendLine($"類型: {(node.IsDirectory ? "資料夾" : "檔案")}");
+
+            if (node.LeftNode != null)
+            {
+                properties.AppendLine();
+                properties.AppendLine("左側:");
+                properties.AppendLine($"  完整路徑: {node.LeftNode.FullPath}");
+                if (!node.LeftNode.IsDirectory)
+                {
+                    properties.AppendLine($"  大小: {node.LeftSize}");
+                }
+                properties.AppendLine($"  修改時間: {node.LeftDate}");
+            }
+
+            if (node.RightNode != null)
+            {
+                properties.AppendLine();
+                properties.AppendLine("右側:");
+                properties.AppendLine($"  完整路徑: {node.RightNode.FullPath}");
+                if (!node.RightNode.IsDirectory)
+                {
+                    properties.AppendLine($"  大小: {node.RightSize}");
+                }
+                properties.AppendLine($"  修改時間: {node.RightDate}");
+            }
+
+            MessageBox.Show(properties.ToString(), "檔案屬性", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void CopySelectedItemTo(TreeNode node, bool toLeft)
+        {
+            if (node.IsDirectory)
+            {
+                MessageBox.Show("目前不支援複製整個資料夾，請選擇個別檔案");
+                return;
+            }
+
+            string sourceRoot = toLeft ? RightPathBox.Text.Trim() : LeftPathBox.Text.Trim();
+            string targetRoot = toLeft ? LeftPathBox.Text.Trim() : RightPathBox.Text.Trim();
+
+            // 檢查來源是否存在
+            var sourceNode = toLeft ? node.RightNode : node.LeftNode;
+            if (sourceNode == null)
+            {
+                MessageBox.Show($"來源檔案不存在於{(toLeft ? "右側" : "左側")}");
+                return;
+            }
+
+            try
+            {
+                string sourcePath = sourceNode.FullPath;
+                string targetPath = Path.Combine(targetRoot, node.RelativePath);
+
+                // 確保目標目錄存在
+                var targetDir = Path.GetDirectoryName(targetPath);
+                if (!Directory.Exists(targetDir))
+                    Directory.CreateDirectory(targetDir);
+
+                // 複製檔案
+                if (File.Exists(sourcePath))
+                {
+                    File.Copy(sourcePath, targetPath, true);
+                    MessageBox.Show($"檔案已成功複製到{(toLeft ? "左側" : "右側")}");
+
+                    // 重新比較更新結果
+                    Compare_Click(null, null);
+                }
+                else
+                {
+                    MessageBox.Show("來源檔案不存在");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"複製檔案失敗: {ex.Message}");
+            }
+        }
+
+        private void OpenFileLocation(string filePath)
+        {
+            try
+            {
+                if (File.Exists(filePath))
+                {
+                    // 在檔案總管中選中該檔案
+                    System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{filePath}\"");
+                }
+                else if (Directory.Exists(filePath))
+                {
+                    // 開啟資料夾
+                    System.Diagnostics.Process.Start("explorer.exe", filePath);
+                }
+                else
+                {
+                    MessageBox.Show("路徑不存在");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"無法開啟檔案位置: {ex.Message}");
+            }
+        }
+
+        private string GetStatusText(ComparisonStatus status)
+        {
+            return status switch
+            {
+                ComparisonStatus.Identical => "相同",
+                ComparisonStatus.Modified => "已修改",
+                ComparisonStatus.LeftOnly => "僅存於左側",
+                ComparisonStatus.RightOnly => "僅存於右側",
+                ComparisonStatus.Conflict => "衝突",
+                _ => "未知"
+            };
         }
     }
 }

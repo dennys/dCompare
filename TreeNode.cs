@@ -15,6 +15,8 @@ namespace dCompare
         public string Name { get; set; } = "";
         public string LeftName { get; set; } = "";
         public string RightName { get; set; } = "";
+        public string LeftDisplayName => GetDisplayName(LeftName, Depth);
+        public string RightDisplayName => GetDisplayName(RightName, Depth);
         public string LeftSize { get; set; } = "";
         public string RightSize { get; set; } = "";
         public string LeftDate { get; set; } = "";
@@ -23,6 +25,7 @@ namespace dCompare
         public ComparisonStatus Status { get; set; }
         public bool IsDirectory { get; set; }
         public string RelativePath { get; set; } = "";
+        public int Depth { get; set; } = 0;
 
         public FileSystemNode? LeftNode { get; set; }
         public FileSystemNode? RightNode { get; set; }
@@ -62,6 +65,19 @@ namespace dCompare
             {
                 child.CollapseAll();
             }
+        }
+
+        private string GetDisplayName(string name, int depth)
+        {
+            if (string.IsNullOrEmpty(name)) return "";
+
+            // 根據深度添加縮排，每層縮排使用兩個空格
+            string indent = new string(' ', depth * 2);
+
+            // 添加圖標
+            string icon = IsDirectory ? "📁 " : "📄 ";
+
+            return indent + icon + name;
         }
     }
 }
