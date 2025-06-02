@@ -4,119 +4,98 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:dCompare"
-        mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
 
-    <Window.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
-    </Window.Resources>
+	<Window.InputBindings>
+		<KeyBinding Key="N" Modifiers="Ctrl" Command="{Binding AddTabCommand}"/>
+		<KeyBinding Key="W" Modifiers="Ctrl" Command="{Binding CloseTabCommand}"/>
+	</Window.InputBindings>
 
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+	<Window.Resources>
+		<!-- TabItem Header Template with "-" Button -->
+		<Style TargetType="TabItem">
+			<Setter Property="HeaderTemplate">
+				<Setter.Value>
+					<DataTemplate>
+						<StackPanel Orientation="Horizontal">
+							<TextBlock Text="{Binding RelativeSource={RelativeSource AncestorType=TabItem}, Path=Header}" VerticalAlignment="Center" Margin="5,0"/>
+							<Button Content="-" Width="20" Height="20" Margin="5,0" FontSize="12"
+                                    Command="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext.CloseTabCommand}"
+                                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=TabItem}}"/>
+						</StackPanel>
+					</DataTemplate>
+				</Setter.Value>
+			</Setter>
 
-        <!-- 路徑選擇區域 -->
-        <StackPanel Grid.Row="0" Margin="10">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="20"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+			<!-- Enable drag-and-drop -->
+			<Setter Property="AllowDrop" Value="True"/>
+			<EventSetter Event="PreviewMouseLeftButtonDown" Handler="TabItem_PreviewMouseLeftButtonDown"/>
+			<EventSetter Event="Drop" Handler="TabItem_Drop"/>
+		</Style>
+		<!-- TabControl Template with "+" Button -->
+		<Style TargetType="TabControl">
+			<Setter Property="Template">
+				<Setter.Value>
+					<ControlTemplate TargetType="TabControl">
+						<Grid>
+							<Grid.RowDefinitions>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="*"/>
+							</Grid.RowDefinitions>
+							<StackPanel Orientation="Horizontal" Grid.Row="0">
+								<TabPanel x:Name="HeaderPanel" IsItemsHost="True"/>
+								<Button Content="+" Width="20" Height="20" Margin="0,0,0,0" FontSize="16"
+                                        Command="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext.AddTabCommand}"/>
+							</StackPanel>
+							<ContentPresenter Grid.Row="1" ContentSource="SelectedContent"/>
+						</Grid>
+					</ControlTemplate>
+				</Setter.Value>
+			</Setter>
+		</Style>
+	</Window.Resources>
 
-                <Label Grid.Column="0" Content="Left Path:" VerticalAlignment="Center"/>
-                <TextBox Grid.Column="1" Name="LeftPathBox" Margin="5,0" VerticalAlignment="Center"/>
-                <Button Grid.Column="2" Name="BrowseLeftBtn" Content="Browse..." Click="BrowseLeft_Click" Padding="10,2"/>
+	<DockPanel>
+		<!-- Menu Bar -->
+		<Menu DockPanel.Dock="Top">
+			<MenuItem Header="_File">
+				<MenuItem Header="_New" Click="Test_Click"/>
+				<MenuItem Header="_Exit" Click="Test_Click"/>
+			</MenuItem>
+			<MenuItem Header="_Edit">
+				<MenuItem Header="_Change Tab Header" Click="Test_Click"/>
+			</MenuItem>
+			<MenuItem Header="_Help">
+				<MenuItem Header="_About" Click="Test_Click"/>
+			</MenuItem>
+		</Menu>
 
-                <Label Grid.Column="4" Content="Right Path:" VerticalAlignment="Center"/>
-                <TextBox Grid.Column="5" Name="RightPathBox" Margin="5,0" VerticalAlignment="Center"/>
-                <Button Grid.Column="6" Name="BrowseRightBtn" Content="Browse..." Click="BrowseRight_Click" Padding="10,2"/>
-            </Grid>
+		<!-- ToolBar -->
+		<ToolBar DockPanel.Dock="Top">
+			<Button Content="New Tab" Click="Test_Click"/>
+			<Button Content="Change Header" Click="Test_Click"/>
+			<Separator/>
+			<Button Content="About" Click="Test_Click"/>
+		</ToolBar>
 
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10">
-                <Button Name="CompareBtn" Content="Compare" Click="Compare_Click" Padding="20,5" Margin="5"/>
-                <Button Name="ExpandAllBtn" Content="Expand All" Click="ExpandAll_Click" Padding="20,5" Margin="5"/>
-                <Button Name="CollapseAllBtn" Content="Collapse All" Click="CollapseAll_Click" Padding="20,5" Margin="5"/>
-            </StackPanel>
-        </StackPanel>
+		<!-- Status Bar -->
+		<StatusBar DockPanel.Dock="Bottom">
+			<StatusBarItem>
+				<TextBlock x:Name="StatusText" Text="Ready"/>
+			</StatusBarItem>
+		</StatusBar>
 
-        <!-- 結果顯示區域 -->
-        <TreeView Grid.Row="1" Name="ResultTreeView" Margin="10">
-            <TreeView.Resources>
-                <!-- TreeViewItem 樣式 -->
-                <Style TargetType="TreeViewItem">
-                    <Setter Property="IsExpanded" Value="False"/>
-                </Style>
-            </TreeView.Resources>
-
-            <!-- TreeView Header -->
-            <TreeView.ItemTemplate>
-                <HierarchicalDataTemplate ItemsSource="{Binding Children}">
-                    <Grid>
-                        <Grid.ContextMenu>
-                            <ContextMenu>
-                                <MenuItem Header="Copy to Left" Click="ContextMenu_CopyToLeft_Click" Tag="{Binding}"/>
-                                <MenuItem Header="Copy to Right" Click="ContextMenu_CopyToRight_Click" Tag="{Binding}"/>
-                                <Separator/>
-                                <MenuItem Header="Open Left Location" Click="ContextMenu_OpenLeftLocation_Click" Tag="{Binding}"/>
-                                <MenuItem Header="Open Right Location" Click="ContextMenu_OpenRightLocation_Click" Tag="{Binding}"/>
-                                <Separator/>
-                                <MenuItem Header="Properties" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
-                            </ContextMenu>
-                        </Grid.ContextMenu>
-
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="200"/>
-                            <ColumnDefinition Width="80"/>
-                            <ColumnDefinition Width="120"/>
-                            <ColumnDefinition Width="40"/>
-                            <ColumnDefinition Width="200"/>
-                            <ColumnDefinition Width="80"/>
-                            <ColumnDefinition Width="120"/>
-                        </Grid.ColumnDefinitions>
-
-                        <TextBlock Grid.Column="0" Text="{Binding LeftDisplayName}" Margin="2"/>
-                        <TextBlock Grid.Column="1" Text="{Binding LeftSize}" Margin="2" HorizontalAlignment="Right"/>
-                        <TextBlock Grid.Column="2" Text="{Binding LeftDate}" Margin="2"/>
-                        <TextBlock Grid.Column="3" Text="{Binding StatusSymbol}" Margin="2" HorizontalAlignment="Center" FontWeight="Bold">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding StatusSymbol}" Value="=">
-                                            <Setter Property="Foreground" Value="Green"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding StatusSymbol}" Value="≠">
-                                            <Setter Property="Foreground" Value="Orange"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding StatusSymbol}" Value="&lt;">
-                                            <Setter Property="Foreground" Value="Blue"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding StatusSymbol}" Value="&gt;">
-                                            <Setter Property="Foreground" Value="Red"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                        <TextBlock Grid.Column="4" Text="{Binding RightDisplayName}" Margin="2"/>
-                        <TextBlock Grid.Column="5" Text="{Binding RightSize}" Margin="2" HorizontalAlignment="Right"/>
-                        <TextBlock Grid.Column="6" Text="{Binding RightDate}" Margin="2"/>
-                    </Grid>
-                </HierarchicalDataTemplate>
-            </TreeView.ItemTemplate>
-        </TreeView>
-
-        <!-- 操作按鈕區域 -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
-            <Button Name="CopyToLeftBtn" Content="Copy to Left" Click="CopyToLeft_Click" Padding="15,5" Margin="5"/>
-            <Button Name="CopyToRightBtn" Content="Copy to Right" Click="CopyToRight_Click" Padding="15,5" Margin="5"/>
-        </StackPanel>
-    </Grid>
+		<!-- TabControl -->
+		<Grid>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="Auto"/>
+			</Grid.RowDefinitions>
+			<TabControl x:Name="tabControl" Grid.Row="0" PreviewMouseMove="TabControl_PreviewMouseMove">
+				<TabItem Header="Tab 1">
+					<local:UcCompare/>
+				</TabItem>
+			</TabControl>
+		</Grid>
+	</DockPanel>
 </Window>
