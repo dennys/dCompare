@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace dCompare
+namespace dCompare.Compare
 {
     public class DirectoryComparer
     {
