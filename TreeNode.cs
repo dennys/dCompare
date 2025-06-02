@@ -72,12 +72,12 @@ namespace dCompare
             if (string.IsNullOrEmpty(name)) return "";
 
             // 根據深度添加縮排，每層縮排使用兩個空格
-            string indent = new string(' ', depth * 2);
+            string indent = new string(' ', depth * 6);
 
             // 添加圖標
             string icon = IsDirectory ? "📁 " : "📄 ";
 
-            return indent + icon + name;
+            return icon + name;
         }
     }
 }

@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace dCompare
 {
@@ -19,26 +17,35 @@ namespace dCompare
 
         public List<ComparisonItem> Compare(string leftPath, string rightPath)
         {
-            var leftRoot = BuildTree(leftPath, 0);
-            var rightRoot = BuildTree(rightPath, 0);
-            var result = new List<ComparisonItem>();
+            FileSystemNode? leftRoot = BuildTree(leftPath, 0);
+            FileSystemNode? rightRoot = BuildTree(rightPath, 0);
+            List<ComparisonItem> result = new();
 
-            // 添加根目錄的比較
-            result.Add(new ComparisonItem
+            // Add root directory comparison with a placeholder status
+            ComparisonItem? rootItem = new ComparisonItem
             {
-                Status = ComparisonStatus.Identical,
+                Status = ComparisonStatus.Identical, // Initial status, will be updated
                 Left = leftRoot,
                 Right = rightRoot,
                 TreeIndent = ""
-            });
+            };
+            result.Add(rootItem);
 
-            CompareNodes(leftRoot, rightRoot, result, "");
+            // Compare nodes and update directory statuses
+            bool hasDifferences = CompareNodes(leftRoot, rightRoot, result, "");
+
+            // Update root status based on children
+            if (hasDifferences)
+            {
+                rootItem.Status = ComparisonStatus.Modified;
+            }
+
             return result;
         }
 
         private FileSystemNode BuildTree(string path, int depth)
         {
-            var root = new FileSystemNode
+            FileSystemNode? root = new FileSystemNode
             {
                 Name = depth == 0 ? Path.GetFileName(path) : Path.GetFileName(path),
                 FullPath = path,
@@ -52,30 +59,30 @@ namespace dCompare
 
                 try
                 {
-                    // 先處理子目錄
-                    foreach (var dir in Directory.GetDirectories(path))
+                    // Process subdirectories
+                    foreach (string? dir in Directory.GetDirectories(path))
                     {
                         root.Children.Add(BuildTree(dir, depth + 1));
                     }
 
-                    // 再處理檔案
-                    foreach (var file in Directory.GetFiles(path))
+                    // Process files
+                    foreach (string? file in Directory.GetFiles(path))
                     {
                         root.Children.Add(BuildTree(file, depth + 1));
                     }
                 }
                 catch (UnauthorizedAccessException)
                 {
-                    // 如果沒有權限存取，忽略該目錄
+                    // Ignore directories with no access
                 }
                 catch (DirectoryNotFoundException)
                 {
-                    // 目錄不存在，忽略
+                    // Ignore missing directories
                 }
             }
             else if (File.Exists(path))
             {
-                var info = new FileInfo(path);
+                FileInfo? info = new FileInfo(path);
                 root.Size = info.Length;
                 root.ModifiedTime = info.LastWriteTime;
             }
@@ -83,27 +90,33 @@ namespace dCompare
             return root;
         }
 
-        private void CompareNodes(FileSystemNode? left, FileSystemNode? right, List<ComparisonItem> result, string indent)
+        private bool CompareNodes(FileSystemNode? left, FileSystemNode? right, List<ComparisonItem> result, string indent)
         {
-            var names = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+            bool hasDifferences = false;
+            SortedSet<string> names = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            // 收集所有子項目名稱
+            // Collect all child names
             if (left != null)
-                foreach (var child in left.Children)
+                foreach (FileSystemNode? child in left.Children)
+                {
                     names.Add(child.Name);
-
+                }
             if (right != null)
-                foreach (var child in right.Children)
+                foreach (FileSystemNode? child in right.Children)
+                {
                     names.Add(child.Name);
+                }
 
-            foreach (var name in names)
+            // Process each child
+            foreach (string? name in names)
             {
-                var leftNode = left?.Children.Find(n => n.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
-                var rightNode = right?.Children.Find(n => n.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+                FileSystemNode? leftNode = left?.Children.Find(n => n.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+                FileSystemNode? rightNode = right?.Children.Find(n => n.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
 
-                var status = DetermineStatus(leftNode, rightNode);
+                ComparisonStatus status = DetermineStatus(leftNode, rightNode);
 
-                var item = new ComparisonItem
+                // Create comparison item
+                ComparisonItem? item = new()
                 {
                     Status = status,
                     TreeIndent = indent + (leftNode?.IsDirectory ?? rightNode?.IsDirectory ?? false ? "📁 " : "📄 ") + name,
@@ -113,12 +126,34 @@ namespace dCompare
 
                 result.Add(item);
 
-                // 如果是資料夾，遞迴比較子節點
+                // If the current item is not identical, mark differences
+                if (status != ComparisonStatus.Identical)
+                {
+                    hasDifferences = true;
+                }
+
+                // Recursively compare subdirectories and track differences
                 if ((leftNode?.IsDirectory ?? false) || (rightNode?.IsDirectory ?? false))
                 {
-                    CompareNodes(leftNode, rightNode, result, indent + "    ");
+                    bool childHasDifferences = CompareNodes(leftNode, rightNode, result, indent + "    ");
+                    if (childHasDifferences)
+                    {
+                        hasDifferences = true;
+                    }
                 }
             }
+
+            // Update the parent directory's status if necessary
+            if ((left?.IsDirectory ?? false) || (right?.IsDirectory ?? false))
+            {
+                ComparisonItem? parentItem = result.LastOrDefault(i => i.Left == left || i.Right == right);
+                if (parentItem != null && hasDifferences)
+                {
+                    parentItem.Status = ComparisonStatus.Modified;
+                }
+            }
+
+            return hasDifferences;
         }
 
         private ComparisonStatus DetermineStatus(FileSystemNode? left, FileSystemNode? right)
@@ -131,18 +166,18 @@ namespace dCompare
 
             if (left != null && right != null)
             {
-                // 檢查類型是否匹配（目錄vs檔案）
+                // Check if types match (directory vs file)
                 if (left.IsDirectory != right.IsDirectory)
                     return ComparisonStatus.Conflict;
 
                 if (left.IsDirectory && right.IsDirectory)
                 {
-                    // 目錄比較，暫時標記為相同，實際狀態會由子項目決定
-                    return ComparisonStatus.Identical;
+                    // Directory status will be updated in CompareNodes based on children
+                    return ComparisonStatus.Identical; // Placeholder
                 }
                 else
                 {
-                    // 檔案比較
+                    // File comparison
                     if (left.Size == right.Size &&
                         Math.Abs((left.ModifiedTime - right.ModifiedTime).TotalSeconds) < 1)
                         return ComparisonStatus.Identical;
