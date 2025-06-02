@@ -4,98 +4,285 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:dCompare"
-        Title="MainWindow" Height="450" Width="800">
+        Title="dCompare" Height="600" Width="1000"
+        Background="#F0F0F0">
 
-	<Window.InputBindings>
-		<KeyBinding Key="N" Modifiers="Ctrl" Command="{Binding AddTabCommand}"/>
-		<KeyBinding Key="W" Modifiers="Ctrl" Command="{Binding CloseTabCommand}"/>
-	</Window.InputBindings>
+    <Window.InputBindings>
+        <KeyBinding Key="N" Modifiers="Ctrl" Command="{Binding AddTabCommand}"/>
+        <KeyBinding Key="W" Modifiers="Ctrl" Command="{Binding CloseTabCommand}"/>
+    </Window.InputBindings>
 
-	<Window.Resources>
-		<!-- TabItem Header Template with "-" Button -->
-		<Style TargetType="TabItem">
-			<Setter Property="HeaderTemplate">
-				<Setter.Value>
-					<DataTemplate>
-						<StackPanel Orientation="Horizontal">
-							<TextBlock Text="{Binding RelativeSource={RelativeSource AncestorType=TabItem}, Path=Header}" VerticalAlignment="Center" Margin="5,0"/>
-							<Button Content="-" Width="20" Height="20" Margin="5,0" FontSize="12"
-                                    Command="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext.CloseTabCommand}"
-                                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=TabItem}}"/>
-						</StackPanel>
-					</DataTemplate>
-				</Setter.Value>
-			</Setter>
+    <Window.Resources>
+        <!-- Chrome-style Tab Item Template -->
+        <Style x:Key="ChromeTabStyle" TargetType="TabItem">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Grid x:Name="TabGrid" Height="28">
+                            <Border x:Name="TabBorder" 
+                                    Background="#E8E8E8" 
+                                    BorderBrush="#C0C0C0" 
+                                    BorderThickness="1,1,1,0"
+                                    CornerRadius="8,8,0,0"
+                                    Margin="0,0,0,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
 
-			<!-- Enable drag-and-drop -->
-			<Setter Property="AllowDrop" Value="True"/>
-			<EventSetter Event="PreviewMouseLeftButtonDown" Handler="TabItem_PreviewMouseLeftButtonDown"/>
-			<EventSetter Event="Drop" Handler="TabItem_Drop"/>
-		</Style>
-		<!-- TabControl Template with "+" Button -->
-		<Style TargetType="TabControl">
-			<Setter Property="Template">
-				<Setter.Value>
-					<ControlTemplate TargetType="TabControl">
-						<Grid>
-							<Grid.RowDefinitions>
-								<RowDefinition Height="Auto"/>
-								<RowDefinition Height="*"/>
-							</Grid.RowDefinitions>
-							<StackPanel Orientation="Horizontal" Grid.Row="0">
-								<TabPanel x:Name="HeaderPanel" IsItemsHost="True"/>
-								<Button Content="+" Width="20" Height="20" Margin="0,0,0,0" FontSize="16"
-                                        Command="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext.AddTabCommand}"/>
-							</StackPanel>
-							<ContentPresenter Grid.Row="1" ContentSource="SelectedContent"/>
-						</Grid>
-					</ControlTemplate>
-				</Setter.Value>
-			</Setter>
-		</Style>
-	</Window.Resources>
+                                    <!-- Tab Title -->
+                                    <TextBlock x:Name="TabTitle" 
+                                               Grid.Column="0"
+                                               Text="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Header}"
+                                               VerticalAlignment="Center" 
+                                               HorizontalAlignment="Left"
+                                               Margin="12,0,8,0"
+                                               FontSize="12"
+                                               Foreground="#333333"
+                                               TextTrimming="CharacterEllipsis"/>
 
-	<DockPanel>
-		<!-- Menu Bar -->
-		<Menu DockPanel.Dock="Top">
-			<MenuItem Header="_File">
-				<MenuItem Header="_New" Click="Test_Click"/>
-				<MenuItem Header="_Exit" Click="Test_Click"/>
-			</MenuItem>
-			<MenuItem Header="_Edit">
-				<MenuItem Header="_Change Tab Header" Click="Test_Click"/>
-			</MenuItem>
-			<MenuItem Header="_Help">
-				<MenuItem Header="_About" Click="Test_Click"/>
-			</MenuItem>
-		</Menu>
+                                    <!-- Close Button -->
+                                    <Button x:Name="CloseButton"
+                                            Grid.Column="1"
+                                            Width="16" Height="16"
+                                            Margin="0,0,8,0"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Command="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext.CloseTabCommand}"
+                                            CommandParameter="{Binding RelativeSource={RelativeSource TemplatedParent}}"
+                                            Cursor="Hand"
+                                            ToolTip="Close tab">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="CloseBorder" 
+                                                        Background="Transparent" 
+                                                        CornerRadius="2">
+                                                    <Path x:Name="ClosePath"
+                                                          Data="M 0 0 L 8 8 M 8 0 L 0 8"
+                                                          Stroke="#666666"
+                                                          StrokeThickness="1.5"
+                                                          HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="CloseBorder" Property="Background" Value="#E81123"/>
+                                                        <Setter TargetName="ClosePath" Property="Stroke" Value="White"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </Grid>
 
-		<!-- ToolBar -->
-		<ToolBar DockPanel.Dock="Top">
-			<Button Content="New Tab" Click="Test_Click"/>
-			<Button Content="Change Header" Click="Test_Click"/>
-			<Separator/>
-			<Button Content="About" Click="Test_Click"/>
-		</ToolBar>
+                        <ControlTemplate.Triggers>
+                            <!-- Selected Tab -->
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="TabBorder" Property="Background" Value="White"/>
+                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="#C0C0C0"/>
+                                <Setter TargetName="TabTitle" Property="Foreground" Value="#000000"/>
+                                <Setter TargetName="TabGrid" Property="Panel.ZIndex" Value="100"/>
+                            </Trigger>
 
-		<!-- Status Bar -->
-		<StatusBar DockPanel.Dock="Bottom">
-			<StatusBarItem>
-				<TextBlock x:Name="StatusText" Text="Ready"/>
-			</StatusBarItem>
-		</StatusBar>
+                            <!-- Hover Effect -->
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsSelected" Value="False"/>
+                                    <Condition Property="IsMouseOver" Value="True"/>
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="TabBorder" Property="Background" Value="#F0F0F0"/>
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="AllowDrop" Value="True"/>
+            <EventSetter Event="PreviewMouseLeftButtonDown" Handler="TabItem_PreviewMouseLeftButtonDown"/>
+            <EventSetter Event="Drop" Handler="TabItem_Drop"/>
+        </Style>
 
-		<!-- TabControl -->
-		<Grid>
-			<Grid.RowDefinitions>
-				<RowDefinition Height="*"/>
-				<RowDefinition Height="Auto"/>
-			</Grid.RowDefinitions>
-			<TabControl x:Name="tabControl" Grid.Row="0" PreviewMouseMove="TabControl_PreviewMouseMove">
-				<TabItem Header="Tab 1">
-					<local:UcCompare/>
-				</TabItem>
-			</TabControl>
-		</Grid>
-	</DockPanel>
+        <!-- Chrome-style TabControl Template -->
+        <Style x:Key="ChromeTabControlStyle" TargetType="TabControl">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#C0C0C0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabControl">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Tab Headers with Add Button -->
+                            <Border Grid.Row="0" 
+                                    Background="#F8F8F8" 
+                                    BorderBrush="#C0C0C0" 
+                                    BorderThickness="0,0,0,1">
+                                <StackPanel Orientation="Horizontal" Height="28">
+                                    <TabPanel x:Name="HeaderPanel" IsItemsHost="True" Margin="8,0,0,0"/>
+
+                                    <!-- Add Tab Button -->
+                                    <Button x:Name="AddTabButton"
+                                            Width="24" Height="24"
+                                            Margin="4,4,8,4"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Command="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext.AddTabCommand}"
+                                            Cursor="Hand"
+                                            ToolTip="Add new tab (Ctrl+N)">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="AddBorder" 
+                                                        Background="Transparent" 
+                                                        CornerRadius="2">
+                                                    <Path x:Name="AddPath"
+                                                          Data="M 0 6 L 12 6 M 6 0 L 6 12"
+                                                          Stroke="#666666"
+                                                          StrokeThickness="2"
+                                                          HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="AddBorder" Property="Background" Value="#E0E0E0"/>
+                                                        <Setter TargetName="AddPath" Property="Stroke" Value="#333333"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsPressed" Value="True">
+                                                        <Setter TargetName="AddBorder" Property="Background" Value="#D0D0D0"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Content Area -->
+                            <Border Grid.Row="1" 
+                                    Background="White" 
+                                    BorderBrush="#C0C0C0" 
+                                    BorderThickness="1,0,1,1">
+                                <ContentPresenter ContentSource="SelectedContent" Margin="4"/>
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Unified Menu and Toolbar Style -->
+        <Style x:Key="UnifiedMenuStyle" TargetType="Menu">
+            <Setter Property="Background" Value="#F8F8F8"/>
+            <Setter Property="BorderBrush" Value="#C0C0C0"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+        </Style>
+
+        <Style x:Key="UnifiedToolBarStyle" TargetType="ToolBar">
+            <Setter Property="Background" Value="#F8F8F8"/>
+            <Setter Property="BorderBrush" Value="#C0C0C0"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+        </Style>
+    </Window.Resources>
+
+    <DockPanel>
+        <!-- Menu Bar -->
+        <Menu DockPanel.Dock="Top" Style="{StaticResource UnifiedMenuStyle}">
+            <MenuItem Header="_File">
+                <MenuItem Header="_New Tab" Command="{Binding AddTabCommand}" InputGestureText="Ctrl+N">
+                    <MenuItem.Icon>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE710;" FontSize="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator/>
+                <MenuItem Header="E_xit" Click="Exit_Click">
+                    <MenuItem.Icon>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8BB;" FontSize="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+            </MenuItem>
+            <MenuItem Header="_Edit">
+                <MenuItem Header="_Rename Tab" Click="RenameTab_Click">
+                    <MenuItem.Icon>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE70F;" FontSize="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="_Close Tab" Command="{Binding CloseTabCommand}" InputGestureText="Ctrl+W">
+                    <MenuItem.Icon>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE711;" FontSize="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+            </MenuItem>
+            <MenuItem Header="_Help">
+                <MenuItem Header="_About" Click="About_Click">
+                    <MenuItem.Icon>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE946;" FontSize="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+            </MenuItem>
+        </Menu>
+
+        <!-- ToolBar -->
+        <ToolBar DockPanel.Dock="Top" Style="{StaticResource UnifiedToolBarStyle}">
+            <!-- New Tab Button with Icon -->
+            <Button Command="{Binding AddTabCommand}" ToolTip="Add new tab (Ctrl+N)">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE710;" FontSize="16" Margin="0,0,4,0"/>
+                    <TextBlock Text="New Tab"/>
+                </StackPanel>
+            </Button>
+
+            <!-- Rename Tab Button with Icon -->
+            <Button Click="RenameTab_Click" ToolTip="Rename current tab">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE70F;" FontSize="16" Margin="0,0,4,0"/>
+                    <TextBlock Text="Rename"/>
+                </StackPanel>
+            </Button>
+
+            <Separator/>
+
+            <!-- Close Tab Button with Icon -->
+            <Button Command="{Binding CloseTabCommand}" ToolTip="Close current tab (Ctrl+W)">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE711;" FontSize="16" Margin="0,0,4,0"/>
+                    <TextBlock Text="Close Tab"/>
+                </StackPanel>
+            </Button>
+
+            <Separator/>
+
+            <!-- About Button with Icon -->
+            <Button Click="About_Click">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE946;" FontSize="16" Margin="0,0,4,0"/>
+                    <TextBlock Text="About"/>
+                </StackPanel>
+            </Button>
+        </ToolBar>
+
+        <!-- Status Bar -->
+        <StatusBar DockPanel.Dock="Bottom" Background="#F8F8F8" BorderBrush="#C0C0C0" BorderThickness="0,1,0,0">
+            <StatusBarItem>
+                <TextBlock x:Name="StatusText" Text="Ready" Foreground="#333333"/>
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <TextBlock x:Name="TabCountText" Text="{Binding ElementName=tabControl, Path=Items.Count, StringFormat='Tabs: {0}'}" Foreground="#666666"/>
+            </StatusBarItem>
+        </StatusBar>
+
+        <!-- Main TabControl -->
+        <TabControl x:Name="tabControl" 
+                    Style="{StaticResource ChromeTabControlStyle}"
+                    ItemContainerStyle="{StaticResource ChromeTabStyle}"
+                    PreviewMouseMove="TabControl_PreviewMouseMove">
+            <TabItem Header="Welcome">
+                <local:UcCompare/>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
 </Window>

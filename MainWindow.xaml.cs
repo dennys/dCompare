@@ -1,70 +1,159 @@
-﻿
-using System;
+﻿using System;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
 namespace dCompare
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, INotifyPropertyChanged
     {
+        #region Properties and Fields
+
         public ICommand AddTabCommand { get; }
         public ICommand CloseTabCommand { get; }
+
         private TabItem _draggedTab;
         private Point _dragStartPoint;
+        private int _tabCounter = 1;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        #endregion
+
+        #region Constructor
 
         public MainWindow()
         {
             InitializeComponent();
-            AddTabCommand = new RelayCommand(_ => AddNewTab());
+
+            // Initialize commands
+            AddTabCommand = new RelayCommand(_ => AddNewTab(), _ => CanAddTab());
             CloseTabCommand = new RelayCommand(param => CloseTab(param as TabItem), param => CanCloseTab());
-            DataContext = this; // For command binding
+
+            DataContext = this;
+
+            // Set initial status
+            UpdateStatus("Application ready");
         }
 
-        private void Test_Click(object sender, RoutedEventArgs e)
-        {
-        }
+        #endregion
+
+        #region Tab Management
+
         private void AddNewTab()
         {
-            TabItem newTab = new TabItem
+            try
             {
-                Header = $"Tab {tabControl.Items.Count + 1}",
-                Content = new UcCompare()
-            };
-            tabControl.Items.Add(newTab);
-            tabControl.SelectedItem = newTab; // Select the new tab
+                _tabCounter++;
+                TabItem newTab = new TabItem
+                {
+                    Header = $"Tab {_tabCounter}",
+                    Content = new UcCompare()
+                };
+
+                tabControl.Items.Add(newTab);
+                tabControl.SelectedItem = newTab;
+
+                UpdateStatus($"Added new tab: Tab {_tabCounter}");
+
+                // Force command re-evaluation
+                CommandManager.InvalidateRequerySuggested();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error adding tab: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void CloseTab(TabItem tab)
         {
-            // If tab is null (e.g., from Ctrl+W), use the currently selected tab
-            TabItem tabToClose = tab ?? tabControl.SelectedItem as TabItem;
-            if (tabToClose != null && tabControl.Items.Contains(tabToClose))
+            try
             {
-                MessageBoxResult result = MessageBox.Show(
-                    $"Are you sure you want to close '{tabToClose.Header}'?",
-                    "Confirm Close",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question);
-                if (result == MessageBoxResult.Yes)
+                // If tab is null (e.g., from Ctrl+W), use the currently selected tab
+                TabItem tabToClose = tab ?? tabControl.SelectedItem as TabItem;
+
+                if (tabToClose == null || !tabControl.Items.Contains(tabToClose))
                 {
-                    tabControl.Items.Remove(tabToClose);
+                    UpdateStatus("No tab to close");
+                    return;
                 }
+
+                // Don't show confirmation for the default "Welcome" tab or if there's only one tab
+                bool showConfirmation = tabControl.Items.Count > 1 &&
+                                       !tabToClose.Header.ToString().Equals("Welcome", StringComparison.OrdinalIgnoreCase);
+
+                if (showConfirmation)
+                {
+                    MessageBoxResult result = MessageBox.Show(
+                        $"Are you sure you want to close '{tabToClose.Header}'?",
+                        "Confirm Close",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Question);
+
+                    if (result != MessageBoxResult.Yes)
+                    {
+                        return;
+                    }
+                }
+
+                // Store the index for potential selection adjustment
+                int closedIndex = tabControl.Items.IndexOf(tabToClose);
+
+                // Remove the tab
+                tabControl.Items.Remove(tabToClose);
+
+                // Select appropriate tab after closing
+                if (tabControl.Items.Count > 0)
+                {
+                    // Select the tab that was after the closed one, or the last tab if we closed the last one
+                    int newSelectedIndex = Math.Min(closedIndex, tabControl.Items.Count - 1);
+                    tabControl.SelectedIndex = newSelectedIndex;
+                }
+
+                UpdateStatus($"Closed tab: {tabToClose.Header}");
+
+                // Force command re-evaluation
+                CommandManager.InvalidateRequerySuggested();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error closing tab: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        // when I click '-' button, it works. but when I click ctrl-W, the 'tab' variable is null
+
+        private bool CanAddTab()
+        {
+            // Allow adding tabs up to a reasonable limit
+            return tabControl?.Items.Count < 20;
+        }
 
         private bool CanCloseTab()
         {
-            return tabControl.Items.Count > 1; // Prevent closing the last tab
+            // Allow closing if there's more than one tab, or if the single tab isn't the welcome tab
+            if (tabControl?.Items.Count == 0)
+                return false;
+
+            if (tabControl.Items.Count == 1)
+            {
+                var singleTab = tabControl.Items[0] as TabItem;
+                return !singleTab?.Header.ToString().Equals("Welcome", StringComparison.OrdinalIgnoreCase) ?? false;
+            }
+
+            return true;
         }
 
-        // Drag-and-drop for tab reordering
+        #endregion
+
+        #region Drag and Drop
+
         private void TabItem_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            _draggedTab = sender as TabItem;
-            if (_draggedTab != null)
+            if (sender is TabItem tabItem)
             {
+                _draggedTab = tabItem;
                 _dragStartPoint = e.GetPosition(null);
             }
         }
@@ -81,26 +170,161 @@ namespace dCompare
             if (Math.Abs(diff.X) > SystemParameters.MinimumHorizontalDragDistance ||
                 Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance)
             {
-                DragDrop.DoDragDrop(_draggedTab, _draggedTab, DragDropEffects.Move);
+                try
+                {
+                    DragDrop.DoDragDrop(_draggedTab, _draggedTab, DragDropEffects.Move);
+                }
+                catch (Exception ex)
+                {
+                    UpdateStatus($"Drag operation failed: {ex.Message}");
+                }
+                finally
+                {
+                    _draggedTab = null;
+                }
             }
         }
 
         private void TabItem_Drop(object sender, DragEventArgs e)
         {
-            if (e.Data.GetData(typeof(TabItem)) is TabItem sourceTab && sender is TabItem targetTab && sourceTab != targetTab)
+            try
             {
-                int sourceIndex = tabControl.Items.IndexOf(sourceTab);
-                int targetIndex = tabControl.Items.IndexOf(targetTab);
+                if (e.Data.GetData(typeof(TabItem)) is TabItem sourceTab &&
+                    sender is TabItem targetTab &&
+                    sourceTab != targetTab)
+                {
+                    int sourceIndex = tabControl.Items.IndexOf(sourceTab);
+                    int targetIndex = tabControl.Items.IndexOf(targetTab);
 
-                tabControl.Items.Remove(sourceTab);
-                tabControl.Items.Insert(targetIndex, sourceTab);
-                tabControl.SelectedItem = sourceTab; // Keep the dragged tab selected
+                    if (sourceIndex >= 0 && targetIndex >= 0)
+                    {
+                        tabControl.Items.Remove(sourceTab);
+                        tabControl.Items.Insert(targetIndex, sourceTab);
+                        tabControl.SelectedItem = sourceTab;
+
+                        UpdateStatus($"Moved tab '{sourceTab.Header}' to position {targetIndex + 1}");
+                    }
+                }
             }
-            _draggedTab = null; // Reset dragged tab
+            catch (Exception ex)
+            {
+                UpdateStatus($"Drop operation failed: {ex.Message}");
+            }
+            finally
+            {
+                _draggedTab = null;
+            }
         }
+
+        #endregion
+
+        #region Menu Event Handlers
+
+        private void RenameTab_Click(object sender, RoutedEventArgs e)
+        {
+            if (tabControl.SelectedItem is TabItem selectedTab)
+            {
+                string currentName = selectedTab.Header.ToString();
+                string newName = PromptForTabName(currentName);
+
+                if (!string.IsNullOrWhiteSpace(newName) && newName != currentName)
+                {
+                    selectedTab.Header = newName;
+                    UpdateStatus($"Renamed tab to: {newName}");
+                }
+            }
+        }
+
+        private void About_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show(
+                "dCompare - Chrome-style Tabbed Interface\n\n" +
+                "Features:\n" +
+                "• Chrome-style tabs with hover effects\n" +
+                "• Drag and drop tab reordering\n" +
+                "• Keyboard shortcuts (Ctrl+N, Ctrl+W)\n" +
+                "• Tab close confirmation\n" +
+                "• Unified color scheme\n\n" +
+                "Keyboard Shortcuts:\n" +
+                "Ctrl+N: New Tab\n" +
+                "Ctrl+W: Close Current Tab",
+                "About dCompare",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+
+        private void Exit_Click(object sender, RoutedEventArgs e)
+        {
+            if (tabControl.Items.Count > 1)
+            {
+                MessageBoxResult result = MessageBox.Show(
+                    "Are you sure you want to exit? All tabs will be closed.",
+                    "Confirm Exit",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (result != MessageBoxResult.Yes)
+                    return;
+            }
+
+            Close();
+        }
+
+        #endregion
+
+        #region Helper Methods
+
+        private void UpdateStatus(string message)
+        {
+            if (StatusText != null)
+            {
+                StatusText.Text = message;
+            }
+        }
+
+        private string PromptForTabName(string currentName)
+        {
+            // Simple input dialog - in a real application, you might want a custom dialog
+            return Microsoft.VisualBasic.Interaction.InputBox(
+                "Enter new tab name:",
+                "Rename Tab",
+                currentName);
+        }
+
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        #endregion
+
+        #region Window Events
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            if (tabControl.Items.Count > 1)
+            {
+                MessageBoxResult result = MessageBox.Show(
+                    "Are you sure you want to exit? All tabs will be closed.",
+                    "Confirm Exit",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (result != MessageBoxResult.Yes)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+            }
+
+            base.OnClosing(e);
+        }
+
+        #endregion
     }
 
-    // Simple ICommand implementation for commands
+    #region Command Implementation
+
     public class RelayCommand : ICommand
     {
         private readonly Action<object> _execute;
@@ -108,7 +332,7 @@ namespace dCompare
 
         public RelayCommand(Action<object> execute, Func<object, bool> canExecute = null)
         {
-            _execute = execute;
+            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
             _canExecute = canExecute;
         }
 
@@ -118,7 +342,31 @@ namespace dCompare
             remove { CommandManager.RequerySuggested -= value; }
         }
 
-        public bool CanExecute(object parameter) => _canExecute?.Invoke(parameter) ?? true;
-        public void Execute(object parameter) => _execute(parameter);
+        public bool CanExecute(object parameter)
+        {
+            try
+            {
+                return _canExecute?.Invoke(parameter) ?? true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public void Execute(object parameter)
+        {
+            try
+            {
+                _execute(parameter);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Command execution failed: {ex.Message}", "Error",
+                              MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
     }
+
+    #endregion
 }
