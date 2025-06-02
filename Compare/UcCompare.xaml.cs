@@ -1,14 +1,10 @@
 ﻿using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.IO;using System.Windows.Media;
-using System.Linq;
+using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
+using dCompare.Compare;
 
 namespace dCompare
 {
@@ -33,7 +29,7 @@ namespace dCompare
     /// </summary>
     public partial class UcCompare : UserControl
     {
-        private ObservableCollection<TreeNode> _treeNodes = new ObservableCollection<TreeNode>();
+        private ObservableCollection<TreeNode> _treeNodes = new();
         private DirectoryComparer _comparer = new DirectoryComparer();
         public UcCompare()
         {
@@ -50,11 +46,16 @@ namespace dCompare
         }
         private void BrowseLeft_Click(object sender, RoutedEventArgs e)
         {
-            //var dialog = new System.Windows.Forms.FolderBrowserDialog();
-            //if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            //{
-            //    LeftPathBox.Text = dialog.SelectedPath;
-            //}
+            var folderDialog = new OpenFolderDialog
+            {
+                Title = "Select Folder",
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)
+            };
+
+            if (folderDialog.ShowDialog() == true)
+            {
+                LeftPathBox.Text = folderDialog.FolderName;
+            }
         }
 
         private void BrowseRight_Click(object sender, RoutedEventArgs e)
