@@ -33,6 +33,7 @@ namespace dCompare
         private DirectoryComparer _comparer = new DirectoryComparer();
         private ListSortDirection _lastSortDirection;
         private GridViewColumnHeader _lastHeaderClicked;
+        private Predicate<object> _currentFilter = null; // Store current filter
 
         public UcCompare()
         {
@@ -87,8 +88,7 @@ namespace dCompare
                     _treeNodes.Add(node);
                 }
 
-                ICollectionView? view = CollectionViewSource.GetDefaultView(_treeNodes);
-                view.Filter = null;
+                ApplyCurrentFilter();
             }
             catch (Exception ex)
             {
@@ -156,23 +156,52 @@ namespace dCompare
             if (ResultListView.SelectedItem is TreeNode selectedNode && selectedNode.IsDirectory)
             {
                 selectedNode.IsExpanded = !selectedNode.IsExpanded;
-                UpdateDirectoryFilter(selectedNode);
+                ApplyCurrentFilter(); // Use the stored filter instead of UpdateDirectoryFilter
             }
         }
 
-        private void UpdateDirectoryFilter(TreeNode directoryNode)
+        private bool IsNodeVisible(TreeNode node)
+        {
+            // Always show root level items
+            if (node.Depth == 0) return true;
+
+            // For child items, check if all parent directories are expanded
+            string currentPath = "";
+            string[] pathParts = node.RelativePath.Split(Path.DirectorySeparatorChar);
+
+            for (int i = 0; i < pathParts.Length - 1; i++) // Exclude the node itself
+            {
+                if (i == 0)
+                    currentPath = pathParts[i];
+                else
+                    currentPath = Path.Combine(currentPath, pathParts[i]);
+
+                TreeNode? parentNode = _treeNodes.FirstOrDefault(n => n.IsDirectory &&
+                    n.RelativePath.Equals(currentPath, StringComparison.OrdinalIgnoreCase));
+
+                if (parentNode != null && !parentNode.IsExpanded)
+                    return false;
+            }
+
+            return true;
+        }
+
+        private void ApplyCurrentFilter()
         {
             ICollectionView? view = CollectionViewSource.GetDefaultView(_treeNodes);
+
             view.Filter = obj =>
             {
                 if (obj is not TreeNode node) return false;
 
-                if (!node.IsDirectory || node.Depth == 0) return true;
+                // First check visibility based on expansion state
+                if (!IsNodeVisible(node)) return false;
 
-                string parentPath = Path.GetDirectoryName(node.RelativePath)?.Replace(Path.DirectorySeparatorChar, '/') ?? "";
-                TreeNode? parentNode = _treeNodes.FirstOrDefault(n => n.IsDirectory && n.RelativePath == parentPath);
+                // Then apply any additional filter
+                if (_currentFilter != null)
+                    return _currentFilter(obj);
 
-                return parentNode == null || parentNode.IsExpanded || node.RelativePath == directoryNode.RelativePath;
+                return true;
             };
         }
 
@@ -182,8 +211,7 @@ namespace dCompare
             {
                 if (node.IsDirectory) node.IsExpanded = true;
             }
-            ICollectionView? view = CollectionViewSource.GetDefaultView(_treeNodes);
-            view.Filter = null;
+            ApplyCurrentFilter();
         }
 
         private void CollapseAll_Click(object sender, RoutedEventArgs e)
@@ -192,38 +220,37 @@ namespace dCompare
             {
                 if (node.IsDirectory) node.IsExpanded = false;
             }
-            ICollectionView? view = CollectionViewSource.GetDefaultView(_treeNodes);
-            view.Filter = obj => obj is TreeNode node && node.Depth == 0;
+            ApplyCurrentFilter();
         }
 
         private void ShowAll_Click(object sender, RoutedEventArgs e)
         {
-            ICollectionView? view = CollectionViewSource.GetDefaultView(_treeNodes);
-            view.Filter = obj => obj is TreeNode;
+            _currentFilter = null;
+            ApplyCurrentFilter();
         }
 
         private void ShowDifferent_Click(object sender, RoutedEventArgs e)
         {
-            ICollectionView? view = CollectionViewSource.GetDefaultView(_treeNodes);
-            view.Filter = obj => obj is TreeNode node && (node.Status == ComparisonStatus.Modified || node.Status == ComparisonStatus.Conflict);
+            _currentFilter = obj => obj is TreeNode node && (node.Status == ComparisonStatus.Modified || node.Status == ComparisonStatus.Conflict);
+            ApplyCurrentFilter();
         }
 
         private void ShowIdentical_Click(object sender, RoutedEventArgs e)
         {
-            ICollectionView? view = CollectionViewSource.GetDefaultView(_treeNodes);
-            view.Filter = obj => obj is TreeNode node && node.Status == ComparisonStatus.Identical;
+            _currentFilter = obj => obj is TreeNode node && node.Status == ComparisonStatus.Identical;
+            ApplyCurrentFilter();
         }
 
         private void ShowLeftUnique_Click(object sender, RoutedEventArgs e)
         {
-            ICollectionView? view = CollectionViewSource.GetDefaultView(_treeNodes);
-            view.Filter = obj => obj is TreeNode node && node.Status == ComparisonStatus.LeftOnly;
+            _currentFilter = obj => obj is TreeNode node && node.Status == ComparisonStatus.LeftOnly;
+            ApplyCurrentFilter();
         }
 
         private void ShowRightUnique_Click(object sender, RoutedEventArgs e)
         {
-            ICollectionView? view = CollectionViewSource.GetDefaultView(_treeNodes);
-            view.Filter = obj => obj is TreeNode node && node.Status == ComparisonStatus.RightOnly;
+            _currentFilter = obj => obj is TreeNode node && node.Status == ComparisonStatus.RightOnly;
+            ApplyCurrentFilter();
         }
 
         private void CopyToLeft_Click(object sender, RoutedEventArgs e)
@@ -283,14 +310,8 @@ namespace dCompare
 
         private void ContextMenu_Properties_Click(object sender, RoutedEventArgs e)
         {
-            //if (sender is MenuItem menuItem && menuItem.Tag is TreeNode selectedItem)
-            //{
-            //    FileOperations.ShowPropertiesDialog(selectedItem);
-            //}
             var selectedItem = ResultListView.SelectedItem as TreeNode;
-            
-            //var menuItem = sender as MenuItem;
-            //var selectedItem = menuItem.Tag as TreeNode;
+
             if (selectedItem == null)
             {
                 MessageBox.Show("請選擇一個項目");
@@ -394,6 +415,3 @@ namespace dCompare
         }
     }
 }
-
-//=> move file related function (CopySelectedItemTo, ShowPropertiesDialog, ContextMenu_Copy***, ...
-//and this file should not using Microsoft.Win32
