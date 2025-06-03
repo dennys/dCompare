@@ -1,22 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
 
 namespace dCompare.Compare
 {
     public class TreeNode : INotifyPropertyChanged
     {
-        private bool _isExpanded = false;
+        private bool _isExpanded = true; // Default to expanded
 
         public string Name { get; set; } = "";
         public string LeftName { get; set; } = "";
         public string RightName { get; set; } = "";
-        public string LeftDisplayName => GetDisplayName(LeftName, Depth);
-        public string RightDisplayName => GetDisplayName(RightName, Depth);
+        public string LeftDisplayName => GetDisplayName(LeftName);
+        public string RightDisplayName => GetDisplayName(RightName);
         public string LeftSize { get; set; } = "";
         public string RightSize { get; set; } = "";
         public string LeftDate { get; set; } = "";
@@ -29,8 +23,6 @@ namespace dCompare.Compare
 
         public FileSystemNode? LeftNode { get; set; }
         public FileSystemNode? RightNode { get; set; }
-
-        public ObservableCollection<TreeNode> Children { get; set; } = new ObservableCollection<TreeNode>();
 
         public bool IsExpanded
         {
@@ -49,35 +41,11 @@ namespace dCompare.Compare
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        public void ExpandAll()
-        {
-            IsExpanded = true;
-            foreach (var child in Children)
-            {
-                child.ExpandAll();
-            }
-        }
-
-        public void CollapseAll()
-        {
-            IsExpanded = false;
-            foreach (var child in Children)
-            {
-                child.CollapseAll();
-            }
-        }
-
-        private string GetDisplayName(string name, int depth)
+        private string GetDisplayName(string name)
         {
             if (string.IsNullOrEmpty(name)) return "";
-
-            // 根據深度添加縮排，每層縮排使用兩個空格
-            string indent = new string(' ', depth * 6);
-
-            // 添加圖標
             string icon = IsDirectory ? "📁 " : "📄 ";
-
-            return icon + name;
+            return icon + name; // Indentation handled by DepthToMarginConverter
         }
     }
 }
