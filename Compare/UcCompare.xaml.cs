@@ -1,10 +1,14 @@
-﻿using Microsoft.Win32;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using dCompare.Compare;
+using System.Linq;
+using System.Collections.Generic;
+using System;
 
 namespace dCompare
 {
@@ -23,19 +27,20 @@ namespace dCompare
             return null;
         }
     }
-
-    /// <summary>
-    /// ucCompare.xaml 的互動邏輯
-    /// </summary>
     public partial class UcCompare : UserControl
     {
         private ObservableCollection<TreeNode> _treeNodes = new();
         private DirectoryComparer _comparer = new DirectoryComparer();
+        private ListSortDirection _lastSortDirection;
+        private GridViewColumnHeader _lastHeaderClicked;
+
         public UcCompare()
         {
             InitializeComponent();
-            ResultTreeView.ItemsSource = _treeNodes;
+            ResultListView.ItemsSource = _treeNodes;
+            ResultListView.AddHandler(GridViewColumnHeader.ClickEvent, new RoutedEventHandler(GridViewColumnHeaderClickedHandler));
         }
+
         public void ChangeTabHeader(string newHeader)
         {
             TabItem tabItem = LogicalTreeHelperExtensions.FindParent<TabItem>(this);
@@ -44,27 +49,19 @@ namespace dCompare
                 tabItem.Header = newHeader;
             }
         }
+
         private void BrowseLeft_Click(object sender, RoutedEventArgs e)
         {
-            var folderDialog = new OpenFolderDialog
-            {
-                Title = "Select Folder",
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)
-            };
-
-            if (folderDialog.ShowDialog() == true)
-            {
-                LeftPathBox.Text = folderDialog.FolderName;
-            }
+            // Note: Folder selection dialog implementation would need to be handled
+            // without Microsoft.Win32. Consider using a different approach or library
+            MessageBox.Show("請選擇左側資料夾");
         }
 
         private void BrowseRight_Click(object sender, RoutedEventArgs e)
         {
-            //var dialog = new System.Windows.Forms.FolderBrowserDialog();
-            //if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            //{
-            //    RightPathBox.Text = dialog.SelectedPath;
-            //}
+            // Note: Folder selection dialog implementation would need to be handled
+            // without Microsoft.Win32. Consider using a different approach or library
+            MessageBox.Show("請選擇右側資料夾");
         }
 
         private void Compare_Click(object sender, RoutedEventArgs e)
@@ -82,13 +79,16 @@ namespace dCompare
 
             try
             {
-                var comparisonResults = _comparer.Compare(leftDir, rightDir);
-                var rootNodes = BuildTreeStructure(comparisonResults, leftDir, rightDir);
+                List<DirectoryComparer.ComparisonItem>? comparisonResults = _comparer.Compare(leftDir, rightDir);
+                List<TreeNode>? flatNodes = BuildFlatTreeStructure(comparisonResults, leftDir, rightDir);
 
-                foreach (var node in rootNodes)
+                foreach (TreeNode? node in flatNodes)
                 {
                     _treeNodes.Add(node);
                 }
+
+                ICollectionView? view = CollectionViewSource.GetDefaultView(_treeNodes);
+                view.Filter = null;
             }
             catch (Exception ex)
             {
@@ -97,175 +97,133 @@ namespace dCompare
             ChangeTabHeader(LeftPathBox.Text + " - " + RightPathBox.Text);
         }
 
-        private List<TreeNode> BuildTreeStructure(List<DirectoryComparer.ComparisonItem> items, string leftRoot, string rightRoot)
+        private List<TreeNode> BuildFlatTreeStructure(List<DirectoryComparer.ComparisonItem> items, string leftRoot, string rightRoot)
         {
-            var nodeDict = new Dictionary<string, TreeNode>();
-            var rootNodes = new List<TreeNode>();
+            List<TreeNode> flatNodes = new List<TreeNode>();
 
-            foreach (var item in items)
+            foreach (DirectoryComparer.ComparisonItem? item in items)
             {
-                var relativePath = GetRelativePath(item, leftRoot, rightRoot);
+                string? relativePath = GetRelativePath(item, leftRoot, rightRoot);
                 if (string.IsNullOrEmpty(relativePath)) continue;
 
-                var pathParts = relativePath.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
-                TreeNode currentParent = null;
-                string currentPath = "";
-
-                for (int i = 0; i < pathParts.Length; i++)
+                TreeNode node = new TreeNode
                 {
-                    if (i > 0) currentPath += Path.DirectorySeparatorChar;
-                    currentPath += pathParts[i];
+                    Name = item.Left?.Name ?? item.Right?.Name ?? Path.GetFileName(relativePath),
+                    RelativePath = relativePath,
+                    IsDirectory = item.Left?.IsDirectory ?? item.Right?.IsDirectory ?? false,
+                    Depth = relativePath.Count(c => c == Path.DirectorySeparatorChar)
+                };
 
-                    if (!nodeDict.ContainsKey(currentPath))
-                    {
-                        var node = new TreeNode
-                        {
-                            Name = pathParts[i],
-                            RelativePath = currentPath,
-                            IsDirectory = i < pathParts.Length - 1 || (item.Left?.IsDirectory ?? item.Right?.IsDirectory ?? false),
-                            Depth = i
-                        };
-
-                        // 如果是最後一層，設定詳細資訊
-                        if (i == pathParts.Length - 1)
-                        {
-                            SetNodeDetails(node, item, leftRoot, rightRoot);
-                        }
-                        else
-                        {
-                            // 中間層目錄，需要查找對應的比較項目來設定詳細資訊
-                            var dirItem = items.FirstOrDefault(x =>
-                                GetRelativePath(x, leftRoot, rightRoot) == currentPath);
-                            if (dirItem != null)
-                            {
-                                SetNodeDetails(node, dirItem, leftRoot, rightRoot);
-                            }
-                            else
-                            {
-                                // 預設為目錄存在於兩邊
-                                node.LeftName = node.RightName = pathParts[i];
-                                node.StatusSymbol = "=";
-                                node.Status = ComparisonStatus.Identical;
-                            }
-                        }
-
-                        nodeDict[currentPath] = node;
-
-                        if (currentParent == null)
-                        {
-                            rootNodes.Add(node);
-                        }
-                        else
-                        {
-                            currentParent.Children.Add(node);
-                        }
-                    }
-
-                    currentParent = nodeDict[currentPath];
-                }
+                SetNodeDetails(node, item, leftRoot, rightRoot);
+                flatNodes.Add(node);
             }
 
-            return rootNodes;
+            return flatNodes;
         }
 
-        private string GetRelativePath(DirectoryComparer.ComparisonItem item, string leftRoot, string rightRoot)
+        private void GridViewColumnHeaderClickedHandler(object sender, RoutedEventArgs e)
         {
-            string path = "";
-
-            if (item.Left != null)
+            if (e.OriginalSource is GridViewColumnHeader headerClicked)
             {
-                path = item.Left.FullPath.Substring(leftRoot.Length).TrimStart(Path.DirectorySeparatorChar);
-            }
-            else if (item.Right != null)
-            {
-                path = item.Right.FullPath.Substring(rightRoot.Length).TrimStart(Path.DirectorySeparatorChar);
-            }
+                string sortBy = headerClicked.Column.Header as string;
+                ListSortDirection direction = _lastHeaderClicked == headerClicked && _lastSortDirection == ListSortDirection.Ascending
+                    ? ListSortDirection.Descending
+                    : ListSortDirection.Ascending;
 
-            return path;
+                ICollectionView? view = CollectionViewSource.GetDefaultView(_treeNodes);
+                view.SortDescriptions.Clear();
+
+                string propertyName = sortBy switch
+                {
+                    "Left Name" => "LeftDisplayName",
+                    "Left Size" => "LeftSize",
+                    "Left Date" => "LeftDate",
+                    "Right Name" => "RightDisplayName",
+                    "Right Size" => "RightSize",
+                    "Right Date" => "RightDate",
+                    "Status" => "StatusSymbol",
+                    _ => "LeftDisplayName"
+                };
+
+                view.SortDescriptions.Add(new SortDescription(propertyName, direction));
+                _lastHeaderClicked = headerClicked;
+                _lastSortDirection = direction;
+            }
         }
 
-        private void SetNodeDetails(TreeNode node, DirectoryComparer.ComparisonItem item, string leftRoot, string rightRoot)
+        private void ResultListView_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            node.LeftNode = item.Left;
-            node.RightNode = item.Right;
-            node.Status = item.Status;
-
-            // 設定左邊資訊
-            if (item.Left != null)
+            if (ResultListView.SelectedItem is TreeNode selectedNode && selectedNode.IsDirectory)
             {
-                node.LeftName = item.Left.Name;
-                if (!item.Left.IsDirectory)
-                {
-                    node.LeftSize = FileSystemNode.FormatSize(item.Left.Size);
-                }
-                node.LeftDate = item.Left.ModifiedTime.ToString("yyyy/MM/dd HH:mm");
+                selectedNode.IsExpanded = !selectedNode.IsExpanded;
+                UpdateDirectoryFilter(selectedNode);
             }
+        }
 
-            // 設定右邊資訊
-            if (item.Right != null)
+        private void UpdateDirectoryFilter(TreeNode directoryNode)
+        {
+            ICollectionView? view = CollectionViewSource.GetDefaultView(_treeNodes);
+            view.Filter = obj =>
             {
-                node.RightName = item.Right.Name;
-                if (!item.Right.IsDirectory)
-                {
-                    node.RightSize = FileSystemNode.FormatSize(item.Right.Size);
-                }
-                node.RightDate = item.Right.ModifiedTime.ToString("yyyy/MM/dd HH:mm");
-            }
+                if (obj is not TreeNode node) return false;
 
-            // 設定狀態符號
-            node.StatusSymbol = item.Status switch
-            {
-                ComparisonStatus.Identical => "=",
-                ComparisonStatus.Modified => "≠",
-                ComparisonStatus.LeftOnly => "<",
-                ComparisonStatus.RightOnly => ">",
-                ComparisonStatus.Conflict => "X",
-                _ => "?"
+                if (!node.IsDirectory || node.Depth == 0) return true;
+
+                string parentPath = Path.GetDirectoryName(node.RelativePath)?.Replace(Path.DirectorySeparatorChar, '/') ?? "";
+                TreeNode? parentNode = _treeNodes.FirstOrDefault(n => n.IsDirectory && n.RelativePath == parentPath);
+
+                return parentNode == null || parentNode.IsExpanded || node.RelativePath == directoryNode.RelativePath;
             };
         }
 
         private void ExpandAll_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var node in _treeNodes)
+            foreach (TreeNode? node in _treeNodes)
             {
-                node.ExpandAll();
+                if (node.IsDirectory) node.IsExpanded = true;
             }
-            ExpandTreeViewItems(ResultTreeView);
+            ICollectionView? view = CollectionViewSource.GetDefaultView(_treeNodes);
+            view.Filter = null;
         }
 
         private void CollapseAll_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var node in _treeNodes)
+            foreach (TreeNode? node in _treeNodes)
             {
-                node.CollapseAll();
+                if (node.IsDirectory) node.IsExpanded = false;
             }
-            CollapseTreeViewItems(ResultTreeView);
+            ICollectionView? view = CollectionViewSource.GetDefaultView(_treeNodes);
+            view.Filter = obj => obj is TreeNode node && node.Depth == 0;
         }
 
-        private void ExpandTreeViewItems(ItemsControl itemsControl)
+        private void ShowAll_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var item in itemsControl.Items)
-            {
-                var treeViewItem = itemsControl.ItemContainerGenerator.ContainerFromItem(item) as TreeViewItem;
-                if (treeViewItem != null)
-                {
-                    treeViewItem.IsExpanded = true;
-                    ExpandTreeViewItems(treeViewItem);
-                }
-            }
+            ICollectionView? view = CollectionViewSource.GetDefaultView(_treeNodes);
+            view.Filter = obj => obj is TreeNode;
         }
 
-        private void CollapseTreeViewItems(ItemsControl itemsControl)
+        private void ShowDifferent_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var item in itemsControl.Items)
-            {
-                var treeViewItem = itemsControl.ItemContainerGenerator.ContainerFromItem(item) as TreeViewItem;
-                if (treeViewItem != null)
-                {
-                    treeViewItem.IsExpanded = false;
-                    CollapseTreeViewItems(treeViewItem);
-                }
-            }
+            ICollectionView? view = CollectionViewSource.GetDefaultView(_treeNodes);
+            view.Filter = obj => obj is TreeNode node && (node.Status == ComparisonStatus.Modified || node.Status == ComparisonStatus.Conflict);
+        }
+
+        private void ShowIdentical_Click(object sender, RoutedEventArgs e)
+        {
+            ICollectionView? view = CollectionViewSource.GetDefaultView(_treeNodes);
+            view.Filter = obj => obj is TreeNode node && node.Status == ComparisonStatus.Identical;
+        }
+
+        private void ShowLeftUnique_Click(object sender, RoutedEventArgs e)
+        {
+            ICollectionView? view = CollectionViewSource.GetDefaultView(_treeNodes);
+            view.Filter = obj => obj is TreeNode node && node.Status == ComparisonStatus.LeftOnly;
+        }
+
+        private void ShowRightUnique_Click(object sender, RoutedEventArgs e)
+        {
+            ICollectionView? view = CollectionViewSource.GetDefaultView(_treeNodes);
+            view.Filter = obj => obj is TreeNode node && node.Status == ComparisonStatus.RightOnly;
         }
 
         private void CopyToLeft_Click(object sender, RoutedEventArgs e)
@@ -280,7 +238,7 @@ namespace dCompare
 
         private void CopySelectedFiles(bool toLeft)
         {
-            var selectedItems = GetSelectedTreeNodes();
+            List<TreeNode> selectedItems = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
             if (selectedItems.Count == 0)
             {
                 MessageBox.Show("請選擇至少一個項目進行同步");
@@ -293,21 +251,19 @@ namespace dCompare
             int successCount = 0;
             int errorCount = 0;
 
-            foreach (var node in selectedItems)
+            foreach (TreeNode? node in selectedItems)
             {
-                if (node.IsDirectory) continue; // 跳過目錄
+                if (node.IsDirectory) continue;
 
                 try
                 {
                     string sourcePath = Path.Combine(sourceRoot, node.RelativePath);
                     string targetPath = Path.Combine(targetRoot, node.RelativePath);
 
-                    // 確保目標目錄存在
-                    var targetDir = Path.GetDirectoryName(targetPath);
+                    string? targetDir = Path.GetDirectoryName(targetPath);
                     if (!Directory.Exists(targetDir))
                         Directory.CreateDirectory(targetDir);
 
-                    // 只複製存在於來源端的檔案
                     if (File.Exists(sourcePath))
                     {
                         File.Copy(sourcePath, targetPath, true);
@@ -322,215 +278,122 @@ namespace dCompare
             }
 
             MessageBox.Show($"同步完成\n成功: {successCount} 個檔案\n失敗: {errorCount} 個檔案");
-
-            // 重新比較更新結果
             Compare_Click(null, null);
         }
 
-        private List<TreeNode> GetSelectedTreeNodes()
-        {
-            var selected = new List<TreeNode>();
-            // 這裡需要實現選擇邏輯，因為TreeView的選擇機制比較複雜
-            // 為了簡化，暫時返回所有節點中狀態不為Identical的節點
-            CollectNonIdenticalNodes(_treeNodes, selected);
-            return selected;
-        }
-
-        private void CollectNonIdenticalNodes(IEnumerable<TreeNode> nodes, List<TreeNode> result)
-        {
-            foreach (var node in nodes)
-            {
-                if (node.Status != ComparisonStatus.Identical)
-                {
-                    result.Add(node);
-                }
-                CollectNonIdenticalNodes(node.Children, result);
-            }
-        }
-
-        // 將以下方法添加到 MainWindow.xaml.cs 類中
-
         private void ContextMenu_Properties_Click(object sender, RoutedEventArgs e)
         {
-            var selectedItem = ResultTreeView.SelectedItem as TreeNode;
+            //if (sender is MenuItem menuItem && menuItem.Tag is TreeNode selectedItem)
+            //{
+            //    FileOperations.ShowPropertiesDialog(selectedItem);
+            //}
+            var selectedItem = ResultListView.SelectedItem as TreeNode;
+            
+            //var menuItem = sender as MenuItem;
+            //var selectedItem = menuItem.Tag as TreeNode;
             if (selectedItem == null)
             {
                 MessageBox.Show("請選擇一個項目");
                 return;
             }
 
-            ShowPropertiesDialog(selectedItem);
+            FileOperations.ShowPropertiesDialog(selectedItem);
         }
 
         private void ContextMenu_CopyToLeft_Click(object sender, RoutedEventArgs e)
         {
-            var selectedItem = ResultTreeView.SelectedItem as TreeNode;
-            if (selectedItem == null)
+            if (sender is MenuItem menuItem && menuItem.Tag is TreeNode selectedItem)
             {
-                MessageBox.Show("請選擇一個項目");
-                return;
+                FileOperations.CopySelectedItemTo(selectedItem, true, LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
+                Compare_Click(null, null);
             }
-
-            CopySelectedItemTo(selectedItem, toLeft: true);
         }
 
         private void ContextMenu_CopyToRight_Click(object sender, RoutedEventArgs e)
         {
-            var selectedItem = ResultTreeView.SelectedItem as TreeNode;
-            if (selectedItem == null)
+            if (sender is MenuItem menuItem && menuItem.Tag is TreeNode selectedItem)
             {
-                MessageBox.Show("請選擇一個項目");
-                return;
+                FileOperations.CopySelectedItemTo(selectedItem, false, LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
+                Compare_Click(null, null);
             }
-
-            CopySelectedItemTo(selectedItem, toLeft: false);
         }
 
         private void ContextMenu_OpenLeftLocation_Click(object sender, RoutedEventArgs e)
         {
-            var selectedItem = ResultTreeView.SelectedItem as TreeNode;
-            if (selectedItem == null || selectedItem.LeftNode == null)
+            if (sender is MenuItem menuItem && menuItem.Tag is TreeNode selectedItem && selectedItem.LeftNode != null)
+            {
+                FileOperations.OpenFileLocation(selectedItem.LeftNode.FullPath);
+            }
+            else
             {
                 MessageBox.Show("左側路徑不存在");
-                return;
             }
-
-            OpenFileLocation(selectedItem.LeftNode.FullPath);
         }
 
         private void ContextMenu_OpenRightLocation_Click(object sender, RoutedEventArgs e)
         {
-            var selectedItem = ResultTreeView.SelectedItem as TreeNode;
-            if (selectedItem == null || selectedItem.RightNode == null)
+            if (sender is MenuItem menuItem && menuItem.Tag is TreeNode selectedItem && selectedItem.RightNode != null)
+            {
+                FileOperations.OpenFileLocation(selectedItem.RightNode.FullPath);
+            }
+            else
             {
                 MessageBox.Show("右側路徑不存在");
-                return;
-            }
-
-            OpenFileLocation(selectedItem.RightNode.FullPath);
-        }
-
-        // 輔助方法
-        private void ShowPropertiesDialog(TreeNode node)
-        {
-            var properties = new StringBuilder();
-            properties.AppendLine($"名稱: {node.Name}");
-            properties.AppendLine($"狀態: {GetStatusText(node.Status)}");
-            properties.AppendLine($"相對路徑: {node.RelativePath}");
-            properties.AppendLine($"類型: {(node.IsDirectory ? "資料夾" : "檔案")}");
-
-            if (node.LeftNode != null)
-            {
-                properties.AppendLine();
-                properties.AppendLine("左側:");
-                properties.AppendLine($"  完整路徑: {node.LeftNode.FullPath}");
-                if (!node.LeftNode.IsDirectory)
-                {
-                    properties.AppendLine($"  大小: {node.LeftSize}");
-                }
-                properties.AppendLine($"  修改時間: {node.LeftDate}");
-            }
-
-            if (node.RightNode != null)
-            {
-                properties.AppendLine();
-                properties.AppendLine("右側:");
-                properties.AppendLine($"  完整路徑: {node.RightNode.FullPath}");
-                if (!node.RightNode.IsDirectory)
-                {
-                    properties.AppendLine($"  大小: {node.RightSize}");
-                }
-                properties.AppendLine($"  修改時間: {node.RightDate}");
-            }
-
-            MessageBox.Show(properties.ToString(), "檔案屬性", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
-        private void CopySelectedItemTo(TreeNode node, bool toLeft)
-        {
-            if (node.IsDirectory)
-            {
-                MessageBox.Show("目前不支援複製整個資料夾，請選擇個別檔案");
-                return;
-            }
-
-            string sourceRoot = toLeft ? RightPathBox.Text.Trim() : LeftPathBox.Text.Trim();
-            string targetRoot = toLeft ? LeftPathBox.Text.Trim() : RightPathBox.Text.Trim();
-
-            // 檢查來源是否存在
-            var sourceNode = toLeft ? node.RightNode : node.LeftNode;
-            if (sourceNode == null)
-            {
-                MessageBox.Show($"來源檔案不存在於{(toLeft ? "右側" : "左側")}");
-                return;
-            }
-
-            try
-            {
-                string sourcePath = sourceNode.FullPath;
-                string targetPath = Path.Combine(targetRoot, node.RelativePath);
-
-                // 確保目標目錄存在
-                var targetDir = Path.GetDirectoryName(targetPath);
-                if (!Directory.Exists(targetDir))
-                    Directory.CreateDirectory(targetDir);
-
-                // 複製檔案
-                if (File.Exists(sourcePath))
-                {
-                    File.Copy(sourcePath, targetPath, true);
-                    MessageBox.Show($"檔案已成功複製到{(toLeft ? "左側" : "右側")}");
-
-                    // 重新比較更新結果
-                    Compare_Click(null, null);
-                }
-                else
-                {
-                    MessageBox.Show("來源檔案不存在");
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"複製檔案失敗: {ex.Message}");
             }
         }
 
-        private void OpenFileLocation(string filePath)
+        private string GetRelativePath(DirectoryComparer.ComparisonItem item, string leftRoot, string rightRoot)
         {
-            try
+            string path = "";
+            if (item.Left != null)
             {
-                if (File.Exists(filePath))
-                {
-                    // 在檔案總管中選中該檔案
-                    System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{filePath}\"");
-                }
-                else if (Directory.Exists(filePath))
-                {
-                    // 開啟資料夾
-                    System.Diagnostics.Process.Start("explorer.exe", filePath);
-                }
-                else
-                {
-                    MessageBox.Show("路徑不存在");
-                }
+                path = item.Left.FullPath.Substring(leftRoot.Length).TrimStart(Path.DirectorySeparatorChar);
             }
-            catch (Exception ex)
+            else if (item.Right != null)
             {
-                MessageBox.Show($"無法開啟檔案位置: {ex.Message}");
+                path = item.Right.FullPath.Substring(rightRoot.Length).TrimStart(Path.DirectorySeparatorChar);
             }
+            return path;
         }
 
-        private string GetStatusText(ComparisonStatus status)
+        private void SetNodeDetails(TreeNode node, DirectoryComparer.ComparisonItem item, string leftRoot, string rightRoot)
         {
-            return status switch
+            node.LeftNode = item.Left;
+            node.RightNode = item.Right;
+            node.Status = item.Status;
+
+            if (item.Left != null)
             {
-                ComparisonStatus.Identical => "相同",
-                ComparisonStatus.Modified => "已修改",
-                ComparisonStatus.LeftOnly => "僅存於左側",
-                ComparisonStatus.RightOnly => "僅存於右側",
-                ComparisonStatus.Conflict => "衝突",
-                _ => "未知"
+                node.LeftName = item.Left.Name;
+                if (!item.Left.IsDirectory)
+                {
+                    node.LeftSize = FileSystemNode.FormatSize(item.Left.Size);
+                }
+                node.LeftDate = item.Left.ModifiedTime.ToString("yyyy/MM/dd HH:mm");
+            }
+
+            if (item.Right != null)
+            {
+                node.RightName = item.Right.Name;
+                if (!item.Right.IsDirectory)
+                {
+                    node.RightSize = FileSystemNode.FormatSize(item.Right.Size);
+                }
+                node.RightDate = item.Right.ModifiedTime.ToString("yyyy/MM/dd HH:mm");
+            }
+
+            node.StatusSymbol = item.Status switch
+            {
+                ComparisonStatus.Identical => "=",
+                ComparisonStatus.Modified => "≠",
+                ComparisonStatus.LeftOnly => "<",
+                ComparisonStatus.RightOnly => ">",
+                ComparisonStatus.Conflict => "X",
+                _ => "?"
             };
         }
     }
 }
+
+//=> move file related function (CopySelectedItemTo, ShowPropertiesDialog, ContextMenu_Copy***, ...
+//and this file should not using Microsoft.Win32

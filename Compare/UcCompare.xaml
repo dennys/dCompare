@@ -6,7 +6,9 @@
              xmlns:local="clr-namespace:dCompare"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-
+    <UserControl.Resources>
+        <local:DepthToMarginConverter x:Key="DepthToMarginConverter"/>
+    </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -14,7 +16,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- 路徑選擇區域 -->
+        <!-- Path Selection Area -->
         <StackPanel Grid.Row="0" Margin="10">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -40,85 +42,103 @@
                 <Button Name="CompareBtn" Content="Compare" Click="Compare_Click" Padding="20,5" Margin="5"/>
                 <Button Name="ExpandAllBtn" Content="Expand All" Click="ExpandAll_Click" Padding="20,5" Margin="5"/>
                 <Button Name="CollapseAllBtn" Content="Collapse All" Click="CollapseAll_Click" Padding="20,5" Margin="5"/>
+                <Button Name="ShowAllBtn" Content="Show All" Click="ShowAll_Click" Padding="20,5" Margin="5"/>
+                <Button Name="ShowDifferentBtn" Content="Different" Click="ShowDifferent_Click" Padding="20,5" Margin="5"/>
+                <Button Name="ShowIdenticalBtn" Content="Identical" Click="ShowIdentical_Click" Padding="20,5" Margin="5"/>
+                <Button Name="ShowLeftUniqueBtn" Content="Left Unique" Click="ShowLeftUnique_Click" Padding="20,5" Margin="5"/>
+                <Button Name="ShowRightUniqueBtn" Content="Right Unique" Click="ShowRightUnique_Click" Padding="20,5" Margin="5"/>
             </StackPanel>
-
         </StackPanel>
 
+        <!-- Results Display Area -->
+        <ListView Grid.Row="1" Name="ResultListView" Margin="10" SelectionMode="Multiple" MouseDoubleClick="ResultListView_MouseDoubleClick">
+            <ListView.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Copy to Left" Click="ContextMenu_CopyToLeft_Click" Tag="{Binding}"/>
+                    <MenuItem Header="Copy to Right" Click="ContextMenu_CopyToRight_Click" Tag="{Binding}"/>
+                    <Separator/>
+                    <MenuItem Header="Open Left Location" Click="ContextMenu_OpenLeftLocation_Click" Tag="{Binding}"/>
+                    <MenuItem Header="Open Right Location" Click="ContextMenu_OpenRightLocation_Click" Tag="{Binding}"/>
+                    <Separator/>
+                    <MenuItem Header="Properties" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
+                </ContextMenu>
+            </ListView.ContextMenu>
 
-        <!-- 結果顯示區域 -->
-        <TreeView Grid.Row="1" Name="ResultTreeView" Margin="10">
-            <TreeView.Resources>
-                <!-- TreeViewItem 樣式 -->
-                <Style TargetType="TreeViewItem">
-                    <Setter Property="IsExpanded" Value="False"/>
-                    <Setter Property="Margin" Value="0,0,-50,0"/>
-                    <Setter Property="Padding" Value="0"/>
-                </Style>
-            </TreeView.Resources>
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Left Name" Width="200">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding LeftDisplayName}" Margin="{Binding Depth, Converter={StaticResource DepthToMarginConverter}}"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Left Size" Width="80">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding LeftSize}" HorizontalAlignment="Right"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Left Date" Width="120">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding LeftDate}"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Status" Width="40">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding StatusSymbol}" HorizontalAlignment="Center" FontWeight="Bold">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding StatusSymbol}" Value="=">
+                                                    <Setter Property="Foreground" Value="Green"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding StatusSymbol}" Value="≠">
+                                                    <Setter Property="Foreground" Value="Orange"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding StatusSymbol}" Value="&lt;">
+                                                    <Setter Property="Foreground" Value="Blue"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding StatusSymbol}" Value=">">
+                                                    <Setter Property="Foreground" Value="Red"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Right Name" Width="200">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding RightDisplayName}" Margin="{Binding Depth, Converter={StaticResource DepthToMarginConverter}}"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Right Size" Width="80">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding RightSize}" HorizontalAlignment="Right"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Right Date" Width="120">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding RightDate}"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                </GridView>
+            </ListView.View>
+        </ListView>
 
-            <!-- TreeView Header -->
-            <TreeView.ItemTemplate >
-                <HierarchicalDataTemplate ItemsSource="{Binding Children}">
-                    <Grid>
-                        <Grid.ContextMenu>
-                            <ContextMenu>
-                                <MenuItem Header="Copy to Left" Click="ContextMenu_CopyToLeft_Click" Tag="{Binding}"/>
-                                <MenuItem Header="Copy to Right" Click="ContextMenu_CopyToRight_Click" Tag="{Binding}"/>
-                                <Separator/>
-                                <MenuItem Header="Open Left Location" Click="ContextMenu_OpenLeftLocation_Click" Tag="{Binding}"/>
-                                <MenuItem Header="Open Right Location" Click="ContextMenu_OpenRightLocation_Click" Tag="{Binding}"/>
-                                <Separator/>
-                                <MenuItem Header="Properties" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
-                            </ContextMenu>
-                        </Grid.ContextMenu>
-
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="200"/>
-                            <ColumnDefinition Width="80"/>
-                            <ColumnDefinition Width="120" />
-                            <ColumnDefinition Width="40"/>
-                            <ColumnDefinition Width="200"/>
-                            <ColumnDefinition Width="80"/>
-                            <ColumnDefinition Width="120"/>
-                        </Grid.ColumnDefinitions>
-
-                        <TextBlock Grid.Column="0" Text="{Binding LeftDisplayName}" Margin="2"/>
-                        <TextBlock Grid.Column="1" Text="{Binding LeftSize}" Margin="2" HorizontalAlignment="Right"/>
-                        <TextBlock Grid.Column="2" Text="{Binding LeftDate}" Margin="2"/>
-                        <TextBlock Grid.Column="3" Text="{Binding StatusSymbol}" Margin="2" HorizontalAlignment="Center" FontWeight="Bold">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding StatusSymbol}" Value="=">
-                                            <Setter Property="Foreground" Value="Green"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding StatusSymbol}" Value="≠">
-                                            <Setter Property="Foreground" Value="Orange"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding StatusSymbol}" Value="&lt;">
-                                            <Setter Property="Foreground" Value="Blue"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding StatusSymbol}" Value="&gt;">
-                                            <Setter Property="Foreground" Value="Red"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                        <TextBlock Grid.Column="4" Text="{Binding RightDisplayName}" Margin="2"/>
-                        <TextBlock Grid.Column="5" Text="{Binding RightSize}" Margin="2" HorizontalAlignment="Right"/>
-                        <TextBlock Grid.Column="6" Text="{Binding RightDate}" Margin="2"/>
-                    </Grid>
-                </HierarchicalDataTemplate>
-            </TreeView.ItemTemplate>
-        </TreeView>
-
-        <!-- 操作按鈕區域 -->
+        <!-- Operation Buttons Area -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
             <Button Name="CopyToLeftBtn" Content="Copy to Left" Click="CopyToLeft_Click" Padding="15,5" Margin="5"/>
             <Button Name="CopyToRightBtn" Content="Copy to Right" Click="CopyToRight_Click" Padding="15,5" Margin="5"/>
