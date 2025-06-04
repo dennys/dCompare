@@ -51,7 +51,12 @@
         </StackPanel>
 
         <!-- Results Display Area -->
-        <ListView Grid.Row="1" Name="ResultListView" Margin="10" SelectionMode="Multiple" MouseDoubleClick="ResultListView_MouseDoubleClick">
+        <ListView Grid.Row="1" Name="ResultListView" Margin="10" SelectionMode="Extended" MouseDoubleClick="ResultListView_MouseDoubleClick">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <EventSetter Event="PreviewMouseRightButtonDown" Handler="ListView_PreviewMouseRightButtonDown"/>
+                </Style>
+            </ListView.ItemContainerStyle>
             <ListView.ContextMenu>
                 <ContextMenu>
                     <MenuItem Header="Copy to Left" Click="ContextMenu_CopyToLeft_Click" Tag="{Binding}"/>
