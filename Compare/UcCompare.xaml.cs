@@ -9,6 +9,8 @@ using dCompare.Compare;
 using System.Linq;
 using System.Collections.Generic;
 using System;
+using System.Windows.Media;
+using System.Windows.Input;
 
 namespace dCompare
 {
@@ -95,6 +97,7 @@ namespace dCompare
                 MessageBox.Show($"比較過程中發生錯誤: {ex.Message}");
             }
             ChangeTabHeader(LeftPathBox.Text + " - " + RightPathBox.Text);
+            CollapseAll_Click(null, null);
         }
 
         private List<TreeNode> BuildFlatTreeStructure(List<DirectoryComparer.ComparisonItem> items, string leftRoot, string rightRoot)
@@ -150,13 +153,21 @@ namespace dCompare
                 _lastSortDirection = direction;
             }
         }
-
         private void ResultListView_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            if (ResultListView.SelectedItem is TreeNode selectedNode && selectedNode.IsDirectory)
+            DependencyObject obj = (DependencyObject)e.OriginalSource;
+            while (obj != null && !(obj is ListViewItem))
             {
-                selectedNode.IsExpanded = !selectedNode.IsExpanded;
-                ApplyCurrentFilter(); // Use the stored filter instead of UpdateDirectoryFilter
+                obj = VisualTreeHelper.GetParent(obj);
+            }
+
+            if (obj is ListViewItem item)
+            {
+                if (item.Content is TreeNode clickedItem && clickedItem.IsDirectory)
+                {
+                    clickedItem.IsExpanded = !clickedItem.IsExpanded;
+                    ApplyCurrentFilter();
+                }
             }
         }
 
@@ -184,6 +195,12 @@ namespace dCompare
             }
 
             return true;
+        }
+
+        private void ApplyCollapseFilter()
+        {
+            ICollectionView view = CollectionViewSource.GetDefaultView(_treeNodes);
+            view.Filter = obj => obj is TreeNode node && node.Depth == 0;
         }
 
         private void ApplyCurrentFilter()
@@ -308,10 +325,14 @@ namespace dCompare
             Compare_Click(null, null);
         }
 
+        private void ListView_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            e.Handled = true; // Prevents selection on right-click
+        }
+
         private void ContextMenu_Properties_Click(object sender, RoutedEventArgs e)
         {
             var selectedItem = ResultListView.SelectedItem as TreeNode;
-
             if (selectedItem == null)
             {
                 MessageBox.Show("請選擇一個項目");
