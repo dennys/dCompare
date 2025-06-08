@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Serilog;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -28,6 +29,7 @@ namespace dCompare
         public MainWindow()
         {
             InitializeComponent();
+            ConfigureLogging();
 
             // Initialize commands
             AddTabCommand = new RelayCommand(_ => AddNewTab(), _ => CanAddTab());
@@ -36,9 +38,18 @@ namespace dCompare
             DataContext = this;
 
             // Set initial status
+            Log.Information("Application ready.");
             UpdateStatus("Application ready");
         }
-
+        private void ConfigureLogging()
+        {
+            Log.Logger = new LoggerConfiguration()
+                .Enrich.WithThreadId() // Adds Thread ID
+                .WriteTo.File("logs\\dCompare.log",
+                    rollingInterval: RollingInterval.Day, // Create a new log file daily
+                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss:fff} [ThreadId:{ThreadId}] {Level:u3}: {Message}{NewLine}")
+                .CreateLogger();
+        }
         #endregion
 
         #region Tab Management

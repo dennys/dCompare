@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
+using Serilog;
 
 namespace dCompare.Compare
 {
@@ -17,11 +15,15 @@ namespace dCompare.Compare
 
         public List<ComparisonItem> Compare(string leftPath, string rightPath)
         {
+            Log.Information("Start to compare.");
+            Log.Information("Start to build left path.");
             FileSystemNode? leftRoot = BuildTree(leftPath, 0);
+            Log.Information("Start to build right path.");
             FileSystemNode? rightRoot = BuildTree(rightPath, 0);
             List<ComparisonItem> result = new();
 
             // Add root directory comparison with a placeholder status
+            Log.Information("Start to create ComparisonItem.");
             ComparisonItem? rootItem = new ComparisonItem
             {
                 Status = ComparisonStatus.Identical, // Initial status, will be updated
@@ -32,14 +34,17 @@ namespace dCompare.Compare
             result.Add(rootItem);
 
             // Compare nodes and update directory statuses
+            Log.Information("Start to compare.");
             bool hasDifferences = CompareNodes(leftRoot, rightRoot, result, "");
 
             // Update root status based on children
+            Log.Information("Start to show result.");
             if (hasDifferences)
             {
                 rootItem.Status = ComparisonStatus.Modified;
             }
 
+            Log.Information("End to compare.");
             return result;
         }
 

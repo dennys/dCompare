@@ -51,9 +51,11 @@
         </StackPanel>
 
         <!-- Results Display Area -->
-        <ListView Grid.Row="1" Name="ResultListView" Margin="10" SelectionMode="Extended" MouseDoubleClick="ResultListView_MouseDoubleClick">
+        <ListView Grid.Row="1" Name="ResultListView" Margin="10" SelectionMode="Extended" MouseDoubleClick="ResultListView_MouseDoubleClick"
+                  VirtualizingStackPanel.IsVirtualizing="True" VirtualizingStackPanel.VirtualizationMode="Recycling">
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
+                    <Setter Property="Height" Value="30"/>
                     <EventSetter Event="PreviewMouseRightButtonDown" Handler="ListView_PreviewMouseRightButtonDown"/>
                 </Style>
             </ListView.ItemContainerStyle>
