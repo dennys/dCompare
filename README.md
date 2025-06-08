@@ -10,3 +10,4 @@
 ## Issues
 
 * The performance is not good, it takes about 2~3 seconds to read 1 directory contains 1000 sub-directories and files.
+=> consider to use lazy-loading.
