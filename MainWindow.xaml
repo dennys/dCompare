@@ -10,6 +10,7 @@
     <Window.InputBindings>
         <KeyBinding Key="N" Modifiers="Ctrl" Command="{Binding AddTabCommand}"/>
         <KeyBinding Key="W" Modifiers="Ctrl" Command="{Binding CloseTabCommand}"/>
+        <KeyBinding Key="R" Modifiers="Ctrl" Command="{Binding CompareCommand}"/>
     </Window.InputBindings>
 
     <Window.Resources>
@@ -195,32 +196,85 @@
             <MenuItem Header="_File">
                 <MenuItem Header="_New Tab" Command="{Binding AddTabCommand}" InputGestureText="Ctrl+N">
                     <MenuItem.Icon>
-                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE710;" FontSize="14"/>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="_Close Tab" Command="{Binding CloseTabCommand}" InputGestureText="Ctrl+W">
+                    <MenuItem.Icon>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="_Options" Command="{Binding OptionsCommand}">
+                    <MenuItem.Icon>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
                     </MenuItem.Icon>
                 </MenuItem>
                 <Separator/>
                 <MenuItem Header="E_xit" Click="Exit_Click">
                     <MenuItem.Icon>
-                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8BB;" FontSize="14"/>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
                     </MenuItem.Icon>
                 </MenuItem>
             </MenuItem>
-            <MenuItem Header="_Edit">
-                <MenuItem Header="_Rename Tab" Click="RenameTab_Click">
+            <MenuItem Header="_Action">
+                <MenuItem Header="_Compare" Command="{Binding CompareCommand}" InputGestureText="Ctrl+R">
                     <MenuItem.Icon>
-                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE70F;" FontSize="14"/>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="_Close Tab" Command="{Binding CloseTabCommand}" InputGestureText="Ctrl+W">
+                <Separator/>
+                <MenuItem Header="Copy to _Left" Command="{Binding CopyToLeftCommand}">
                     <MenuItem.Icon>
-                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE711;" FontSize="14"/>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="Copy to _Right" Command="{Binding CopyToRightCommand}">
+                    <MenuItem.Icon>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+            </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Header="_Expand All" Command="{Binding ExpandAllCommand}">
+                    <MenuItem.Icon>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="_Collapse All" Command="{Binding CollapseAllCommand}">
+                    <MenuItem.Icon>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="Show _All" Command="{Binding ShowAllCommand}">
+                    <MenuItem.Icon>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="Show _Different" Command="{Binding ShowDifferentCommand}">
+                    <MenuItem.Icon>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="Show _Identical" Command="{Binding ShowIdenticalCommand}">
+                    <MenuItem.Icon>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="Show _Left Unique" Command="{Binding ShowLeftUniqueCommand}">
+                    <MenuItem.Icon>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="Show _Right Unique" Command="{Binding ShowRightUniqueCommand}">
+                    <MenuItem.Icon>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
                     </MenuItem.Icon>
                 </MenuItem>
             </MenuItem>
             <MenuItem Header="_Help">
                 <MenuItem Header="_About" Click="About_Click">
                     <MenuItem.Icon>
-                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE946;" FontSize="14"/>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
                     </MenuItem.Icon>
                 </MenuItem>
             </MenuItem>
@@ -228,40 +282,80 @@
 
         <!-- ToolBar -->
         <ToolBar DockPanel.Dock="Top" Style="{StaticResource UnifiedToolBarStyle}">
-            <!-- New Tab Button with Icon -->
+            <!-- New Tab Button -->
             <Button Command="{Binding AddTabCommand}" ToolTip="Add new tab (Ctrl+N)">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE710;" FontSize="16" Margin="0,0,4,0"/>
-                    <TextBlock Text="New Tab"/>
-                </StackPanel>
+                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
             </Button>
 
-            <!-- Rename Tab Button with Icon -->
-            <Button Click="RenameTab_Click" ToolTip="Rename current tab">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE70F;" FontSize="16" Margin="0,0,4,0"/>
-                    <TextBlock Text="Rename"/>
-                </StackPanel>
-            </Button>
-
-            <Separator/>
-
-            <!-- Close Tab Button with Icon -->
+            <!-- Close Tab Button -->
             <Button Command="{Binding CloseTabCommand}" ToolTip="Close current tab (Ctrl+W)">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE711;" FontSize="16" Margin="0,0,4,0"/>
-                    <TextBlock Text="Close Tab"/>
-                </StackPanel>
+                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
+            </Button>
+
+            <!-- Options Button -->
+            <Button Command="{Binding OptionsCommand}" ToolTip="Open options">
+                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
             </Button>
 
             <Separator/>
 
-            <!-- About Button with Icon -->
-            <Button Click="About_Click">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE946;" FontSize="16" Margin="0,0,4,0"/>
-                    <TextBlock Text="About"/>
-                </StackPanel>
+            <!-- Compare Button -->
+            <Button Command="{Binding CompareCommand}" ToolTip="Compare directories (Ctrl+R)">
+                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
+            </Button>
+
+            <!-- Copy to Left Button -->
+            <Button Command="{Binding CopyToLeftCommand}" ToolTip="Copy to left">
+                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
+            </Button>
+
+            <!-- Copy to Right Button -->
+            <Button Command="{Binding CopyToRightCommand}" ToolTip="Copy to right">
+                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
+            </Button>
+
+            <Separator/>
+
+            <!-- Expand All Button -->
+            <Button Command="{Binding ExpandAllCommand}" ToolTip="Expand all">
+                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
+            </Button>
+
+            <!-- Collapse All Button -->
+            <Button Command="{Binding CollapseAllCommand}" ToolTip="Collapse all">
+                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
+            </Button>
+
+            <!-- Show All Button -->
+            <Button Command="{Binding ShowAllCommand}" ToolTip="Show all">
+                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
+            </Button>
+
+            <!-- Show Different Button -->
+            <Button Command="{Binding ShowDifferentCommand}" ToolTip="Show different">
+                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
+            </Button>
+
+            <!-- Show Identical Button -->
+            <Button Command="{Binding ShowIdenticalCommand}" ToolTip="Show identical">
+                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
+            </Button>
+
+            <!-- Show Left Unique Button -->
+            <Button Command="{Binding ShowLeftUniqueCommand}" ToolTip="Show left unique">
+                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
+            </Button>
+
+            <!-- Show Right Unique Button -->
+            <Button Command="{Binding ShowRightUniqueCommand}" ToolTip="Show right unique">
+                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
+            </Button>
+
+            <Separator/>
+
+            <!-- About Button -->
+            <Button Click="About_Click" ToolTip="About">
+                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
             </Button>
         </ToolBar>
 

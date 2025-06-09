@@ -11,3 +11,5 @@
 
 * The performance is not good, it takes about 2~3 seconds to read 1 directory contains 1000 sub-directories and files.
 => consider to use lazy-loading.
+* Cannot change the width of column?
+* Cannot use mouse to partial select some text of the text box
