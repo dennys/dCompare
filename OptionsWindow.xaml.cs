@@ -1,37 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+﻿using System.Windows;
+using dCompare.Configuration;
 
 namespace dCompare
 {
-    /// <summary>
-    /// OptionsWindow.xaml 的互動邏輯
-    /// </summary>
     public partial class OptionsWindow : Window
     {
+        private readonly ConfigurationService _configService;
+        private OptionsConfig _options;
+
         public OptionsWindow()
         {
             InitializeComponent();
+            _configService = new ConfigurationService();
+            _options = _configService.GetConfiguration().Options;
+            DataContext = _options; // Bind to UI elements
         }
+
         private void OK_Click(object sender, RoutedEventArgs e)
         {
-            DialogResult = true;
+            _configService.UpdateOptions(_options);
             Close();
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
-            DialogResult = false;
             Close();
         }
     }
