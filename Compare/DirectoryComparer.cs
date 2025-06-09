@@ -61,20 +61,27 @@ namespace dCompare.Compare
             if (root.IsDirectory && Directory.Exists(path))
             {
                 root.ModifiedTime = Directory.GetLastWriteTime(path);
+                long totalSize = 0;
 
                 try
                 {
                     // Process subdirectories
                     foreach (string? dir in Directory.GetDirectories(path))
                     {
-                        root.Children.Add(BuildTree(dir, depth + 1));
+                        FileSystemNode childDir = BuildTree(dir, depth + 1);
+                        root.Children.Add(childDir);
+                        totalSize += childDir.Size; // Add subdirectory's total size
                     }
 
                     // Process files
                     foreach (string? file in Directory.GetFiles(path))
                     {
-                        root.Children.Add(BuildTree(file, depth + 1));
+                        FileSystemNode childFile = BuildTree(file, depth + 1);
+                        root.Children.Add(childFile);
+                        totalSize += childFile.Size; // Add file size
                     }
+
+                    root.Size = totalSize; // Set the total size for the directory
                 }
                 catch (UnauthorizedAccessException)
                 {
