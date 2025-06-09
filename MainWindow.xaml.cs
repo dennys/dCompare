@@ -1,9 +1,14 @@
-﻿using Serilog;
+﻿using dCompare.Configuration;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Win32;
+using Serilog;
+using Serilog.Events;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -17,6 +22,8 @@ namespace dCompare
         public ICommand AddTabCommand { get; }
         public ICommand CloseTabCommand { get; }
         public ICommand OptionsCommand { get; }
+        public ICommand SaveSessionCommand { get; }
+        public ICommand LoadSessionCommand { get; }
         public ICommand CompareCommand { get; }
         public ICommand CopyToLeftCommand { get; }
         public ICommand CopyToRightCommand { get; }
@@ -27,6 +34,9 @@ namespace dCompare
         public ICommand ShowIdenticalCommand { get; }
         public ICommand ShowLeftUniqueCommand { get; }
         public ICommand ShowRightUniqueCommand { get; }
+
+        private readonly ConfigurationService _configService;
+        private readonly Dictionary<string, string> _tabIdMap; // Maps TabItem.Header to session ID
 
         private TabItem _draggedTab;
         private Point _dragStartPoint;
@@ -41,6 +51,8 @@ namespace dCompare
         public MainWindow()
         {
             InitializeComponent();
+            _configService = new ConfigurationService();
+            _tabIdMap = new Dictionary<string, string>();
             ConfigureLogging();
 
             // Initialize commands
@@ -57,6 +69,8 @@ namespace dCompare
             ShowIdenticalCommand = new RelayCommand(_ => ExecuteUcCompareMethod("ShowIdentical_Click"), _ => CanExecuteUcCompareMethod());
             ShowLeftUniqueCommand = new RelayCommand(_ => ExecuteUcCompareMethod("ShowLeftUnique_Click"), _ => CanExecuteUcCompareMethod());
             ShowRightUniqueCommand = new RelayCommand(_ => ExecuteUcCompareMethod("ShowRightUnique_Click"), _ => CanExecuteUcCompareMethod());
+            SaveSessionCommand = new RelayCommand(_ => SaveSession(), _ => CanSaveSession());
+            LoadSessionCommand = new RelayCommand(_ => LoadSession(), _ => CanLoadSession());
 
             DataContext = this;
 
@@ -66,34 +80,233 @@ namespace dCompare
         }
         private void ConfigureLogging()
         {
-            Log.Logger = new LoggerConfiguration()
-                .Enrich.WithThreadId() // Adds Thread ID
-                .WriteTo.File("logs\\dCompare.log",
-                    rollingInterval: RollingInterval.Day, // Create a new log file daily
-                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss:fff} [ThreadId:{ThreadId}] {Level:u3}: {Message}{NewLine}")
-                .CreateLogger();
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+                .AddJsonFile("dcompare.json", optional: true, reloadOnChange: true)
+                .Build();
+
+            var logConfig = configuration.GetSection("options:log").Get<LogConfig>() ?? new LogConfig();
+
+            if (logConfig.Enabled)
+            {
+                var level = Enum.TryParse<LogEventLevel>(logConfig.Level, true, out var parsedLevel)
+                    ? parsedLevel
+                    : LogEventLevel.Information;
+
+                Log.Logger = new LoggerConfiguration()
+                    .MinimumLevel.Is(level)
+                    .Enrich.WithThreadId()
+                    .WriteTo.File(
+                        path: "logs\\dCompare.log",
+                        rollingInterval: RollingInterval.Day,
+                        retainedFileCountLimit: logConfig.RetentionDays,
+                        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss:fff} [ThreadId:{ThreadId}] {Level:u3}: {Message}{NewLine}")
+                    .CreateLogger();
+            }
+            else
+            {
+                Log.Logger = new LoggerConfiguration().CreateLogger(); // Null logger if disabled
+            }
         }
+        private void ApplyOptions(OptionsConfig options)
+        {
+            // Apply theme
+            // Note: Implement theme switching logic based on options.Theme ("light" or "dark")
+            // For example, update resource dictionaries or styles
+
+            // Apply language
+            // Note: Implement language switching logic based on options.Language
+            // Example: Thread.CurrentThread.CurrentUICulture = new CultureInfo(options.Language);
+
+            // Apply hotkeys
+            UpdateHotKeys(options.HotKeys);
+        }
+        private void UpdateHotKeys(Dictionary<string, string> hotKeys)
+        {
+            // Clear existing key bindings  
+            InputBindings.Clear();
+
+            // Add new key bindings  
+            foreach (var hotKey in hotKeys)
+            {
+                try
+                {
+                    // Fix for CS0120: Create an instance of KeyGestureConverter instead of using it statically  
+                    var keyGestureConverter = new KeyGestureConverter();
+                    if (keyGestureConverter.ConvertFromString(hotKey.Value) is KeyGesture keyGesture)
+                    {
+                        var command = hotKey.Key switch
+                        {
+                            "AddTab" => AddTabCommand,
+                            "CloseTab" => CloseTabCommand,
+                            "Compare" => CompareCommand,
+                            // Add other commands as needed  
+                            _ => null
+                        };
+                        if (command != null)
+                        {
+                            InputBindings.Add(new KeyBinding(command, keyGesture));
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning("Invalid hotkey format for {Key}: {Value}", hotKey.Key, hotKey.Value);
+                }
+            }
+        }
+        #endregion
+        #region Session Management
+
+        private void SaveSession()
+        {
+            try
+            {
+                var config = new AppConfiguration();
+                config.Options = _configService.GetConfiguration().Options;
+
+                foreach (TabItem tab in tabControl.Items)
+                {
+                    if (tab.Content is UcCompare ucCompare)
+                    {
+                        string tabId = _tabIdMap.ContainsKey(tab.Header.ToString())
+                            ? _tabIdMap[tab.Header.ToString()]
+                            : Guid.NewGuid().ToString();
+
+                        config.Sessions[tabId] = new SessionConfig
+                        {
+                            Left = ucCompare.LeftPathBox.Text,
+                            Right = ucCompare.RightPathBox.Text
+                        };
+
+                        if (!_tabIdMap.ContainsKey(tab.Header.ToString()))
+                        {
+                            _tabIdMap[tab.Header.ToString()] = tabId;
+                        }
+                    }
+                }
+
+                var saveFileDialog = new SaveFileDialog
+                {
+                    Filter = "JSON files (*.json)|*.json",
+                    DefaultExt = "json",
+                    FileName = "dCompareSession.json"
+                };
+
+                if (saveFileDialog.ShowDialog() == true)
+                {
+                    var options = new JsonSerializerOptions { WriteIndented = true };
+                    var json = JsonSerializer.Serialize(config, options);
+                    System.IO.File.WriteAllText(saveFileDialog.FileName, json);
+                    UpdateStatus($"Session saved to {saveFileDialog.FileName}");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error saving session: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                UpdateStatus($"Error saving session: {ex.Message}");
+            }
+        }
+
+        private bool CanSaveSession()
+        {
+            return tabControl.Items.Count > 0;
+        }
+
+        private void LoadSession()
+        {
+            try
+            {
+                var openFileDialog = new OpenFileDialog
+                {
+                    Filter = "JSON files (*.json)|*.json",
+                    DefaultExt = "json"
+                };
+
+                if (openFileDialog.ShowDialog() == true)
+                {
+                    var json = System.IO.File.ReadAllText(openFileDialog.FileName);
+                    var config = JsonSerializer.Deserialize<AppConfiguration>(json);
+
+                    if (config?.Sessions != null)
+                    {
+                        // Clear existing tabs except Welcome
+                        while (tabControl.Items.Count > 1)
+                        {
+                            tabControl.Items.RemoveAt(tabControl.Items.Count - 1);
+                        }
+                        if (tabControl.Items.Count == 1 && (tabControl.Items[0] as TabItem)?.Header.ToString() == "Welcome")
+                        {
+                            tabControl.Items.Clear();
+                        }
+
+                        _tabIdMap.Clear();
+                        _tabCounter = 0;
+
+                        foreach (var session in config.Sessions)
+                        {
+                            _tabCounter++;
+                            var tabId = session.Key;
+                            var newTab = new TabItem
+                            {
+                                Header = $"Tab {_tabCounter}",
+                                Content = new UcCompare()
+                            };
+                            ((UcCompare)newTab.Content).LeftPathBox.Text = session.Value.Left;
+                            ((UcCompare)newTab.Content).RightPathBox.Text = session.Value.Right;
+                            tabControl.Items.Add(newTab);
+                            _tabIdMap[newTab.Header.ToString()] = tabId;
+                        }
+
+                        if (tabControl.Items.Count > 0)
+                        {
+                            tabControl.SelectedIndex = 0;
+                        }
+
+                        // Apply options
+                        ApplyOptions(config.Options);
+
+                        UpdateStatus($"Session loaded from {openFileDialog.FileName}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading session: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                UpdateStatus($"Error loading session: {ex.Message}");
+            }
+        }
+
+        private bool CanLoadSession()
+        {
+            return true;
+        }
+
         #endregion
 
         #region Tab Management
-
         private void AddNewTab()
         {
             try
             {
                 _tabCounter++;
-                TabItem newTab = new TabItem
+                var tabId = Guid.NewGuid().ToString();
+                var newTab = new TabItem
                 {
                     Header = $"Tab {_tabCounter}",
                     Content = new UcCompare()
                 };
-
                 tabControl.Items.Add(newTab);
                 tabControl.SelectedItem = newTab;
+                _tabIdMap[newTab.Header.ToString()] = tabId;
+
+                var config = _configService.GetConfiguration();
+                if (!config.Sessions.ContainsKey(tabId))
+                {
+                    _configService.UpdateSession(tabId, string.Empty, string.Empty);
+                }
 
                 UpdateStatus($"Added new tab: Tab {_tabCounter}");
-
-                // Force command re-evaluation
                 CommandManager.InvalidateRequerySuggested();
             }
             catch (Exception ex)
@@ -106,16 +319,13 @@ namespace dCompare
         {
             try
             {
-                // If tab is null (e.g., from Ctrl+W), use the currently selected tab
                 TabItem tabToClose = tab ?? tabControl.SelectedItem as TabItem;
-
                 if (tabToClose == null || !tabControl.Items.Contains(tabToClose))
                 {
                     UpdateStatus("No tab to close");
                     return;
                 }
 
-                // Don't show confirmation for the default "Welcome" tab or if there's only one tab
                 bool showConfirmation = tabControl.Items.Count > 1 &&
                                        !tabToClose.Header.ToString().Equals("Welcome", StringComparison.OrdinalIgnoreCase);
 
@@ -133,23 +343,19 @@ namespace dCompare
                     }
                 }
 
-                // Store the index for potential selection adjustment
                 int closedIndex = tabControl.Items.IndexOf(tabToClose);
-
-                // Remove the tab
+                var tabId = _tabIdMap[tabToClose.Header.ToString()];
                 tabControl.Items.Remove(tabToClose);
+                _tabIdMap.Remove(tabToClose.Header.ToString());
+                _configService.RemoveSession(tabId);
 
-                // Select appropriate tab after closing
                 if (tabControl.Items.Count > 0)
                 {
-                    // Select the tab that was after the closed one, or the last tab if we closed the last one
                     int newSelectedIndex = Math.Min(closedIndex, tabControl.Items.Count - 1);
                     tabControl.SelectedIndex = newSelectedIndex;
                 }
 
                 UpdateStatus($"Closed tab: {tabToClose.Header}");
-
-                // Force command re-evaluation
                 CommandManager.InvalidateRequerySuggested();
             }
             catch (Exception ex)

@@ -11,6 +11,8 @@
         <KeyBinding Key="N" Modifiers="Ctrl" Command="{Binding AddTabCommand}"/>
         <KeyBinding Key="W" Modifiers="Ctrl" Command="{Binding CloseTabCommand}"/>
         <KeyBinding Key="R" Modifiers="Ctrl" Command="{Binding CompareCommand}"/>
+        <KeyBinding Key="S" Modifiers="Ctrl" Command="{Binding SaveSessionCommand}"/>
+        <KeyBinding Key="O" Modifiers="Ctrl" Command="{Binding LoadSessionCommand}"/>
     </Window.InputBindings>
 
     <Window.Resources>
@@ -194,6 +196,17 @@
         <!-- Menu Bar -->
         <Menu DockPanel.Dock="Top" Style="{StaticResource UnifiedMenuStyle}">
             <MenuItem Header="_File">
+                <MenuItem Header="_Save Session" Command="{Binding SaveSessionCommand}" InputGestureText="Ctrl+S">
+                    <MenuItem.Icon>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="_Load Session" Command="{Binding LoadSessionCommand}" InputGestureText="Ctrl+O">
+                    <MenuItem.Icon>
+                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator/>
                 <MenuItem Header="_New Tab" Command="{Binding AddTabCommand}" InputGestureText="Ctrl+N">
                     <MenuItem.Icon>
                         <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
@@ -295,6 +308,18 @@
             <!-- Options Button -->
             <Button Command="{Binding OptionsCommand}" ToolTip="Open options">
                 <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
+            </Button>
+
+            <Separator/>
+
+            <!-- Save Session Button -->
+            <Button Command="{Binding SaveSessionCommand}" ToolTip="Save session (Ctrl+S)">
+                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
+            </Button>
+
+            <!-- Load Session Button -->
+            <Button Command="{Binding LoadSessionCommand}" ToolTip="Load session (Ctrl+O)">
+                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
             </Button>
 
             <Separator/>
