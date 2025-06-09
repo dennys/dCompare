@@ -407,20 +407,14 @@ namespace dCompare
             if (item.Left != null)
             {
                 node.LeftName = item.Left.Name;
-                if (!item.Left.IsDirectory)
-                {
-                    node.LeftSize = FileSystemNode.FormatSize(item.Left.Size);
-                }
+                node.LeftSize = FileSystemNode.FormatSize(item.Left.Size);
                 node.LeftDate = item.Left.ModifiedTime.ToString("yyyy/MM/dd HH:mm");
             }
 
             if (item.Right != null)
             {
                 node.RightName = item.Right.Name;
-                if (!item.Right.IsDirectory)
-                {
-                    node.RightSize = FileSystemNode.FormatSize(item.Right.Size);
-                }
+                node.RightSize = FileSystemNode.FormatSize(item.Right.Size);
                 node.RightDate = item.Right.ModifiedTime.ToString("yyyy/MM/dd HH:mm");
             }
 
