@@ -3,6 +3,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -15,6 +16,17 @@ namespace dCompare
 
         public ICommand AddTabCommand { get; }
         public ICommand CloseTabCommand { get; }
+        public ICommand OptionsCommand { get; }
+        public ICommand CompareCommand { get; }
+        public ICommand CopyToLeftCommand { get; }
+        public ICommand CopyToRightCommand { get; }
+        public ICommand ExpandAllCommand { get; }
+        public ICommand CollapseAllCommand { get; }
+        public ICommand ShowAllCommand { get; }
+        public ICommand ShowDifferentCommand { get; }
+        public ICommand ShowIdenticalCommand { get; }
+        public ICommand ShowLeftUniqueCommand { get; }
+        public ICommand ShowRightUniqueCommand { get; }
 
         private TabItem _draggedTab;
         private Point _dragStartPoint;
@@ -34,6 +46,17 @@ namespace dCompare
             // Initialize commands
             AddTabCommand = new RelayCommand(_ => AddNewTab(), _ => CanAddTab());
             CloseTabCommand = new RelayCommand(param => CloseTab(param as TabItem), param => CanCloseTab());
+            OptionsCommand = new RelayCommand(_ => ExecuteOptions(), _ => CanExecuteOptions());
+            CompareCommand = new RelayCommand(_ => ExecuteUcCompareMethod("Compare_Click"), _ => CanExecuteUcCompareMethod());
+            CopyToLeftCommand = new RelayCommand(_ => ExecuteUcCompareMethod("CopyToLeft_Click"), _ => CanExecuteUcCompareMethod());
+            CopyToRightCommand = new RelayCommand(_ => ExecuteUcCompareMethod("CopyToRight_Click"), _ => CanExecuteUcCompareMethod());
+            ExpandAllCommand = new RelayCommand(_ => ExecuteUcCompareMethod("ExpandAll_Click"), _ => CanExecuteUcCompareMethod());
+            CollapseAllCommand = new RelayCommand(_ => ExecuteUcCompareMethod("CollapseAll_Click"), _ => CanExecuteUcCompareMethod());
+            ShowAllCommand = new RelayCommand(_ => ExecuteUcCompareMethod("ShowAll_Click"), _ => CanExecuteUcCompareMethod());
+            ShowDifferentCommand = new RelayCommand(_ => ExecuteUcCompareMethod("ShowDifferent_Click"), _ => CanExecuteUcCompareMethod());
+            ShowIdenticalCommand = new RelayCommand(_ => ExecuteUcCompareMethod("ShowIdentical_Click"), _ => CanExecuteUcCompareMethod());
+            ShowLeftUniqueCommand = new RelayCommand(_ => ExecuteUcCompareMethod("ShowLeftUnique_Click"), _ => CanExecuteUcCompareMethod());
+            ShowRightUniqueCommand = new RelayCommand(_ => ExecuteUcCompareMethod("ShowRightUnique_Click"), _ => CanExecuteUcCompareMethod());
 
             DataContext = this;
 
@@ -154,6 +177,58 @@ namespace dCompare
             }
 
             return true;
+        }
+
+        private void ExecuteOptions()
+        {
+            try
+            {
+                var optionsWindow = new OptionsWindow();
+                optionsWindow.Owner = this;
+                optionsWindow.ShowDialog();
+                UpdateStatus("Options window opened");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error opening options: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private bool CanExecuteOptions()
+        {
+            return true; // Options can always be opened
+        }
+        private void ExecuteUcCompareMethod(string methodName)
+        {
+            try
+            {
+                if (tabControl.SelectedItem is TabItem selectedTab && selectedTab.Content is UcCompare ucCompare)
+                {
+                    MethodInfo methodInfo = typeof(UcCompare).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (methodInfo != null)
+                    {
+                        methodInfo.Invoke(ucCompare, new object[] { null, null });
+                        UpdateStatus($"{methodName.Replace("_Click", "")} executed");
+                    }
+                    else
+                    {
+                        MessageBox.Show($"{methodName} method not found", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("No active tab to execute action", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error executing {methodName}: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private bool CanExecuteUcCompareMethod()
+        {
+            return tabControl?.SelectedItem is TabItem selectedTab && selectedTab.Content is UcCompare;
         }
 
         #endregion
