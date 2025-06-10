@@ -6,7 +6,6 @@ namespace dCompare.Configuration
     {
         public Dictionary<string, SessionConfig> Sessions { get; set; } = new();
         public OptionsConfig Options { get; set; } = new();
-        //public string DefaultSessionFile { get; internal set; }
     }
 
     public class SessionConfig
@@ -20,7 +19,8 @@ namespace dCompare.Configuration
         public string Theme { get; set; } = "Light";
         public string Language { get; set; } = "en-US";
         public string DefaultSessionFile { get; set; } = string.Empty;
-        public bool LoadDefaultSessionOnStartup { get; set; } = false;
+        public bool AutoLoadDefaultSession { get; set; } = false;
+        public bool AutoCompareAfterSessionLoad { get; set; }
         public Dictionary<string, string> HotKeys { get; set; } = new()
         {
             { "AddTab", "Ctrl+N" },
