@@ -164,27 +164,18 @@ namespace dCompare
         {
             try
             {
-                var config = new AppConfiguration();
-                config.Options = _configService.GetConfiguration().Options;
+                var sessions = new Dictionary<string, SessionConfig>();
 
                 foreach (TabItem tab in tabControl.Items)
                 {
                     if (tab.Content is UcCompare ucCompare)
                     {
-                        string tabId = _tabIdMap.ContainsKey(tab.Header.ToString())
-                            ? _tabIdMap[tab.Header.ToString()]
-                            : Guid.NewGuid().ToString();
-
-                        config.Sessions[tabId] = new SessionConfig
+                        string tabName = tab.Header.ToString();
+                        sessions[tabName] = new SessionConfig
                         {
                             Left = ucCompare.LeftPathBox.Text,
                             Right = ucCompare.RightPathBox.Text
                         };
-
-                        if (!_tabIdMap.ContainsKey(tab.Header.ToString()))
-                        {
-                            _tabIdMap[tab.Header.ToString()] = tabId;
-                        }
                     }
                 }
 
@@ -198,7 +189,7 @@ namespace dCompare
                 if (saveFileDialog.ShowDialog() == true)
                 {
                     var options = new JsonSerializerOptions { WriteIndented = true };
-                    var json = JsonSerializer.Serialize(config, options);
+                    var json = JsonSerializer.Serialize(sessions, options);
                     System.IO.File.WriteAllText(saveFileDialog.FileName, json);
                     UpdateStatus($"Session saved to {saveFileDialog.FileName}");
                 }
@@ -228,9 +219,9 @@ namespace dCompare
                 if (openFileDialog.ShowDialog() == true)
                 {
                     var json = System.IO.File.ReadAllText(openFileDialog.FileName);
-                    var config = JsonSerializer.Deserialize<AppConfiguration>(json);
+                    var sessions = JsonSerializer.Deserialize<Dictionary<string, SessionConfig>>(json);
 
-                    if (config?.Sessions != null)
+                    if (sessions != null)
                     {
                         // Clear existing tabs except Welcome
                         while (tabControl.Items.Count > 1)
@@ -245,28 +236,25 @@ namespace dCompare
                         _tabIdMap.Clear();
                         _tabCounter = 0;
 
-                        foreach (var session in config.Sessions)
+                        foreach (var session in sessions)
                         {
                             _tabCounter++;
-                            var tabId = session.Key;
+                            var tabName = session.Key;
                             var newTab = new TabItem
                             {
-                                Header = $"Tab {_tabCounter}",
+                                Header = tabName,
                                 Content = new UcCompare()
                             };
                             ((UcCompare)newTab.Content).LeftPathBox.Text = session.Value.Left;
                             ((UcCompare)newTab.Content).RightPathBox.Text = session.Value.Right;
                             tabControl.Items.Add(newTab);
-                            _tabIdMap[newTab.Header.ToString()] = tabId;
+                            _tabIdMap[tabName] = Guid.NewGuid().ToString();
                         }
 
                         if (tabControl.Items.Count > 0)
                         {
                             tabControl.SelectedIndex = 0;
                         }
-
-                        // Apply options
-                        ApplyOptions(config.Options);
 
                         UpdateStatus($"Session loaded from {openFileDialog.FileName}");
                     }
