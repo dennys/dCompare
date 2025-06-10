@@ -7,7 +7,7 @@ using System.Windows.Threading;
 using dCompare.Configuration;
 using Microsoft.Win32;
 
-namespace dCompare
+namespace dCompare.Options
 {
     public partial class OptionsWindow : Window
     {

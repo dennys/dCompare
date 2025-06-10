@@ -5,6 +5,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using dCompare.Configuration;
+using dCompare.Options;
 
 namespace dCompare
 {
