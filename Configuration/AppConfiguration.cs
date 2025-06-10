@@ -6,7 +6,7 @@ namespace dCompare.Configuration
     {
         public Dictionary<string, SessionConfig> Sessions { get; set; } = new();
         public OptionsConfig Options { get; set; } = new();
-        public string DefaultSessionFile { get; internal set; }
+        //public string DefaultSessionFile { get; internal set; }
     }
 
     public class SessionConfig

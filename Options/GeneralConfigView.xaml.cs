@@ -22,7 +22,7 @@ namespace dCompare.Options
             {
                 if (DataContext is AppConfiguration options)
                 {
-                    options.DefaultSessionFile = dialog.FileName;
+                    options.Options.DefaultSessionFile = dialog.FileName;
                 }
             }
         }
