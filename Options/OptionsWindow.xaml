@@ -1,0 +1,72 @@
+﻿<Window x:Class="dCompare.OptionsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:dCompare"
+        Title="Options" Height="450" Width="800"
+        Background="{DynamicResource WindowBackground}"
+        WindowStartupLocation="CenterOwner">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Light Theme -->
+                <ResourceDictionary>
+                    <SolidColorBrush x:Key="WindowBackground" Color="#F0F0F0"/>
+                    <SolidColorBrush x:Key="ControlBackground" Color="White"/>
+                    <SolidColorBrush x:Key="TextColor" Color="Black"/>
+                </ResourceDictionary>
+                <!-- Dark Theme -->
+                <ResourceDictionary>
+                    <SolidColorBrush x:Key="WindowBackground.Dark" Color="#2D2D2D"/>
+                    <SolidColorBrush x:Key="ControlBackground.Dark" Color="#3C3C3C"/>
+                    <SolidColorBrush x:Key="TextColor.Dark" Color="White"/>
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+            <local:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Search Box -->
+        <TextBox Grid.Row="0" Grid.Column="0" Margin="5" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                 TextChanged="SearchTextBox_TextChanged" Background="{DynamicResource ControlBackground}"
+                 Foreground="{DynamicResource TextColor}"/>
+
+        <!-- TreeView -->
+        <TreeView x:Name="OptionsTree" Grid.Row="1" Grid.Column="0" Margin="5"
+                  Background="{DynamicResource ControlBackground}"
+                  Foreground="{DynamicResource TextColor}"
+                  SelectedItemChanged="OptionsTree_SelectedItemChanged">
+            <TreeView.Resources>
+                <Style TargetType="TreeViewItem">
+                    <Setter Property="IsExpanded" Value="True"/>
+                    <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                </Style>
+            </TreeView.Resources>
+            <TreeViewItem Header="General" Tag="General"/>
+            <TreeViewItem Header="UI" Tag="UI">
+                <TreeViewItem Header="General" Tag="UIGeneral"/>
+                <TreeViewItem Header="Hotkeys" Tag="UIHotkeys"/>
+            </TreeViewItem>
+            <TreeViewItem Header="Log" Tag="Log"/>
+        </TreeView>
+
+        <!-- Content Area -->
+        <ContentControl x:Name="ConfigContent" Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Margin="10"
+                        Content="{Binding CurrentConfigView}"/>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="OK" Width="80" Margin="5" Click="OK_Click"/>
+            <Button Content="Cancel" Width="80" Margin="5" Click="Cancel_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

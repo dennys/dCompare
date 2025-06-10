@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Serilog;
+using System;
 using System.IO;
 using System.Text.Json;
 using System.Windows;
@@ -57,6 +58,7 @@ namespace dCompare.Configuration
 
         public void UpdateOptions(OptionsConfig options)
         {
+            //viewModel.UpdateOptions(); // Sync Hotkeys back to Options.HotKeys
             var config = GetConfiguration();
             config.Options = options;
             SaveConfiguration(config);
