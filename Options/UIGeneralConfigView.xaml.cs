@@ -12,7 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-namespace dCompare
+namespace dCompare.Options
 {
     /// <summary>
     /// UIGeneralConfigView.xaml 的互動邏輯

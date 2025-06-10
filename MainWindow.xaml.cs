@@ -1,4 +1,5 @@
 ﻿using dCompare.Configuration;
+using dCompare.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Win32;
 using Serilog;

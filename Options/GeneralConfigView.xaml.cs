@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using dCompare.Configuration;
 
-namespace dCompare
+namespace dCompare.Options
 {
     public partial class GeneralConfigView : UserControl
     {
