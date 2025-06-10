@@ -6,7 +6,6 @@ using Serilog;
 using Serilog.Events;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
@@ -14,6 +13,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.IO;
 
 namespace dCompare
 {
@@ -76,10 +76,20 @@ namespace dCompare
 
             DataContext = this;
 
-            // Set initial status
-            Log.Information("Application ready.");
-            UpdateStatus("Application ready");
+            // Load default session if configured
+            var config = _configService.GetConfiguration();
+            if (config.Options?.AutoLoadDefaultSession == true && !string.IsNullOrEmpty(config.Options.DefaultSessionFile))
+            {
+                LoadSession(config.Options.DefaultSessionFile, config.Options.AutoCompareAfterSessionLoad);
+            }
+            else
+            {
+                // Set initial status if no default session is loaded
+                Log.Information("Application ready.");
+                UpdateStatus("Application ready");
+            }
         }
+
         private void ConfigureLogging()
         {
             var configuration = new ConfigurationBuilder()
@@ -110,6 +120,7 @@ namespace dCompare
                 Log.Logger = new LoggerConfiguration().CreateLogger(); // Null logger if disabled
             }
         }
+
         private void ApplyOptions(OptionsConfig options)
         {
             // Apply theme
@@ -123,6 +134,7 @@ namespace dCompare
             // Apply hotkeys
             UpdateHotKeys(options.HotKeys);
         }
+
         private void UpdateHotKeys(Dictionary<string, string> hotKeys)
         {
             // Clear existing key bindings  
@@ -157,7 +169,9 @@ namespace dCompare
                 }
             }
         }
+
         #endregion
+
         #region Session Management
 
         private void SaveSession()
@@ -206,58 +220,82 @@ namespace dCompare
             return tabControl.Items.Count > 0;
         }
 
-        private void LoadSession()
+        private void LoadSession(string filePath = null, bool executeCompare = false)
         {
             try
             {
-                var openFileDialog = new OpenFileDialog
-                {
-                    Filter = "JSON files (*.json)|*.json",
-                    DefaultExt = "json"
-                };
+                string json;
+                string sessionFileName;
 
-                if (openFileDialog.ShowDialog() == true)
+                if (string.IsNullOrEmpty(filePath))
                 {
-                    var json = System.IO.File.ReadAllText(openFileDialog.FileName);
-                    var sessions = JsonSerializer.Deserialize<Dictionary<string, SessionConfig>>(json);
-
-                    if (sessions != null)
+                    var openFileDialog = new OpenFileDialog
                     {
-                        // Clear existing tabs except Welcome
-                        while (tabControl.Items.Count > 1)
-                        {
-                            tabControl.Items.RemoveAt(tabControl.Items.Count - 1);
-                        }
-                        if (tabControl.Items.Count == 1 && (tabControl.Items[0] as TabItem)?.Header.ToString() == "Welcome")
-                        {
-                            tabControl.Items.Clear();
-                        }
+                        Filter = "JSON files (*.json)|*.json",
+                        DefaultExt = "json"
+                    };
 
-                        _tabIdMap.Clear();
-                        _tabCounter = 0;
+                    if (openFileDialog.ShowDialog() != true)
+                        return;
 
-                        foreach (var session in sessions)
-                        {
-                            _tabCounter++;
-                            var tabName = session.Key;
-                            var newTab = new TabItem
-                            {
-                                Header = tabName,
-                                Content = new UcCompare()
-                            };
-                            ((UcCompare)newTab.Content).LeftPathBox.Text = session.Value.Left;
-                            ((UcCompare)newTab.Content).RightPathBox.Text = session.Value.Right;
-                            tabControl.Items.Add(newTab);
-                            _tabIdMap[tabName] = Guid.NewGuid().ToString();
-                        }
-
-                        if (tabControl.Items.Count > 0)
-                        {
-                            tabControl.SelectedIndex = 0;
-                        }
-
-                        UpdateStatus($"Session loaded from {openFileDialog.FileName}");
+                    json = System.IO.File.ReadAllText(openFileDialog.FileName);
+                    sessionFileName = openFileDialog.FileName;
+                }
+                else
+                {
+                    if (!File.Exists(filePath))
+                    {
+                        UpdateStatus($"Session file not found: {filePath}");
+                        return;
                     }
+                    json = System.IO.File.ReadAllText(filePath);
+                    sessionFileName = filePath;
+                }
+
+                var sessions = JsonSerializer.Deserialize<Dictionary<string, SessionConfig>>(json);
+
+                if (sessions != null)
+                {
+                    // Clear existing tabs except Welcome
+                    while (tabControl.Items.Count > 1)
+                    {
+                        tabControl.Items.RemoveAt(tabControl.Items.Count - 1);
+                    }
+                    if (tabControl.Items.Count == 1 && (tabControl.Items[0] as TabItem)?.Header.ToString() == "Welcome")
+                    {
+                        tabControl.Items.Clear();
+                    }
+
+                    _tabIdMap.Clear();
+                    _tabCounter = 0;
+
+                    foreach (var session in sessions)
+                    {
+                        _tabCounter++;
+                        var tabName = session.Key;
+                        var newTab = new TabItem
+                        {
+                            Header = tabName,
+                            Content = new UcCompare()
+                        };
+                        ((UcCompare)newTab.Content).LeftPathBox.Text = session.Value.Left;
+                        ((UcCompare)newTab.Content).RightPathBox.Text = session.Value.Right;
+                        tabControl.Items.Add(newTab);
+                        _tabIdMap[tabName] = Guid.NewGuid().ToString();
+
+                        if (executeCompare)
+                        {
+                            tabControl.SelectedItem = newTab;
+                            ExecuteUcCompareMethod("Compare_Click");
+                        }
+                    }
+
+                    if (tabControl.Items.Count > 0)
+                    {
+                        tabControl.SelectedIndex = 0;
+                    }
+
+                    UpdateStatus($"Session loaded from {sessionFileName}");
                 }
             }
             catch (Exception ex)
@@ -265,6 +303,11 @@ namespace dCompare
                 MessageBox.Show($"Error loading session: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 UpdateStatus($"Error loading session: {ex.Message}");
             }
+        }
+
+        private void LoadSession()
+        {
+            LoadSession(null, false);
         }
 
         private bool CanLoadSession()
@@ -275,6 +318,7 @@ namespace dCompare
         #endregion
 
         #region Tab Management
+
         private void AddNewTab()
         {
             try
@@ -394,6 +438,7 @@ namespace dCompare
         {
             return true; // Options can always be opened
         }
+
         private void ExecuteUcCompareMethod(string methodName)
         {
             try
@@ -511,7 +556,14 @@ namespace dCompare
 
                 if (!string.IsNullOrWhiteSpace(newName) && newName != currentName)
                 {
+                    string oldName = selectedTab.Header.ToString();
                     selectedTab.Header = newName;
+                    if (_tabIdMap.ContainsKey(oldName))
+                    {
+                        string tabId = _tabIdMap[oldName];
+                        _tabIdMap.Remove(oldName);
+                        _tabIdMap[newName] = tabId;
+                    }
                     UpdateStatus($"Renamed tab to: {newName}");
                 }
             }
@@ -644,8 +696,7 @@ namespace dCompare
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Command execution failed: {ex.Message}", "Error",
-                              MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Command execution failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }
