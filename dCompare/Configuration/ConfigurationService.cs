@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
@@ -9,22 +10,24 @@ namespace dCompare.Configuration
 {
     public class ConfigurationService
     {
-        private readonly IConfiguration _configuration;
-        private readonly ILogger<ConfigurationService> _logger;
-        private readonly IFileSystem _fileSystem;
+        private readonly IServiceProvider _serviceProvider;
         private readonly string _configFilePath;
 
-        public ConfigurationService(IConfiguration configuration, ILogger<ConfigurationService> logger, IFileSystem fileSystem = null, string configFilePath = null)
+        public ConfigurationService(IServiceProvider serviceProvider)
         {
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _fileSystem = fileSystem ?? new FileSystem();
-            _configFilePath = configFilePath ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "dcompare.json");
+            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+            var configuration = _serviceProvider.GetRequiredService<IConfiguration>();
+            _configFilePath = configuration.GetValue<string>("ConfigFilePath")
+                ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "dcompare.json");
         }
+
+        private IConfiguration GetConfigurationService() => _serviceProvider.GetRequiredService<IConfiguration>();
+        private ILogger<ConfigurationService> GetLogger() => _serviceProvider.GetRequiredService<ILogger<ConfigurationService>>();
+        private IFileSystem GetFileSystem() => _serviceProvider.GetRequiredService<IFileSystem>();
 
         public AppConfiguration GetConfiguration()
         {
-            return _configuration.Get<AppConfiguration>() ?? new AppConfiguration();
+            return GetConfigurationService().Get<AppConfiguration>() ?? new AppConfiguration();
         }
 
         public void SaveConfiguration(AppConfiguration config)
@@ -33,12 +36,12 @@ namespace dCompare.Configuration
             {
                 var options = new JsonSerializerOptions { WriteIndented = true };
                 var json = JsonSerializer.Serialize(config, options);
-                _fileSystem.File.WriteAllText(_configFilePath, json);
-                _logger.LogInformation("Configuration saved to {ConfigFilePath}", _configFilePath);
+                GetFileSystem().File.WriteAllText(_configFilePath, json);
+                GetLogger().LogInformation("Configuration saved to {ConfigFilePath}", _configFilePath);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to save configuration to {ConfigFilePath}", _configFilePath);
+                GetLogger().LogError(ex, "Failed to save configuration to {ConfigFilePath}", _configFilePath);
                 throw;
             }
         }

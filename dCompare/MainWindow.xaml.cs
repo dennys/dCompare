@@ -1,20 +1,22 @@
 ﻿using dCompare.Configuration;
 using dCompare.Options;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Win32;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Win32;
 using Serilog;
 using Serilog.Events;
 using Serilog.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
+using System.IO.Abstractions;
 using System.Reflection;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.IO;
 
 namespace dCompare
 {
@@ -42,6 +44,7 @@ namespace dCompare
         private readonly ConfigurationService _configService;
         private readonly Dictionary<string, string> _tabIdMap; // Maps TabItem.Header to session ID
         private readonly ILogger<ConfigurationService> _logger;
+        private readonly IServiceProvider _serviceProvider;
 
         private TabItem _draggedTab;
         private Point _dragStartPoint;
@@ -56,6 +59,15 @@ namespace dCompare
         public MainWindow()
         {
             InitializeComponent();
+
+            // Set up dependency injection
+            var services = new ServiceCollection();
+            ConfigureServices(services);
+            _serviceProvider = services.BuildServiceProvider();
+
+            // Resolve dependencies
+            _configService = _serviceProvider.GetRequiredService<ConfigurationService>();
+            _logger = _serviceProvider.GetRequiredService<ILogger<ConfigurationService>>();
 
             // Initialize commands
             AddTabCommand = new RelayCommand(_ => AddNewTab(), _ => CanAddTab());
@@ -75,18 +87,6 @@ namespace dCompare
             ShowLeftUniqueCommand = new RelayCommand(_ => ExecuteUcCompareMethod("ShowLeftUnique_Click"), _ => CanExecuteUcCompareMethod());
             ShowRightUniqueCommand = new RelayCommand(_ => ExecuteUcCompareMethod("ShowRightUnique_Click"), _ => CanExecuteUcCompareMethod());
 
-            // Set up configuration
-            IConfiguration configuration = new ConfigurationBuilder()
-                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-                .AddJsonFile("dcompare.json", optional: true, reloadOnChange: true)
-                .Build();
-
-            // Set up logger using Serilog
-            ConfigureLogging();
-            _logger = new SerilogLoggerFactory(Log.Logger).CreateLogger<ConfigurationService>();
-
-            // Create ConfigurationService
-            _configService = new ConfigurationService(configuration, _logger);
             _tabIdMap = new Dictionary<string, string>();
 
             DataContext = this;
@@ -105,13 +105,29 @@ namespace dCompare
             }
         }
 
-        private void ConfigureLogging()
+        private void ConfigureServices(IServiceCollection services)
         {
+            // Configure configuration
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
                 .AddJsonFile("dcompare.json", optional: true, reloadOnChange: true)
                 .Build();
+            services.AddSingleton<IConfiguration>(configuration);
 
+            // Configure logging
+            ConfigureLogging(configuration);
+            services.AddSingleton<ILogger<ConfigurationService>>(provider =>
+                new SerilogLoggerFactory(Log.Logger).CreateLogger<ConfigurationService>());
+
+            // Configure file system
+            services.AddSingleton<IFileSystem>(new FileSystem());
+
+            // Configure ConfigurationService
+            services.AddSingleton<ConfigurationService>();
+        }
+
+        private void ConfigureLogging(IConfiguration configuration)
+        {
             var logConfig = configuration.GetSection("options:log").Get<LogConfig>() ?? new LogConfig();
 
             if (logConfig.Enabled)
@@ -160,7 +176,6 @@ namespace dCompare
             {
                 try
                 {
-                    // Fix for CS0120: Create an instance of KeyGestureConverter instead of using it statically  
                     var keyGestureConverter = new KeyGestureConverter();
                     if (keyGestureConverter.ConvertFromString(hotKey.Value) is KeyGesture keyGesture)
                     {
