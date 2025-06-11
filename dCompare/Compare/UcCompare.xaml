@@ -106,7 +106,7 @@
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
-                    <GridViewColumn Header="Left Date" Width="100">
+                    <GridViewColumn Header="Left Date">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding LeftDate}" FontSize="11"/>
@@ -117,7 +117,7 @@
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding StatusSymbol}" HorizontalAlignment="Center" TextAlignment="Center"
-                                           FontWeight="Bold" FontSize="11">
+                                           FontWeight="Bold" FontSize="11" Width="40"> <!-- The width is necessary or TextAlignment will not be effective -->
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Style.Triggers>
@@ -156,7 +156,7 @@
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
-                    <GridViewColumn Header="Right Date" Width="100">
+                    <GridViewColumn Header="Right Date" Width="120">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding RightDate}" FontSize="11"/>

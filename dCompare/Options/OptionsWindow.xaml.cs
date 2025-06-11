@@ -5,6 +5,8 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 using dCompare.Configuration;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 
 namespace dCompare.Options
@@ -13,12 +15,12 @@ namespace dCompare.Options
     {
         private readonly ConfigurationService _configService;
         private readonly OptionsViewModel _viewModel;
-        private DispatcherTimer _searchTimer;
+        private readonly DispatcherTimer _searchTimer;
 
-        public OptionsWindow()
+        public OptionsWindow(ConfigurationService configService)
         {
             InitializeComponent();
-            _configService = new ConfigurationService();
+            _configService = configService ?? throw new ArgumentNullException(nameof(configService));
             _viewModel = new OptionsViewModel(_configService);
             DataContext = _viewModel;
 
@@ -39,7 +41,6 @@ namespace dCompare.Options
                 firstItem.IsSelected = true;
             }
         }
-
 
         private void UpdateTheme(string theme)
         {

@@ -19,13 +19,17 @@
                             </StackPanel>
                         </Button>
                     </DockPanel>
-                    <CheckBox Content="Load Default Session on Startup" 
-                                          IsChecked="{Binding AutoLoadDefaultSession}" 
-                                          Margin="0,5,0,5" Foreground="{DynamicResource TextColor}"/>
-
-                    <CheckBox Content="Execute Comparison After Loading Session" 
-                                          IsChecked="{Binding AutoCompareAfterSessionLoad}" 
-                                          Margin="0,5,0,5" Foreground="{DynamicResource TextColor}"/>
+                    <CheckBox x:Name="LoadDefaultSessionCheckBox"
+                              Content="Load Default Session on Startup" 
+                              IsChecked="{Binding AutoLoadDefaultSession}" 
+                              Margin="0,5,0,5" 
+                              Foreground="{DynamicResource TextColor}"/>
+                    <CheckBox x:Name="ExecuteComparisonCheckBox"
+                              Content="Execute Comparison After Loading Session" 
+                              IsChecked="{Binding AutoCompareAfterSessionLoad}" 
+                              IsEnabled="{Binding IsChecked, ElementName=LoadDefaultSessionCheckBox}"
+                              Margin="0,5,0,5" 
+                              Foreground="{DynamicResource TextColor}"/>
                 </StackPanel>
             </GroupBox>
         </StackPanel>

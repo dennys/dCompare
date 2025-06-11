@@ -2,12 +2,13 @@
 using dCompare.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Win32;
+using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
+using Serilog.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using System.Windows;
@@ -23,9 +24,10 @@ namespace dCompare
 
         public ICommand AddTabCommand { get; }
         public ICommand CloseTabCommand { get; }
-        public ICommand OptionsCommand { get; }
         public ICommand SaveSessionCommand { get; }
         public ICommand LoadSessionCommand { get; }
+
+        public ICommand OptionsCommand { get; }
         public ICommand CompareCommand { get; }
         public ICommand CopyToLeftCommand { get; }
         public ICommand CopyToRightCommand { get; }
@@ -39,6 +41,7 @@ namespace dCompare
 
         private readonly ConfigurationService _configService;
         private readonly Dictionary<string, string> _tabIdMap; // Maps TabItem.Header to session ID
+        private readonly ILogger<ConfigurationService> _logger;
 
         private TabItem _draggedTab;
         private Point _dragStartPoint;
@@ -53,13 +56,13 @@ namespace dCompare
         public MainWindow()
         {
             InitializeComponent();
-            _configService = new ConfigurationService();
-            _tabIdMap = new Dictionary<string, string>();
-            ConfigureLogging();
 
             // Initialize commands
             AddTabCommand = new RelayCommand(_ => AddNewTab(), _ => CanAddTab());
             CloseTabCommand = new RelayCommand(param => CloseTab(param as TabItem), param => CanCloseTab());
+            SaveSessionCommand = new RelayCommand(_ => SaveSession(), _ => CanSaveSession());
+            LoadSessionCommand = new RelayCommand(_ => LoadSession(), _ => CanLoadSession());
+
             OptionsCommand = new RelayCommand(_ => ExecuteOptions(), _ => CanExecuteOptions());
             CompareCommand = new RelayCommand(_ => ExecuteUcCompareMethod("Compare_Click"), _ => CanExecuteUcCompareMethod());
             CopyToLeftCommand = new RelayCommand(_ => ExecuteUcCompareMethod("CopyToLeft_Click"), _ => CanExecuteUcCompareMethod());
@@ -71,8 +74,20 @@ namespace dCompare
             ShowIdenticalCommand = new RelayCommand(_ => ExecuteUcCompareMethod("ShowIdentical_Click"), _ => CanExecuteUcCompareMethod());
             ShowLeftUniqueCommand = new RelayCommand(_ => ExecuteUcCompareMethod("ShowLeftUnique_Click"), _ => CanExecuteUcCompareMethod());
             ShowRightUniqueCommand = new RelayCommand(_ => ExecuteUcCompareMethod("ShowRightUnique_Click"), _ => CanExecuteUcCompareMethod());
-            SaveSessionCommand = new RelayCommand(_ => SaveSession(), _ => CanSaveSession());
-            LoadSessionCommand = new RelayCommand(_ => LoadSession(), _ => CanLoadSession());
+
+            // Set up configuration
+            IConfiguration configuration = new ConfigurationBuilder()
+                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+                .AddJsonFile("dcompare.json", optional: true, reloadOnChange: true)
+                .Build();
+
+            // Set up logger using Serilog
+            ConfigureLogging();
+            _logger = new SerilogLoggerFactory(Log.Logger).CreateLogger<ConfigurationService>();
+
+            // Create ConfigurationService
+            _configService = new ConfigurationService(configuration, _logger);
+            _tabIdMap = new Dictionary<string, string>();
 
             DataContext = this;
 
@@ -178,7 +193,7 @@ namespace dCompare
         {
             try
             {
-                var sessions = new Dictionary<string, SessionConfig>();
+                Dictionary<string, SessionConfig>? sessions = new();
 
                 foreach (TabItem tab in tabControl.Items)
                 {
@@ -423,7 +438,7 @@ namespace dCompare
         {
             try
             {
-                var optionsWindow = new OptionsWindow();
+                var optionsWindow = new OptionsWindow(_configService);
                 optionsWindow.Owner = this;
                 optionsWindow.ShowDialog();
                 UpdateStatus("Options window opened");
