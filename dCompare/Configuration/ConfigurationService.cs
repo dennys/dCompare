@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
+using System.IO.Abstractions;
 using System.Text.Json;
 
 namespace dCompare.Configuration
@@ -10,12 +11,14 @@ namespace dCompare.Configuration
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<ConfigurationService> _logger;
+        private readonly IFileSystem _fileSystem;
         private readonly string _configFilePath;
 
-        public ConfigurationService(IConfiguration configuration, ILogger<ConfigurationService> logger, string configFilePath = null)
+        public ConfigurationService(IConfiguration configuration, ILogger<ConfigurationService> logger, IFileSystem fileSystem = null, string configFilePath = null)
         {
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _fileSystem = fileSystem ?? new FileSystem();
             _configFilePath = configFilePath ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "dcompare.json");
         }
 
@@ -30,7 +33,7 @@ namespace dCompare.Configuration
             {
                 var options = new JsonSerializerOptions { WriteIndented = true };
                 var json = JsonSerializer.Serialize(config, options);
-                File.WriteAllText(_configFilePath, json);
+                _fileSystem.File.WriteAllText(_configFilePath, json);
                 _logger.LogInformation("Configuration saved to {ConfigFilePath}", _configFilePath);
             }
             catch (Exception ex)
