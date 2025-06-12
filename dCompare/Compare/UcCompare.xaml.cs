@@ -1,5 +1,6 @@
 ﻿using dCompare.Compare;
 using dCompare.FileOperation;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -120,12 +121,30 @@ namespace dCompare
 
         private void BrowseLeft_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("請選擇左側資料夾");
+            var folderDialog = new OpenFolderDialog
+            {
+                Title = "Select Folder",
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)
+            };
+
+            if (folderDialog.ShowDialog() == true)
+            {
+                LeftPathBox.Text = folderDialog.FolderName;
+            }
         }
 
         private void BrowseRight_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("請選擇右側資料夾");
+            var folderDialog = new OpenFolderDialog
+            {
+                Title = "Select Folder",
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)
+            };
+
+            if (folderDialog.ShowDialog() == true)
+            {
+                RightPathBox.Text = folderDialog.FolderName;
+            }
         }
 
         private async void Compare_Click(object sender, RoutedEventArgs e)
