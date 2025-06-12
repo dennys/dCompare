@@ -25,7 +25,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- Left File Content -->
-            <ListBox Grid.Column="0" ItemsSource="{Binding LeftLines}" Margin="5"
+            <ListBox x:Name="LeftListBox" Grid.Column="0" ItemsSource="{Binding LeftLines}" Margin="5"
                      Background="#F5F5F5" FontFamily="Consolas" FontSize="12">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
@@ -52,7 +52,7 @@
             </ListBox>
 
             <!-- Right File Content -->
-            <ListBox Grid.Column="1" ItemsSource="{Binding RightLines}" Margin="5"
+            <ListBox x:Name="RightListBox" Grid.Column="1" ItemsSource="{Binding RightLines}" Margin="5"
                      Background="#F5F5F5" FontFamily="Consolas" FontSize="12">
                 <ListBox.ItemTemplate>
                     <DataTemplate>

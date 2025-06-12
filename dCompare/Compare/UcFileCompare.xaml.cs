@@ -2,7 +2,9 @@
 using DiffPlex.DiffBuilder.Model;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace dCompare.Compare
 {
@@ -12,6 +14,9 @@ namespace dCompare.Compare
         private string _rightPath;
         private ObservableCollection<DiffPiece> _leftLines;
         private ObservableCollection<DiffPiece> _rightLines;
+        private ScrollViewer _leftScrollViewer;
+        private ScrollViewer _rightScrollViewer;
+        private bool _isSyncingScroll; // Prevent infinite scroll event loop
 
         public string LeftPath
         {
@@ -57,6 +62,66 @@ namespace dCompare.Compare
         {
             InitializeComponent();
             DataContext = this;
+            Loaded += UcFileCompare_Loaded;
+        }
+
+        private void UcFileCompare_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Find ScrollViewer for LeftListBox
+            _leftScrollViewer = FindScrollViewer(LeftListBox);
+            if (_leftScrollViewer != null)
+            {
+                _leftScrollViewer.ScrollChanged += LeftScrollViewer_ScrollChanged;
+            }
+
+            // Find ScrollViewer for RightListBox
+            _rightScrollViewer = FindScrollViewer(RightListBox);
+            if (_rightScrollViewer != null)
+            {
+                _rightScrollViewer.ScrollChanged += RightScrollViewer_ScrollChanged;
+            }
+        }
+
+        private ScrollViewer FindScrollViewer(DependencyObject depObj)
+        {
+            if (depObj is ScrollViewer scrollViewer)
+            {
+                return scrollViewer;
+            }
+
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+            {
+                var child = VisualTreeHelper.GetChild(depObj, i);
+                var result = FindScrollViewer(child);
+                if (result != null)
+                {
+                    return result;
+                }
+            }
+
+            return null;
+        }
+
+        private void LeftScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            if (_isSyncingScroll || _rightScrollViewer == null)
+                return;
+
+            _isSyncingScroll = true;
+            _rightScrollViewer.ScrollToVerticalOffset(e.VerticalOffset);
+            _rightScrollViewer.ScrollToHorizontalOffset(e.HorizontalOffset);
+            _isSyncingScroll = false;
+        }
+
+        private void RightScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            if (_isSyncingScroll || _leftScrollViewer == null)
+                return;
+
+            _isSyncingScroll = true;
+            _leftScrollViewer.ScrollToVerticalOffset(e.VerticalOffset);
+            _leftScrollViewer.ScrollToHorizontalOffset(e.HorizontalOffset);
+            _isSyncingScroll = false;
         }
 
         public void SetComparisonResult(string leftPath, string rightPath, SideBySideDiffModel diffModel)
