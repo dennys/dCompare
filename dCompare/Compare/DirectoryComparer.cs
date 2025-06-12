@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Serilog;
+using System.Threading;
 
 namespace dCompare.Compare
 {
@@ -16,43 +17,92 @@ namespace dCompare.Compare
             public FileSystemNode? Right { get; set; }
         }
 
-        public List<ComparisonItem> Compare(string leftPath, string rightPath)
+        public List<ComparisonItem> Compare(string leftPath, string rightPath, CancellationToken cancellationToken = default, Action<double> progressCallback = null)
         {
             Log.Information("Start to compare.");
             Log.Information("Start to build left path.");
-            FileSystemNode? leftRoot = BuildTree(leftPath, 0);
+
+            // Count total directories for progress
+            int totalDirs = CountDirectories(leftPath) + CountDirectories(rightPath);
+            int processedDirs = 0;
+            double progressPerDir = totalDirs > 0 ? 1.0 / totalDirs : 1.0;
+            double lastReportedProgress = -0.1; // Ensure first 10% is reported
+
+            FileSystemNode? leftRoot = BuildTree(leftPath, 0, cancellationToken, () =>
+            {
+                processedDirs++;
+                double currentProgress = processedDirs * progressPerDir;
+                // Report progress only at 10% increments
+                if (currentProgress >= lastReportedProgress + 0.1)
+                {
+                    progressCallback?.Invoke(currentProgress);
+                    lastReportedProgress = Math.Floor(currentProgress * 10) / 10;
+                }
+            });
+            cancellationToken.ThrowIfCancellationRequested();
+
             Log.Information("Start to build right path.");
-            FileSystemNode? rightRoot = BuildTree(rightPath, 0);
+            FileSystemNode? rightRoot = BuildTree(rightPath, 0, cancellationToken, () =>
+            {
+                processedDirs++;
+                double currentProgress = processedDirs * progressPerDir;
+                // Report progress only at 10% increments
+                if (currentProgress >= lastReportedProgress + 0.1)
+                {
+                    progressCallback?.Invoke(currentProgress);
+                    lastReportedProgress = Math.Floor(currentProgress * 10) / 10;
+                }
+            });
+            cancellationToken.ThrowIfCancellationRequested();
+
             List<ComparisonItem> result = new();
 
-            // Add root directory comparison with a placeholder status
             Log.Information("Start to create ComparisonItem.");
             ComparisonItem? rootItem = new ComparisonItem
             {
-                Status = ComparisonStatus.Identical, // Initial status, will be updated
+                Status = ComparisonStatus.Identical,
                 Left = leftRoot,
                 Right = rightRoot,
                 TreeIndent = ""
             };
             result.Add(rootItem);
 
-            // Compare nodes and update directory statuses
             Log.Information("Start to compare.");
-            bool hasDifferences = CompareNodes(leftRoot, rightRoot, result, "");
+            bool hasDifferences = CompareNodes(leftRoot, rightRoot, result, "", cancellationToken);
 
-            // Update root status based on children
             Log.Information("Start to show result.");
             if (hasDifferences)
             {
                 rootItem.Status = ComparisonStatus.Modified;
             }
 
+            // Ensure 100% is reported at completion
+            progressCallback?.Invoke(1.0);
+
             Log.Information("End to compare.");
             return result;
         }
 
-        private FileSystemNode BuildTree(string path, int depth)
+        private int CountDirectories(string path)
         {
+            if (!Directory.Exists(path)) return 0;
+            int count = 1; // Include the root directory
+            try
+            {
+                foreach (string dir in Directory.GetDirectories(path, "*", SearchOption.AllDirectories))
+                {
+                    count++;
+                }
+            }
+            catch (UnauthorizedAccessException) { }
+            catch (DirectoryNotFoundException) { }
+            return count;
+        }
+
+        private FileSystemNode BuildTree(string path, int depth, CancellationToken cancellationToken, Action onDirectoryProcessed = null)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
             FileSystemNode? root = new FileSystemNode
             {
                 Name = depth == 0 ? Path.GetFileName(path) : Path.GetFileName(path),
@@ -68,31 +118,30 @@ namespace dCompare.Compare
 
                 try
                 {
-                    // Process subdirectories
                     foreach (string? dir in Directory.GetDirectories(path))
                     {
-                        FileSystemNode childDir = BuildTree(dir, depth + 1);
+                        cancellationToken.ThrowIfCancellationRequested();
+                        FileSystemNode childDir = BuildTree(dir, depth + 1, cancellationToken, onDirectoryProcessed);
                         root.Children.Add(childDir);
-                        totalSize += childDir.Size; // Add subdirectory's total size
+                        totalSize += childDir.Size;
+                        onDirectoryProcessed?.Invoke();
                     }
 
-                    // Process files
                     foreach (string? file in Directory.GetFiles(path))
                     {
-                        FileSystemNode childFile = BuildTree(file, depth + 1);
+                        cancellationToken.ThrowIfCancellationRequested();
+                        FileSystemNode childFile = BuildTree(file, depth + 1, cancellationToken, onDirectoryProcessed);
                         root.Children.Add(childFile);
-                        totalSize += childFile.Size; // Add file size
+                        totalSize += childFile.Size;
                     }
 
-                    root.Size = totalSize; // Set the total size for the directory
+                    root.Size = totalSize;
                 }
                 catch (UnauthorizedAccessException)
                 {
-                    // Ignore directories with no access
                 }
                 catch (DirectoryNotFoundException)
                 {
-                    // Ignore missing directories
                 }
             }
             else if (File.Exists(path))
@@ -105,12 +154,13 @@ namespace dCompare.Compare
             return root;
         }
 
-        private bool CompareNodes(FileSystemNode? left, FileSystemNode? right, List<ComparisonItem> result, string indent)
+        private bool CompareNodes(FileSystemNode? left, FileSystemNode? right, List<ComparisonItem> result, string indent, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             bool hasDifferences = false;
             SortedSet<string> names = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            // Collect all child names
             if (left != null)
                 foreach (FileSystemNode? child in left.Children)
                 {
@@ -122,15 +172,15 @@ namespace dCompare.Compare
                     names.Add(child.Name);
                 }
 
-            // Process each child
             foreach (string? name in names)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 FileSystemNode? leftNode = left?.Children.Find(n => n.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
                 FileSystemNode? rightNode = right?.Children.Find(n => n.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
 
                 ComparisonStatus status = DetermineStatus(leftNode, rightNode);
 
-                // Create comparison item
                 ComparisonItem? item = new()
                 {
                     Status = status,
@@ -141,16 +191,14 @@ namespace dCompare.Compare
 
                 result.Add(item);
 
-                // If the current item is not identical, mark differences
                 if (status != ComparisonStatus.Identical)
                 {
                     hasDifferences = true;
                 }
 
-                // Recursively compare subdirectories and track differences
                 if ((leftNode?.IsDirectory ?? false) || (rightNode?.IsDirectory ?? false))
                 {
-                    bool childHasDifferences = CompareNodes(leftNode, rightNode, result, indent + "    ");
+                    bool childHasDifferences = CompareNodes(leftNode, rightNode, result, indent + "    ", cancellationToken);
                     if (childHasDifferences)
                     {
                         hasDifferences = true;
@@ -158,7 +206,6 @@ namespace dCompare.Compare
                 }
             }
 
-            // Update the parent directory's status if necessary
             if ((left?.IsDirectory ?? false) || (right?.IsDirectory ?? false))
             {
                 ComparisonItem? parentItem = result.LastOrDefault(i => i.Left == left || i.Right == right);
@@ -181,18 +228,15 @@ namespace dCompare.Compare
 
             if (left != null && right != null)
             {
-                // Check if types match (directory vs file)
                 if (left.IsDirectory != right.IsDirectory)
                     return ComparisonStatus.Conflict;
 
                 if (left.IsDirectory && right.IsDirectory)
                 {
-                    // Directory status will be updated in CompareNodes based on children
-                    return ComparisonStatus.Identical; // Placeholder
+                    return ComparisonStatus.Identical;
                 }
                 else
                 {
-                    // File comparison
                     if (left.Size == right.Size &&
                         Math.Abs((left.ModifiedTime - right.ModifiedTime).TotalSeconds) < 1)
                         return ComparisonStatus.Identical;
