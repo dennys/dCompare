@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
-namespace dCompare
+namespace dCompare.Compare
 {
     public class DepthToMarginConverter : IValueConverter
     {

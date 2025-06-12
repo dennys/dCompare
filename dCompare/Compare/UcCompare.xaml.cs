@@ -1,5 +1,4 @@
-﻿using dCompare.Compare;
-using dCompare.FileOperation;
+﻿using dCompare.FileOperation;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -17,7 +16,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace dCompare
+namespace dCompare.Compare
 {
     public static class LogicalTreeHelperExtensions
     {

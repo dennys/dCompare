@@ -5,7 +5,7 @@ using System.IO;
 using System.Text;
 using System.Windows;
 
-namespace dCompare
+namespace dCompare.Compare
 // design a wpf .net8 form, the name is FileOperation I can use another mainform to create it.
 // after created, I can call 2 functions from the mainform, their names are
 // Copy(string source, string target, bool overwrite = false)
