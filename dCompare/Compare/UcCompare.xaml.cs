@@ -1,4 +1,5 @@
 ﻿using dCompare.FileOperation;
+using DiffPlex.DiffBuilder.Model;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -269,7 +270,7 @@ namespace dCompare.Compare
             }
         }
 
-        private void ResultListView_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private async void ResultListView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             DependencyObject obj = (DependencyObject)e.OriginalSource;
             while (obj != null && !(obj is ListViewItem))
@@ -277,9 +278,9 @@ namespace dCompare.Compare
                 obj = VisualTreeHelper.GetParent(obj);
             }
 
-            if (obj is ListViewItem item)
+            if (obj is ListViewItem item && item.Content is TreeNode clickedItem)
             {
-                if (item.Content is TreeNode clickedItem && clickedItem.IsDirectory)
+                if (clickedItem.IsDirectory)
                 {
                     if (clickedItem.IsExpanded)
                     {
@@ -292,9 +293,81 @@ namespace dCompare.Compare
                         LoadChildren(clickedItem);
                     }
                 }
+                else
+                {
+                    // Handle file double-click
+                    string leftPath = clickedItem.LeftNode?.FullPath;
+                    string rightPath = clickedItem.RightNode?.FullPath;
+
+                    if (string.IsNullOrEmpty(leftPath) && string.IsNullOrEmpty(rightPath))
+                    {
+                        MessageBox.Show("No valid file paths to compare.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+
+                    var comparisonHandler = new FileComparisonHandler();
+                    FileType fileType = comparisonHandler.DetermineFileType(leftPath ?? rightPath);
+
+                    if (fileType == FileType.Text)
+                    {
+                        try
+                        {
+                            // Ensure both files exist; use a placeholder for missing files
+                            leftPath = leftPath ?? CreateTemporaryEmptyFile();
+                            rightPath = rightPath ?? CreateTemporaryEmptyFile();
+
+                            var diffModel = await comparisonHandler.CompareTextFilesAsync(leftPath, rightPath);
+                            OpenFileComparisonTab(leftPath, rightPath, diffModel);
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"Error comparing files: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                    }
+                    else if (fileType == FileType.Image)
+                    {
+                        MessageBox.Show("Image comparison is not yet supported.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Unsupported file type for comparison.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
             }
         }
 
+        // Add this new method to create a temporary empty file for missing files
+        private string CreateTemporaryEmptyFile()
+        {
+            string tempPath = Path.Combine(Path.GetTempPath(), $"dCompare_Empty_{Guid.NewGuid()}.txt");
+            File.WriteAllText(tempPath, string.Empty);
+            return tempPath;
+        }
+
+        // Add this new method to open a new tab with the file comparison
+        private void OpenFileComparisonTab(string leftPath, string rightPath, SideBySideDiffModel diffModel)
+        {
+            TabItem parentTab = LogicalTreeHelperExtensions.FindParent<TabItem>(this);
+            TabControl tabControl = LogicalTreeHelperExtensions.FindParent<TabControl>(parentTab);
+            if (tabControl == null)
+            {
+                MessageBox.Show("Cannot find parent TabControl.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            string tabHeader = $"Compare: {Path.GetFileName(leftPath)} - {Path.GetFileName(rightPath)}";
+            var newTab = new TabItem
+            {
+                Header = tabHeader,
+                Content = new UcFileCompare()
+            };
+
+            ((UcFileCompare)newTab.Content).SetComparisonResult(leftPath, rightPath, diffModel);
+            tabControl.Items.Add(newTab);
+            tabControl.SelectedItem = newTab;
+        }
+
+        // Confirm that RemoveChildren and LoadChildren are included (from original UcCompare.xaml.cs)
         private void LoadChildren(TreeNode parentNode)
         {
             if (_cachedComparisonResults == null) return;
@@ -323,6 +396,45 @@ namespace dCompare.Compare
         }
 
         private void RemoveChildren(TreeNode parentNode)
+        {
+            var children = _treeNodes
+                .Where(n => n.RelativePath.StartsWith(parentNode.RelativePath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            foreach (var child in children)
+            {
+                _treeNodes.Remove(child);
+            }
+        }
+
+        private void LoadChildren2(TreeNode parentNode)
+        {
+            if (_cachedComparisonResults == null) return;
+
+            string leftDir = LeftPathBox.Text.Trim();
+            string rightDir = RightPathBox.Text.Trim();
+
+            List<DirectoryComparer.ComparisonItem> childItems = _cachedComparisonResults
+                .Where(item =>
+                {
+                    string? relativePath = GetRelativePath(item, leftDir, rightDir);
+                    return !string.IsNullOrEmpty(relativePath) &&
+                           relativePath.StartsWith(parentNode.RelativePath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
+                           relativePath.Count(c => c == Path.DirectorySeparatorChar) == parentNode.Depth + 1;
+                })
+                .ToList();
+
+            List<TreeNode> childNodes = BuildFlatTreeStructure(childItems, leftDir, rightDir, parentNode.Depth + 1);
+            int insertIndex = _treeNodes.IndexOf(parentNode) + 1;
+
+            foreach (TreeNode child in childNodes)
+            {
+                child.IsExpanded = false;
+                _treeNodes.Insert(insertIndex++, child);
+            }
+        }
+
+        private void RemoveChildren2(TreeNode parentNode)
         {
             var children = _treeNodes
                 .Where(n => n.RelativePath.StartsWith(parentNode.RelativePath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
