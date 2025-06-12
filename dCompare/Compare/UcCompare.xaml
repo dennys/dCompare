@@ -8,6 +8,26 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <local:DepthToMarginConverter x:Key="DepthToMarginConverter"/>
+        <Style x:Key="SpinnerStyle" TargetType="Ellipse">
+            <Setter Property="Width" Value="12"/>
+            <Setter Property="Height" Value="12"/>
+            <Setter Property="Fill" Value="Gray"/>
+            <Setter Property="Visibility" Value="Collapsed"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsComparing}" Value="True">
+                    <Setter Property="Visibility" Value="Visible"/>
+                    <DataTrigger.EnterActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                 From="1" To="0" Duration="0:0:0.5"
+                                                 AutoReverse="True" RepeatBehavior="Forever"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </DataTrigger.EnterActions>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -36,7 +56,6 @@
                         Width="24" Height="18" Padding="0">
                     <Path Data="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"
                           Fill="#666666" Stretch="Uniform" Width="16" Height="16"/>
-                    <!-- Lighter color -->
                 </Button>
 
                 <Label Grid.Column="4" Content="Right Path:" VerticalAlignment="Center"/>
@@ -46,22 +65,8 @@
                         Width="24" Height="18" Padding="0">
                     <Path Data="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"
                           Fill="#666666" Stretch="Uniform" Width="16" Height="16"/>
-                    <!-- Lighter color -->
                 </Button>
             </Grid>
-
-            <!--
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10">
-                <Button Name="CompareBtn" Content="Compare" Click="Compare_Click" Padding="20,5" Margin="5"/>
-                <Button Name="ExpandAllBtn" Content="Expand All" Click="ExpandAll_Click" Padding="20,5" Margin="5"/>
-                <Button Name="CollapseAllBtn" Content="Collapse All" Click="CollapseAll_Click" Padding="20,5" Margin="5"/>
-                <Button Name="ShowAllBtn" Content="Show All" Click="ShowAll_Click" Padding="20,5" Margin="5"/>
-                <Button Name="ShowDifferentBtn" Content="Different" Click="ShowDifferent_Click" Padding="20,5" Margin="5"/>
-                <Button Name="ShowIdenticalBtn" Content="Identical" Click="ShowIdentical_Click" Padding="20,5" Margin="5"/>
-                <Button Name="ShowLeftUniqueBtn" Content="Left Unique" Click="ShowLeftUnique_Click" Padding="20,5" Margin="5"/>
-                <Button Name="ShowRightUniqueBtn" Content="Right Unique" Click="ShowRightUnique_Click" Padding="20,5" Margin="5"/>
-            </StackPanel>
-            -->
         </StackPanel>
 
         <!-- Results Display Area -->
@@ -71,7 +76,7 @@
                   VirtualizingStackPanel.VirtualizationMode="Recycling">
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
-                    <Setter Property="Height" Value="18"/> <!-- The height of raw -->
+                    <Setter Property="Height" Value="18"/>
                     <EventSetter Event="PreviewMouseRightButtonDown" Handler="ListView_PreviewMouseRightButtonDown"/>
                 </Style>
             </ListView.ItemContainerStyle>
@@ -86,7 +91,6 @@
                     <MenuItem Header="Properties" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
                 </ContextMenu>
             </ListView.ContextMenu>
-
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Left Name" Width="250">
@@ -95,7 +99,6 @@
                                 <TextBlock Text="{Binding LeftDisplayName}" 
                                            Margin="{Binding Depth, Converter={StaticResource DepthToMarginConverter}}" 
                                            FontSize="11"/>
-                                <!-- Smaller font for smaller row -->
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
@@ -117,7 +120,7 @@
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding StatusSymbol}" HorizontalAlignment="Center" TextAlignment="Center"
-                                           FontWeight="Bold" FontSize="11" Width="40"> <!-- The width is necessary or TextAlignment will not be effective -->
+                                           FontWeight="Bold" FontSize="11" Width="40">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Style.Triggers>
@@ -167,12 +170,14 @@
             </ListView.View>
         </ListView>
 
-        <!-- Operation Buttons Area -->
-        <!--
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
-            <Button Name="CopyToLeftBtn" Content="Copy to Left" Click="CopyToLeft_Click" Padding="15,5" Margin="5"/>
-            <Button Name="CopyToRightBtn" Content="Copy to Right" Click="CopyToRight_Click" Padding="15,5" Margin="5"/>
-        </StackPanel>
-        -->
+        <!-- Progress Overlay -->
+        <Grid Grid.Row="1" Background="#80FFFFFF" Visibility="{Binding IsComparing, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Width="300">
+                <ProgressBar Value="{Binding ComparisonProgress}" Minimum="0" Maximum="100" Height="20" Margin="10"/>
+                <TextBlock Text="{Binding ComparisonProgress, StringFormat='Comparing: {0:F0}%'}" 
+                           HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                <Button Content="Cancel" Click="CancelCompare_Click" Width="100" Height="30"/>
+            </StackPanel>
+        </Grid>
     </Grid>
 </UserControl>

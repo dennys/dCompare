@@ -44,19 +44,23 @@ namespace dCompare.Options
                 OnPropertyChanged(Nameof(AutoCompareAfterSessionLoad));
             }
         }
-
         private void Browse_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new OpenFileDialog
             {
-                Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*"
+                Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*",
+                Title = "Select a JSON File",
+                AddToRecent = true, // New property in .NET 8
+                ClientGuid = Guid.NewGuid() // Helps maintain dialog state
             };
+
             if (dialog.ShowDialog() == true)
             {
-                if (DataContext is AppConfiguration options)
-                {
-                    options.Options.DefaultSessionFile = dialog.FileName;
-                }
+                DefaultSessionFile.Text = dialog.FileName;
+                //if (DataContext is AppConfiguration options)
+                //{
+                //    options.Options.DefaultSessionFile = dialog.FileName;
+                //}
             }
         }
     }

@@ -1,15 +1,31 @@
 ﻿using dCompare.Compare;
+using Serilog;
 using System;
 using System.IO;
 using System.Text;
 using System.Windows;
 
 namespace dCompare
+// design a wpf .net8 form, the name is FileOperation I can use another mainform to create it.
+// after created, I can call 2 functions from the mainform, their names are
+// Copy(string source, string target, bool overwrite = false)
+// Move(string source, string target, bool overwrite = false)
+// consider to use 1 function for the above 2 functions
+// the UI has 3 tabs: Queued, Failed, and Successful
+// when I call a function, it add a record into Queued and it start to do copy or move in the background
+// when the job is completed, move the list to successful tab. if any error, move this record to failed tab
+// but 1 problem is, how to let the mainwindow know the status of the copy or move? user can still use mainwindow during copy or move
+// is it possible to build a callback-like mechanism? when a job is completed(or failed), a function on mainwindow will be called
+// and it needs to know this is which job, because I need to refresh mainwindows status
+// the concept is like FileZilla's download function
+
+
 {
     public static class FileOperations
     {
         public static void CopySelectedItemTo(TreeNode node, bool toLeft, string leftPath, string rightPath)
         {
+            Log.Information($"Start to copy {leftPath} to {leftPath}");
             if (node.IsDirectory) { MessageBox.Show("目前不支援複製整個資料夾，請選擇個別檔案"); return; }
             string sourceRoot = toLeft ? rightPath : leftPath;
             string targetRoot = toLeft ? leftPath : rightPath;

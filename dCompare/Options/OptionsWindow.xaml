@@ -65,8 +65,8 @@
 
         <!-- Buttons -->
         <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="OK" Width="80" Margin="5" Click="OK_Click"/>
-            <Button Content="Cancel" Width="80" Margin="5" Click="Cancel_Click"/>
+            <Button Content="_OK" Width="80" Margin="5" Click="OK_Click"/>
+            <Button Content="_Cancel" Width="80" Margin="5" Click="Cancel_Click"/>
         </StackPanel>
     </Grid>
 </Window>
