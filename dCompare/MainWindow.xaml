@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:dCompare"
+        xmlns:compare="clr-namespace:dCompare.Compare"
         Title="dCompare" Height="600" Width="1000"
         Background="#F0F0F0">
 
@@ -410,7 +411,7 @@
                     ItemContainerStyle="{StaticResource ChromeTabStyle}"
                     PreviewMouseMove="TabControl_PreviewMouseMove">
             <TabItem Header="Welcome">
-                <local:UcCompare/>
+                <compare:UcCompare/>
             </TabItem>
         </TabControl>
     </DockPanel>
