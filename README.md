@@ -15,7 +15,17 @@
 
 ## Issues
 
-* The performance is not good, it takes about 2~3 seconds to read 1 directory contains 1000 sub-directories and files.
-=> consider to use lazy-loading.
+* Cannot close tab
+
 * Cannot change the width of column?
 * Cannot use mouse to partial select some text of the text box
+
+							<DataTrigger Binding="{Binding Type}" Value="Inserted">
+                                <Setter Property="Background" Value="#DDFFDD"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Type}" Value="Deleted">
+                                <Setter Property="Background" Value="#FFDDDD"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Type}" Value="Imaginary">
+                                <Setter Property="Background" Value="#E0E0E0"/>
+                            </DataTrigger>
