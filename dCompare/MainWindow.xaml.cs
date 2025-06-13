@@ -29,6 +29,7 @@ namespace dCompare
         public ICommand CloseTabCommand { get; }
         public ICommand SaveSessionCommand { get; }
         public ICommand LoadSessionCommand { get; }
+        public ICommand ClearRecentSessionsCommand { get; }
 
         public ICommand OptionsCommand { get; }
         public ICommand CompareCommand { get; }
@@ -44,12 +45,14 @@ namespace dCompare
 
         private readonly ConfigurationService _configService;
         private readonly Dictionary<string, string> _tabIdMap; // Maps TabItem.Header to session ID
+        private readonly List<string> _recentSessions; // Stores recent session file paths
         private readonly ILogger<ConfigurationService> _logger;
         private readonly IServiceProvider _serviceProvider;
 
         private TabItem _draggedTab;
         private Point _dragStartPoint;
         private int _tabCounter = 1;
+        private const int MaxRecentSessions = 5; // Maximum number of recent sessions to store
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -70,11 +73,16 @@ namespace dCompare
             _configService = _serviceProvider.GetRequiredService<ConfigurationService>();
             _logger = _serviceProvider.GetRequiredService<ILogger<ConfigurationService>>();
 
+            // Initialize recent sessions list
+            _recentSessions = new List<string>();
+            LoadRecentSessions();
+
             // Initialize commands
             AddTabCommand = new RelayCommand(_ => AddNewTab(), _ => CanAddTab());
             CloseTabCommand = new RelayCommand(param => CloseTab(param as TabItem), param => CanCloseTab());
             SaveSessionCommand = new RelayCommand(_ => SaveSession(), _ => CanSaveSession());
             LoadSessionCommand = new RelayCommand(_ => LoadSession(), _ => CanLoadSession());
+            ClearRecentSessionsCommand = new RelayCommand(_ => ClearRecentSessions(), _ => CanClearRecentSessions());
 
             OptionsCommand = new RelayCommand(_ => ExecuteOptions(), _ => CanExecuteOptions());
             CompareCommand = new RelayCommand(_ => ExecuteUcCompareMethod("Compare_Click"), _ => CanExecuteUcCompareMethod());
@@ -203,6 +211,132 @@ namespace dCompare
 
         #endregion
 
+        #region Recent Sessions Management
+
+        private void LoadRecentSessions()
+        {
+            try
+            {
+                string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "recentSessions.json");
+                if (File.Exists(configPath))
+                {
+                    string json = File.ReadAllText(configPath);
+                    var sessions = JsonSerializer.Deserialize<List<string>>(json);
+                    if (sessions != null)
+                    {
+                        _recentSessions.AddRange(sessions);
+                        UpdateRecentSessionsMenu();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning("Failed to load recent sessions: {Message}", ex.Message);
+            }
+        }
+
+        private void SaveRecentSessions()
+        {
+            try
+            {
+                string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "recentSessions.json");
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                string json = JsonSerializer.Serialize(_recentSessions, options);
+                File.WriteAllText(configPath, json);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning("Failed to save recent sessions: {Message}", ex.Message);
+            }
+        }
+
+        private void AddRecentSession(string filePath)
+        {
+            try
+            {
+                // Remove if already exists to update position
+                _recentSessions.Remove(filePath);
+
+                // Add to top of list
+                _recentSessions.Insert(0, filePath);
+
+                // Trim list to max size
+                while (_recentSessions.Count > MaxRecentSessions)
+                {
+                    _recentSessions.RemoveAt(_recentSessions.Count - 1);
+                }
+
+                SaveRecentSessions();
+                UpdateRecentSessionsMenu();
+            }
+            catch (Exception ex)
+            {
+                Log.Warning("Failed to add recent session: {Message}", ex.Message);
+            }
+        }
+
+        private void ClearRecentSessions()
+        {
+            try
+            {
+                _recentSessions.Clear();
+                SaveRecentSessions();
+                UpdateRecentSessionsMenu();
+                UpdateStatus("Recent sessions cleared");
+            }
+            catch (Exception ex)
+            {
+                Log.Warning("Failed to clear recent sessions: {Message}", ex.Message);
+                UpdateStatus($"Failed to clear recent sessions: {ex.Message}");
+            }
+        }
+
+        private bool CanClearRecentSessions()
+        {
+            return _recentSessions.Count > 0;
+        }
+
+        private void UpdateRecentSessionsMenu()
+        {
+            try
+            {
+                // Clear existing menu items except the Clear command and separator
+                var itemsToRemove = new List<MenuItem>();
+                foreach (var item in RecentSessionsMenu.Items)
+                {
+                    if (item is MenuItem menuItem && menuItem != RecentSessionsMenu.Items[0] && !(item is Separator))
+                    {
+                        itemsToRemove.Add(menuItem);
+                    }
+                }
+                foreach (var item in itemsToRemove)
+                {
+                    RecentSessionsMenu.Items.Remove(item);
+                }
+
+                // Add recent session items
+                for (int i = 0; i < _recentSessions.Count; i++)
+                {
+                    string filePath = _recentSessions[i];
+                    string fileName = Path.GetFileName(filePath);
+                    var menuItem = new MenuItem
+                    {
+                        Header = $"{i + 1}. {fileName}",
+                        ToolTip = filePath,
+                        Command = LoadSessionCommand,
+                        CommandParameter = filePath
+                    };
+                    RecentSessionsMenu.Items.Insert(i, menuItem);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning("Failed to update recent sessions menu: {Message}", ex.Message);
+            }
+        }
+
+        #endregion
+
         #region Session Management
 
         private void SaveSession()
@@ -236,6 +370,7 @@ namespace dCompare
                     var options = new JsonSerializerOptions { WriteIndented = true };
                     var json = JsonSerializer.Serialize(sessions, options);
                     System.IO.File.WriteAllText(saveFileDialog.FileName, json);
+                    AddRecentSession(saveFileDialog.FileName);
                     UpdateStatus($"Session saved to {saveFileDialog.FileName}");
                 }
             }
@@ -326,6 +461,7 @@ namespace dCompare
                         tabControl.SelectedIndex = 0;
                     }
 
+                    AddRecentSession(sessionFileName);
                     UpdateStatus($"Session loaded from {sessionFileName}");
                 }
             }
@@ -409,10 +545,17 @@ namespace dCompare
                 }
 
                 int closedIndex = tabControl.Items.IndexOf(tabToClose);
-                var tabId = _tabIdMap[tabToClose.Header.ToString()];
                 tabControl.Items.Remove(tabToClose);
-                _tabIdMap.Remove(tabToClose.Header.ToString());
-                _configService.RemoveSession(tabId);
+                try
+                {
+                    var tabId = _tabIdMap[tabToClose.Header.ToString()];
+                    _tabIdMap.Remove(tabToClose.Header.ToString());
+                    _configService.RemoveSession(tabId);
+                }
+                catch
+                {
+
+                }
 
                 if (tabControl.Items.Count > 0)
                 {
@@ -609,10 +752,13 @@ namespace dCompare
                 "• Drag and drop tab reordering\n" +
                 "• Keyboard shortcuts (Ctrl+N, Ctrl+W)\n" +
                 "• Tab close confirmation\n" +
-                "• Unified color scheme\n\n" +
+                "• Unified color scheme\n" +
+                "• Recent sessions history\n\n" +
                 "Keyboard Shortcuts:\n" +
                 "Ctrl+N: New Tab\n" +
-                "Ctrl+W: Close Current Tab",
+                "Ctrl+W: Close Current Tab\n" +
+                "Ctrl+S: Save Session\n" +
+                "Ctrl+O: Load Session",
                 "About dCompare",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
