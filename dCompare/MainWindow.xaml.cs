@@ -9,12 +9,10 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.IO.Abstractions;
 using System.Reflection;
-using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -44,15 +42,12 @@ namespace dCompare
         public ICommand ShowRightUniqueCommand { get; }
 
         private readonly ConfigurationService _configService;
-        private readonly Dictionary<string, string> _tabIdMap; // Maps TabItem.Header to session ID
-        private readonly List<string> _recentSessions; // Stores recent session file paths
+        private readonly SessionManager _sessionManager;
         private readonly ILogger<ConfigurationService> _logger;
         private readonly IServiceProvider _serviceProvider;
 
         private TabItem _draggedTab;
         private Point _dragStartPoint;
-        private int _tabCounter = 1;
-        private const int MaxRecentSessions = 5; // Maximum number of recent sessions to store
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -71,18 +66,18 @@ namespace dCompare
 
             // Resolve dependencies
             _configService = _serviceProvider.GetRequiredService<ConfigurationService>();
+            _sessionManager = _serviceProvider.GetRequiredService<SessionManager>();
             _logger = _serviceProvider.GetRequiredService<ILogger<ConfigurationService>>();
 
-            // Initialize recent sessions list
-            _recentSessions = new List<string>();
-            LoadRecentSessions();
+            // Initialize session manager
+            _sessionManager.Initialize(tabControl, RecentSessionsMenu);
 
             // Initialize commands
             AddTabCommand = new RelayCommand(_ => AddNewTab(), _ => CanAddTab());
             CloseTabCommand = new RelayCommand(param => CloseTab(param as TabItem), param => CanCloseTab());
-            SaveSessionCommand = new RelayCommand(_ => SaveSession(), _ => CanSaveSession());
-            LoadSessionCommand = new RelayCommand(_ => LoadSession(), _ => CanLoadSession());
-            ClearRecentSessionsCommand = new RelayCommand(_ => ClearRecentSessions(), _ => CanClearRecentSessions());
+            SaveSessionCommand = new RelayCommand(_ => _sessionManager.SaveSession(UpdateStatus), _ => _sessionManager.CanSaveSession());
+            LoadSessionCommand = new RelayCommand(_ => _sessionManager.LoadSession(null, false, UpdateStatus, ExecuteUcCompareMethod), _ => _sessionManager.CanLoadSession());
+            ClearRecentSessionsCommand = new RelayCommand(_ => _sessionManager.ClearRecentSessions(), _ => _sessionManager.CanClearRecentSessions());
 
             OptionsCommand = new RelayCommand(_ => ExecuteOptions(), _ => CanExecuteOptions());
             CompareCommand = new RelayCommand(_ => ExecuteUcCompareMethod("Compare_Click"), _ => CanExecuteUcCompareMethod());
@@ -96,19 +91,16 @@ namespace dCompare
             ShowLeftUniqueCommand = new RelayCommand(_ => ExecuteUcCompareMethod("ShowLeftUnique_Click"), _ => CanExecuteUcCompareMethod());
             ShowRightUniqueCommand = new RelayCommand(_ => ExecuteUcCompareMethod("ShowRightUnique_Click"), _ => CanExecuteUcCompareMethod());
 
-            _tabIdMap = new Dictionary<string, string>();
-
             DataContext = this;
 
             // Load default session if configured
             var config = _configService.GetConfiguration();
             if (config.Options?.AutoLoadDefaultSession == true && !string.IsNullOrEmpty(config.Options.DefaultSessionFile))
             {
-                LoadSession(config.Options.DefaultSessionFile, config.Options.AutoCompareAfterSessionLoad);
+                _sessionManager.LoadSession(config.Options.DefaultSessionFile, config.Options.AutoCompareAfterSessionLoad, UpdateStatus, ExecuteUcCompareMethod);
             }
             else
             {
-                // Set initial status if no default session is loaded
                 Log.Information("Application ready.");
                 UpdateStatus("Application ready");
             }
@@ -131,8 +123,9 @@ namespace dCompare
             // Configure file system
             services.AddSingleton<IFileSystem>(new FileSystem());
 
-            // Configure ConfigurationService
+            // Configure services
             services.AddSingleton<ConfigurationService>();
+            services.AddSingleton<SessionManager>();
         }
 
         private void ConfigureLogging(IConfiguration configuration)
@@ -157,329 +150,8 @@ namespace dCompare
             }
             else
             {
-                Log.Logger = new LoggerConfiguration().CreateLogger(); // Null logger if disabled
+                Log.Logger = new LoggerConfiguration().CreateLogger();
             }
-        }
-
-        private void ApplyOptions(OptionsConfig options)
-        {
-            // Apply theme
-            // Note: Implement theme switching logic based on options.Theme ("light" or "dark")
-            // For example, update resource dictionaries or styles
-
-            // Apply language
-            // Note: Implement language switching logic based on options.Language
-            // Example: Thread.CurrentThread.CurrentUICulture = new CultureInfo(options.Language);
-
-            // Apply hotkeys
-            UpdateHotKeys(options.HotKeys);
-        }
-
-        private void UpdateHotKeys(Dictionary<string, string> hotKeys)
-        {
-            // Clear existing key bindings  
-            InputBindings.Clear();
-
-            // Add new key bindings  
-            foreach (var hotKey in hotKeys)
-            {
-                try
-                {
-                    var keyGestureConverter = new KeyGestureConverter();
-                    if (keyGestureConverter.ConvertFromString(hotKey.Value) is KeyGesture keyGesture)
-                    {
-                        var command = hotKey.Key switch
-                        {
-                            "AddTab" => AddTabCommand,
-                            "CloseTab" => CloseTabCommand,
-                            "Compare" => CompareCommand,
-                            // Add other commands as needed  
-                            _ => null
-                        };
-                        if (command != null)
-                        {
-                            InputBindings.Add(new KeyBinding(command, keyGesture));
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.Warning("Invalid hotkey format for {Key}: {Value}", hotKey.Key, hotKey.Value);
-                }
-            }
-        }
-
-        #endregion
-
-        #region Recent Sessions Management
-
-        private void LoadRecentSessions()
-        {
-            try
-            {
-                string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "recentSessions.json");
-                if (File.Exists(configPath))
-                {
-                    string json = File.ReadAllText(configPath);
-                    var sessions = JsonSerializer.Deserialize<List<string>>(json);
-                    if (sessions != null)
-                    {
-                        _recentSessions.AddRange(sessions);
-                        UpdateRecentSessionsMenu();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Warning("Failed to load recent sessions: {Message}", ex.Message);
-            }
-        }
-
-        private void SaveRecentSessions()
-        {
-            try
-            {
-                string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "recentSessions.json");
-                var options = new JsonSerializerOptions { WriteIndented = true };
-                string json = JsonSerializer.Serialize(_recentSessions, options);
-                File.WriteAllText(configPath, json);
-            }
-            catch (Exception ex)
-            {
-                Log.Warning("Failed to save recent sessions: {Message}", ex.Message);
-            }
-        }
-
-        private void AddRecentSession(string filePath)
-        {
-            try
-            {
-                // Remove if already exists to update position
-                _recentSessions.Remove(filePath);
-
-                // Add to top of list
-                _recentSessions.Insert(0, filePath);
-
-                // Trim list to max size
-                while (_recentSessions.Count > MaxRecentSessions)
-                {
-                    _recentSessions.RemoveAt(_recentSessions.Count - 1);
-                }
-
-                SaveRecentSessions();
-                UpdateRecentSessionsMenu();
-            }
-            catch (Exception ex)
-            {
-                Log.Warning("Failed to add recent session: {Message}", ex.Message);
-            }
-        }
-
-        private void ClearRecentSessions()
-        {
-            try
-            {
-                _recentSessions.Clear();
-                SaveRecentSessions();
-                UpdateRecentSessionsMenu();
-                UpdateStatus("Recent sessions cleared");
-            }
-            catch (Exception ex)
-            {
-                Log.Warning("Failed to clear recent sessions: {Message}", ex.Message);
-                UpdateStatus($"Failed to clear recent sessions: {ex.Message}");
-            }
-        }
-
-        private bool CanClearRecentSessions()
-        {
-            return _recentSessions.Count > 0;
-        }
-
-        private void UpdateRecentSessionsMenu()
-        {
-            try
-            {
-                // Clear existing menu items except the Clear command and separator
-                var itemsToRemove = new List<MenuItem>();
-                foreach (var item in RecentSessionsMenu.Items)
-                {
-                    if (item is MenuItem menuItem && menuItem != RecentSessionsMenu.Items[0] && !(item is Separator))
-                    {
-                        itemsToRemove.Add(menuItem);
-                    }
-                }
-                foreach (var item in itemsToRemove)
-                {
-                    RecentSessionsMenu.Items.Remove(item);
-                }
-
-                // Add recent session items
-                for (int i = 0; i < _recentSessions.Count; i++)
-                {
-                    string filePath = _recentSessions[i];
-                    string fileName = Path.GetFileName(filePath);
-                    var menuItem = new MenuItem
-                    {
-                        Header = $"{i + 1}. {fileName}",
-                        ToolTip = filePath,
-                        Command = LoadSessionCommand,
-                        CommandParameter = filePath
-                    };
-                    RecentSessionsMenu.Items.Insert(i, menuItem);
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Warning("Failed to update recent sessions menu: {Message}", ex.Message);
-            }
-        }
-
-        #endregion
-
-        #region Session Management
-
-        private void SaveSession()
-        {
-            try
-            {
-                Dictionary<string, SessionConfig>? sessions = new();
-
-                foreach (TabItem tab in tabControl.Items)
-                {
-                    if (tab.Content is UcCompare ucCompare)
-                    {
-                        string tabName = tab.Header.ToString();
-                        sessions[tabName] = new SessionConfig
-                        {
-                            Left = ucCompare.LeftPathBox.Text,
-                            Right = ucCompare.RightPathBox.Text
-                        };
-                    }
-                }
-
-                var saveFileDialog = new SaveFileDialog
-                {
-                    Filter = "JSON files (*.json)|*.json",
-                    DefaultExt = "json",
-                    FileName = "dCompareSession.json"
-                };
-
-                if (saveFileDialog.ShowDialog() == true)
-                {
-                    var options = new JsonSerializerOptions { WriteIndented = true };
-                    var json = JsonSerializer.Serialize(sessions, options);
-                    System.IO.File.WriteAllText(saveFileDialog.FileName, json);
-                    AddRecentSession(saveFileDialog.FileName);
-                    UpdateStatus($"Session saved to {saveFileDialog.FileName}");
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error saving session: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                UpdateStatus($"Error saving session: {ex.Message}");
-            }
-        }
-
-        private bool CanSaveSession()
-        {
-            return tabControl.Items.Count > 0;
-        }
-
-        private void LoadSession(string filePath = null, bool executeCompare = false)
-        {
-            try
-            {
-                string json;
-                string sessionFileName;
-
-                if (string.IsNullOrEmpty(filePath))
-                {
-                    var openFileDialog = new OpenFileDialog
-                    {
-                        Filter = "JSON files (*.json)|*.json",
-                        DefaultExt = "json"
-                    };
-
-                    if (openFileDialog.ShowDialog() != true)
-                        return;
-
-                    json = System.IO.File.ReadAllText(openFileDialog.FileName);
-                    sessionFileName = openFileDialog.FileName;
-                }
-                else
-                {
-                    if (!File.Exists(filePath))
-                    {
-                        UpdateStatus($"Session file not found: {filePath}");
-                        return;
-                    }
-                    json = System.IO.File.ReadAllText(filePath);
-                    sessionFileName = filePath;
-                }
-
-                var sessions = JsonSerializer.Deserialize<Dictionary<string, SessionConfig>>(json);
-
-                if (sessions != null)
-                {
-                    // Clear existing tabs except Welcome
-                    while (tabControl.Items.Count > 1)
-                    {
-                        tabControl.Items.RemoveAt(tabControl.Items.Count - 1);
-                    }
-                    if (tabControl.Items.Count == 1 && (tabControl.Items[0] as TabItem)?.Header.ToString() == "Welcome")
-                    {
-                        tabControl.Items.Clear();
-                    }
-
-                    _tabIdMap.Clear();
-                    _tabCounter = 0;
-
-                    foreach (var session in sessions)
-                    {
-                        _tabCounter++;
-                        var tabName = session.Key;
-                        var newTab = new TabItem
-                        {
-                            Header = tabName,
-                            Content = new UcCompare()
-                        };
-                        ((UcCompare)newTab.Content).LeftPathBox.Text = session.Value.Left;
-                        ((UcCompare)newTab.Content).RightPathBox.Text = session.Value.Right;
-                        tabControl.Items.Add(newTab);
-                        _tabIdMap[tabName] = Guid.NewGuid().ToString();
-
-                        if (executeCompare)
-                        {
-                            tabControl.SelectedItem = newTab;
-                            ExecuteUcCompareMethod("Compare_Click");
-                        }
-                    }
-
-                    if (tabControl.Items.Count > 0)
-                    {
-                        tabControl.SelectedIndex = 0;
-                    }
-
-                    AddRecentSession(sessionFileName);
-                    UpdateStatus($"Session loaded from {sessionFileName}");
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error loading session: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                UpdateStatus($"Error loading session: {ex.Message}");
-            }
-        }
-
-        private void LoadSession()
-        {
-            LoadSession(null, false);
-        }
-
-        private bool CanLoadSession()
-        {
-            return true;
         }
 
         #endregion
@@ -490,16 +162,16 @@ namespace dCompare
         {
             try
             {
-                _tabCounter++;
+                _sessionManager.TabCounter++;
                 var tabId = Guid.NewGuid().ToString();
                 var newTab = new TabItem
                 {
-                    Header = $"Tab {_tabCounter}",
+                    Header = $"Tab {_sessionManager.TabCounter}",
                     Content = new UcCompare()
                 };
                 tabControl.Items.Add(newTab);
                 tabControl.SelectedItem = newTab;
-                _tabIdMap[newTab.Header.ToString()] = tabId;
+                _sessionManager.TabIdMap[newTab.Header.ToString()] = tabId;
 
                 var config = _configService.GetConfiguration();
                 if (!config.Sessions.ContainsKey(tabId))
@@ -507,7 +179,7 @@ namespace dCompare
                     _configService.UpdateSession(tabId, string.Empty, string.Empty);
                 }
 
-                UpdateStatus($"Added new tab: Tab {_tabCounter}");
+                UpdateStatus($"Added new tab: Tab {_sessionManager.TabCounter}");
                 CommandManager.InvalidateRequerySuggested();
             }
             catch (Exception ex)
@@ -548,13 +220,14 @@ namespace dCompare
                 tabControl.Items.Remove(tabToClose);
                 try
                 {
-                    var tabId = _tabIdMap[tabToClose.Header.ToString()];
-                    _tabIdMap.Remove(tabToClose.Header.ToString());
+                    var tabId = _sessionManager.TabIdMap[tabToClose.Header.ToString()];
+                    _sessionManager.TabIdMap.Remove(tabToClose.Header.ToString());
                     _configService.RemoveSession(tabId);
                 }
-                catch
+                catch (Exception ex)
                 {
-
+                    Log.Warning("Failed to remove tab session: {Message}", ex.Message);
+                    UpdateStatus($"Failed to remove tab session: {ex.Message}");
                 }
 
                 if (tabControl.Items.Count > 0)
@@ -569,18 +242,17 @@ namespace dCompare
             catch (Exception ex)
             {
                 MessageBox.Show($"Error closing tab: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Log.Error("Error closing tab: {Message}", ex.Message);
             }
         }
 
         private bool CanAddTab()
         {
-            // Allow adding tabs up to a reasonable limit
             return tabControl?.Items.Count < 20;
         }
 
         private bool CanCloseTab()
         {
-            // Allow closing if there's more than one tab, or if the single tab isn't the welcome tab
             if (tabControl?.Items.Count == 0)
                 return false;
 
@@ -610,7 +282,7 @@ namespace dCompare
 
         private bool CanExecuteOptions()
         {
-            return true; // Options can always be opened
+            return true;
         }
 
         private void ExecuteUcCompareMethod(string methodName)
@@ -667,7 +339,6 @@ namespace dCompare
             Point currentPoint = e.GetPosition(null);
             Vector diff = _dragStartPoint - currentPoint;
 
-            // Start drag if mouse has moved sufficiently
             if (Math.Abs(diff.X) > SystemParameters.MinimumHorizontalDragDistance ||
                 Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance)
             {
@@ -732,11 +403,11 @@ namespace dCompare
                 {
                     string oldName = selectedTab.Header.ToString();
                     selectedTab.Header = newName;
-                    if (_tabIdMap.ContainsKey(oldName))
+                    if (_sessionManager.TabIdMap.ContainsKey(oldName))
                     {
-                        string tabId = _tabIdMap[oldName];
-                        _tabIdMap.Remove(oldName);
-                        _tabIdMap[newName] = tabId;
+                        string tabId = _sessionManager.TabIdMap[oldName];
+                        _sessionManager.TabIdMap.Remove(oldName);
+                        _sessionManager.TabIdMap[newName] = tabId;
                     }
                     UpdateStatus($"Renamed tab to: {newName}");
                 }
@@ -795,7 +466,6 @@ namespace dCompare
 
         private string PromptForTabName(string currentName)
         {
-            // Simple input dialog - in a real application, you might want a custom dialog
             return Microsoft.VisualBasic.Interaction.InputBox(
                 "Enter new tab name:",
                 "Rename Tab",
@@ -833,8 +503,6 @@ namespace dCompare
 
         #endregion
     }
-
-    #region Command Implementation
 
     public class RelayCommand : ICommand
     {
@@ -877,6 +545,4 @@ namespace dCompare
             }
         }
     }
-
-    #endregion
 }
