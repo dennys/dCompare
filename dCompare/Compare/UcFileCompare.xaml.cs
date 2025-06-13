@@ -2,6 +2,7 @@
 using DiffPlex.DiffBuilder.Model;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics; // For debugging
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -16,7 +17,7 @@ namespace dCompare.Compare
         private ObservableCollection<DiffPiece> _rightLines;
         private ScrollViewer _leftScrollViewer;
         private ScrollViewer _rightScrollViewer;
-        private bool _isSyncingScroll; // Prevent infinite scroll event loop
+        private bool _isSyncingScroll;
 
         public string LeftPath
         {
@@ -67,14 +68,12 @@ namespace dCompare.Compare
 
         private void UcFileCompare_Loaded(object sender, RoutedEventArgs e)
         {
-            // Find ScrollViewer for LeftListBox
             _leftScrollViewer = FindScrollViewer(LeftListBox);
             if (_leftScrollViewer != null)
             {
                 _leftScrollViewer.ScrollChanged += LeftScrollViewer_ScrollChanged;
             }
 
-            // Find ScrollViewer for RightListBox
             _rightScrollViewer = FindScrollViewer(RightListBox);
             if (_rightScrollViewer != null)
             {
@@ -124,12 +123,32 @@ namespace dCompare.Compare
             _isSyncingScroll = false;
         }
 
-        public void SetComparisonResult(string leftPath, string rightPath, SideBySideDiffModel diffModel)
+        public void SetComparisonResult(string leftPath, string rightPath, object comparisonResult)
         {
             LeftPath = leftPath;
             RightPath = rightPath;
-            LeftLines = new ObservableCollection<DiffPiece>(diffModel.OldText.Lines);
-            RightLines = new ObservableCollection<DiffPiece>(diffModel.NewText.Lines);
+
+            if (comparisonResult is SideBySideDiffModel diffModel)
+            {
+                LeftLines = new ObservableCollection<DiffPiece>(diffModel.OldText.Lines);
+                RightLines = new ObservableCollection<DiffPiece>(diffModel.NewText.Lines);
+
+                // Debug: Log DiffPiece types
+                foreach (var piece in LeftLines)
+                {
+                    Debug.WriteLine($"Left DiffPiece: Text='{piece.Text}', Type={piece.Type}");
+                }
+                foreach (var piece in RightLines)
+                {
+                    Debug.WriteLine($"Right DiffPiece: Text='{piece.Text}', Type={piece.Type}");
+                }
+            }
+            else
+            {
+                // Placeholder for other comparison types (e.g., images)
+                LeftLines = new ObservableCollection<DiffPiece>();
+                RightLines = new ObservableCollection<DiffPiece>();
+            }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

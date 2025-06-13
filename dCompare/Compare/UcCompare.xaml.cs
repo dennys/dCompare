@@ -1,5 +1,4 @@
 ﻿using dCompare.FileOperation;
-using DiffPlex.DiffBuilder.Model;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -316,8 +315,8 @@ namespace dCompare.Compare
                             leftPath = leftPath ?? CreateTemporaryEmptyFile();
                             rightPath = rightPath ?? CreateTemporaryEmptyFile();
 
-                            var diffModel = await comparisonHandler.CompareTextFilesAsync(leftPath, rightPath);
-                            OpenFileComparisonTab(leftPath, rightPath, diffModel);
+                            var comparisonResult = await comparisonHandler.CompareFilesAsync(leftPath, rightPath, fileType);
+                            OpenFileComparisonTab(leftPath, rightPath, comparisonResult);
                         }
                         catch (Exception ex)
                         {
@@ -345,7 +344,7 @@ namespace dCompare.Compare
         }
 
         // Add this new method to open a new tab with the file comparison
-        private void OpenFileComparisonTab(string leftPath, string rightPath, SideBySideDiffModel diffModel)
+        private void OpenFileComparisonTab(string leftPath, string rightPath, object comparisonResult)
         {
             TabItem parentTab = LogicalTreeHelperExtensions.FindParent<TabItem>(this);
             TabControl tabControl = LogicalTreeHelperExtensions.FindParent<TabControl>(parentTab);
@@ -362,7 +361,7 @@ namespace dCompare.Compare
                 Content = new UcFileCompare()
             };
 
-            ((UcFileCompare)newTab.Content).SetComparisonResult(leftPath, rightPath, diffModel);
+            ((UcFileCompare)newTab.Content).SetComparisonResult(leftPath, rightPath, comparisonResult);
             tabControl.Items.Add(newTab);
             tabControl.SelectedItem = newTab;
         }
@@ -699,7 +698,7 @@ namespace dCompare.Compare
             if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
             {
                 // Example paths; replace with actual file selection logic
-                _fileOperationWindow.Copy("source.txt", "target.txt", false);
+                _fileOperationWindow.Copy("d:\\a.pptx", "d:\\a2.pptx", false);
                 //StatusText.Text = "Copy operation queued.";
             }
             else

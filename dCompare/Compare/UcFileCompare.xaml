@@ -34,11 +34,11 @@
                                 <Style TargetType="TextBlock">
                                     <Setter Property="Background" Value="Transparent"/>
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Type}" Value="Delete">
-                                            <Setter Property="Background" Value="#FFDDDD"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding Type}" Value="Insert">
+                                        <DataTrigger Binding="{Binding Type}" Value="Inserted">
                                             <Setter Property="Background" Value="#DDFFDD"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Type}" Value="Deleted">
+                                            <Setter Property="Background" Value="#FFDDDD"/>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding Type}" Value="Imaginary">
                                             <Setter Property="Background" Value="#E0E0E0"/>
@@ -61,11 +61,11 @@
                                 <Style TargetType="TextBlock">
                                     <Setter Property="Background" Value="Transparent"/>
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Type}" Value="Insert">
-                                            <Setter Property="Background" Value="#DDFFDD"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding Type}" Value="Delete">
+                                        <DataTrigger Binding="{Binding Type}" Value="Deleted">
                                             <Setter Property="Background" Value="#FFDDDD"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Type}" Value="Inserted">
+                                            <Setter Property="Background" Value="#DDFFDD"/>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding Type}" Value="Imaginary">
                                             <Setter Property="Background" Value="#E0E0E0"/>
