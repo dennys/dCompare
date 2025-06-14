@@ -18,21 +18,6 @@ using System.Windows.Media;
 
 namespace dCompare.Compare
 {
-    public static class LogicalTreeHelperExtensions
-    {
-        public static T FindParent<T>(DependencyObject child) where T : DependencyObject
-        {
-            while (child != null)
-            {
-                child = LogicalTreeHelper.GetParent(child);
-                if (child is T parent)
-                {
-                    return parent;
-                }
-            }
-            return null;
-        }
-    }
 
     public partial class UcCompare : UserControl, INotifyPropertyChanged
     {
@@ -86,17 +71,9 @@ namespace dCompare.Compare
         private void UpdateTabHeader()
         {
             string baseHeader = LeftPathBox.Text.Trim() + " - " + RightPathBox.Text.Trim();
-            TabItem tabItem = LogicalTreeHelperExtensions.FindParent<TabItem>(this);
-            if (tabItem != null)
+            if (LogicalTreeHelperExtensions.FindParent<TabItem>(this) is TabItem tabItem)
             {
-                if (IsComparing)
-                {
-                    tabItem.Header = "(Comparing...) " + baseHeader;
-                }
-                else
-                {
-                    tabItem.Header = baseHeader;
-                }
+                tabItem.Header = IsComparing ? $"(Comparing...) {baseHeader}" : baseHeader;
             }
         }
 
@@ -108,42 +85,19 @@ namespace dCompare.Compare
                 tabItem.Header = newHeader;
             }
         }
-
-        private void BrowseLeft_Click(object sender, RoutedEventArgs e)
+        private void Browse_Click(object sender, RoutedEventArgs e)
         {
-            var folderDialog = new OpenFolderDialog
-            {
-                Title = "Select Folder",
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)
-            };
-
+            var folderDialog = new OpenFolderDialog { Title = "Select Folder" };
             if (folderDialog.ShowDialog() == true)
             {
-                LeftPathBox.Text = folderDialog.FolderName;
-            }
-        }
-
-        private void BrowseRight_Click(object sender, RoutedEventArgs e)
-        {
-            var folderDialog = new OpenFolderDialog
-            {
-                Title = "Select Folder",
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)
-            };
-
-            if (folderDialog.ShowDialog() == true)
-            {
-                RightPathBox.Text = folderDialog.FolderName;
+                var textBox = (sender as Button)?.Name == "BrowseLeftButton" ? LeftPathBox : RightPathBox;
+                textBox.Text = folderDialog.FolderName;
             }
         }
 
         private async void Compare_Click(object sender, RoutedEventArgs e)
         {
-            if (IsComparing)
-            {
-                MessageBox.Show("Comparison is already in progress.");
-                return;
-            }
+            if (IsComparing) { MessageBox.Show("Comparison is already in progress."); return; }
 
             _treeNodes.Clear();
             _cachedComparisonResults = null;
@@ -154,7 +108,7 @@ namespace dCompare.Compare
 
             if (!Directory.Exists(leftDir) || !Directory.Exists(rightDir))
             {
-                MessageBox.Show("請輸入有效的左右資料夾路徑");
+                MessageBox.Show("Please enter valid source and target folder paths.");
                 return;
             }
 
@@ -185,7 +139,7 @@ namespace dCompare.Compare
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"比較過程中發生錯誤: {ex.Message}");
+                MessageBox.Show($"An error occurred during comparison: {ex.Message}");
             }
             finally
             {
@@ -195,13 +149,7 @@ namespace dCompare.Compare
             }
         }
 
-        private void CancelCompare_Click(object sender, RoutedEventArgs e)
-        {
-            if (_cancellationTokenSource != null)
-            {
-                _cancellationTokenSource.Cancel();
-            }
-        }
+        private void CancelCompare_Click(object sender, RoutedEventArgs e) => _cancellationTokenSource?.Cancel();
 
         private List<TreeNode> CreateFlatTreeStructure(List<DirectoryComparer.ComparisonItem> items, string leftRoot, string rightRoot, int maxDepth = int.MaxValue)
         {
@@ -263,7 +211,7 @@ namespace dCompare.Compare
         private async void ResultListView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             DependencyObject obj = (DependencyObject)e.OriginalSource;
-            while (obj != null && !(obj is ListViewItem))
+            while (obj != null && obj is not ListViewItem)
             {
                 obj = VisualTreeHelper.GetParent(obj);
             }
@@ -392,45 +340,6 @@ namespace dCompare.Compare
             }
         }
 
-        private void LoadChildren2(TreeNode parentNode)
-        {
-            if (_cachedComparisonResults == null) return;
-
-            string leftDir = LeftPathBox.Text.Trim();
-            string rightDir = RightPathBox.Text.Trim();
-
-            List<DirectoryComparer.ComparisonItem> childItems = _cachedComparisonResults
-                .Where(item =>
-                {
-                    string? relativePath = GetRelativePath(item, leftDir, rightDir);
-                    return !string.IsNullOrEmpty(relativePath) &&
-                           relativePath.StartsWith(parentNode.RelativePath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
-                           relativePath.Count(c => c == Path.DirectorySeparatorChar) == parentNode.Depth + 1;
-                })
-                .ToList();
-
-            List<TreeNode> childNodes = CreateFlatTreeStructure(childItems, leftDir, rightDir, parentNode.Depth + 1);
-            int insertIndex = _treeNodes.IndexOf(parentNode) + 1;
-
-            foreach (TreeNode child in childNodes)
-            {
-                child.IsExpanded = false;
-                _treeNodes.Insert(insertIndex++, child);
-            }
-        }
-
-        private void RemoveChildren2(TreeNode parentNode)
-        {
-            var children = _treeNodes
-                .Where(n => n.RelativePath.StartsWith(parentNode.RelativePath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-
-            foreach (var child in children)
-            {
-                _treeNodes.Remove(child);
-            }
-        }
-
         private void ExpandAll_Click(object sender, RoutedEventArgs e)
         {
             if (_cachedComparisonResults == null) return;
@@ -464,40 +373,21 @@ namespace dCompare.Compare
             ApplyFilter();
         }
 
-        private void ShowAll_Click(object sender, RoutedEventArgs e)
-        {
-            _currentFilter = null;
-            ApplyFilter();
-        }
+        private void ShowAll_Click(object sender, RoutedEventArgs e) => SetFilter(null);
+        private void ShowDifferent_Click(object sender, RoutedEventArgs e) => SetFilter(node => node.Status == ComparisonStatus.Modified || node.Status == ComparisonStatus.Conflict);
+        private void ShowIdentical_Click(object sender, RoutedEventArgs e) => SetFilter(node => node.Status == ComparisonStatus.Identical);
+        private void ShowLeftUnique_Click(object sender, RoutedEventArgs e) => SetFilter(node => node.Status == ComparisonStatus.LeftOnly);
+        private void ShowRightUnique_Click(object sender, RoutedEventArgs e) => SetFilter(node => node.Status == ComparisonStatus.RightOnly);
 
-        private void ShowDifferent_Click(object sender, RoutedEventArgs e)
+        private void SetFilter(Predicate<TreeNode> filter)
         {
-            _currentFilter = obj => obj is TreeNode node && (node.Status == ComparisonStatus.Modified || node.Status == ComparisonStatus.Conflict);
-            ApplyFilter();
-        }
-
-        private void ShowIdentical_Click(object sender, RoutedEventArgs e)
-        {
-            _currentFilter = obj => obj is TreeNode node && node.Status == ComparisonStatus.Identical;
-            ApplyFilter();
-        }
-
-        private void ShowLeftUnique_Click(object sender, RoutedEventArgs e)
-        {
-            _currentFilter = obj => obj is TreeNode node && node.Status == ComparisonStatus.LeftOnly;
-            ApplyFilter();
-        }
-
-        private void ShowRightUnique_Click(object sender, RoutedEventArgs e)
-        {
-            _currentFilter = obj => obj is TreeNode node && node.Status == ComparisonStatus.RightOnly;
+            _currentFilter = obj => obj is TreeNode node && (filter == null || filter(node));
             ApplyFilter();
         }
 
         private void ApplyFilter()
         {
-            ICollectionView? view = CollectionViewSource.GetDefaultView(_treeNodes);
-            view.Filter = _currentFilter;
+            CollectionViewSource.GetDefaultView(_treeNodes).Filter = _currentFilter;
         }
 
         private void CopyToLeft_Click(object sender, RoutedEventArgs e)
