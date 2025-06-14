@@ -89,6 +89,7 @@ namespace dCompare.FileOperation
                     long bytesTransferred = 0;
                     long totalBytes = transfer.FileSize;
                     DateTime startTime = DateTime.Now;
+                    FileInfo sourceInfo = new FileInfo(source);
 
                     using (var sourceStream = new FileStream(source, FileMode.Open, FileAccess.Read))
                     using (var targetStream = new FileStream(target, overwrite ? FileMode.Create : FileMode.CreateNew, FileAccess.Write))
@@ -121,7 +122,14 @@ namespace dCompare.FileOperation
                         }
                     }
 
-                    if (!isCopy)
+                    // Preserve original file timestamps for copy operation
+                    if (isCopy)
+                    {
+                        File.SetCreationTime(target, sourceInfo.CreationTime);
+                        File.SetLastAccessTime(target, sourceInfo.LastAccessTime);
+                        File.SetLastWriteTime(target, sourceInfo.LastWriteTime);
+                    }
+                    else
                     {
                         File.Delete(source);
                     }
