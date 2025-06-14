@@ -29,7 +29,7 @@ namespace dCompare.Compare
             string extension = Path.GetExtension(filePath)?.ToLowerInvariant();
             return extension switch
             {
-                ".txt" or ".cs" or ".xaml" or ".json" or ".xml" => FileType.Text,
+                ".cs" or ".json" or ".log" or ".md" or ".txt" or ".xaml" or ".xml" => FileType.Text,
                 ".png" or ".jpg" or ".jpeg" or ".bmp" => FileType.Image,
                 _ => FileType.Unsupported
             };

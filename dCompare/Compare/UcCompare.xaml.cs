@@ -92,15 +92,6 @@ namespace dCompare.Compare
                 if (IsComparing)
                 {
                     tabItem.Header = "(Comparing...) " + baseHeader;
-                    //tabItem.Header = new StackPanel
-                    //{
-                    //    Orientation = Orientation.Horizontal,
-                    //    Children =
-                    //    {
-                    //        new System.Windows.Shapes.Ellipse { Style = (Style)Resources["SpinnerStyle"] },
-                    //        new TextBlock { Text = baseHeader, Margin = new Thickness(5, 0, 0, 0) }
-                    //    }
-                    //};
                 }
                 else
                 {
@@ -177,7 +168,7 @@ namespace dCompare.Compare
                     _cancellationTokenSource.Token);
 
                 _cachedComparisonResults = comparisonResults;
-                List<TreeNode>? flatNodes = BuildFlatTreeStructure(comparisonResults, leftDir, rightDir, maxDepth: 0);
+                List<TreeNode>? flatNodes = CreateFlatTreeStructure(comparisonResults, leftDir, rightDir, maxDepth: 0);
 
                 foreach (TreeNode? node in flatNodes)
                 {
@@ -212,7 +203,7 @@ namespace dCompare.Compare
             }
         }
 
-        private List<TreeNode> BuildFlatTreeStructure(List<DirectoryComparer.ComparisonItem> items, string leftRoot, string rightRoot, int maxDepth = int.MaxValue)
+        private List<TreeNode> CreateFlatTreeStructure(List<DirectoryComparer.ComparisonItem> items, string leftRoot, string rightRoot, int maxDepth = int.MaxValue)
         {
             List<TreeNode> flatNodes = new List<TreeNode>();
 
@@ -294,7 +285,6 @@ namespace dCompare.Compare
                 }
                 else
                 {
-                    // Handle file double-click
                     string leftPath = clickedItem.LeftNode?.FullPath;
                     string rightPath = clickedItem.RightNode?.FullPath;
 
@@ -311,7 +301,6 @@ namespace dCompare.Compare
                     {
                         try
                         {
-                            // Ensure both files exist; use a placeholder for missing files
                             leftPath = leftPath ?? CreateTemporaryEmptyFile();
                             rightPath = rightPath ?? CreateTemporaryEmptyFile();
 
@@ -335,7 +324,6 @@ namespace dCompare.Compare
             }
         }
 
-        // Add this new method to create a temporary empty file for missing files
         private string CreateTemporaryEmptyFile()
         {
             string tempPath = Path.Combine(Path.GetTempPath(), $"dCompare_Empty_{Guid.NewGuid()}.txt");
@@ -343,7 +331,6 @@ namespace dCompare.Compare
             return tempPath;
         }
 
-        // Add this new method to open a new tab with the file comparison
         private void OpenFileComparisonTab(string leftPath, string rightPath, object comparisonResult)
         {
             TabItem parentTab = LogicalTreeHelperExtensions.FindParent<TabItem>(this);
@@ -366,7 +353,6 @@ namespace dCompare.Compare
             tabControl.SelectedItem = newTab;
         }
 
-        // Confirm that RemoveChildren and LoadChildren are included (from original UcCompare.xaml.cs)
         private void LoadChildren(TreeNode parentNode)
         {
             if (_cachedComparisonResults == null) return;
@@ -384,7 +370,7 @@ namespace dCompare.Compare
                 })
                 .ToList();
 
-            List<TreeNode> childNodes = BuildFlatTreeStructure(childItems, leftDir, rightDir, parentNode.Depth + 1);
+            List<TreeNode> childNodes = CreateFlatTreeStructure(childItems, leftDir, rightDir, parentNode.Depth + 1);
             int insertIndex = _treeNodes.IndexOf(parentNode) + 1;
 
             foreach (TreeNode child in childNodes)
@@ -423,7 +409,7 @@ namespace dCompare.Compare
                 })
                 .ToList();
 
-            List<TreeNode> childNodes = BuildFlatTreeStructure(childItems, leftDir, rightDir, parentNode.Depth + 1);
+            List<TreeNode> childNodes = CreateFlatTreeStructure(childItems, leftDir, rightDir, parentNode.Depth + 1);
             int insertIndex = _treeNodes.IndexOf(parentNode) + 1;
 
             foreach (TreeNode child in childNodes)
@@ -455,7 +441,7 @@ namespace dCompare.Compare
             var rootNodes = _treeNodes.Where(n => n.Depth == 0).ToList();
             _treeNodes.Clear();
 
-            List<TreeNode> allNodes = BuildFlatTreeStructure(_cachedComparisonResults, leftDir, rightDir);
+            List<TreeNode> allNodes = CreateFlatTreeStructure(_cachedComparisonResults, leftDir, rightDir);
 
             foreach (TreeNode node in allNodes)
             {
@@ -533,40 +519,38 @@ namespace dCompare.Compare
                 return;
             }
 
+            OpenFileOperations_Click();
+
             string targetRoot = toLeft ? LeftPathBox.Text.Trim() : RightPathBox.Text.Trim();
             string sourceRoot = toLeft ? RightPathBox.Text.Trim() : LeftPathBox.Text.Trim();
 
-            int successCount = 0;
-            int errorCount = 0;
-
-            foreach (TreeNode? node in selectedItems)
+            foreach (TreeNode node in selectedItems)
             {
                 if (node.IsDirectory) continue;
 
-                try
+                string sourcePath = toLeft ? node.RightNode?.FullPath : node.LeftNode?.FullPath;
+                if (string.IsNullOrEmpty(sourcePath)) continue;
+
+                string relativePath = node.RelativePath ?? string.Empty;
+                string destDir = Path.Combine(targetRoot, Path.GetDirectoryName(relativePath) ?? string.Empty);
+                string fileName = Path.GetFileName(sourcePath);
+                string destPath = Path.Combine(destDir, fileName);
+
+                if (File.Exists(sourcePath) && _fileOperationWindow != null && _fileOperationWindow.IsLoaded)
                 {
-                    string sourcePath = Path.Combine(sourceRoot, node.RelativePath);
-                    string targetPath = Path.Combine(targetRoot, node.RelativePath);
-
-                    string? targetDir = Path.GetDirectoryName(targetPath);
-                    if (!Directory.Exists(targetDir))
-                        Directory.CreateDirectory(targetDir);
-
-                    if (File.Exists(sourcePath))
+                    try
                     {
-                        File.Copy(sourcePath, targetPath, true);
-                        successCount++;
+                        Directory.CreateDirectory(destDir);
+                        _fileOperationWindow.Copy(sourcePath, destPath, true);
                     }
-                }
-                catch (Exception ex)
-                {
-                    errorCount++;
-                    MessageBox.Show($"複製檔案失敗: {node.RelativePath}\n{ex.Message}");
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Error copying file: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
                 }
             }
 
-            MessageBox.Show($"同步完成\n成功: {successCount} 個檔案\n失敗: {errorCount} 個檔案");
-            Compare_Click(null, null);
+            RefreshComparison();
         }
 
         private void ListView_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
@@ -582,64 +566,133 @@ namespace dCompare.Compare
                 MessageBox.Show("請選擇一個項目");
                 return;
             }
-
             FileOperations.ShowPropertiesDialog(selectedItem);
         }
 
         private void ContextMenu_CopyToLeft_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is MenuItem && !(sender is MenuItem)) return;
-
-            if (sender is MenuItem menuItem && menuItem.Tag is TreeNode selectedItem)
+            if (ResultListView.SelectedItem is TreeNode selectedNode)
             {
-                FileOperations.CopySelectedItemTo(selectedItem, true, LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
-                Compare_Click(null, null);
+                if (selectedNode.IsDirectory)
+                {
+                    MessageBox.Show("Cannot copy directories. Please select a file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                string sourcePath = selectedNode.RightNode?.FullPath;
+                if (string.IsNullOrEmpty(sourcePath))
+                {
+                    MessageBox.Show("No valid source file path to copy.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                string leftDir = LeftPathBox.Text.Trim();
+                if (string.IsNullOrEmpty(leftDir))
+                {
+                    MessageBox.Show("No valid destination directory specified.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                try
+                {
+                    OpenFileOperations_Click();
+                    if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
+                    {
+                        string relativePath = selectedNode.RelativePath ?? string.Empty;
+                        string destDir = Path.Combine(leftDir, Path.GetDirectoryName(relativePath) ?? string.Empty);
+                        string fileName = Path.GetFileName(sourcePath);
+                        string destPath = Path.Combine(destDir, fileName);
+
+                        Directory.CreateDirectory(destDir);
+                        _fileOperationWindow.Copy(sourcePath, destPath, true);
+                        RefreshComparison();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error copying file: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            else
+            {
+                MessageBox.Show("No file selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         private void ContextMenu_CopyToRight_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileOperations_Click();
-            CopyFile_Click();
-            //if (sender is MenuItem menuItem && menuItem.Tag is TreeNode selectedItem)
-            //{
-            //    FileOperations.CopySelectedItemTo(selectedItem, false, LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
-            //    Compare_Click(null, null);
-            //}
+            if (ResultListView.SelectedItem is TreeNode selectedNode)
+            {
+                if (selectedNode.IsDirectory)
+                {
+                    MessageBox.Show("Cannot copy directories. Please select a file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                string sourcePath = selectedNode.LeftNode?.FullPath;
+                if (string.IsNullOrEmpty(sourcePath))
+                {
+                    MessageBox.Show("No valid source file path to copy.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                string rightDir = RightPathBox.Text.Trim();
+                if (string.IsNullOrEmpty(rightDir))
+                {
+                    MessageBox.Show("No valid destination directory specified.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                try
+                {
+                    OpenFileOperations_Click();
+                    if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
+                    {
+                        string relativePath = selectedNode.RelativePath ?? string.Empty;
+                        string destDir = Path.Combine(rightDir, Path.GetDirectoryName(relativePath) ?? string.Empty);
+                        string fileName = Path.GetFileName(sourcePath);
+                        string destPath = Path.Combine(destDir, fileName);
+
+                        Directory.CreateDirectory(destDir);
+                        _fileOperationWindow.Copy(sourcePath, destPath, true);
+                        RefreshComparison();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error copying file: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            else
+            {
+                MessageBox.Show("No file selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void ContextMenu_OpenLeftLocation_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is MenuItem menuItem && menuItem.Tag is TreeNode selectedItem && selectedItem.LeftNode != null)
+            if (ResultListView.SelectedItem is TreeNode selectedNode && selectedNode.LeftNode != null)
             {
-                FileOperations.OpenFileLocation(selectedItem.LeftNode.FullPath);
-            }
-            else
-            {
-                MessageBox.Show("左側路徑不存在");
+                FileOperations.OpenFileLocation(selectedNode.LeftNode.FullPath);
             }
         }
 
         private void ContextMenu_OpenRightLocation_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is MenuItem menuItem && menuItem.Tag is TreeNode selectedItem && selectedItem.RightNode != null)
+            if (ResultListView.SelectedItem is TreeNode selectedNode && selectedNode.RightNode != null)
             {
-                FileOperations.OpenFileLocation(selectedItem.RightNode.FullPath);
-            }
-            else
-            {
-                MessageBox.Show("右側路徑不存在");
+                FileOperations.OpenFileLocation(selectedNode.RightNode.FullPath);
             }
         }
 
         private string GetRelativePath(DirectoryComparer.ComparisonItem item, string leftRoot, string rightRoot)
         {
             string path = "";
-            if (item.Left != null)
+            if (item.Left != null && item.Left.FullPath.StartsWith(leftRoot, StringComparison.OrdinalIgnoreCase))
             {
                 path = item.Left.FullPath.Substring(leftRoot.Length).TrimStart(Path.DirectorySeparatorChar);
             }
-            else if (item.Right != null)
+            else if (item.Right != null && item.Right.FullPath.StartsWith(rightRoot, StringComparison.OrdinalIgnoreCase))
             {
                 path = item.Right.FullPath.Substring(rightRoot.Length).TrimStart(Path.DirectorySeparatorChar);
             }
@@ -677,7 +730,11 @@ namespace dCompare.Compare
             };
         }
 
-        #region
+        private void RefreshComparison()
+        {
+            Compare_Click(null, null);
+        }
+
         private void OpenFileOperations_Click()
         {
             if (_fileOperationWindow == null || !_fileOperationWindow.IsLoaded)
@@ -693,17 +750,20 @@ namespace dCompare.Compare
             }
         }
 
-        private void CopyFile_Click()
+        private void CopyFile_Click(object sender, RoutedEventArgs e)
         {
             if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
             {
-                // Example paths; replace with actual file selection logic
-                _fileOperationWindow.Copy("d:\\a.pptx", "d:\\a2.pptx", false);
-                //StatusText.Text = "Copy operation queued.";
-            }
-            else
-            {
-                //StatusText.Text = "Please open File Operations window first.";
+                var selectedItem = ResultListView.SelectedItem as TreeNode;
+                if (selectedItem != null)
+                {
+                    string sourcePath = selectedItem.LeftNode?.FullPath ?? selectedItem.RightNode?.FullPath;
+                    if (!string.IsNullOrEmpty(sourcePath))
+                    {
+                        string targetPath = Path.Combine(LeftPathBox.Text.Trim(), selectedItem.Name);
+                        _fileOperationWindow.Copy(sourcePath, targetPath, false);
+                    }
+                }
             }
         }
 
@@ -711,13 +771,16 @@ namespace dCompare.Compare
         {
             if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
             {
-                // Example paths; replace with actual file selection logic
-                _fileOperationWindow.Move("source.txt", "target.txt", false);
-                //StatusText.Text = "Move operation queued.";
-            }
-            else
-            {
-                //StatusText.Text = "Please open File Operations window first.";
+                var selectedItem = ResultListView.SelectedItem as TreeNode;
+                if (selectedItem != null)
+                {
+                    string sourcePath = selectedItem.LeftNode?.FullPath ?? selectedItem.RightNode?.FullPath;
+                    if (!string.IsNullOrEmpty(sourcePath))
+                    {
+                        string targetPath = Path.Combine(LeftPathBox.Text.Trim(), selectedItem.Name);
+                        _fileOperationWindow.Move(sourcePath, targetPath, false);
+                    }
+                }
             }
         }
 
@@ -731,6 +794,5 @@ namespace dCompare.Compare
                 //StatusText.Text = $"Job {jobId}: {message}";
             });
         }
-        #endregion
     }
 }
