@@ -28,6 +28,32 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+        <!-- Left Side Context Menu -->
+        <ContextMenu x:Key="LeftContextMenu">
+            <MenuItem Header="Copy to Right" Click="ContextMenu_CopyToRight_Click" Tag="{Binding}"/>
+            <MenuItem Header="Move to Right" Click="ContextMenu_CopyToRight_Click" Tag="{Binding}"/>
+            <Separator/>
+            <MenuItem Header="Open Left Location" Click="ContextMenu_OpenLeftLocation_Click" Tag="{Binding}"/>
+            <MenuItem Header="Rename" Click="ContextMenu_Properties_Click" Tag="{Binding}" InputGestureText="F2"/>
+            <MenuItem Header="Delete..." Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
+            <MenuItem Header="Compare contents" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
+            <MenuItem Header="Copy left path to clipboard" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
+            <Separator/>
+            <MenuItem Header="Properties" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
+        </ContextMenu>
+        <!-- Right Side Context Menu -->
+        <ContextMenu x:Key="RightContextMenu">
+            <MenuItem Header="Copy to Left" Click="ContextMenu_CopyToLeft_Click" Tag="{Binding}"/>
+            <MenuItem Header="Move to Left" Click="ContextMenu_CopyToLeft_Click" Tag="{Binding}"/>
+            <Separator/>
+            <MenuItem Header="Open Right Location" Click="ContextMenu_OpenRightLocation_Click" Tag="{Binding}"/>
+            <MenuItem Header="Rename" Click="ContextMenu_Properties_Click" Tag="{Binding}" InputGestureText="F2"/>
+            <MenuItem Header="Delete..." Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
+            <MenuItem Header="Compare contents" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
+            <MenuItem Header="Copy right path to clipboard" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
+            <Separator/>
+            <MenuItem Header="Properties" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
+        </ContextMenu>
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -80,28 +106,6 @@
                     <EventSetter Event="PreviewMouseRightButtonDown" Handler="ListView_PreviewMouseRightButtonDown"/>
                 </Style>
             </ListView.ItemContainerStyle>
-            <ListView.ContextMenu>
-                <ContextMenu>
-                    <MenuItem Header="Copy to Left" Click="ContextMenu_CopyToLeft_Click" Tag="{Binding}"/>
-                    <MenuItem Header="Move to Left" Click="ContextMenu_CopyToLeft_Click" Tag="{Binding}"/>
-                    <MenuItem Header="Copy to Right" Click="ContextMenu_CopyToRight_Click" Tag="{Binding}"/>
-                    <MenuItem Header="Move to Right" Click="ContextMenu_CopyToRight_Click" Tag="{Binding}"/>
-                    <Separator/>
-                    <MenuItem Header="Open with..." >
-                        <MenuItem Header="Associated" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
-                    </MenuItem>
-                    <MenuItem Header="Open Left Location" Click="ContextMenu_OpenLeftLocation_Click" Tag="{Binding}"/>
-                    <MenuItem Header="Open Right Location" Click="ContextMenu_OpenRightLocation_Click" Tag="{Binding}"/>
-                    <Separator/>
-                    <MenuItem Header="Rename" Click="ContextMenu_Properties_Click" Tag="{Binding}" InputGestureText="F2"/>
-                    <MenuItem Header="Delete..." Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
-                    <MenuItem Header="Compare contents" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
-                    <MenuItem Header="Copy left path to clipboard" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
-                    <MenuItem Header="Copy right path to clipboard" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
-                    <Separator/>
-                    <MenuItem Header="Properties" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
-                </ContextMenu>
-            </ListView.ContextMenu>
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Left Name" Width="250">
@@ -109,21 +113,23 @@
                             <DataTemplate>
                                 <TextBlock Text="{Binding LeftDisplayName}" 
                                            Margin="{Binding Depth, Converter={StaticResource DepthToMarginConverter}}" 
-                                           FontSize="11"/>
+                                           FontSize="11" ContextMenu="{StaticResource LeftContextMenu}"/>
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
                     <GridViewColumn Header="Left Size" Width="60">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding LeftSize}" HorizontalAlignment="Right" FontSize="11"/>
+                                <TextBlock Text="{Binding LeftSize}" HorizontalAlignment="Right" FontSize="11" 
+                                           ContextMenu="{StaticResource LeftContextMenu}"/>
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
                     <GridViewColumn Header="Left Date">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding LeftDate}" FontSize="11"/>
+                                <TextBlock Text="{Binding LeftDate}" FontSize="11" 
+                                           ContextMenu="{StaticResource LeftContextMenu}"/>
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
@@ -159,21 +165,23 @@
                             <DataTemplate>
                                 <TextBlock Text="{Binding RightDisplayName}" 
                                            Margin="{Binding Depth, Converter={StaticResource DepthToMarginConverter}}" 
-                                           FontSize="11"/>
+                                           FontSize="11" ContextMenu="{StaticResource RightContextMenu}"/>
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
                     <GridViewColumn Header="Right Size" Width="60">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding RightSize}" HorizontalAlignment="Right" FontSize="11"/>
+                                <TextBlock Text="{Binding RightSize}" HorizontalAlignment="Right" FontSize="11" 
+                                           ContextMenu="{StaticResource RightContextMenu}"/>
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
                     <GridViewColumn Header="Right Date" Width="120">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding RightDate}" FontSize="11"/>
+                                <TextBlock Text="{Binding RightDate}" FontSize="11" 
+                                           ContextMenu="{StaticResource RightContextMenu}"/>
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
