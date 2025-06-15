@@ -29,16 +29,16 @@
                      Background="#F5F5F5" FontFamily="Consolas" FontSize="12">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding Text}">
+                        <TextBlock>
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="Background" Value="Transparent"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding Type}" Value="Inserted">
-                                            <Setter Property="Background" Value="#DDFFDD"/>
+                                            <Setter Property="Background" Value="#B3E6B3"/>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding Type}" Value="Deleted">
-                                            <Setter Property="Background" Value="#FFDDDD"/>
+                                            <Setter Property="Background" Value="#FFB3B3"/>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding Type}" Value="Imaginary">
                                             <Setter Property="Background" Value="#E0E0E0"/>
@@ -46,6 +46,39 @@
                                     </Style.Triggers>
                                 </Style>
                             </TextBlock.Style>
+                            <TextBlock.Inlines>
+                                <ItemsControl ItemsSource="{Binding SubPieces}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <VirtualizingStackPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock>
+                                                <Run Text="{Binding Text}">
+                                                    <Run.Style>
+                                                        <Style TargetType="Run">
+                                                            <Setter Property="FontWeight" Value="Normal"/>
+                                                            <Setter Property="Background" Value="Transparent"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Type}" Value="Inserted">
+                                                                    <Setter Property="FontWeight" Value="Bold"/>
+                                                                    <Setter Property="Background" Value="#A3D6A3"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Type}" Value="Deleted">
+                                                                    <Setter Property="FontWeight" Value="Bold"/>
+                                                                    <Setter Property="Background" Value="#F4A3A3"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Run.Style>
+                                                </Run>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </TextBlock.Inlines>
                         </TextBlock>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
@@ -56,16 +89,16 @@
                      Background="#F5F5F5" FontFamily="Consolas" FontSize="12">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding Text}">
+                        <TextBlock>
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="Background" Value="Transparent"/>
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Type}" Value="Deleted">
-                                            <Setter Property="Background" Value="#FFDDDD"/>
-                                        </DataTrigger>
                                         <DataTrigger Binding="{Binding Type}" Value="Inserted">
-                                            <Setter Property="Background" Value="#DDFFDD"/>
+                                            <Setter Property="Background" Value="#B3E6B3"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Type}" Value="Deleted">
+                                            <Setter Property="Background" Value="#FFB3B3"/>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding Type}" Value="Imaginary">
                                             <Setter Property="Background" Value="#E0E0E0"/>
@@ -73,6 +106,39 @@
                                     </Style.Triggers>
                                 </Style>
                             </TextBlock.Style>
+                            <TextBlock.Inlines>
+                                <ItemsControl ItemsSource="{Binding SubPieces}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <VirtualizingStackPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock>
+                                                <Run Text="{Binding Text}">
+                                                    <Run.Style>
+                                                        <Style TargetType="Run">
+                                                            <Setter Property="FontWeight" Value="Normal"/>
+                                                            <Setter Property="Background" Value="Transparent"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Type}" Value="Inserted">
+                                                                    <Setter Property="FontWeight" Value="Bold"/>
+                                                                    <Setter Property="Background" Value="#A3D6A3"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Type}" Value="Deleted">
+                                                                    <Setter Property="FontWeight" Value="Bold"/>
+                                                                    <Setter Property="Background" Value="#F4A3A3"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Run.Style>
+                                                </Run>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </TextBlock.Inlines>
                         </TextBlock>
                     </DataTemplate>
                 </ListBox.ItemTemplate>

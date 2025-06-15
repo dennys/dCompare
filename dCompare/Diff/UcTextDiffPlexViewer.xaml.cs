@@ -1,8 +1,7 @@
-// File: UcFileCompare.xaml.cs
 using DiffPlex.DiffBuilder.Model;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics; // For debugging
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -130,22 +129,58 @@ namespace dCompare.Diff
 
             if (comparisonResult is SideBySideDiffModel diffModel)
             {
-                LeftLines = new ObservableCollection<DiffPiece>(diffModel.OldText.Lines);
-                RightLines = new ObservableCollection<DiffPiece>(diffModel.NewText.Lines);
+                var leftLines = new ObservableCollection<DiffPiece>();
+                var rightLines = new ObservableCollection<DiffPiece>();
 
-                // Debug: Log DiffPiece types
+                foreach (var piece in diffModel.OldText.Lines)
+                {
+                    if (piece.SubPieces == null || piece.SubPieces.Count == 0)
+                    {
+                        // Create a single SubPiece for lines without inline diffs
+                        piece.SubPieces = new List<DiffPiece> { new DiffPiece(piece.Text, piece.Type) };
+                    }
+                    leftLines.Add(piece);
+                }
+
+                foreach (var piece in diffModel.NewText.Lines)
+                {
+                    if (piece.SubPieces == null || piece.SubPieces.Count == 0)
+                    {
+                        // Create a single SubPiece for lines without inline diffs
+                        piece.SubPieces = new List<DiffPiece> { new DiffPiece(piece.Text, piece.Type) };
+                    }
+                    rightLines.Add(piece);
+                }
+
+                LeftLines = leftLines;
+                RightLines = rightLines;
+
+                // Debug: Log DiffPiece types and subpieces
                 foreach (var piece in LeftLines)
                 {
-                    Debug.WriteLine($"Left DiffPiece: Text='{piece.Text}', Type={piece.Type}");
+                    Debug.WriteLine($"Left DiffPiece: Text='{piece.Text}', Type={piece.Type}, SubPieces={piece.SubPieces?.Count ?? 0}");
+                    if (piece.SubPieces != null)
+                    {
+                        foreach (var subPiece in piece.SubPieces)
+                        {
+                            Debug.WriteLine($"  SubPiece: Text='{subPiece.Text}', Type={subPiece.Type}");
+                        }
+                    }
                 }
                 foreach (var piece in RightLines)
                 {
-                    Debug.WriteLine($"Right DiffPiece: Text='{piece.Text}', Type={piece.Type}");
+                    Debug.WriteLine($"Right DiffPiece: Text='{piece.Text}', Type={piece.Type}, SubPieces={piece.SubPieces?.Count ?? 0}");
+                    if (piece.SubPieces != null)
+                    {
+                        foreach (var subPiece in piece.SubPieces)
+                        {
+                            Debug.WriteLine($"  SubPiece: Text='{subPiece.Text}', Type={subPiece.Type}");
+                        }
+                    }
                 }
             }
             else
             {
-                // Placeholder for other comparison types (e.g., images)
                 LeftLines = new ObservableCollection<DiffPiece>();
                 RightLines = new ObservableCollection<DiffPiece>();
             }
