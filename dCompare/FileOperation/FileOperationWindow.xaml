@@ -1,4 +1,4 @@
-﻿<Window x:Class="dCompare.FileOperation.Operation"
+﻿<Window x:Class="dCompare.FileOperation.FileOperationWindow"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:dCompare" xmlns:local1="clr-namespace:dCompare.FileOperation"

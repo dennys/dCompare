@@ -1,4 +1,6 @@
 ﻿using dCompare.FileOperation;
+using dCompare.Diff;
+using Serilog;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -15,6 +17,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using dCompare.FileOperation.Models;
 
 namespace dCompare.Compare
 {
@@ -31,7 +34,7 @@ namespace dCompare.Compare
         private bool _isComparing;
         private double _comparisonProgress;
 
-        private Operation _fileOperationWindow;
+        private FileOperationWindow _fileOperationWindow;
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName)
@@ -629,7 +632,7 @@ namespace dCompare.Compare
         {
             if (_fileOperationWindow == null || !_fileOperationWindow.IsLoaded)
             {
-                _fileOperationWindow = new Operation();
+                _fileOperationWindow = new FileOperationWindow();
                 _fileOperationWindow.OnTransferStatusChanged += FileOperation_OnTransferStatusChanged;
                 _fileOperationWindow.Closed += (s, args) => _fileOperationWindow = null;
                 _fileOperationWindow.Show();
@@ -677,7 +680,7 @@ namespace dCompare.Compare
         private void FileOperation_OnTransferStatusChanged(string jobId, bool success, string message)
         {
             string a = $"Job {jobId}: {message}";
-            Console.Write(a);
+            Log.Information(a);
             MessageBox.Show(a);
             Dispatcher.Invoke(() =>
             {

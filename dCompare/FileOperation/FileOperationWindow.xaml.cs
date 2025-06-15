@@ -11,7 +11,7 @@ using System.Windows.Data;
 
 namespace dCompare.FileOperation
 {
-    public partial class Operation : Window
+    public partial class FileOperationWindow : Window
     {
         private CancellationTokenSource _cancellationTokenSource;
         private bool _isPaused;
@@ -23,7 +23,7 @@ namespace dCompare.FileOperation
         public delegate void TransferStatusChangedHandler(string jobId, bool success, string message);
         public event TransferStatusChangedHandler OnTransferStatusChanged;
 
-        public Operation()
+        public FileOperationWindow()
         {
             InitializeComponent();
             DataContext = this;

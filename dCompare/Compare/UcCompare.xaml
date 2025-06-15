@@ -83,10 +83,21 @@
             <ListView.ContextMenu>
                 <ContextMenu>
                     <MenuItem Header="Copy to Left" Click="ContextMenu_CopyToLeft_Click" Tag="{Binding}"/>
+                    <MenuItem Header="Move to Left" Click="ContextMenu_CopyToLeft_Click" Tag="{Binding}"/>
                     <MenuItem Header="Copy to Right" Click="ContextMenu_CopyToRight_Click" Tag="{Binding}"/>
+                    <MenuItem Header="Move to Right" Click="ContextMenu_CopyToRight_Click" Tag="{Binding}"/>
                     <Separator/>
+                    <MenuItem Header="Open with..." >
+                        <MenuItem Header="Associated" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
+                    </MenuItem>
                     <MenuItem Header="Open Left Location" Click="ContextMenu_OpenLeftLocation_Click" Tag="{Binding}"/>
                     <MenuItem Header="Open Right Location" Click="ContextMenu_OpenRightLocation_Click" Tag="{Binding}"/>
+                    <Separator/>
+                    <MenuItem Header="Rename" Click="ContextMenu_Properties_Click" Tag="{Binding}" InputGestureText="F2"/>
+                    <MenuItem Header="Delete..." Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
+                    <MenuItem Header="Compare contents" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
+                    <MenuItem Header="Copy left path to clipboard" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
+                    <MenuItem Header="Copy right path to clipboard" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
                     <Separator/>
                     <MenuItem Header="Properties" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
                 </ContextMenu>

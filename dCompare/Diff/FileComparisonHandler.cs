@@ -6,7 +6,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace dCompare.Compare
+namespace dCompare.Diff
 {
     public enum FileType
     {
