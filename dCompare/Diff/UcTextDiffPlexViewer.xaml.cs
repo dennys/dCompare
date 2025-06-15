@@ -1,9 +1,12 @@
+using DiffPlex.DiffBuilder;
 using DiffPlex.DiffBuilder.Model;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace dCompare.Diff
@@ -63,6 +66,9 @@ namespace dCompare.Diff
             InitializeComponent();
             DataContext = this;
             Loaded += UcFileCompare_Loaded;
+
+            // Add F5 keybinding for refresh
+            InputBindings.Add(new KeyBinding(new RelayCommand(Refresh), Key.F5, ModifierKeys.None));
         }
 
         private void UcFileCompare_Loaded(object sender, RoutedEventArgs e)
@@ -136,7 +142,6 @@ namespace dCompare.Diff
                 {
                     if (piece.SubPieces == null || piece.SubPieces.Count == 0)
                     {
-                        // Create a single SubPiece for lines without inline diffs
                         piece.SubPieces = new List<DiffPiece> { new DiffPiece(piece.Text, piece.Type) };
                     }
                     leftLines.Add(piece);
@@ -146,7 +151,6 @@ namespace dCompare.Diff
                 {
                     if (piece.SubPieces == null || piece.SubPieces.Count == 0)
                     {
-                        // Create a single SubPiece for lines without inline diffs
                         piece.SubPieces = new List<DiffPiece> { new DiffPiece(piece.Text, piece.Type) };
                     }
                     rightLines.Add(piece);
@@ -186,11 +190,51 @@ namespace dCompare.Diff
             }
         }
 
+        private void Refresh(object parameter)
+        {
+            if (string.IsNullOrEmpty(LeftPath) || string.IsNullOrEmpty(RightPath))
+            {
+                MessageBox.Show("Both file paths must be set to refresh the comparison.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            try
+            {
+                // Read file contents
+                string leftText = File.ReadAllText(LeftPath);
+                string rightText = File.ReadAllText(RightPath);
+
+                // Compute diff using DiffPlex
+                var diffBuilder = new SideBySideDiffBuilder();
+                var diffModel = diffBuilder.BuildDiffModel(leftText, rightText);
+
+                // Update the comparison result
+                SetComparisonResult(LeftPath, RightPath, diffModel);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to refresh comparison: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected virtual void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        // RelayCommand implementation for keybinding
+        private class RelayCommand : ICommand
+        {
+            private readonly Action<object> _execute;
+            public RelayCommand(Action<object> execute)
+            {
+                _execute = execute;
+            }
+            public bool CanExecute(object parameter) => true;
+            public void Execute(object parameter) => _execute(parameter);
+            public event EventHandler CanExecuteChanged;
         }
     }
 }
