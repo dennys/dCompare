@@ -2,26 +2,17 @@
 using dCompare.Diff;
 using Serilog;
 using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
-using dCompare.FileOperation.Models;
 
 namespace dCompare.Compare
 {
-
     public partial class UcCompare : UserControl, INotifyPropertyChanged
     {
         private ObservableCollection<TreeNode> _treeNodes = new();
@@ -88,6 +79,7 @@ namespace dCompare.Compare
                 tabItem.Header = newHeader;
             }
         }
+
         private void Browse_Click(object sender, RoutedEventArgs e)
         {
             var folderDialog = new OpenFolderDialog { Title = "Select Folder" };
@@ -448,7 +440,58 @@ namespace dCompare.Compare
 
         private void ListView_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
-            e.Handled = true; // Prevents selection on right-click
+            // Find the ListViewItem that was clicked
+            DependencyObject obj = (DependencyObject)e.OriginalSource;
+            while (obj != null && !(obj is ListViewItem))
+            {
+                obj = VisualTreeHelper.GetParent(obj);
+            }
+
+            if (obj is ListViewItem listViewItem)
+            {
+                // Select the item
+                ResultListView.SelectedItem = listViewItem.Content;
+
+                // Determine which column was clicked
+                GridView gridView = (GridView)ResultListView.View;
+                Point clickPoint = e.GetPosition(ResultListView);
+                double currentX = 0;
+                int clickedColumnIndex = -1;
+
+                for (int i = 0; i < gridView.Columns.Count; i++)
+                {
+                    currentX += gridView.Columns[i].ActualWidth;
+                    if (clickPoint.X <= currentX)
+                    {
+                        clickedColumnIndex = i;
+                        break;
+                    }
+                }
+
+                // Set context menu based on column index
+                // Columns 0-2: Left side (Left Name, Left Size, Left Date)
+                // Column 3: Status (no context menu)
+                // Columns 4-6: Right side (Right Name, Right Size, Right Date)
+                if (clickedColumnIndex >= 0 && clickedColumnIndex <= 2)
+                {
+                    listViewItem.ContextMenu = (ContextMenu)FindResource("LeftContextMenu");
+                }
+                else if (clickedColumnIndex >= 4 && clickedColumnIndex <= 6)
+                {
+                    listViewItem.ContextMenu = (ContextMenu)FindResource("RightContextMenu");
+                }
+                else
+                {
+                    listViewItem.ContextMenu = null; // No context menu for Status column
+                }
+
+                if (listViewItem.ContextMenu != null)
+                {
+                    listViewItem.ContextMenu.IsOpen = true;
+                }
+            }
+
+            e.Handled = true; // Prevent default context menu
         }
 
         private void ContextMenu_Properties_Click(object sender, RoutedEventArgs e)
