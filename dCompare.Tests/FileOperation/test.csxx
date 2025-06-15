@@ -1,0 +1,102 @@
+using FileOperations;
+using FileOperations.Models;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+
+public class Program
+{
+    public static async Task Main(string[] args)
+    {
+        // --- Setup ---
+        var sourceDir = "C:\\Temp\\Source";
+        var targetDir = "C:\\Temp\\Target";
+        Directory.CreateDirectory(sourceDir);
+        Directory.CreateDirectory(targetDir);
+
+        // Create a large dummy file for testing byte-level progress
+        var largeFilePath = Path.Combine(sourceDir, "largefile.bin");
+        Console.WriteLine("Creating a large test file...");
+        await CreateDummyFile(largeFilePath, 100 * 1024 * 1024); // 100 MB
+
+        // Create smaller files
+        File.WriteAllText(Path.Combine(sourceDir, "file1.txt"), "hello");
+        File.WriteAllText(Path.Combine(sourceDir, "file2.txt"), "world");
+        Directory.CreateDirectory(Path.Combine(sourceDir, "EmptySubDir"));
+
+
+        // --- Example 1: Copy a single large file ---
+        Console.WriteLine("\n--- Starting single large file copy ---");
+        var fileManager = new FileManager();
+        var progress = new Progress<OperationProgress>(p =>
+        {
+            Console.WriteLine($"Progress: {p.Percentage}% - Copying {Path.GetFileName(p.CurrentItem)}");
+        });
+        var cts = new CancellationTokenSource();
+
+        // Example of cancelling after 2 seconds
+        // cts.CancelAfter(2000);
+
+        try
+        {
+            var result = await fileManager.CopyAsync(largeFilePath, Path.Combine(targetDir, "largefile_copy.bin"), true, progress, cts.Token);
+            PrintResult(result);
+        }
+        catch (OperationCanceledException)
+        {
+            Console.WriteLine("Operation was cancelled!");
+        }
+
+
+        // --- Example 2: Copy multiple files and directories ---
+        Console.WriteLine("\n--- Starting multiple item copy ---");
+        var itemsToCopy = new List<(string source, string target)>
+        {
+            (Path.Combine(sourceDir, "file1.txt"), Path.Combine(targetDir, "file1_copy.txt")),
+            (Path.Combine(sourceDir, "file2.txt"), Path.Combine(targetDir, "file2_copy.txt")),
+            (Path.Combine(sourceDir, "non_existent_file.txt"), Path.Combine(targetDir, "fail.txt")), // This one will fail
+            (Path.Combine(sourceDir, "EmptySubDir"), Path.Combine(targetDir, "EmptySubDir_copy"))
+        };
+
+        var multiProgress = new Progress<OperationProgress>(p =>
+        {
+            Console.WriteLine($"Progress: {p.Percentage}%");
+        });
+
+        var multiResult = await fileManager.CopyMultipleAsync(itemsToCopy, true, multiProgress);
+        PrintResult(multiResult);
+
+        // --- Cleanup ---
+        Console.WriteLine("\nCleaning up test directories...");
+        Directory.Delete(sourceDir, true);
+        Directory.Delete(targetDir, true);
+        Console.WriteLine("Done.");
+    }
+
+    private static void PrintResult(OperationResult result)
+    {
+        Console.WriteLine("----- Operation Complete -----");
+        Console.WriteLine($"Execution Time: {result.ExecutionTime.TotalSeconds:F2}s");
+        Console.WriteLine($"Success Count: {result.SuccessCount}");
+        Console.WriteLine($"Failure Count: {result.FailCount}");
+        if (result.FailCount > 0)
+        {
+            Console.WriteLine("Failed Items:");
+            result.FailedItems.ForEach(item => Console.WriteLine($" - {item}"));
+        }
+        Console.WriteLine("----------------------------\n");
+    }
+
+    private static Task CreateDummyFile(string path, long size)
+    {
+        return Task.Run(() =>
+        {
+            using (var fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                fs.SetLength(size);
+            }
+        });
+    }
+}

@@ -202,7 +202,6 @@ namespace dCompare.Compare
                 _lastSortDirection = direction;
             }
         }
-
         private async void ResultListView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             DependencyObject obj = (DependencyObject)e.OriginalSource;
@@ -240,28 +239,28 @@ namespace dCompare.Compare
                     var comparisonHandler = new FileComparisonHandler();
                     FileType fileType = comparisonHandler.DetermineFileType(leftPath ?? rightPath);
 
-                    if (fileType == FileType.Text)
+                    try
                     {
-                        try
-                        {
-                            leftPath = leftPath ?? CreateTemporaryEmptyFile();
-                            rightPath = rightPath ?? CreateTemporaryEmptyFile();
+                        leftPath = leftPath ?? CreateTemporaryEmptyFile();
+                        rightPath = rightPath ?? CreateTemporaryEmptyFile();
 
-                            var comparisonResult = await comparisonHandler.CompareFilesAsync(leftPath, rightPath, fileType);
-                            OpenFileComparisonTab(leftPath, rightPath, comparisonResult);
-                        }
-                        catch (Exception ex)
+                        if (fileType == FileType.Text)
                         {
-                            MessageBox.Show($"Error comparing files: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            var comparisonResult = await comparisonHandler.CompareFilesAsync(leftPath, rightPath, fileType);
+                            OpenFileComparisonTab(leftPath, rightPath, comparisonResult, fileType);
+                        }
+                        else if (fileType == FileType.Image)
+                        {
+                            OpenFileComparisonTab(leftPath, rightPath, null, fileType);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Unsupported file type for comparison.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         }
                     }
-                    else if (fileType == FileType.Image)
+                    catch (Exception ex)
                     {
-                        MessageBox.Show("Image comparison is not yet supported.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-                    else
-                    {
-                        MessageBox.Show("Unsupported file type for comparison.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show($"Error comparing files: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
             }
@@ -274,7 +273,7 @@ namespace dCompare.Compare
             return tempPath;
         }
 
-        private void OpenFileComparisonTab(string leftPath, string rightPath, object comparisonResult)
+        private void OpenFileComparisonTab(string leftPath, string rightPath, object comparisonResult, FileType fileType)
         {
             TabItem parentTab = LogicalTreeHelperExtensions.FindParent<TabItem>(this);
             TabControl tabControl = LogicalTreeHelperExtensions.FindParent<TabControl>(parentTab);
@@ -285,13 +284,26 @@ namespace dCompare.Compare
             }
 
             string tabHeader = $"Compare: {Path.GetFileName(leftPath)} - {Path.GetFileName(rightPath)}";
-            var newTab = new TabItem
-            {
-                Header = tabHeader,
-                Content = new UcFileCompare()
-            };
+            TabItem newTab = new TabItem { Header = tabHeader };
 
-            ((UcFileCompare)newTab.Content).SetComparisonResult(leftPath, rightPath, comparisonResult);
+            if (fileType == FileType.Text)
+            {
+                var textViewer = new UcFileCompare();
+                textViewer.SetComparisonResult(leftPath, rightPath, comparisonResult);
+                newTab.Content = textViewer;
+            }
+            else if (fileType == FileType.Image)
+            {
+                var imageViewer = new UcImageDiffViewer();
+                imageViewer.SetImagePaths(leftPath, rightPath);
+                newTab.Content = imageViewer;
+            }
+            else
+            {
+                MessageBox.Show("Unsupported file type for comparison.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
             tabControl.Items.Add(newTab);
             tabControl.SelectedItem = newTab;
         }
