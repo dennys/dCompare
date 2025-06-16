@@ -51,6 +51,8 @@ namespace dCompare
                     new TreeItemViewModel("General", true),
                     new TreeItemViewModel("Hotkeys", true)
                 }},
+                new TreeItemViewModel("Compare", true),
+                new TreeItemViewModel("Diff", true),
                 new TreeItemViewModel("Log", true)
             };
         }
@@ -68,9 +70,11 @@ namespace dCompare
         {
             UserControl view = tag switch
             {
-                "General" => new GeneralConfigView { DataContext = Options },
-                "UIGeneral" => new UIGeneralConfigView { DataContext = Options },
+                "UIGeneral" => new UIGeneralConfigView { DataContext = Options.UI },
                 "UIHotkeys" => new HotkeysConfigView { DataContext = this },
+                "Session" => new SessionConfigView { DataContext = Options },
+                "Compare" => new CompareConfigView { DataContext = Options.Compare },
+                "Diff" => new DiffConfigView { DataContext = Options.Diff },
                 "Log" => new LogConfigView { DataContext = Options },
                 _ => null
             };

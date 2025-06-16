@@ -27,7 +27,20 @@ namespace dCompare.Configuration
 
         public AppConfiguration GetConfiguration()
         {
-            return GetConfigurationService().Get<AppConfiguration>() ?? new AppConfiguration();
+            try
+            {
+                if (GetFileSystem().File.Exists(_configFilePath))
+                {
+                    var json = GetFileSystem().File.ReadAllText(_configFilePath);
+                    var config = JsonSerializer.Deserialize<AppConfiguration>(json);
+                    return config ?? new AppConfiguration();
+                }
+            }
+            catch (Exception ex)
+            {
+                GetLogger().LogWarning(ex, "Failed to load configuration from {ConfigFilePath}. Using defaults.", _configFilePath);
+            }
+            return new AppConfiguration();
         }
 
         public void SaveConfiguration(AppConfiguration config)

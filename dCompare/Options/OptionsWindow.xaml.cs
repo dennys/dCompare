@@ -25,7 +25,7 @@ namespace dCompare.Options
             DataContext = _viewModel;
 
             // Initialize theme
-            UpdateTheme(_viewModel.Options.Theme);
+            UpdateTheme(_viewModel.Options.UI.Theme);
 
             // Initialize search debounce timer
             _searchTimer = new DispatcherTimer

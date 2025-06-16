@@ -90,7 +90,11 @@ namespace dCompare.Compare
             }
         }
 
-        private async void Compare_Click(object sender, RoutedEventArgs e)
+        private void Compare_Click(object sender, RoutedEventArgs e)
+        {
+            RefreshComparison();
+        }
+        private async void RefreshComparison()
         {
             if (IsComparing) { MessageBox.Show("Comparison is already in progress."); return; }
 
@@ -397,17 +401,17 @@ namespace dCompare.Compare
             CollectionViewSource.GetDefaultView(_treeNodes).Filter = _currentFilter;
         }
 
-        private void CopyToLeft_Click(object sender, RoutedEventArgs e)
+        private void CopyToLeft_ClickXXX(object sender, RoutedEventArgs e)
         {
-            CopySelectedFiles(toLeft: true);
+            CopySelectedFilesXXX(toLeft: true);
         }
 
-        private void CopyToRight_Click(object sender, RoutedEventArgs e)
+        private void CopyToRight_ClickXXX(object sender, RoutedEventArgs e)
         {
-            CopySelectedFiles(toLeft: false);
+            CopySelectedFilesXXX(toLeft: false);
         }
 
-        private void CopySelectedFiles(bool toLeft)
+        private void CopySelectedFilesXXX(bool toLeft)
         {
             List<TreeNode> selectedItems = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
             if (selectedItems.Count == 0)
@@ -519,102 +523,107 @@ namespace dCompare.Compare
 
         private void ContextMenu_CopyToLeft_Click(object sender, RoutedEventArgs e)
         {
-            if (ResultListView.SelectedItem is TreeNode selectedNode)
-            {
-                if (selectedNode.IsDirectory)
+            foreach (object selectedItem in ResultListView.SelectedItems) {
+                if (ResultListView.SelectedItem is TreeNode selectedNode)
                 {
-                    MessageBox.Show("Cannot copy directories. Please select a file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                string sourcePath = selectedNode.RightNode?.FullPath;
-                if (string.IsNullOrEmpty(sourcePath))
-                {
-                    MessageBox.Show("No valid source file path to copy.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                string leftDir = LeftPathBox.Text.Trim();
-                if (string.IsNullOrEmpty(leftDir))
-                {
-                    MessageBox.Show("No valid destination directory specified.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                try
-                {
-                    OpenFileOperations_Click();
-                    if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
+                    if (selectedNode.IsDirectory)
                     {
-                        string relativePath = selectedNode.RelativePath ?? string.Empty;
-                        string destDir = Path.Combine(leftDir, Path.GetDirectoryName(relativePath) ?? string.Empty);
-                        string fileName = Path.GetFileName(sourcePath);
-                        string destPath = Path.Combine(destDir, fileName);
+                        MessageBox.Show("Cannot copy directories. Please select a file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
 
-                        Directory.CreateDirectory(destDir);
-                        _fileOperationWindow.Copy(sourcePath, destPath, true);
-                        RefreshComparison();
+                    string sourcePath = selectedNode.RightNode?.FullPath;
+                    if (string.IsNullOrEmpty(sourcePath))
+                    {
+                        MessageBox.Show("No valid source file path to copy.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+
+                    string leftDir = LeftPathBox.Text.Trim();
+                    if (string.IsNullOrEmpty(leftDir))
+                    {
+                        MessageBox.Show("No valid destination directory specified.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+
+                    try
+                    {
+                        OpenFileOperations_Click();
+                        if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
+                        {
+                            string relativePath = selectedNode.RelativePath ?? string.Empty;
+                            string destDir = Path.Combine(leftDir, Path.GetDirectoryName(relativePath) ?? string.Empty);
+                            string fileName = Path.GetFileName(sourcePath);
+                            string destPath = Path.Combine(destDir, fileName);
+
+                            Directory.CreateDirectory(destDir);
+                            _fileOperationWindow.Copy(sourcePath, destPath, true);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Error copying file: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
-                catch (Exception ex)
+                else
                 {
-                    MessageBox.Show($"Error copying file: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("No file selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
-            else
-            {
-                MessageBox.Show("No file selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            RefreshComparison();
         }
 
         private void ContextMenu_CopyToRight_Click(object sender, RoutedEventArgs e)
         {
-            if (ResultListView.SelectedItem is TreeNode selectedNode)
+            foreach (object selectedItem in ResultListView.SelectedItems)
             {
-                if (selectedNode.IsDirectory)
+                if (selectedItem is TreeNode selectedNode)
                 {
-                    MessageBox.Show("Cannot copy directories. Please select a file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                string sourcePath = selectedNode.LeftNode?.FullPath;
-                if (string.IsNullOrEmpty(sourcePath))
-                {
-                    MessageBox.Show("No valid source file path to copy.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                string rightDir = RightPathBox.Text.Trim();
-                if (string.IsNullOrEmpty(rightDir))
-                {
-                    MessageBox.Show("No valid destination directory specified.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                try
-                {
-                    OpenFileOperations_Click();
-                    if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
+                    if (selectedNode.IsDirectory)
                     {
-                        string relativePath = selectedNode.RelativePath ?? string.Empty;
-                        string destDir = Path.Combine(rightDir, Path.GetDirectoryName(relativePath) ?? string.Empty);
-                        string fileName = Path.GetFileName(sourcePath);
-                        string destPath = Path.Combine(destDir, fileName);
+                        MessageBox.Show("Cannot copy directories. Please select a file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
 
-                        Directory.CreateDirectory(destDir);
-                        _fileOperationWindow.Copy(sourcePath, destPath, true);
-                        RefreshComparison();
+                    string sourcePath = selectedNode.LeftNode?.FullPath;
+                    if (string.IsNullOrEmpty(sourcePath))
+                    {
+                        MessageBox.Show("No valid source file path to copy.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+
+                    string rightDir = RightPathBox.Text.Trim();
+                    if (string.IsNullOrEmpty(rightDir))
+                    {
+                        MessageBox.Show("No valid destination directory specified.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+
+                    try
+                    {
+                        OpenFileOperations_Click();
+                        if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
+                        {
+                            string relativePath = selectedNode.RelativePath ?? string.Empty;
+                            string destDir = Path.Combine(rightDir, Path.GetDirectoryName(relativePath) ?? string.Empty);
+                            string fileName = Path.GetFileName(sourcePath);
+                            string destPath = Path.Combine(destDir, fileName);
+
+                            Directory.CreateDirectory(destDir);
+                            _fileOperationWindow.Copy(sourcePath, destPath, true);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Error copying file: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
-                catch (Exception ex)
+                else
                 {
-                    MessageBox.Show($"Error copying file: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("No file selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
-            else
-            {
-                MessageBox.Show("No file selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            RefreshComparison();
         }
 
         private void ContextMenu_OpenLeftLocation_Click(object sender, RoutedEventArgs e)
@@ -678,11 +687,6 @@ namespace dCompare.Compare
             };
         }
 
-        private void RefreshComparison()
-        {
-            Compare_Click(null, null);
-        }
-
         private void OpenFileOperations_Click()
         {
             if (_fileOperationWindow == null || !_fileOperationWindow.IsLoaded)
@@ -698,7 +702,7 @@ namespace dCompare.Compare
             }
         }
 
-        private void CopyFile_Click(object sender, RoutedEventArgs e)
+        private void CopyFile_ClickXXX(object sender, RoutedEventArgs e)
         {
             if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
             {
@@ -715,7 +719,7 @@ namespace dCompare.Compare
             }
         }
 
-        private void MoveFile_Click(object sender, RoutedEventArgs e)
+        private void MoveFile_ClickXXX(object sender, RoutedEventArgs e)
         {
             if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
             {
