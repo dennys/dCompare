@@ -1,17 +1,20 @@
 ﻿using dCompare.Configuration;
 using System.ComponentModel;
 using System.Windows.Controls;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace dCompare.Options
 {
     public partial class CompareConfigView : UserControl, INotifyPropertyChanged
     {
         private readonly CompareConfig _compareConfig;
+        private readonly ConfigurationService _configurationService;
 
-        public CompareConfigView()
+        public CompareConfigView(ConfigurationService configurationService)
         {
             InitializeComponent();
-            _compareConfig = (DataContext as CompareConfig) ?? new CompareConfig();
+            _configurationService = configurationService ?? throw new ArgumentNullException(nameof(configurationService));
+            _compareConfig = _configurationService.GetConfiguration().Options.Compare;
             DataContext = this;
         }
 
@@ -20,8 +23,12 @@ namespace dCompare.Options
             get => _compareConfig.Algorithm;
             set
             {
-                _compareConfig.Algorithm = value;
-                OnPropertyChanged(nameof(Algorithm));
+                if (_compareConfig.Algorithm != value)
+                {
+                    _compareConfig.Algorithm = value;
+                    OnPropertyChanged(nameof(Algorithm));
+                    SaveConfiguration();
+                }
             }
         }
 
@@ -30,9 +37,20 @@ namespace dCompare.Options
             get => _compareConfig.DoubleClick;
             set
             {
-                _compareConfig.DoubleClick = value;
-                OnPropertyChanged(nameof(DoubleClick));
+                if (_compareConfig.DoubleClick != value)
+                {
+                    _compareConfig.DoubleClick = value;
+                    OnPropertyChanged(nameof(DoubleClick));
+                    SaveConfiguration();
+                }
             }
+        }
+
+        private void SaveConfiguration()
+        {
+            var config = _configurationService.GetConfiguration();
+            config.Options.Compare = _compareConfig;
+            _configurationService.SaveConfiguration(config);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
