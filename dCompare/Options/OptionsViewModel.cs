@@ -70,10 +70,10 @@ namespace dCompare
         {
             UserControl view = tag switch
             {
-                "UIGeneral" => new UIGeneralConfigView { DataContext = Options.UI },
+                "UIGeneral" => new UIGeneralConfigView(_configService) { DataContext = Options.UI },
                 "UIHotkeys" => new HotkeysConfigView { DataContext = this },
                 "Session" => new SessionConfigView { DataContext = Options },
-                "Compare" => new CompareConfigView { DataContext = Options.Compare },
+                "Compare" => new CompareConfigView(_configService) { DataContext = Options.Compare },
                 "Diff" => new DiffConfigView { DataContext = Options.Diff },
                 "Log" => new LogConfigView { DataContext = Options },
                 _ => null
