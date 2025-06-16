@@ -95,9 +95,9 @@ namespace dCompare
 
             // Load default session if configured
             var config = _configService.GetConfiguration();
-            if (config.Options?.AutoLoadDefaultSession == true && !string.IsNullOrEmpty(config.Options.DefaultSessionFile))
+            if (config.Options?.Session.AutoLoadDefaultSession == true && !string.IsNullOrEmpty(config.Options.Session.DefaultSessionFile))
             {
-                _sessionManager.LoadSession(config.Options.DefaultSessionFile, config.Options.AutoCompareAfterSessionLoad, UpdateStatus, ExecuteUcCompareMethod);
+                _sessionManager.LoadSession(config.Options.Session.DefaultSessionFile, config.Options.Session.AutoCompareAfterSessionLoad, UpdateStatus, ExecuteUcCompareMethod);
             }
             else
             {

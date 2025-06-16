@@ -51,11 +51,13 @@
                     <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                 </Style>
             </TreeView.Resources>
-            <TreeViewItem Header="General" Tag="General"/>
             <TreeViewItem Header="UI" Tag="UI">
                 <TreeViewItem Header="General" Tag="UIGeneral"/>
                 <TreeViewItem Header="Hotkeys" Tag="UIHotkeys"/>
             </TreeViewItem>
+            <TreeViewItem Header="Session" Tag="Session"/>
+            <TreeViewItem Header="Compare" Tag="Compare"/>
+            <TreeViewItem Header="Diff" Tag="Diff"/>
             <TreeViewItem Header="Log" Tag="Log"/>
         </TreeView>
 
