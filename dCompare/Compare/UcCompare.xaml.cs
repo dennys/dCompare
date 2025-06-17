@@ -424,8 +424,6 @@ namespace dCompare.Compare
 
             foreach (TreeNode node in ResultListView.SelectedItems.Cast<TreeNode>())
             {
-                if (node.IsDirectory) continue;
-
                 string sourcePath = toLeft ? node.RightNode?.FullPath : node.LeftNode?.FullPath;
                 if (string.IsNullOrEmpty(sourcePath)) continue;
 
@@ -440,12 +438,26 @@ namespace dCompare.Compare
             return items;
         }
 
+        private List<string> GetSelectedItemsForDeletion(bool isLeft)
+        {
+            List<string> paths = new();
+            foreach (TreeNode node in ResultListView.SelectedItems.Cast<TreeNode>())
+            {
+                string path = isLeft ? node.LeftNode?.FullPath : node.RightNode?.FullPath;
+                if (!string.IsNullOrEmpty(path))
+                {
+                    paths.Add(path);
+                }
+            }
+            return paths;
+        }
+
         private void ContextMenu_CopyToLeft_Click(object sender, RoutedEventArgs e)
         {
             var items = GetSelectedItemsForTransfer(toLeft: true);
             if (items.Count == 0)
             {
-                MessageBox.Show("請選擇至少一個文件進行同步");
+                MessageBox.Show("請選擇至少一個文件或目錄進行同步");
                 return;
             }
 
@@ -459,7 +471,7 @@ namespace dCompare.Compare
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error copying files: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error copying items: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
             RefreshComparison();
@@ -470,7 +482,7 @@ namespace dCompare.Compare
             var items = GetSelectedItemsForTransfer(toLeft: false);
             if (items.Count == 0)
             {
-                MessageBox.Show("請選擇至少一個文件進行同步");
+                MessageBox.Show("請選擇至少一個文件或目錄進行同步");
                 return;
             }
 
@@ -484,7 +496,7 @@ namespace dCompare.Compare
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error copying files: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error copying items: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
             RefreshComparison();
@@ -495,7 +507,7 @@ namespace dCompare.Compare
             var items = GetSelectedItemsForTransfer(toLeft: true);
             if (items.Count == 0)
             {
-                MessageBox.Show("請選擇至少一個文件進行移動");
+                MessageBox.Show("請選擇至少一個文件或目錄進行移動");
                 return;
             }
 
@@ -509,7 +521,7 @@ namespace dCompare.Compare
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error moving files: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error moving items: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
             RefreshComparison();
@@ -520,7 +532,7 @@ namespace dCompare.Compare
             var items = GetSelectedItemsForTransfer(toLeft: false);
             if (items.Count == 0)
             {
-                MessageBox.Show("請選擇至少一個文件進行移動");
+                MessageBox.Show("請選擇至少一個文件或目錄進行移動");
                 return;
             }
 
@@ -534,7 +546,7 @@ namespace dCompare.Compare
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error moving files: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error moving items: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
             RefreshComparison();
@@ -591,26 +603,27 @@ namespace dCompare.Compare
 
         private async void ContextMenu_Delete_Click(object sender, RoutedEventArgs e)
         {
-            var selectedItem = ResultListView.SelectedItem as TreeNode;
-            if (selectedItem == null)
+            var selectedItems = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
+            if (selectedItems.Count == 0)
             {
-                MessageBox.Show("請選擇一個項目");
+                MessageBox.Show("請選擇至少一個項目");
                 return;
             }
 
             bool isLeft = (sender as MenuItem)?.Parent is ContextMenu contextMenu &&
                           contextMenu == FindResource("LeftContextMenu");
-            string path = isLeft ? selectedItem.LeftNode?.FullPath : selectedItem.RightNode?.FullPath;
+            var paths = GetSelectedItemsForDeletion(isLeft);
 
-            if (string.IsNullOrEmpty(path))
+            if (paths.Count == 0)
             {
-                MessageBox.Show("No valid file or directory path selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("No valid file or directory paths selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
-            string itemType = selectedItem.IsDirectory ? "directory" : "file";
+            string itemList = string.Join("\n", paths.Select(p => Path.GetFileName(p)));
+            string message = $"Are you sure you want to delete the following {paths.Count} item(s)?\n\n{itemList}";
             var result = MessageBox.Show(
-                $"Are you sure you want to delete the {itemType} '{Path.GetFileName(path)}'?",
+                message,
                 "Confirm Delete",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
@@ -622,12 +635,16 @@ namespace dCompare.Compare
 
             try
             {
-                await _fileManager.DeleteAsync(path);
+                OpenFileOperations_Click();
+                if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
+                {
+                    await _fileManager.DeleteMultipleAsync(paths);
+                }
                 RefreshComparison();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error deleting {itemType}: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error deleting items: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -709,6 +726,7 @@ namespace dCompare.Compare
                 FileOperations.OpenFileLocation(selectedNode.RightNode.FullPath);
             }
         }
+
         private void ContextMenu_CopyPathnames_Click(object sender, RoutedEventArgs e)
         {
             bool isLeft = (sender as MenuItem)?.Parent is ContextMenu contextMenu &&
@@ -758,6 +776,7 @@ namespace dCompare.Compare
                 MessageBox.Show("No valid files selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
         private void ListView_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             DependencyObject obj = (DependencyObject)e.OriginalSource;

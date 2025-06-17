@@ -102,10 +102,10 @@ namespace dCompare.FileOperation
                             await HandleCopyAsync(source, target, overwrite, totalCount, processedCount, ReportProgress, cancellationToken);
                             break;
                         case OperationType.Move:
-                            HandleMove(source, target, overwrite);
+                            await HandleMoveAsync(source, target, overwrite, totalCount, processedCount, ReportProgress, cancellationToken);
                             break;
                         case OperationType.Delete:
-                            HandleDelete(source);
+                            await HandleDeleteAsync(source, totalCount, processedCount, ReportProgress, cancellationToken);
                             break;
                     }
                     successCount++;
@@ -115,9 +115,9 @@ namespace dCompare.FileOperation
                     failedItems.Add(source);
                     throw;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    failedItems.Add(source);
+                    failedItems.Add($"{source}: {ex.Message}");
                 }
                 finally
                 {
@@ -139,12 +139,7 @@ namespace dCompare.FileOperation
             bool isDirectory = Directory.Exists(source);
             if (isDirectory)
             {
-                Directory.CreateDirectory(target);
-                var sourceInfo = new DirectoryInfo(source);
-                var targetInfo = new DirectoryInfo(target);
-                targetInfo.CreationTimeUtc = sourceInfo.CreationTimeUtc;
-                targetInfo.LastAccessTimeUtc = sourceInfo.LastAccessTimeUtc;
-                targetInfo.LastWriteTimeUtc = sourceInfo.LastWriteTimeUtc;
+                await CopyDirectoryAsync(source, target, overwrite, totalCount, processedCount, reportProgress, cancellationToken);
             }
             else
             {
@@ -171,28 +166,154 @@ namespace dCompare.FileOperation
             }
         }
 
-        private void HandleMove(string source, string target, bool overwrite)
+        private async Task CopyDirectoryAsync(string sourceDir, string targetDir, bool overwrite, int totalCount, int processedCount, Action<int, string> reportProgress, CancellationToken cancellationToken)
         {
-            if (Directory.Exists(source))
+            // Create target directory
+            Directory.CreateDirectory(targetDir);
+            var sourceInfo = new DirectoryInfo(sourceDir);
+            var targetInfo = new DirectoryInfo(targetDir);
+            targetInfo.CreationTimeUtc = sourceInfo.CreationTimeUtc;
+            targetInfo.LastAccessTimeUtc = sourceInfo.LastAccessTimeUtc;
+            targetInfo.LastWriteTimeUtc = sourceInfo.LastWriteTimeUtc;
+
+            // Get all files and subdirectories
+            var files = Directory.GetFiles(sourceDir);
+            var subDirs = Directory.GetDirectories(sourceDir);
+            int totalItems = files.Length + subDirs.Length;
+            int processedItems = 0;
+
+            // Copy files
+            foreach (string file in files)
             {
-                Directory.Move(source, target);
+                cancellationToken.ThrowIfCancellationRequested();
+                string fileName = Path.GetFileName(file);
+                string destFile = Path.Combine(targetDir, fileName);
+                long fileSize = new FileInfo(file).Length;
+
+                CopyProgressCallback byteProgressCallback = (totalFileSize, totalBytesTransferred, _, _, _, _, _, _, _) =>
+                {
+                    if (totalFileSize > 0)
+                    {
+                        int filePercentage = (int)(totalBytesTransferred * 100 / totalFileSize);
+                        int overallPercentage = (int)(processedCount * 100 / totalCount + (filePercentage * (1 / (float)totalCount) / totalItems));
+                        reportProgress(overallPercentage, file);
+                    }
+                    return cancellationToken.IsCancellationRequested ? CopyProgressResult.PROGRESS_CANCEL : CopyProgressResult.PROGRESS_CONTINUE;
+                };
+
+                await _strategy.CopyFileAsync(file, destFile, overwrite, byteProgressCallback, cancellationToken);
+                processedItems++;
+            }
+
+            // Recursively copy subdirectories
+            foreach (string subDir in subDirs)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                string dirName = Path.GetFileName(subDir);
+                string destDir = Path.Combine(targetDir, dirName);
+                await CopyDirectoryAsync(subDir, destDir, overwrite, totalCount, processedCount, reportProgress, cancellationToken);
+                processedItems++;
+            }
+        }
+
+        private async Task HandleMoveAsync(string source, string target, bool overwrite, int totalCount, int processedCount, Action<int, string> reportProgress, CancellationToken cancellationToken)
+        {
+            bool isDirectory = Directory.Exists(source);
+            if (isDirectory)
+            {
+                await MoveDirectoryAsync(source, target, overwrite, totalCount, processedCount, reportProgress, cancellationToken);
             }
             else
             {
+                int basePercentage = processedCount * 100 / totalCount;
+                reportProgress(basePercentage, source);
                 _strategy.MoveFile(source, target, overwrite);
             }
         }
 
-        private void HandleDelete(string path)
+        private async Task MoveDirectoryAsync(string sourceDir, string targetDir, bool overwrite, int totalCount, int processedCount, Action<int, string> reportProgress, CancellationToken cancellationToken)
         {
-            if (Directory.Exists(path))
+            // Create target directory
+            Directory.CreateDirectory(targetDir);
+
+            // Get all files and subdirectories
+            var files = Directory.GetFiles(sourceDir);
+            var subDirs = Directory.GetDirectories(sourceDir);
+            int totalItems = files.Length + subDirs.Length;
+            int processedItems = 0;
+
+            // Move files
+            foreach (string file in files)
             {
-                _strategy.DeleteDirectory(path);
+                cancellationToken.ThrowIfCancellationRequested();
+                string fileName = Path.GetFileName(file);
+                string destFile = Path.Combine(targetDir, fileName);
+                int overallPercentage = (int)(processedCount * 100 / totalCount + (processedItems * (1 / (float)totalCount) / totalItems));
+                reportProgress(overallPercentage, file);
+                _strategy.MoveFile(file, destFile, overwrite);
+                processedItems++;
+            }
+
+            // Recursively move subdirectories
+            foreach (string subDir in subDirs)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                string dirName = Path.GetFileName(subDir);
+                string destDir = Path.Combine(targetDir, dirName);
+                await MoveDirectoryAsync(subDir, destDir, overwrite, totalCount, processedCount, reportProgress, cancellationToken);
+                processedItems++;
+            }
+
+            // Delete the source directory if empty
+            if (Directory.GetFiles(sourceDir).Length == 0 && Directory.GetDirectories(sourceDir).Length == 0)
+            {
+                Directory.Delete(sourceDir);
+            }
+        }
+
+        private async Task HandleDeleteAsync(string path, int totalCount, int processedCount, Action<int, string> reportProgress, CancellationToken cancellationToken)
+        {
+            bool isDirectory = Directory.Exists(path);
+            if (isDirectory)
+            {
+                await DeleteDirectoryAsync(path, totalCount, processedCount, reportProgress, cancellationToken);
             }
             else
             {
+                int basePercentage = processedCount * 100 / totalCount;
+                reportProgress(basePercentage, path);
                 _strategy.DeleteFile(path);
             }
+        }
+
+        private async Task DeleteDirectoryAsync(string dirPath, int totalCount, int processedCount, Action<int, string> reportProgress, CancellationToken cancellationToken)
+        {
+            // Get all files and subdirectories
+            var files = Directory.GetFiles(dirPath);
+            var subDirs = Directory.GetDirectories(dirPath);
+            int totalItems = files.Length + subDirs.Length;
+            int processedItems = 0;
+
+            // Delete files
+            foreach (string file in files)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                int overallPercentage = (int)(processedCount * 100 / totalCount + (processedItems * (1 / (float)totalCount) / totalItems));
+                reportProgress(overallPercentage, file);
+                _strategy.DeleteFile(file);
+                processedItems++;
+            }
+
+            // Recursively delete subdirectories
+            foreach (string subDir in subDirs)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await DeleteDirectoryAsync(subDir, totalCount, processedCount, reportProgress, cancellationToken);
+                processedItems++;
+            }
+
+            // Delete the directory itself
+            _strategy.DeleteDirectory(dirPath);
         }
     }
 }
