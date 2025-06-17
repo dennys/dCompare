@@ -1,5 +1,4 @@
-﻿using dCompare.FileOperation;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;

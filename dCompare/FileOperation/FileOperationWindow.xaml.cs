@@ -1,4 +1,8 @@
-﻿using System;
+﻿using dCompare.Compare;
+using dCompare.FileOperation;
+using dCompare.FileOperation.Models;
+using dCompare.FileOperation.Strategies;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
@@ -15,6 +19,7 @@ namespace dCompare.FileOperation
     {
         private CancellationTokenSource _cancellationTokenSource;
         private bool _isPaused;
+        private readonly FileManager _fileManager;
 
         public ObservableCollection<FileTransfer> QueuedTransfers { get; } = new ObservableCollection<FileTransfer>();
         public ObservableCollection<FileTransfer> SuccessfulTransfers { get; } = new ObservableCollection<FileTransfer>();
@@ -29,8 +34,9 @@ namespace dCompare.FileOperation
             DataContext = this;
             _cancellationTokenSource = new CancellationTokenSource();
             _isPaused = false;
+            //_fileManager = new FileManager(new Kernel32FileCopyStrategy());
+            _fileManager = new FileManager(new FileStreamStrategy());
 
-            // Set up CollectionViewSource for filtering
             var queuedView = CollectionViewSource.GetDefaultView(QueuedTransfers);
             var successfulView = CollectionViewSource.GetDefaultView(SuccessfulTransfers);
             var failedView = CollectionViewSource.GetDefaultView(FailedTransfers);
@@ -39,35 +45,23 @@ namespace dCompare.FileOperation
             failedView.Filter = FilterTransfers;
         }
 
-        public void Copy(string source, string target, bool overwrite = false)
+        public void CopyMultiple(List<(string Source, string TargetPath, SourceType Type)> items, bool overwrite = false)
         {
-            Transfer(source, target, overwrite, true);
-        }
-
-        public void Move(string source, string target, bool overwrite = false)
-        {
-            Transfer(source, target, overwrite, false);
-        }
-
-        public void CopyMultiple(string[] sources, string targetDirectory, bool overwrite = false)
-        {
-            foreach (var source in sources)
+            foreach (var item in items)
             {
-                string target = Path.Combine(targetDirectory, Path.GetFileName(source));
-                Copy(source, target, overwrite);
+                Transfer(item.Source, item.TargetPath, overwrite, true, item.Type);
             }
         }
 
-        public void MoveMultiple(string[] sources, string targetDirectory, bool overwrite = false)
+        public void MoveMultiple(List<(string Source, string TargetPath, SourceType Type)> items, bool overwrite = false)
         {
-            foreach (var source in sources)
+            foreach (var item in items)
             {
-                string target = Path.Combine(targetDirectory, Path.GetFileName(source));
-                Move(source, target, overwrite);
+                Transfer(item.Source, item.TargetPath, overwrite, false, item.Type);
             }
         }
 
-        private void Transfer(string source, string target, bool overwrite, bool isCopy)
+        private void Transfer(string source, string target, bool overwrite, bool isCopy, SourceType sourceType)
         {
             string jobId = Guid.NewGuid().ToString();
             var transfer = new FileTransfer
@@ -77,7 +71,8 @@ namespace dCompare.FileOperation
                 Source = source,
                 Target = target,
                 Status = "Queued",
-                FileSize = new FileInfo(source).Length
+                FileSize = Directory.Exists(source) ? 0 : new FileInfo(source).Length,
+                SourceType = sourceType
             };
 
             Dispatcher.Invoke(() => QueuedTransfers.Add(transfer));
@@ -86,63 +81,53 @@ namespace dCompare.FileOperation
             {
                 try
                 {
-                    long bytesTransferred = 0;
-                    long totalBytes = transfer.FileSize;
-                    DateTime startTime = DateTime.Now;
-                    FileInfo sourceInfo = new FileInfo(source);
-
-                    using (var sourceStream = new FileStream(source, FileMode.Open, FileAccess.Read))
-                    using (var targetStream = new FileStream(target, overwrite ? FileMode.Create : FileMode.CreateNew, FileAccess.Write))
+                    var progress = new Progress<OperationProgress>(p =>
                     {
-                        byte[] buffer = new byte[8192];
-                        int bytesRead;
-                        while ((bytesRead = await sourceStream.ReadAsync(buffer, 0, buffer.Length, _cancellationTokenSource.Token)) > 0)
+                        Dispatcher.Invoke(() =>
                         {
-                            if (_isPaused)
+                            transfer.Progress = p.Percentage / 100.0;
+                            transfer.Status = $"Transferring ({p.Percentage:P0})";
+                            if (p.Percentage > 0)
                             {
-                                while (_isPaused && !_cancellationTokenSource.Token.IsCancellationRequested)
-                                {
-                                    await Task.Delay(100);
-                                }
+                                transfer.TransferSpeed = (transfer.FileSize * (p.Percentage / 100.0) / 1024.0) / (DateTime.Now - transfer.StartTime).TotalSeconds;
                             }
+                        });
+                    });
 
-                            await targetStream.WriteAsync(buffer, 0, bytesRead, _cancellationTokenSource.Token);
-                            bytesTransferred += bytesRead;
-
-                            double progress = (double)bytesTransferred / totalBytes;
-                            double elapsedSeconds = (DateTime.Now - startTime).TotalSeconds;
-                            double speed = elapsedSeconds > 0 ? (bytesTransferred / 1024.0) / elapsedSeconds : 0;
-
-                            Dispatcher.Invoke(() =>
-                            {
-                                transfer.Progress = progress;
-                                transfer.TransferSpeed = speed;
-                                transfer.Status = $"Transferring ({progress:P0})";
-                            });
-                        }
+                    while (_isPaused && !_cancellationTokenSource.Token.IsCancellationRequested)
+                    {
+                        await Task.Delay(100, _cancellationTokenSource.Token);
                     }
 
-                    // Preserve original file timestamps for copy operation
+                    OperationResult result;
+                    transfer.StartTime = DateTime.Now;
+
                     if (isCopy)
                     {
-                        File.SetCreationTime(target, sourceInfo.CreationTime);
-                        File.SetLastAccessTime(target, sourceInfo.LastAccessTime);
-                        File.SetLastWriteTime(target, sourceInfo.LastWriteTime);
+                        result = await _fileManager.CopyAsync(source, target, overwrite, progress, _cancellationTokenSource.Token);
                     }
                     else
                     {
-                        File.Delete(source);
+                        result = await _fileManager.MoveAsync(source, target, overwrite, progress, _cancellationTokenSource.Token);
                     }
 
-                    Dispatcher.Invoke(() =>
+                    if (result.SuccessCount > 0)
                     {
-                        QueuedTransfers.Remove(transfer);
-                        transfer.Status = "Completed";
-                        SuccessfulTransfers.Add(transfer);
-                        LogTransfer(transfer);
-                    });
+                        Dispatcher.Invoke(() =>
+                        {
+                            QueuedTransfers.Remove(transfer);
+                            transfer.Status = "Completed";
+                            transfer.Progress = 1.0;
+                            SuccessfulTransfers.Add(transfer);
+                            LogTransfer(transfer);
+                        });
 
-                    OnTransferStatusChanged?.Invoke(jobId, true, "Operation completed successfully.");
+                        OnTransferStatusChanged?.Invoke(jobId, true, "Operation completed successfully.");
+                    }
+                    else
+                    {
+                        throw new Exception(string.Join("; ", result.FailedItems));
+                    }
                 }
                 catch (OperationCanceledException)
                 {
@@ -218,7 +203,7 @@ namespace dCompare.FileOperation
             if (FailedGrid.SelectedItem is FileTransfer transfer)
             {
                 FailedTransfers.Remove(transfer);
-                Transfer(transfer.Source, transfer.Target, true, transfer.Operation == "Copy");
+                Transfer(transfer.Source, transfer.Target, true, transfer.Operation == "Copy", transfer.SourceType);
             }
         }
 
@@ -241,6 +226,8 @@ namespace dCompare.FileOperation
         public string Source { get; set; }
         public string Target { get; set; }
         public long FileSize { get; set; }
+        public DateTime StartTime { get; set; }
+        public SourceType SourceType { get; set; }
 
         public string Status
         {
