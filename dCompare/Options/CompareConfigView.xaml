@@ -10,8 +10,10 @@
                     <ComboBox SelectedItem="{Binding Algorithm, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,10" Width="200">
                         <ComboBox.ItemsSource>
                             <x:Array Type="{x:Type sys:String}" xmlns:sys="clr-namespace:System;assembly=mscorlib">
-                                <sys:String>Quick</sys:String>
-                                <sys:String>MD5</sys:String>
+                                <sys:String>Modified Date and Size</sys:String>
+                                <sys:String>Modified Date Only</sys:String>
+                                <sys:String>FullContentsByHash</sys:String>
+                                <sys:String>PartialContentsByHash</sys:String>
                             </x:Array>
                         </ComboBox.ItemsSource>
                     </ComboBox>
@@ -19,8 +21,10 @@
                     <ComboBox SelectedItem="{Binding DoubleClick, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,10" Width="200">
                         <ComboBox.ItemsSource>
                             <x:Array Type="{x:Type sys:String}" xmlns:sys="clr-namespace:System;assembly=mscorlib">
-                                <sys:String>compare</sys:String>
-                                <sys:String>view</sys:String>
+                                <sys:String>CompareContent</sys:String>
+                                <sys:String>ViewContentByInternalViewer</sys:String>
+                                <sys:String>ViewContentByAssociatedEditor</sys:String>
+                                <sys:String>ViewContentByExternalEditor</sys:String>
                             </x:Array>
                         </ComboBox.ItemsSource>
                     </ComboBox>
