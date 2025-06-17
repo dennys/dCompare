@@ -30,27 +30,31 @@
         </Style>
         <!-- Left Side Context Menu -->
         <ContextMenu x:Key="LeftContextMenu">
-            <MenuItem Header="Copy to Right" Click="ContextMenu_CopyToRight_Click" Tag="{Binding}"/>
-            <MenuItem Header="Move to Right" Click="ContextMenu_CopyToRight_Click" Tag="{Binding}"/>
+            <MenuItem Header="Compare contents" Click="ContextMenu_CompareContents_Click" Tag="{Binding}"/>
             <Separator/>
-            <MenuItem Header="Open Left Location" Click="ContextMenu_OpenLeftLocation_Click" Tag="{Binding}"/>
-            <MenuItem Header="Rename" Click="ContextMenu_Properties_Click" Tag="{Binding}" InputGestureText="F2"/>
-            <MenuItem Header="Delete..." Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
-            <MenuItem Header="Compare contents" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
-            <MenuItem Header="Copy left path to clipboard" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
+            <MenuItem Header="Copy to Right" Click="ContextMenu_CopyToRight_Click" Tag="{Binding}"/>
+            <MenuItem Header="Move to Right" Click="ContextMenu_MoveToRight_Click" Tag="{Binding}"/>
+            <MenuItem Header="Delete..." Click="ContextMenu_Delete_Click" Tag="{Binding}"/>
+            <MenuItem Header="Rename" Click="ContextMenu_Rename_Click" Tag="{Binding}" InputGestureText="F2"/>
+            <Separator/>
+            <MenuItem Header="Open File Location" Click="ContextMenu_OpenLeftLocation_Click" Tag="{Binding}"/>
+            <Separator/>
+            <MenuItem Header="Copy Pathname to clipboard" Click="ContextMenu_CopyPathnames_Click" Tag="{Binding}"/>
+            <MenuItem Header="Copy Filenames to clipboard" Click="ContextMenu_CopyFilenames_Click" Tag="{Binding}"/>
             <Separator/>
             <MenuItem Header="Properties" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
         </ContextMenu>
         <!-- Right Side Context Menu -->
         <ContextMenu x:Key="RightContextMenu">
-            <MenuItem Header="Copy to Left" Click="ContextMenu_CopyToLeft_Click" Tag="{Binding}"/>
-            <MenuItem Header="Move to Left" Click="ContextMenu_CopyToLeft_Click" Tag="{Binding}"/>
+            <MenuItem Header="Compare contents" Click="ContextMenu_CompareContents_Click" Tag="{Binding}"/>
             <Separator/>
-            <MenuItem Header="Open Right Location" Click="ContextMenu_OpenRightLocation_Click" Tag="{Binding}"/>
-            <MenuItem Header="Rename" Click="ContextMenu_Properties_Click" Tag="{Binding}" InputGestureText="F2"/>
-            <MenuItem Header="Delete..." Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
-            <MenuItem Header="Compare contents" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
-            <MenuItem Header="Copy right path to clipboard" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
+            <MenuItem Header="Copy to Left" Click="ContextMenu_CopyToLeft_Click" Tag="{Binding}"/>
+            <MenuItem Header="Move to Left" Click="ContextMenu_MoveToLeft_Click" Tag="{Binding}"/>
+            <MenuItem Header="Delete..." Click="ContextMenu_Delete_Click" Tag="{Binding}"/>
+            <MenuItem Header="Rename" Click="ContextMenu_Rename_Click" Tag="{Binding}" InputGestureText="F2"/>
+            <Separator/>
+            <MenuItem Header="Copy Pathname to clipboard" Click="ContextMenu_CopyPathnames_Click" Tag="{Binding}"/>
+            <MenuItem Header="Copy Filenames to clipboard" Click="ContextMenu_CopyFilenames_Click" Tag="{Binding}"/>
             <Separator/>
             <MenuItem Header="Properties" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
         </ContextMenu>
