@@ -438,18 +438,116 @@ namespace dCompare.Compare
             return items;
         }
 
-        private List<string> GetSelectedItemsForDeletion(bool isLeft)
+        private List<(string Path, SourceType Type)> GetSelectedItemsForDeletion(bool isLeft)
         {
-            List<string> paths = new();
+            List<(string Path, SourceType Type)> paths = new();
             foreach (TreeNode node in ResultListView.SelectedItems.Cast<TreeNode>())
             {
                 string path = isLeft ? node.LeftNode?.FullPath : node.RightNode?.FullPath;
                 if (!string.IsNullOrEmpty(path))
                 {
-                    paths.Add(path);
+                    paths.Add((path, isLeft ? SourceType.Left : SourceType.Right));
                 }
             }
             return paths;
+        }
+
+        private void UpdateNodeAfterOperation(TreeNode node, string leftPath, string rightPath, bool isDirectory)
+        {
+            var leftRoot = LeftPathBox.Text.Trim();
+            var rightRoot = RightPathBox.Text.Trim();
+
+            // Update LeftNode
+            if (!string.IsNullOrEmpty(leftPath) && File.Exists(leftPath) || Directory.Exists(leftPath))
+            {
+                node.LeftNode = new FileSystemNode
+                {
+                    FullPath = leftPath,
+                    Name = Path.GetFileName(leftPath),
+                    IsDirectory = isDirectory,
+                    Size = isDirectory ? 0 : new FileInfo(leftPath).Length,
+                    ModifiedTime = isDirectory ? Directory.GetLastWriteTime(leftPath) : File.GetLastWriteTime(leftPath)
+                };
+                node.LeftName = node.LeftNode.Name;
+                node.LeftSize = FileSystemNode.FormatSize(node.LeftNode.Size);
+                node.LeftDate = node.LeftNode.ModifiedTime.ToString("yyyy/MM/dd HH:mm");
+            }
+            else
+            {
+                node.LeftNode = null;
+                node.LeftName = null;
+                node.LeftSize = null;
+                node.LeftDate = null;
+            }
+
+            // Update RightNode
+            if (!string.IsNullOrEmpty(rightPath) && File.Exists(rightPath) || Directory.Exists(rightPath))
+            {
+                node.RightNode = new FileSystemNode
+                {
+                    FullPath = rightPath,
+                    Name = Path.GetFileName(rightPath),
+                    IsDirectory = isDirectory,
+                    Size = isDirectory ? 0 : new FileInfo(rightPath).Length,
+                    ModifiedTime = isDirectory ? Directory.GetLastWriteTime(rightPath) : File.GetLastWriteTime(rightPath)
+                };
+                node.RightName = node.RightNode.Name;
+                node.RightSize = FileSystemNode.FormatSize(node.RightNode.Size);
+                node.RightDate = node.RightNode.ModifiedTime.ToString("yyyy/MM/dd HH:mm");
+            }
+            else
+            {
+                node.RightNode = null;
+                node.RightName = null;
+                node.RightSize = null;
+                node.RightDate = null;
+            }
+
+            // Update Status
+            if (node.LeftNode != null && node.RightNode != null)
+            {
+                bool areIdentical = node.LeftNode.Size == node.RightNode.Size &&
+                                    node.LeftNode.ModifiedTime == node.RightNode.ModifiedTime;
+                node.Status = areIdentical ? ComparisonStatus.Identical : ComparisonStatus.Modified;
+                node.StatusSymbol = areIdentical ? "=" : "≠";
+            }
+            else if (node.LeftNode != null)
+            {
+                node.Status = ComparisonStatus.LeftOnly;
+                node.StatusSymbol = "<";
+            }
+            else if (node.RightNode != null)
+            {
+                node.Status = ComparisonStatus.RightOnly;
+                node.StatusSymbol = ">";
+            }
+            else
+            {
+                node.Status = ComparisonStatus.Conflict;
+                node.StatusSymbol = "X";
+            }
+
+            node.Name = node.LeftNode?.Name ?? node.RightNode?.Name ?? node.Name;
+            node.IsDirectory = isDirectory;
+        }
+
+        private TreeNode FindOrCreateNode(string relativePath, bool isDirectory)
+        {
+            var node = _treeNodes.FirstOrDefault(n => n.RelativePath == relativePath);
+            if (node == null)
+            {
+                node = new TreeNode
+                {
+                    RelativePath = relativePath,
+                    Name = Path.GetFileName(relativePath),
+                    IsDirectory = isDirectory,
+                    Depth = relativePath.Count(c => c == Path.DirectorySeparatorChar)
+                };
+                // Insert node in sorted order (assuming sorted by LeftDisplayName)
+                int insertIndex = _treeNodes.TakeWhile(n => string.Compare(n.LeftDisplayName, node.LeftDisplayName, StringComparison.OrdinalIgnoreCase) < 0).Count();
+                _treeNodes.Insert(insertIndex, node);
+            }
+            return node;
         }
 
         private void ContextMenu_CopyToLeft_Click(object sender, RoutedEventArgs e)
@@ -467,14 +565,19 @@ namespace dCompare.Compare
                 if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
                 {
                     _fileOperationWindow.CopyMultiple(items, true);
+                    foreach (var (source, target, type) in items)
+                    {
+                        bool isDirectory = Directory.Exists(source);
+                        var relativePath = target.Substring(LeftPathBox.Text.Trim().Length).TrimStart(Path.DirectorySeparatorChar);
+                        var node = FindOrCreateNode(relativePath, isDirectory);
+                        UpdateNodeAfterOperation(node, target, source, isDirectory);
+                    }
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error copying items: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
-            RefreshComparison();
         }
 
         private void ContextMenu_CopyToRight_Click(object sender, RoutedEventArgs e)
@@ -492,14 +595,19 @@ namespace dCompare.Compare
                 if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
                 {
                     _fileOperationWindow.CopyMultiple(items, true);
+                    foreach (var (source, target, type) in items)
+                    {
+                        bool isDirectory = Directory.Exists(source);
+                        var relativePath = target.Substring(RightPathBox.Text.Trim().Length).TrimStart(Path.DirectorySeparatorChar);
+                        var node = FindOrCreateNode(relativePath, isDirectory);
+                        UpdateNodeAfterOperation(node, source, target, isDirectory);
+                    }
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error copying items: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
-            RefreshComparison();
         }
 
         private void ContextMenu_MoveToLeft_Click(object sender, RoutedEventArgs e)
@@ -517,14 +625,19 @@ namespace dCompare.Compare
                 if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
                 {
                     _fileOperationWindow.MoveMultiple(items, true);
+                    foreach (var (source, target, type) in items)
+                    {
+                        bool isDirectory = Directory.Exists(source);
+                        var relativePath = target.Substring(LeftPathBox.Text.Trim().Length).TrimStart(Path.DirectorySeparatorChar);
+                        var node = FindOrCreateNode(relativePath, isDirectory);
+                        UpdateNodeAfterOperation(node, target, null, isDirectory);
+                    }
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error moving items: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
-            RefreshComparison();
         }
 
         private void ContextMenu_MoveToRight_Click(object sender, RoutedEventArgs e)
@@ -542,14 +655,19 @@ namespace dCompare.Compare
                 if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
                 {
                     _fileOperationWindow.MoveMultiple(items, true);
+                    foreach (var (source, target, type) in items)
+                    {
+                        bool isDirectory = Directory.Exists(source);
+                        var relativePath = target.Substring(RightPathBox.Text.Trim().Length).TrimStart(Path.DirectorySeparatorChar);
+                        var node = FindOrCreateNode(relativePath, isDirectory);
+                        UpdateNodeAfterOperation(node, null, target, isDirectory);
+                    }
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error moving items: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
-            RefreshComparison();
         }
 
         private void ContextMenu_Rename_Click(object sender, RoutedEventArgs e)
@@ -593,7 +711,10 @@ namespace dCompare.Compare
                     File.Move(sourcePath, newPath);
                 }
 
-                RefreshComparison();
+                // Update the TreeNode
+                string relativePath = newPath.Substring(isLeft ? LeftPathBox.Text.Trim().Length : RightPathBox.Text.Trim().Length).TrimStart(Path.DirectorySeparatorChar);
+                selectedItem.RelativePath = relativePath;
+                UpdateNodeAfterOperation(selectedItem, isLeft ? newPath : null, isLeft ? null : newPath, selectedItem.IsDirectory);
             }
             catch (Exception ex)
             {
@@ -612,16 +733,16 @@ namespace dCompare.Compare
 
             bool isLeft = (sender as MenuItem)?.Parent is ContextMenu contextMenu &&
                           contextMenu == FindResource("LeftContextMenu");
-            var paths = GetSelectedItemsForDeletion(isLeft);
+            var items = GetSelectedItemsForDeletion(isLeft);
 
-            if (paths.Count == 0)
+            if (items.Count == 0)
             {
                 MessageBox.Show("No valid file or directory paths selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
-            string itemList = string.Join("\n", paths.Select(p => Path.GetFileName(p)));
-            string message = $"Are you sure you want to delete the following {paths.Count} item(s)?\n\n{itemList}";
+            string itemList = string.Join("\n", items.Select(i => Path.GetFileName(i.Path)));
+            string message = $"Are you sure you want to delete the following {items.Count} item(s)?\n\n{itemList}";
             var result = MessageBox.Show(
                 message,
                 "Confirm Delete",
@@ -638,9 +759,20 @@ namespace dCompare.Compare
                 OpenFileOperations_Click();
                 if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
                 {
-                    await _fileManager.DeleteMultipleAsync(paths);
+                    await _fileManager.DeleteMultipleAsync(items.Select(i => i.Path).ToList());
+                    foreach (var (path, type) in items)
+                    {
+                        var node = selectedItems.FirstOrDefault(n => (isLeft ? n.LeftNode?.FullPath : n.RightNode?.FullPath) == path);
+                        if (node != null)
+                        {
+                            UpdateNodeAfterOperation(node, isLeft ? null : node.LeftNode?.FullPath, isLeft ? node.RightNode?.FullPath : null, node.IsDirectory);
+                            if (node.LeftNode == null && node.RightNode == null)
+                            {
+                                _treeNodes.Remove(node);
+                            }
+                        }
+                    }
                 }
-                RefreshComparison();
             }
             catch (Exception ex)
             {
