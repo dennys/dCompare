@@ -170,7 +170,7 @@ namespace dCompare
 
         #region Tab Management
 
-        private void AddNewTab()
+        private async void AddNewTab()
         {
             try
             {
@@ -185,11 +185,10 @@ namespace dCompare
                 tabControl.SelectedItem = newTab;
                 _sessionManager.TabIdMap[newTab.Header.ToString()] = tabId;
 
-                //var config = _configService.GetConfiguration();
-                AppConfiguration config = _configService.LoadConfiguration();
+                AppConfiguration config = await _configService.LoadConfigurationAsync();
                 if (!config.Sessions.ContainsKey(tabId))
                 {
-                    _configService.UpdateSession(tabId, string.Empty, string.Empty);
+                    await _configService.UpdateSessionAsync(tabId, string.Empty, string.Empty);
                 }
 
                 UpdateStatus($"Added new tab: Tab {_sessionManager.TabCounter}");
@@ -201,7 +200,7 @@ namespace dCompare
             }
         }
 
-        private void CloseTab(TabItem tab)
+        private async void CloseTab(TabItem tab)
         {
             try
             {
@@ -235,7 +234,7 @@ namespace dCompare
                 {
                     var tabId = _sessionManager.TabIdMap[tabToClose.Header.ToString()];
                     _sessionManager.TabIdMap.Remove(tabToClose.Header.ToString());
-                    _configService.RemoveSession(tabId);
+                    await _configService.RemoveSessionAsync(tabId);
                 }
                 catch (Exception ex)
                 {

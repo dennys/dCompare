@@ -27,10 +27,6 @@ namespace dCompare.Configuration
             _configPath = Path.Combine(Directory.GetCurrentDirectory(), configFileName);
         }
 
-        public AppConfiguration LoadConfiguration()
-        {
-            return LoadConfigurationAsync().GetAwaiter().GetResult();
-        }
         /// <summary>
         /// Loads the application configuration from the JSON file.
         /// If the file does not exist, it returns a new default configuration.
@@ -60,17 +56,19 @@ namespace dCompare.Configuration
                 return new AppConfiguration(); // Return default config on error
             }
         }
-        public void UpdateSession(string tabId, string leftPath, string rightPath)
+
+        public async Task UpdateSessionAsync(string tabId, string leftPath, string rightPath)
         {
-            var config = LoadConfiguration();
+            var config = await LoadConfigurationAsync();
             config.Sessions[tabId] = new SessionConfig { Left = leftPath, Right = rightPath };
-            SaveConfigurationAsync(config);
+            await SaveConfigurationAsync(config);
         }
-        public void RemoveSession(string tabId)
+
+        public async Task RemoveSessionAsync(string tabId)
         {
-            var config = LoadConfiguration();
+            var config = await LoadConfigurationAsync();
             config.Sessions.Remove(tabId);
-            SaveConfigurationAsync(config);
+            await SaveConfigurationAsync(config);
         }
 
         /// <summary>
@@ -82,10 +80,5 @@ namespace dCompare.Configuration
             var jsonString = JsonSerializer.Serialize(config, _serializerOptions);
             await File.WriteAllTextAsync(_configPath, jsonString);
         }
-
-        //public AppConfiguration GetConfiguration()
-        //{
-        //    return new AppConfiguration();
-        //}
     }
 }
