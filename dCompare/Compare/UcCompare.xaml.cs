@@ -370,7 +370,11 @@ namespace dCompare.Compare
 
             if (obj is ListViewItem listViewItem)
             {
-                ResultListView.SelectedItem = listViewItem.Content;
+                // Only add to selection if not already selected to preserve multi-selection
+                if (!ResultListView.SelectedItems.Contains(listViewItem.Content))
+                {
+                    ResultListView.SelectedItems.Add(listViewItem.Content);
+                }
 
                 GridView gridView = (GridView)ResultListView.View;
                 Point clickPoint = e.GetPosition(ResultListView);
@@ -404,9 +408,10 @@ namespace dCompare.Compare
                 {
                     listViewItem.ContextMenu.IsOpen = true;
                 }
-            }
 
-            e.Handled = true;
+                // Mark the event as handled to prevent default selection behavior
+                e.Handled = true;
+            }
         }
 
         private void ContextMenu_CompareContents_Click(object sender, RoutedEventArgs e)
