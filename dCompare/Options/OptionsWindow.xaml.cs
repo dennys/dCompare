@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Microsoft.VisualBasic; // For InputBox
 
 namespace dCompare.Options
 {
@@ -328,7 +329,18 @@ namespace dCompare.Options
         }
 
         public string SelectedExtension { get => _selectedExtension; set => SetProperty(ref _selectedExtension, value); }
-        private void AddExtension(object obj) { Extensions.Add(".new"); } // Simple placeholder
+        private void AddExtension(object obj)
+        {
+            string newExt = Interaction.InputBox("Enter new file extension (e.g., .txt):", "Add Extension", "");
+            if (!string.IsNullOrWhiteSpace(newExt) && newExt.StartsWith(".") && !Extensions.Contains(newExt, StringComparer.OrdinalIgnoreCase))
+            {
+                Extensions.Add(newExt);
+            }
+            else if (!string.IsNullOrWhiteSpace(newExt) && !newExt.StartsWith("."))
+            {
+                MessageBox.Show("Extension must start with a dot (e.g., .txt).", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
         private void RemoveExtension(object obj) { if (!string.IsNullOrEmpty(SelectedExtension)) Extensions.Remove(SelectedExtension); }
     }
 
@@ -353,7 +365,16 @@ namespace dCompare.Options
         private readonly SessionOptions _model;
         public SessionOptionsViewModel(SessionOptions model) { _model = model; }
         public string DefaultSessionFile { get => _model.DefaultSessionFile; set { _model.DefaultSessionFile = value; OnPropertyChanged(); } }
-        public bool AutoLoadDefaultSession { get => _model.AutoLoadDefaultSession; set { _model.AutoLoadDefaultSession = value; OnPropertyChanged(); } }
+        public bool AutoLoadDefaultSession
+        {
+            get => _model.AutoLoadDefaultSession;
+            set
+            {
+                _model.AutoLoadDefaultSession = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(AutoCompareAfterSessionLoad)); // Notify dependent property
+            }
+        }
         public bool AutoCompareAfterSessionLoad { get => _model.AutoCompareAfterSessionLoad; set { _model.AutoCompareAfterSessionLoad = value; OnPropertyChanged(); } }
     }
 
