@@ -10,6 +10,7 @@ using Serilog.Events;
 using Serilog.Extensions.Logging;
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Abstractions;
 using System.Reflection;
@@ -93,16 +94,27 @@ namespace dCompare
 
             DataContext = this;
 
-            // Load default session if configured
-            var config = _configService.GetConfiguration();
-            if (config.Options?.Session.AutoLoadDefaultSession == true && !string.IsNullOrEmpty(config.Options.Session.DefaultSessionFile))
+            Loaded += MainWindow_Loaded; // Subscribe to Loaded event
+        }
+        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            try
             {
-                _sessionManager.LoadSession(config.Options.Session.DefaultSessionFile, config.Options.Session.AutoCompareAfterSessionLoad, UpdateStatus, ExecuteUcCompareMethod);
+                AppConfiguration config = await _configService.LoadConfigurationAsync();
+                if (config.Options?.Session.AutoLoadDefaultSession == true && !string.IsNullOrEmpty(config.Options.Session.DefaultSessionFile))
+                {
+                    _sessionManager.LoadSession(config.Options.Session.DefaultSessionFile, config.Options.Session.AutoCompareAfterSessionLoad, UpdateStatus, ExecuteUcCompareMethod);
+                }
+                else
+                {
+                    Log.Information("Application ready.");
+                    UpdateStatus("Application ready");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Log.Information("Application ready.");
-                UpdateStatus("Application ready");
+                Debug.WriteLine($"Error loading configuration: {ex.Message}");
+                // Handle error, e.g., show error message to user
             }
         }
 
@@ -130,7 +142,7 @@ namespace dCompare
 
         private void ConfigureLogging(IConfiguration configuration)
         {
-            var logConfig = configuration.GetSection("options:log").Get<LogConfig>() ?? new LogConfig();
+            var logConfig = configuration.GetSection("options:log").Get<LogOptions>() ?? new LogOptions();
 
             if (logConfig.Enabled)
             {
@@ -173,7 +185,8 @@ namespace dCompare
                 tabControl.SelectedItem = newTab;
                 _sessionManager.TabIdMap[newTab.Header.ToString()] = tabId;
 
-                var config = _configService.GetConfiguration();
+                //var config = _configService.GetConfiguration();
+                AppConfiguration config = _configService.LoadConfiguration();
                 if (!config.Sessions.ContainsKey(tabId))
                 {
                     _configService.UpdateSession(tabId, string.Empty, string.Empty);
@@ -269,7 +282,7 @@ namespace dCompare
         {
             try
             {
-                var optionsWindow = new OptionsWindow(_configService);
+                var optionsWindow = new OptionsWindow();
                 optionsWindow.Owner = this;
                 optionsWindow.ShowDialog();
                 UpdateStatus("Options window opened");

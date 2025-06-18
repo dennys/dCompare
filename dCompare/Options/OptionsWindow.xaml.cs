@@ -165,7 +165,7 @@ namespace dCompare.Options
 
             // Select the first item by default
             optionsNode.IsExpanded = true;
-                if(uiNode != null) uiNode.IsSelected = true;
+            if (uiNode != null) uiNode.IsSelected = true;
         }
         public string FilterText
         {
@@ -184,7 +184,7 @@ namespace dCompare.Options
         {
             string effectiveFilter = (string.IsNullOrWhiteSpace(_filterText) || _filterText == "Filter settings...") ? "" : _filterText;
 
-            foreach(var node in MenuItems)
+            foreach (var node in MenuItems)
             {
                 FilterNode(node, effectiveFilter);
             }
@@ -331,25 +331,6 @@ namespace dCompare.Options
         private void AddExtension(object obj) { Extensions.Add(".new"); } // Simple placeholder
         private void RemoveExtension(object obj) { if (!string.IsNullOrEmpty(SelectedExtension)) Extensions.Remove(SelectedExtension); }
     }
-    //private void AddExtension(object obj)
-    //{
-    //    // In a real app, you'd show a dialog to get the new extension.
-    //    // For this example, we'll add a placeholder.
-    //    var newExt = ".new";
-    //    if (!Extensions.Contains(newExt))
-    //    {
-    //        Extensions.Add(newExt);
-    //    }
-    //}
-
-    //private void RemoveExtension(object obj)
-    //{
-    //    if (!string.IsNullOrEmpty(SelectedExtension))
-    //    {
-    //        Extensions.Remove(SelectedExtension);
-    //    }
-    //}
-
 
     public class TextDiffOptionsViewModel : ListEditorViewModelBase<TextDiffOptions, string>
     {
@@ -408,9 +389,9 @@ namespace dCompare.Options
         public void UpdateModel()
         {
             // A more robust solution could use a dictionary or reflection
-			_model.AddTab      = HotKeyItems.FirstOrDefault(i => i.Name == "Add Tab")?.Combination ?? _model.AddTab;
-			_model.CloseTab    = HotKeyItems.FirstOrDefault(i => i.Name == "Close Tab")?.Combination ?? _model.CloseTab;
-			_model.Compare     = HotKeyItems.FirstOrDefault(i => i.Name == "Compare")?.Combination ?? _model.Compare;
+            _model.AddTab = HotKeyItems.FirstOrDefault(i => i.Name == "Add Tab")?.Combination ?? _model.AddTab;
+            _model.CloseTab = HotKeyItems.FirstOrDefault(i => i.Name == "Close Tab")?.Combination ?? _model.CloseTab;
+            _model.Compare = HotKeyItems.FirstOrDefault(i => i.Name == "Compare")?.Combination ?? _model.Compare;
             _model.SaveSession = HotKeyItems.FirstOrDefault(i => i.Name == "Save Session")?.Combination ?? _model.SaveSession;
             _model.LoadSession = HotKeyItems.FirstOrDefault(i => i.Name == "Load Session")?.Combination ?? _model.LoadSession;
         }

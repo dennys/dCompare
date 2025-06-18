@@ -1,3 +1,4 @@
+using dCompare.Compare;
 using dCompare.FileOperation;
 using dCompare.FileOperation.Models;
 using System;
@@ -94,12 +95,12 @@ namespace dCompare.Tests.FileOperation
         public async Task CopyMultipleAsync_MixedItems_SucceedsAndFailsCorrectly()
         {
             // Arrange
-            var itemsToCopy = new List<(string source, string target)>
+            var itemsToCopy = new List<(string source, string target, SourceType type)>
             {
-                (Path.Combine(_sourceDir, "file1.txt"), Path.Combine(_targetDir, "file1_copy.txt")),
-                (Path.Combine(_sourceDir, "file2.txt"), Path.Combine(_targetDir, "file2_copy.txt")),
-                (Path.Combine(_sourceDir, "non_existent_file.txt"), Path.Combine(_targetDir, "fail.txt")),
-                (Path.Combine(_sourceDir, "EmptySubDir"), Path.Combine(_targetDir, "EmptySubDir_copy"))
+                (Path.Combine(_sourceDir, "file1.txt"), Path.Combine(_targetDir, "file1_copy.txt"), SourceType.Left),
+                (Path.Combine(_sourceDir, "file2.txt"), Path.Combine(_targetDir, "file2_copy.txt"), SourceType.Left),
+                (Path.Combine(_sourceDir, "non_existent_file.txt"), Path.Combine(_targetDir, "fail.txt"), SourceType.Left),
+                (Path.Combine(_sourceDir, "EmptySubDir"), Path.Combine(_targetDir, "EmptySubDir_copy"), SourceType.Left)
             };
             var progressReports = new List<OperationProgress>();
             var progress = new Progress<OperationProgress>(p => progressReports.Add(p));

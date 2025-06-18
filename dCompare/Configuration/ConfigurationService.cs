@@ -1,83 +1,91 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using System;
-using System.IO;
-using System.IO.Abstractions;
+﻿using System.IO;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace dCompare.Configuration
 {
+    /// <summary>
+    /// Service to manage loading and saving application configuration.
+    /// </summary>
     public class ConfigurationService
     {
-        private readonly IServiceProvider _serviceProvider;
-        private readonly string _configFilePath;
-
-        public ConfigurationService(IServiceProvider serviceProvider)
+        private readonly string _configPath;
+        private static readonly JsonSerializerOptions _serializerOptions = new()
         {
-            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            var configuration = _serviceProvider.GetRequiredService<IConfiguration>();
-            _configFilePath = configuration.GetValue<string>("ConfigFilePath")
-                ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "dcompare.json");
+            WriteIndented = true,
+            PropertyNameCaseInsensitive = true
+        };
+
+        /// <summary>
+        /// Initializes a new instance of the ConfigurationService.
+        /// </summary>
+        /// <param name="configFileName">The name of the configuration file, e.g., "appsettings.json".</param>
+        public ConfigurationService(string configFileName = "appsettings.json")
+        {
+            // For a real app, you might use AppContext.BaseDirectory
+            // For simplicity, we use the current directory.
+            _configPath = Path.Combine(Directory.GetCurrentDirectory(), configFileName);
         }
 
-        private IConfiguration GetConfigurationService() => _serviceProvider.GetRequiredService<IConfiguration>();
-        private ILogger<ConfigurationService> GetLogger() => _serviceProvider.GetRequiredService<ILogger<ConfigurationService>>();
-        private IFileSystem GetFileSystem() => _serviceProvider.GetRequiredService<IFileSystem>();
-
-        public AppConfiguration GetConfiguration()
+        public AppConfiguration LoadConfiguration()
         {
+            return LoadConfigurationAsync().GetAwaiter().GetResult();
+        }
+        /// <summary>
+        /// Loads the application configuration from the JSON file.
+        /// If the file does not exist, it returns a new default configuration.
+        /// </summary>
+        /// <returns>An AppConfiguration object.</returns>
+        public async Task<AppConfiguration> LoadConfigurationAsync()
+        {
+            if (!File.Exists(_configPath))
+            {
+                // If no config file, create one with default values and return it
+                var defaultConfig = new AppConfiguration();
+                await SaveConfigurationAsync(defaultConfig);
+                return defaultConfig;
+            }
+
             try
             {
-                if (GetFileSystem().File.Exists(_configFilePath))
-                {
-                    var json = GetFileSystem().File.ReadAllText(_configFilePath);
-                    var config = JsonSerializer.Deserialize<AppConfiguration>(json);
-                    return config ?? new AppConfiguration();
-                }
+                var jsonString = await File.ReadAllTextAsync(_configPath);
+                var config = JsonSerializer.Deserialize<AppConfiguration>(jsonString, _serializerOptions);
+                return config ?? new AppConfiguration(); // Return new config if file is empty
             }
-            catch (Exception ex)
+            catch (JsonException ex)
             {
-                GetLogger().LogWarning(ex, "Failed to load configuration from {ConfigFilePath}. Using defaults.", _configFilePath);
-            }
-            return new AppConfiguration();
-        }
-
-        public void SaveConfiguration(AppConfiguration config)
-        {
-            try
-            {
-                var options = new JsonSerializerOptions { WriteIndented = true };
-                var json = JsonSerializer.Serialize(config, options);
-                GetFileSystem().File.WriteAllText(_configFilePath, json);
-                GetLogger().LogInformation("Configuration saved to {ConfigFilePath}", _configFilePath);
-            }
-            catch (Exception ex)
-            {
-                GetLogger().LogError(ex, "Failed to save configuration to {ConfigFilePath}", _configFilePath);
-                throw;
+                // Handle malformed JSON file. You might want to log this error
+                // and load default settings.
+                System.Diagnostics.Debug.WriteLine($"Error reading configuration file: {ex.Message}");
+                return new AppConfiguration(); // Return default config on error
             }
         }
-
         public void UpdateSession(string tabId, string leftPath, string rightPath)
         {
-            var config = GetConfiguration();
+            var config = LoadConfiguration();
             config.Sessions[tabId] = new SessionConfig { Left = leftPath, Right = rightPath };
-            SaveConfiguration(config);
+            SaveConfigurationAsync(config);
         }
-
         public void RemoveSession(string tabId)
         {
-            var config = GetConfiguration();
+            var config = LoadConfiguration();
             config.Sessions.Remove(tabId);
-            SaveConfiguration(config);
+            SaveConfigurationAsync(config);
         }
 
-        public void UpdateOptions(OptionsConfig options)
+        /// <summary>
+        /// Saves the provided configuration object to the JSON file.
+        /// </summary>
+        /// <param name="config">The AppConfiguration object to save.</param>
+        public async Task SaveConfigurationAsync(AppConfiguration config)
         {
-            var config = GetConfiguration();
-            config.Options = options;
-            SaveConfiguration(config);
+            var jsonString = JsonSerializer.Serialize(config, _serializerOptions);
+            await File.WriteAllTextAsync(_configPath, jsonString);
         }
+
+        //public AppConfiguration GetConfiguration()
+        //{
+        //    return new AppConfiguration();
+        //}
     }
 }
