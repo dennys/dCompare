@@ -17,6 +17,7 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace dCompare
 {
@@ -336,11 +337,25 @@ namespace dCompare
 
         private void TabItem_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (sender is TabItem tabItem)
+            if (sender is TextBlock textBlock)
             {
-                _draggedTab = tabItem;
-                _dragStartPoint = e.GetPosition(null);
+                TabItem tabItem = FindAncestor<TabItem>(textBlock);
+                if (tabItem != null)
+                {
+                    _draggedTab = tabItem;
+                    _dragStartPoint = e.GetPosition(null);
+                }   
             }
+        }
+
+        // Helper method to find the parent TabItem
+        private static T FindAncestor<T>(DependencyObject current) where T : DependencyObject
+        {
+            while (current != null && !(current is T))
+            {
+                current = VisualTreeHelper.GetParent(current);
+            }
+            return current as T;
         }
 
         private void TabControl_PreviewMouseMove(object sender, MouseEventArgs e)
