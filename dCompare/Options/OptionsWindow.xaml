@@ -1,74 +1,257 @@
 ﻿<Window x:Class="dCompare.Options.OptionsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:local="clr-namespace:dCompare" xmlns:local1="clr-namespace:dCompare.Options"
-        Title="Options" Height="450" Width="800"
-        Background="{DynamicResource WindowBackground}"
-        WindowStartupLocation="CenterOwner">
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:dCompare.Options"
+        mc:Ignorable="d"
+        Title="Settings" Height="600" Width="800"
+        d:DataContext="{d:DesignInstance Type=local:SettingsViewModel, IsDesignTimeCreatable=True}">
     <Window.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <!-- Light Theme -->
-                <ResourceDictionary>
-                    <SolidColorBrush x:Key="WindowBackground" Color="#F0F0F0"/>
-                    <SolidColorBrush x:Key="ControlBackground" Color="White"/>
-                    <SolidColorBrush x:Key="TextColor" Color="Black"/>
-                </ResourceDictionary>
-                <!-- Dark Theme -->
-                <ResourceDictionary>
-                    <SolidColorBrush x:Key="WindowBackground.Dark" Color="#2D2D2D"/>
-                    <SolidColorBrush x:Key="ControlBackground.Dark" Color="#3C3C3C"/>
-                    <SolidColorBrush x:Key="TextColor.Dark" Color="White"/>
-                </ResourceDictionary>
-            </ResourceDictionary.MergedDictionaries>
-            <local:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
-        </ResourceDictionary>
+        <local:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <!-- DataTemplate for UI Settings -->
+        <DataTemplate DataType="{x:Type local:UIOptionsViewModel}">
+            <StackPanel Margin="20">
+                <TextBlock Text="UI Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Theme:" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                    <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,5"
+                              ItemsSource="{Binding AvailableThemes}" 
+                              SelectedItem="{Binding Theme}"/>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Language:" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                    <ComboBox Grid.Row="1" Grid.Column="1" Margin="0,5"
+                              ItemsSource="{Binding AvailableLanguages}" 
+                              SelectedItem="{Binding Language}"/>
+                </Grid>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- DataTemplate for Compare Settings -->
+        <DataTemplate DataType="{x:Type local:CompareOptionsViewModel}">
+            <StackPanel Margin="20">
+                <TextBlock Text="Compare Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Algorithm:" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                    <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,5"
+                              ItemsSource="{Binding AvailableAlgorithms}"
+                              SelectedValue="{Binding Algorithm}"
+                              DisplayMemberPath="Key"
+                              SelectedValuePath="Value" />
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Double Click Action:" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                    <ComboBox Grid.Row="1" Grid.Column="1" Margin="0,5"
+                              ItemsSource="{Binding AvailableDoubleClickActions}"
+                              SelectedItem="{Binding DoubleClickAction}"/>
+                </Grid>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- Helper for list editing in Diff views -->
+        <Style x:Key="ListEditButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="25"/>
+            <Setter Property="Height" Value="25"/>
+            <Setter Property="Margin" Value="5,0"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+
+        <!-- DataTemplate for Text Diff Settings -->
+        <DataTemplate DataType="{x:Type local:TextDiffOptionsViewModel}">
+            <StackPanel Margin="20">
+                <TextBlock Text="Text Diff Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+
+                <TextBlock Text="Viewer:" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                <ComboBox Margin="0,0,0,15"
+                          ItemsSource="{Binding AvailableViewers}"
+                          SelectedItem="{Binding Viewer}"/>
+
+                <TextBlock Text="File Extensions:" Margin="0,5,10,5"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <ListBox ItemsSource="{Binding Extensions}" SelectedItem="{Binding SelectedExtension}" Height="150" Grid.Column="0"/>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <Button Content="+" Command="{Binding AddExtensionCommand}" Style="{StaticResource ListEditButtonStyle}"/>
+                        <Button Content="-" Command="{Binding RemoveExtensionCommand}" Style="{StaticResource ListEditButtonStyle}"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- DataTemplate for Image Diff Settings (Similar to Text Diff) -->
+        <DataTemplate DataType="{x:Type local:ImageDiffOptionsViewModel}">
+            <StackPanel Margin="20">
+                <TextBlock Text="Image Diff Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+
+                <TextBlock Text="Viewer:" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                <ComboBox Margin="0,0,0,15"
+                          ItemsSource="{Binding AvailableViewers}"
+                          SelectedItem="{Binding Viewer}"/>
+
+                <TextBlock Text="File Extensions:" Margin="0,5,10,5"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <ListBox ItemsSource="{Binding Extensions}" SelectedItem="{Binding SelectedExtension}" Height="150" Grid.Column="0"/>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <Button Content="+" Command="{Binding AddExtensionCommand}" Style="{StaticResource ListEditButtonStyle}"/>
+                        <Button Content="-" Command="{Binding RemoveExtensionCommand}" Style="{StaticResource ListEditButtonStyle}"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- DataTemplate for Session Settings -->
+        <DataTemplate DataType="{x:Type local:SessionOptionsViewModel}">
+            <StackPanel Margin="20">
+                <TextBlock Text="Session Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Text="Default Session File:" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                    <TextBox Text="{Binding DefaultSessionFile, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" Margin="0,5"/>
+                    <Button Grid.Column="1" Content="..." VerticalAlignment="Center" Padding="10,2" Margin="5,0"/>
+                </Grid>
+
+                <CheckBox IsChecked="{Binding AutoLoadDefaultSession}" Content="Auto-load default session on startup" Margin="0,10"/>
+                <CheckBox IsChecked="{Binding AutoCompareAfterSessionLoad}" Content="Auto-compare after session load" Margin="0,5"/>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- DataTemplate for Hotkey Settings -->
+        <DataTemplate DataType="{x:Type local:HotKeysOptionsViewModel}">
+            <StackPanel Margin="20">
+                <TextBlock Text="Hotkey Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+                <ItemsControl ItemsSource="{Binding HotKeyItems}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="1" Text="{Binding Combination, UpdateSourceTrigger=PropertyChanged}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- DataTemplate for Log Settings -->
+        <DataTemplate DataType="{x:Type local:LogOptionsViewModel}">
+            <StackPanel Margin="20">
+                <TextBlock Text="Log Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+                <CheckBox IsChecked="{Binding IsEnabled}" Content="Enable logging" Margin="0,10"/>
+
+                <Grid IsEnabled="{Binding IsEnabled}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Log Level:" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                    <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,5"
+                              ItemsSource="{Binding AvailableLogLevels}" 
+                              SelectedItem="{Binding Level}"/>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Retention (days):" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Margin="0,5"
+                             Text="{Binding RetentionDays}"/>
+                </Grid>
+            </StackPanel>
+        </DataTemplate>
+
     </Window.Resources>
-    <Grid Margin="10">
+
+    <!-- 
+    ==========================================================================================
+    MAIN LAYOUT
+    - A 3-row, 2-column grid defines the main structure.
+    ==========================================================================================
+    -->
+    <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="250" MinWidth="200"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Search Box -->
-        <TextBox Grid.Row="0" Grid.Column="0" Margin="5" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                 TextChanged="SearchTextBox_TextChanged" Background="{DynamicResource ControlBackground}"
-                 Foreground="{DynamicResource TextColor}"/>
+        <!-- Left Panel: Filter and TreeView -->
+        <Border Grid.Column="0" Grid.Row="0" BorderBrush="LightGray" BorderThickness="0,0,1,0" Padding="5">
+            <DockPanel>
+                <TextBox DockPanel.Dock="Top" Margin="5" Name="FilterTextBox"
+                         Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}"
+                         Tag="Filter settings..." GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
 
-        <!-- TreeView -->
-        <TreeView x:Name="OptionsTree" Grid.Row="1" Grid.Column="0" Margin="5"
-                  Background="{DynamicResource ControlBackground}"
-                  Foreground="{DynamicResource TextColor}"
-                  SelectedItemChanged="OptionsTree_SelectedItemChanged">
-            <TreeView.Resources>
-                <Style TargetType="TreeViewItem">
-                    <Setter Property="IsExpanded" Value="True"/>
-                    <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                </Style>
-            </TreeView.Resources>
-            <TreeViewItem Header="UI" Tag="UI">
-                <TreeViewItem Header="General" Tag="UIGeneral"/>
-                <TreeViewItem Header="Hotkeys" Tag="UIHotkeys"/>
-            </TreeViewItem>
-            <TreeViewItem Header="Session" Tag="Session"/>
-            <TreeViewItem Header="Compare" Tag="Compare"/>
-            <TreeViewItem Header="Diff" Tag="Diff"/>
-            <TreeViewItem Header="Log" Tag="Log"/>
-        </TreeView>
+                <TreeView ItemsSource="{Binding MenuItems}" x:Name="SettingsTree">
+                    <TreeView.ItemContainerStyle>
+                        <!-- Bind IsSelected to the view model and set Visibility based on filter -->
+                        <Style TargetType="TreeViewItem">
+                            <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
+                            <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                            <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        </Style>
+                    </TreeView.ItemContainerStyle>
+                    <TreeView.Resources>
+                        <!-- Template for parent nodes -->
+                        <HierarchicalDataTemplate DataType="{x:Type local:SettingsMenuItem}" ItemsSource="{Binding Children}">
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                        </HierarchicalDataTemplate>
+                        <!-- Template for leaf nodes (settings pages) 
+                        <DataTemplate DataType="{x:Type local:SettingsMenuItem}">
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>-->
+                    </TreeView.Resources>
+                </TreeView>
+            </DockPanel>
+        </Border>
 
-        <!-- Content Area -->
-        <ContentControl x:Name="ConfigContent" Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Margin="10"
-                        Content="{Binding CurrentConfigView}"/>
+        <!-- Right Panel: Content Display -->
+        <Border Grid.Column="1" Grid.Row="0" Background="#FDFDFD">
+            <ContentControl Content="{Binding SelectedViewModel}" Margin="5"
+                            d:Content="{d:DesignInstance local:UIOptionsViewModel}"/>
+        </Border>
 
-        <!-- Buttons -->
-        <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="_OK" Width="80" Margin="5" Click="OK_Click"/>
-            <Button Content="_Cancel" Width="80" Margin="5" Click="Cancel_Click"/>
-        </StackPanel>
+        <!-- Bottom Panel: Action Buttons -->
+        <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" BorderBrush="LightGray" BorderThickness="0,1,0,0" Background="#F0F0F0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="10">
+                <Button Content="Save" Width="80" Margin="5" Command="{Binding SaveCommand}"/>
+                <Button Content="Cancel" Width="80" Margin="5" Click="CancelButton_Click"/>
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>
