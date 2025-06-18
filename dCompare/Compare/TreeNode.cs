@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.IO;
+using System.Xml.Linq;
 
 namespace dCompare.Compare
 {
@@ -71,14 +72,20 @@ namespace dCompare.Compare
 
         public string LeftName
         {
-            get => _leftName;
+            get => GetDisplayName(_leftName);
             set { _leftName = value; OnPropertyChanged(nameof(LeftName)); OnPropertyChanged(nameof(LeftDisplayName)); }
         }
 
         public string RightName
         {
-            get => _rightName;
+            get => GetDisplayName(_rightName);
             set { _rightName = value; OnPropertyChanged(nameof(RightName)); OnPropertyChanged(nameof(RightDisplayName)); }
+        }
+        private string GetDisplayName(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return "";
+            string icon = IsDirectory ? "📁 " : "📄 ";
+            return icon + name; // Indentation handled by DepthToMarginConverter
         }
 
         public string LeftSize

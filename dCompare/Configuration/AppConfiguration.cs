@@ -1,77 +1,129 @@
 ﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace dCompare.Configuration
 {
-    public class AppConfiguration
-    {
-        public Dictionary<string, SessionConfig> Sessions { get; set; } = new();
-        public OptionsConfig Options { get; set; } = new();
-    }
 
     public class SessionConfig
     {
         public string Left { get; set; } = string.Empty;
         public string Right { get; set; } = string.Empty;
     }
-
-    public class OptionsConfig
+    /// <summary>
+    /// Represents the root of the application configuration.
+    /// </summary>
+    public class AppConfiguration
     {
-        public UIConfig UI { get; set; } = new();
-        public CompareConfig Compare { get; set; } = new();
-        public DiffConfig Diff { get; set; } = new();
-        public SessionConfigOptions Session { get; set; } = new();
-        public Dictionary<string, string> HotKeys { get; set; } = new()
-        {
-            { "AddTab", "Ctrl+N" },
-            { "CloseTab", "Ctrl+W" },
-            { "Compare", "Ctrl+R" },
-            { "SaveSession", "Ctrl+S" },
-            { "LoadSession", "Ctrl+O" }
-        };
-        public LogConfig Log { get; set; } = new();
+        public Dictionary<string, SessionConfig> Sessions { get; set; } = new();
+        [JsonPropertyName("Options")]
+        public Options Options { get; set; } = new();
     }
 
-    public class UIConfig
+    public class Options
     {
+        [JsonPropertyName("UI")]
+        public UIOptions UI { get; set; } = new();
+
+        [JsonPropertyName("Compare")]
+        public CompareOptions Compare { get; set; } = new();
+
+        [JsonPropertyName("Diff")]
+        public DiffOptions Diff { get; set; } = new();
+
+        [JsonPropertyName("Session")]
+        public SessionOptions Session { get; set; } = new();
+
+        [JsonPropertyName("HotKeys")]
+        public HotKeysOptions HotKeys { get; set; } = new();
+
+        [JsonPropertyName("Log")]
+        public LogOptions Log { get; set; } = new();
+    }
+
+    public class UIOptions
+    {
+        [JsonPropertyName("Theme")]
         public string Theme { get; set; } = "Light";
-        public string Language { get; set; } = "en-US";
+
+        [JsonPropertyName("Language")]
+        public string Language { get; set; } = "zh-TW";
     }
 
-    public class CompareConfig
+    public class CompareOptions
     {
-        public string Algorithm { get; set; } = "Quick";
-        public string DoubleClick { get; set; } = "compare";
+        [JsonPropertyName("Algorithm")]
+        public string Algorithm { get; set; } = "Modified Date and Size";
+
+        [JsonPropertyName("DoubleClick")]
+        public string DoubleClick { get; set; } = "view";
     }
 
-    public class DiffConfig
+    public class DiffOptions
     {
-        public TextDiffConfig Text { get; set; } = new();
-        public ImageDiffConfig Image { get; set; } = new();
+        [JsonPropertyName("Text")]
+        public TextDiffOptions Text { get; set; } = new();
+
+        [JsonPropertyName("Image")]
+        public ImageDiffOptions Image { get; set; } = new();
     }
 
-    public class TextDiffConfig
+    public class TextDiffOptions
     {
-        public List<string> Ext { get; set; } = new() { ".cs", ".json", ".log", ".md", ".txt", ".xaml", ".xml" };
-        public string Viewer { get; set; } = "DiffPlex";
+        [JsonPropertyName("Ext")]
+        public List<string> Ext { get; set; } = new();
+
+        [JsonPropertyName("Viewer")]
+        public string Viewer { get; set; } = "DiffPlexQ";
     }
 
-    public class ImageDiffConfig
+    public class ImageDiffOptions
     {
-        public List<string> Ext { get; set; } = new() { ".png", ".jpg", ".jpeg", ".bmp" };
+        [JsonPropertyName("Ext")]
+        public List<string> Ext { get; set; } = new();
+
+        [JsonPropertyName("Viewer")]
         public string Viewer { get; set; } = "Not implement";
     }
 
-    public class SessionConfigOptions
+    public class SessionOptions
     {
-        public string DefaultSessionFile { get; set; } = string.Empty;
-        public bool AutoLoadDefaultSession { get; set; } = false;
+        [JsonPropertyName("DefaultSessionFile")]
+        public string DefaultSessionFile { get; set; } = "";
+
+        [JsonPropertyName("AutoLoadDefaultSession")]
+        public bool AutoLoadDefaultSession { get; set; }
+
+        [JsonPropertyName("AutoCompareAfterSessionLoad")]
         public bool AutoCompareAfterSessionLoad { get; set; }
     }
 
-    public class LogConfig
+    public class HotKeysOptions
     {
+        [JsonPropertyName("AddTab")]
+        public string AddTab { get; set; } = "Ctrl+N";
+
+        [JsonPropertyName("CloseTab")]
+        public string CloseTab { get; set; } = "Ctrl+W";
+
+        [JsonPropertyName("Compare")]
+        public string Compare { get; set; } = "Ctrl+R";
+
+        [JsonPropertyName("SaveSession")]
+        public string SaveSession { get; set; } = "Ctrl+S";
+
+        [JsonPropertyName("LoadSession")]
+        public string LoadSession { get; set; } = "Ctrl+O";
+    }
+
+    public class LogOptions
+    {
+        [JsonPropertyName("Enabled")]
         public bool Enabled { get; set; } = true;
+
+        [JsonPropertyName("Level")]
         public string Level { get; set; } = "Information";
+
+        [JsonPropertyName("RetentionDays")]
         public int RetentionDays { get; set; } = 10;
     }
 }
