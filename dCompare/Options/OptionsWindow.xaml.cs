@@ -16,12 +16,12 @@ namespace dCompare.Options
     {
         public OptionsWindow()
         {
-                InitializeComponent();
-                // Check if we are in design mode to avoid runtime errors in the designer
-                if (!DesignerProperties.GetIsInDesignMode(this))
-                {
-                   this.DataContext = new SettingsViewModel(new ConfigurationService());
-                }
+            InitializeComponent();
+            // Check if we are in design mode to avoid runtime errors in the designer
+            if (!DesignerProperties.GetIsInDesignMode(this))
+            {
+                this.DataContext = new SettingsViewModel(new ConfigurationService());
+            }
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
@@ -60,13 +60,13 @@ namespace dCompare.Options
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-             protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
-            {
-                if (EqualityComparer<T>.Default.Equals(field, value)) return false;
-                field = value;
-                OnPropertyChanged(propertyName);
-                return true;
-            }
+        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+        {
+            if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+            field = value;
+            OnPropertyChanged(propertyName);
+            return true;
+        }
     }
 
     public class RelayCommand : ICommand
@@ -183,7 +183,7 @@ namespace dCompare.Options
         private void ApplyFilter()
         {
             string effectiveFilter = (string.IsNullOrWhiteSpace(_filterText) || _filterText == "Filter settings...") ? "" : _filterText;
-                
+
             foreach(var node in MenuItems)
             {
                 FilterNode(node, effectiveFilter);
@@ -192,8 +192,8 @@ namespace dCompare.Options
 
         private bool FilterNode(SettingsMenuItem node, string filter)
         {
-            bool anyChildVisible = node.Children.Any() 
-                ? node.Children.Select(child => FilterNode(child, filter)).Any(isVis => isVis) 
+            bool anyChildVisible = node.Children.Any()
+                ? node.Children.Select(child => FilterNode(child, filter)).Any(isVis => isVis)
                 : false;
 
             if (string.IsNullOrEmpty(filter))
@@ -266,7 +266,7 @@ namespace dCompare.Options
 
     // ================== Individual Settings ViewModels ==================
 
-        // Interface to ensure ViewModels can update the master config object
+    // Interface to ensure ViewModels can update the master config object
     public interface IConfigurationUpdater
     {
         void UpdateModel();
@@ -275,9 +275,14 @@ namespace dCompare.Options
     {
         private readonly UIOptions _model;
         public UIOptionsViewModel(UIOptions model) { _model = model; }
- 		public UIOptionsViewModel() : this(new UIOptions()) { } // For designer
- 	    public List<string> AvailableThemes => new List<string> { "Light", "Dark" };
-        public List<string> AvailableLanguages => new List<string> { "en-US", "zh-TW", "ja-JP" };
+        public UIOptionsViewModel() : this(new UIOptions()) { } // For designer
+        public List<string> AvailableThemes => new List<string> { "Light", "Dark" };
+        public List<KeyValuePair<string, string>> AvailableLanguages => new List<KeyValuePair<string, string>>
+        {
+            new KeyValuePair<string, string>("English (United States)", "en_US"),
+            new KeyValuePair<string, string>("繁體中文", "zh_TW"),
+            new KeyValuePair<string, string>("简体中文", "zh_CN")
+        };
 
         public string Theme { get => _model.Theme; set { _model.Theme = value; OnPropertyChanged(); } }
         public string Language { get => _model.Language; set { _model.Language = value; OnPropertyChanged(); } }
@@ -290,11 +295,11 @@ namespace dCompare.Options
 
         // This demonstrates the mapping requirement
         public List<KeyValuePair<string, string>> AvailableAlgorithms => new List<KeyValuePair<string, string>>
-            {
-                new KeyValuePair<string, string>("Quick (Modified Date and Size)", "ModifiedDateAndSize"),
-                new KeyValuePair<string, string>("Full Contents)", "FullContents"),
-                new KeyValuePair<string, string>("Hash (xxHash)", "xxHash")
-            };
+        {
+            new KeyValuePair<string, string>("Quick (Modified Date and Size)", "ModifiedDateAndSize"),
+            new KeyValuePair<string, string>("Full Contents)", "FullContents"),
+            new KeyValuePair<string, string>("Hash (xxHash)", "xxHash")
+        };
         public List<string> AvailableDoubleClickActions => new List<string> { "view", "edit", "open" };
 
         public string Algorithm { get => _model.Algorithm; set { _model.Algorithm = value; OnPropertyChanged(); } }
@@ -321,7 +326,7 @@ namespace dCompare.Options
             AddExtensionCommand = new RelayCommand(AddExtension);
             RemoveExtensionCommand = new RelayCommand(RemoveExtension, _ => !string.IsNullOrEmpty(SelectedExtension));
         }
-            
+
         public string SelectedExtension { get => _selectedExtension; set => SetProperty(ref _selectedExtension, value); }
         private void AddExtension(object obj) { Extensions.Add(".new"); } // Simple placeholder
         private void RemoveExtension(object obj) { if (!string.IsNullOrEmpty(SelectedExtension)) Extensions.Remove(SelectedExtension); }
@@ -346,21 +351,21 @@ namespace dCompare.Options
     //}
 
 
-	public class TextDiffOptionsViewModel : ListEditorViewModelBase<TextDiffOptions, string>
-	{
-		private readonly TextDiffOptions _textModel;
-		public TextDiffOptionsViewModel(TextDiffOptions model) : base(model, model.Ext, (m, l) => m.Ext = l) { _textModel = model; }
-		public List<string> AvailableViewers => new List<string> { "DiffPlexQ", "VS Code", "Beyond Compare" };
-		public string Viewer { get => _textModel.Viewer; set { _textModel.Viewer = value; OnPropertyChanged(); } }
-	}
+    public class TextDiffOptionsViewModel : ListEditorViewModelBase<TextDiffOptions, string>
+    {
+        private readonly TextDiffOptions _textModel;
+        public TextDiffOptionsViewModel(TextDiffOptions model) : base(model, model.Ext, (m, l) => m.Ext = l) { _textModel = model; }
+        public List<string> AvailableViewers => new List<string> { "DiffPlexQ", "VS Code", "Beyond Compare" };
+        public string Viewer { get => _textModel.Viewer; set { _textModel.Viewer = value; OnPropertyChanged(); } }
+    }
 
-	public class ImageDiffOptionsViewModel : ListEditorViewModelBase<ImageDiffOptions, string>
-	{
-		private readonly ImageDiffOptions _imageModel;
-		public ImageDiffOptionsViewModel(ImageDiffOptions model) : base(model, model.Ext, (m, l) => m.Ext = l) { _imageModel = model; }
-		public List<string> AvailableViewers => new List<string> { "Not implement", "IrfanView", "Paint.NET" };
-		public string Viewer { get => _imageModel.Viewer; set { _imageModel.Viewer = value; OnPropertyChanged(); } }
-	}
+    public class ImageDiffOptionsViewModel : ListEditorViewModelBase<ImageDiffOptions, string>
+    {
+        private readonly ImageDiffOptions _imageModel;
+        public ImageDiffOptionsViewModel(ImageDiffOptions model) : base(model, model.Ext, (m, l) => m.Ext = l) { _imageModel = model; }
+        public List<string> AvailableViewers => new List<string> { "Not implement", "IrfanView", "Paint.NET" };
+        public string Viewer { get => _imageModel.Viewer; set { _imageModel.Viewer = value; OnPropertyChanged(); } }
+    }
 
     public class SessionOptionsViewModel : ViewModelBase
     {
@@ -371,45 +376,45 @@ namespace dCompare.Options
         public bool AutoCompareAfterSessionLoad { get => _model.AutoCompareAfterSessionLoad; set { _model.AutoCompareAfterSessionLoad = value; OnPropertyChanged(); } }
     }
 
-	public class HotKeyItemViewModel : ViewModelBase
-	{
-		private string _combination;
-		public string Name { get; } // The name (e.g., "Add Tab") doesn't change
-		public string Combination { get => _combination; set => SetProperty(ref _combination, value); }
-		public HotKeyItemViewModel(string name, string combination)
-		{
-			Name = name;
-			_combination = combination;
-		}
-	}
-	
-	public class HotKeysOptionsViewModel : ViewModelBase, IConfigurationUpdater
-	{
-		private readonly HotKeysOptions _model;
-		public ObservableCollection<HotKeyItemViewModel> HotKeyItems { get; } = new();
+    public class HotKeyItemViewModel : ViewModelBase
+    {
+        private string _combination;
+        public string Name { get; } // The name (e.g., "Add Tab") doesn't change
+        public string Combination { get => _combination; set => SetProperty(ref _combination, value); }
+        public HotKeyItemViewModel(string name, string combination)
+        {
+            Name = name;
+            _combination = combination;
+        }
+    }
 
-		public HotKeysOptionsViewModel(HotKeysOptions model)
-		{
-			_model = model;
-			// Use the new mutable ViewModel
-			HotKeyItems.Add(new HotKeyItemViewModel("Add Tab", _model.AddTab));
-			HotKeyItems.Add(new HotKeyItemViewModel("Close Tab", _model.CloseTab));
-			HotKeyItems.Add(new HotKeyItemViewModel("Compare", _model.Compare));
-			HotKeyItems.Add(new HotKeyItemViewModel("Save Session", _model.SaveSession));
-			HotKeyItems.Add(new HotKeyItemViewModel("Load Session", _model.LoadSession));
-		}
-		
-		// This method is called before saving to push UI changes back to the data model
-		public void UpdateModel()
-		{
-			// A more robust solution could use a dictionary or reflection
+    public class HotKeysOptionsViewModel : ViewModelBase, IConfigurationUpdater
+    {
+        private readonly HotKeysOptions _model;
+        public ObservableCollection<HotKeyItemViewModel> HotKeyItems { get; } = new();
+
+        public HotKeysOptionsViewModel(HotKeysOptions model)
+        {
+            _model = model;
+            // Use the new mutable ViewModel
+            HotKeyItems.Add(new HotKeyItemViewModel("Add Tab", _model.AddTab));
+            HotKeyItems.Add(new HotKeyItemViewModel("Close Tab", _model.CloseTab));
+            HotKeyItems.Add(new HotKeyItemViewModel("Compare", _model.Compare));
+            HotKeyItems.Add(new HotKeyItemViewModel("Save Session", _model.SaveSession));
+            HotKeyItems.Add(new HotKeyItemViewModel("Load Session", _model.LoadSession));
+        }
+
+        // This method is called before saving to push UI changes back to the data model
+        public void UpdateModel()
+        {
+            // A more robust solution could use a dictionary or reflection
 			_model.AddTab      = HotKeyItems.FirstOrDefault(i => i.Name == "Add Tab")?.Combination ?? _model.AddTab;
 			_model.CloseTab    = HotKeyItems.FirstOrDefault(i => i.Name == "Close Tab")?.Combination ?? _model.CloseTab;
 			_model.Compare     = HotKeyItems.FirstOrDefault(i => i.Name == "Compare")?.Combination ?? _model.Compare;
-			_model.SaveSession = HotKeyItems.FirstOrDefault(i => i.Name == "Save Session")?.Combination ?? _model.SaveSession;
-			_model.LoadSession = HotKeyItems.FirstOrDefault(i => i.Name == "Load Session")?.Combination ?? _model.LoadSession;
-		}
-	}
+            _model.SaveSession = HotKeyItems.FirstOrDefault(i => i.Name == "Save Session")?.Combination ?? _model.SaveSession;
+            _model.LoadSession = HotKeyItems.FirstOrDefault(i => i.Name == "Load Session")?.Combination ?? _model.LoadSession;
+        }
+    }
 
     public class LogOptionsViewModel : ViewModelBase
     {
