@@ -23,7 +23,6 @@
 
 ## Known Issues
 
-- **Column Width Adjustment**: Users cannot currently resize columns in the directory comparison view.
 - **Text Selection**: Partial text selection with the mouse is not supported in the text comparison view.
 
 ## Development

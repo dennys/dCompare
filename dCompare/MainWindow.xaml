@@ -44,6 +44,7 @@
                                                Margin="12,0,8,0"
                                                FontSize="12"
                                                Foreground="#333333"
+                                               PreviewMouseLeftButtonDown="TabItem_PreviewMouseLeftButtonDown"
                                                TextTrimming="CharacterEllipsis"/>
 
                                     <!-- Close Button -->
@@ -104,7 +105,6 @@
                 </Setter.Value>
             </Setter>
             <Setter Property="AllowDrop" Value="True"/>
-            <EventSetter Event="PreviewMouseLeftButtonDown" Handler="TabItem_PreviewMouseLeftButtonDown"/>
             <EventSetter Event="Drop" Handler="TabItem_Drop"/>
         </Style>
 
