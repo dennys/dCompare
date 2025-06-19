@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Serilog;
 using System.Threading;
+using System.Security.Cryptography;
 
 namespace dCompare.Compare
 {
@@ -17,7 +18,8 @@ namespace dCompare.Compare
             public FileSystemNode? Right { get; set; }
         }
 
-        public List<ComparisonItem> Compare(string leftPath, string rightPath, CancellationToken cancellationToken = default, Action<double> progressCallback = null)
+        public List<ComparisonItem> Compare(string leftPath, string rightPath, CancellationToken cancellationToken = default,
+            Action<double> progressCallback = null, string algorithm = "ModifiedDateAndSize")
         {
             Log.Information("Start to compare.");
             Log.Information("Start to build left path.");
@@ -68,7 +70,7 @@ namespace dCompare.Compare
             result.Add(rootItem);
 
             Log.Information("Start to compare.");
-            bool hasDifferences = CompareNodes(leftRoot, rightRoot, result, "", cancellationToken);
+            bool hasDifferences = CompareNodes(leftRoot, rightRoot, result, "", cancellationToken, algorithm);
 
             Log.Information("Start to show result.");
             if (hasDifferences)
@@ -154,7 +156,8 @@ namespace dCompare.Compare
             return root;
         }
 
-        private bool CompareNodes(FileSystemNode? left, FileSystemNode? right, List<ComparisonItem> result, string indent, CancellationToken cancellationToken)
+        private bool CompareNodes(FileSystemNode? left, FileSystemNode? right, List<ComparisonItem> result,
+            string indent, CancellationToken cancellationToken, string algorithm)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -179,7 +182,7 @@ namespace dCompare.Compare
                 FileSystemNode? leftNode = left?.Children.Find(n => n.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
                 FileSystemNode? rightNode = right?.Children.Find(n => n.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
 
-                ComparisonStatus status = DetermineStatus(leftNode, rightNode);
+                ComparisonStatus status = DetermineStatus(leftNode, rightNode, algorithm);
 
                 ComparisonItem? item = new()
                 {
@@ -198,7 +201,7 @@ namespace dCompare.Compare
 
                 if ((leftNode?.IsDirectory ?? false) || (rightNode?.IsDirectory ?? false))
                 {
-                    bool childHasDifferences = CompareNodes(leftNode, rightNode, result, indent + "    ", cancellationToken);
+                    bool childHasDifferences = CompareNodes(leftNode, rightNode, result, indent + "    ", cancellationToken, algorithm);
                     if (childHasDifferences)
                     {
                         hasDifferences = true;
@@ -218,7 +221,7 @@ namespace dCompare.Compare
             return hasDifferences;
         }
 
-        private ComparisonStatus DetermineStatus(FileSystemNode? left, FileSystemNode? right)
+        private ComparisonStatus DetermineStatus(FileSystemNode? left, FileSystemNode? right, string algorithm)
         {
             if (left == null && right != null)
                 return ComparisonStatus.RightOnly;
@@ -237,15 +240,72 @@ namespace dCompare.Compare
                 }
                 else
                 {
-                    if (left.Size == right.Size &&
-                        Math.Abs((left.ModifiedTime - right.ModifiedTime).TotalSeconds) < 1)
-                        return ComparisonStatus.Identical;
-                    else
-                        return ComparisonStatus.Modified;
+                    switch (algorithm)
+                    {
+                        case "ModifiedDateAndSize":
+                            if (left.Size == right.Size &&
+                                Math.Abs((left.ModifiedTime - right.ModifiedTime).TotalSeconds) < 1)
+                                return ComparisonStatus.Identical;
+                            else
+                                return ComparisonStatus.Modified;
+
+                        case "FullContents":
+                            try
+                            {
+                                byte[] leftContent = File.ReadAllBytes(left.FullPath);
+                                byte[] rightContent = File.ReadAllBytes(right.FullPath);
+                                if (leftContent.SequenceEqual(rightContent))
+                                    return ComparisonStatus.Identical;
+                                else
+                                    return ComparisonStatus.Modified;
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.Error($"Error comparing file contents: {ex.Message}");
+                                return ComparisonStatus.Conflict;
+                            }
+
+                        case "xxHash":
+                            try
+                            {
+                                using (var leftStream = File.OpenRead(left.FullPath))
+                                using (var rightStream = File.OpenRead(right.FullPath))
+                                {
+                                    var leftHash = ComputeXxHash(leftStream);
+                                    var rightHash = ComputeXxHash(rightStream);
+                                    if (leftHash.SequenceEqual(rightHash))
+                                        return ComparisonStatus.Identical;
+                                    else
+                                        return ComparisonStatus.Modified;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.Error($"Error computing xxHash: {ex.Message}");
+                                return ComparisonStatus.Conflict;
+                            }
+
+                        default:
+                            Log.Warning($"Unknown comparison algorithm: {algorithm}. Falling back to ModifiedDateAndSize.");
+                            if (left.Size == right.Size &&
+                                Math.Abs((left.ModifiedTime - right.ModifiedTime).TotalSeconds) < 1)
+                                return ComparisonStatus.Identical;
+                            else
+                                return ComparisonStatus.Modified;
+                    }
                 }
             }
 
             return ComparisonStatus.Unknown;
+        }
+
+        private byte[] ComputeXxHash(Stream stream)
+        {
+            // This is a simplified implementation. In a real application, you'd want to use an actual xxHash library
+            using (var md5 = MD5.Create()) // Using MD5 as a placeholder since xxHash isn't natively available
+            {
+                return md5.ComputeHash(stream);
+            }
         }
     }
 }

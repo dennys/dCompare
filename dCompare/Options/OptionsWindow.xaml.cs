@@ -1,5 +1,4 @@
 ﻿using dCompare.Configuration;
-using dCompare.Options;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -294,13 +293,8 @@ namespace dCompare.Options
         private readonly CompareOptions _model;
         public CompareOptionsViewModel(CompareOptions model) { _model = model; }
 
-        // This demonstrates the mapping requirement
-        public List<KeyValuePair<string, string>> AvailableAlgorithms => new List<KeyValuePair<string, string>>
-        {
-            new KeyValuePair<string, string>("Quick (Modified Date and Size)", "ModifiedDateAndSize"),
-            new KeyValuePair<string, string>("Full Contents)", "FullContents"),
-            new KeyValuePair<string, string>("Hash (xxHash)", "xxHash")
-        };
+        // Reference the static AvailableAlgorithms
+        public List<KeyValuePair<string, string>> AvailableAlgorithms => ComparisonAlgorithms.AvailableAlgorithms;
         public List<string> AvailableDoubleClickActions => new List<string> { "view", "edit", "open" };
 
         public string Algorithm { get => _model.Algorithm; set { _model.Algorithm = value; OnPropertyChanged(); } }
