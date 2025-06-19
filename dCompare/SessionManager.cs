@@ -165,7 +165,8 @@ namespace dCompare
                         sessions[tabName] = new SessionConfig
                         {
                             Left = ucCompare.LeftPathBox.Text,
-                            Right = ucCompare.RightPathBox.Text
+                            Right = ucCompare.RightPathBox.Text,
+                            Algorithm = ucCompare.SelectedAlgorithm
                         };
                     }
                 }
@@ -257,6 +258,7 @@ namespace dCompare
                         };
                         ((UcCompare)newTab.Content).LeftPathBox.Text = session.Value.Left;
                         ((UcCompare)newTab.Content).RightPathBox.Text = session.Value.Right;
+                        ((UcCompare)newTab.Content).SelectedAlgorithm = session.Value.Algorithm ?? "ModifiedDateAndSize";
                         _tabControl.Items.Add(newTab);
                         _tabIdMap[tabName] = Guid.NewGuid().ToString();
 

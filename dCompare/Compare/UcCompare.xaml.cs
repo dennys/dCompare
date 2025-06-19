@@ -1,4 +1,5 @@
-﻿using dCompare.Diff;
+﻿using dCompare.Configuration;
+using dCompare.Diff;
 using dCompare.FileOperation;
 using dCompare.FileOperation.Strategies;
 using Microsoft.VisualBasic;
@@ -37,6 +38,7 @@ namespace dCompare.Compare
         private CancellationTokenSource _cancellationTokenSource;
         private bool _isComparing;
         private double _comparisonProgress;
+        private string _selectedAlgorithm;
 
         private FileOperationWindow _fileOperationWindow;
         private readonly FileManager _fileManager = new FileManager(new Kernel32FileCopyStrategy());
@@ -70,6 +72,16 @@ namespace dCompare.Compare
             }
         }
 
+        public string SelectedAlgorithm
+        {
+            get => _selectedAlgorithm;
+            set
+            {
+                _selectedAlgorithm = value;
+                OnPropertyChanged(nameof(SelectedAlgorithm));
+            }
+        }
+
         public UcCompare()
         {
             InitializeComponent();
@@ -78,6 +90,7 @@ namespace dCompare.Compare
             ResultListView.ItemsSource = _treeNodes;
             ResultListView.AddHandler(GridViewColumnHeader.ClickEvent, new RoutedEventHandler(GridViewColumnHeaderClickedHandler));
             DataContext = this;
+            SelectedAlgorithm = ComparisonAlgorithms.AvailableAlgorithms.First().Value;
         }
 
         private void UpdateTabHeader()
@@ -91,7 +104,7 @@ namespace dCompare.Compare
 
         public void ChangeTabHeader(string newHeader)
         {
-            TabItem tabItem = LogicalTreeHelperExtensions.FindParent<TabItem>(this);
+            TabItem tabItem = LogicalTreeHelperExtensions.FindParent(this);
             if (tabItem != null && !IsComparing)
             {
                 tabItem.Header = newHeader;
@@ -136,7 +149,7 @@ namespace dCompare.Compare
             {
                 List<DirectoryComparer.ComparisonItem> comparisonResults = await Task.Run(() =>
                     _comparer.Compare(leftDir, rightDir, _cancellationTokenSource.Token,
-                        progress => Dispatcher.Invoke(() => ComparisonProgress = progress * 100)),
+                        progress => Dispatcher.Invoke(() => ComparisonProgress = progress * 100), SelectedAlgorithm),
                     _cancellationTokenSource.Token);
 
                 _cachedComparisonResults = comparisonResults;
