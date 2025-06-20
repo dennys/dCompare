@@ -137,7 +137,7 @@
 
                     <TextBlock Text="Default Session File:" VerticalAlignment="Center" Margin="0,5,10,5"/>
                     <TextBox Text="{Binding DefaultSessionFile, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" Margin="0,5"/>
-                    <Button Grid.Column="1" Content="..." VerticalAlignment="Center" Padding="10,2" Margin="5,0"/>
+                    <Button Grid.Column="1" Content="..." VerticalAlignment="Center" Padding="10,2" Margin="5,0" Command="{Binding BrowseSessionFileCommand}"/>
                 </Grid>
 
                 <CheckBox IsChecked="{Binding AutoLoadDefaultSession}" Content="Auto-load default session on startup" Margin="0,10"/>

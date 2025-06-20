@@ -3,12 +3,13 @@ using System.Text.Json.Serialization;
 
 namespace dCompare.Configuration
 {
-
     public class SessionConfig
     {
         public string Left { get; set; } = string.Empty;
         public string Right { get; set; } = string.Empty;
+        public string Algorithm { get; set; } = "ModifiedDateAndSize";
     }
+
     /// <summary>
     /// Represents the root of the application configuration.
     /// </summary>
@@ -52,7 +53,7 @@ namespace dCompare.Configuration
     public class CompareOptions
     {
         [JsonPropertyName("Algorithm")]
-        public string Algorithm { get; set; } = "Modified Date and Size";
+        public string Algorithm { get; set; } = "ModifiedDateAndSize";
 
         [JsonPropertyName("DoubleClick")]
         public string DoubleClick { get; set; } = "view";
