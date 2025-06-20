@@ -1,4 +1,5 @@
 ﻿using dCompare.Configuration;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -357,8 +358,22 @@ namespace dCompare.Options
     public class SessionOptionsViewModel : ViewModelBase
     {
         private readonly SessionOptions _model;
-        public SessionOptionsViewModel(SessionOptions model) { _model = model; }
-        public string DefaultSessionFile { get => _model.DefaultSessionFile; set { _model.DefaultSessionFile = value; OnPropertyChanged(); } }
+        public SessionOptionsViewModel(SessionOptions model)
+        {
+            _model = model;
+            BrowseSessionFileCommand = new RelayCommand(BrowseSessionFile);
+        }
+
+        public string DefaultSessionFile
+        {
+            get => _model.DefaultSessionFile;
+            set
+            {
+                _model.DefaultSessionFile = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool AutoLoadDefaultSession
         {
             get => _model.AutoLoadDefaultSession;
@@ -369,7 +384,32 @@ namespace dCompare.Options
                 OnPropertyChanged(nameof(AutoCompareAfterSessionLoad)); // Notify dependent property
             }
         }
-        public bool AutoCompareAfterSessionLoad { get => _model.AutoCompareAfterSessionLoad; set { _model.AutoCompareAfterSessionLoad = value; OnPropertyChanged(); } }
+
+        public bool AutoCompareAfterSessionLoad
+        {
+            get => _model.AutoCompareAfterSessionLoad;
+            set
+            {
+                _model.AutoCompareAfterSessionLoad = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public ICommand BrowseSessionFileCommand { get; }
+
+        private void BrowseSessionFile(object parameter)
+        {
+            var openFileDialog = new OpenFileDialog
+            {
+                Filter = "Session Files (*.json)|*.json|All Files (*.*)|*.*",
+                Title = "Select Default Session File"
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                DefaultSessionFile = openFileDialog.FileName;
+            }
+        }
     }
 
     public class HotKeyItemViewModel : ViewModelBase

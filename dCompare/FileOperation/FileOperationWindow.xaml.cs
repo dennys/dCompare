@@ -2,6 +2,7 @@
 using dCompare.FileOperation;
 using dCompare.FileOperation.Models;
 using dCompare.FileOperation.Strategies;
+using Serilog;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -63,6 +64,7 @@ namespace dCompare.FileOperation
 
         private void Transfer(string source, string target, bool overwrite, bool isCopy, SourceType sourceType)
         {
+            Log.Information($"Start to cp/mv {source} to {target}");
             string jobId = Guid.NewGuid().ToString();
             var transfer = new FileTransfer
             {
