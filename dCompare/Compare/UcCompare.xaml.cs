@@ -104,7 +104,7 @@ namespace dCompare.Compare
 
         public void ChangeTabHeader(string newHeader)
         {
-            TabItem tabItem = LogicalTreeHelperExtensions.FindParent(this);
+            TabItem tabItem = LogicalTreeHelperExtensions.FindParent<TabItem>(this);
             if (tabItem != null && !IsComparing)
             {
                 tabItem.Header = newHeader;
@@ -278,12 +278,15 @@ namespace dCompare.Compare
         private void SetFilter(Predicate<TreeNode> filter)
         {
             _currentFilter = obj => obj is TreeNode node && (filter == null || filter(node));
+			_treeNodeManager.SetCurrentFilter(filter); // Pass filter to TreeNodeManager
             ApplyFilter();
         }
 
         private void ApplyFilter()
         {
-            CollectionViewSource.GetDefaultView(_treeNodes).Refresh();
+            // CollectionViewSource.GetDefaultView(_treeNodes).Refresh();
+			ICollectionView? view = CollectionViewSource.GetDefaultView(_treeNodes);
+			view.Filter = _currentFilter;
         }
 
         private async void CompareFileContents(TreeNode selectedItem)
@@ -574,7 +577,7 @@ namespace dCompare.Compare
         private void FileOperation_OnTransferStatusChanged(string jobId, bool success, string message)
         {
             string a = $"Job {jobId}: {message}";
-            Log.Information(a);
+            Log.Information($"UcCompare: complete copy or move or delete: {a}");
             MessageBox.Show(a);
         }
     }

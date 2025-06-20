@@ -401,7 +401,7 @@ namespace dCompare.Options
         {
             var openFileDialog = new OpenFileDialog
             {
-                Filter = "Session Files (*.json)|*.json|All Files (*.*)|*.*",
+                Filter = "Session Files (*.session)|*.session|All Files (*.*)|*.*",
                 Title = "Select Default Session File"
             };
 

@@ -1,5 +1,6 @@
 ﻿using dCompare.FileOperation;
 using Microsoft.VisualBasic;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -280,12 +281,19 @@ namespace dCompare.Compare
             {
                 _fileOperationWindow = new FileOperationWindow();
                 _fileOperationWindow.Closed += (s, args) => _fileOperationWindow = null;
+                _fileOperationWindow.OnTransferStatusChanged += FileOperation_OnTransferStatusChanged;
                 _fileOperationWindow.Show();
             }
             else
             {
                 _fileOperationWindow.Activate();
             }
+        }
+        private void FileOperation_OnTransferStatusChanged(string jobId, bool success, string message)
+        {
+            string a = $"Job {jobId}: {message}";
+            Log.Information($"complete copy or move or delete: {a}");
+            //MessageBox.Show(a);
         }
     }
 }

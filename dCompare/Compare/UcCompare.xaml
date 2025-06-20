@@ -93,7 +93,7 @@
                 <ComboBox Grid.Column="3" Name="AlgorithmComboBox" Margin="5,0" VerticalAlignment="Center" Width="200"
                           ItemsSource="{x:Static config:ComparisonAlgorithms.AvailableAlgorithms}"
                           DisplayMemberPath="Key" SelectedValuePath="Value" SelectedValue="{Binding SelectedAlgorithm}"/>
-
+                
                 <Label Grid.Column="5" Content="Right Path:" VerticalAlignment="Center"/>
                 <TextBox Grid.Column="6" Name="RightPathBox" Margin="5,0" VerticalAlignment="Center" 
                          IsReadOnly="False" IsEnabled="True" TextWrapping="NoWrap"/>
