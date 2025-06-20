@@ -9,11 +9,18 @@ namespace dCompare.Compare
     public class TreeNodeManager
     {
         private readonly ObservableCollection<TreeNode> _treeNodes;
+        private Predicate<TreeNode> _currentFilter;
 
         public TreeNodeManager(ObservableCollection<TreeNode> treeNodes)
         {
             _treeNodes = treeNodes;
         }
+
+		// Method to set the current filter
+		public void SetCurrentFilter(Predicate<TreeNode> filter)
+		{
+			_currentFilter = filter;
+		}
 
         public void BuildTree(List<DirectoryComparer.ComparisonItem> items, string leftRoot, string rightRoot, int maxDepth = 0)
         {
@@ -50,7 +57,6 @@ namespace dCompare.Compare
             }
             return flatNodes;
         }
-
         public void LoadChildren(TreeNode parentNode, List<DirectoryComparer.ComparisonItem> cachedResults, string leftRoot, string rightRoot)
         {
             if (cachedResults == null) return;
@@ -176,6 +182,42 @@ namespace dCompare.Compare
 
             node.Name = node.LeftNode?.Name ?? node.RightNode?.Name ?? node.Name;
             node.IsDirectory = isDirectory;
+
+			// Check if node should be removed based on current filter
+			if (_currentFilter != null && !_currentFilter(node))
+			{
+				_treeNodes.Remove(node);
+				return;
+			}
+
+			// Update child nodes if expanded
+			if (node.IsExpanded && node.IsDirectory)
+			{
+				var children = _treeNodes
+					.Where(n => n.RelativePath.StartsWith(node.RelativePath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
+							   n.Depth == node.Depth + 1)
+					.ToList();
+
+				foreach (var child in children)
+				{
+					string childLeftPath = null;
+					string childRightPath = null;
+
+					if (!string.IsNullOrEmpty(leftPath) && child.LeftNode != null)
+					{
+						var relativeChildPath = child.RelativePath.Substring(node.RelativePath.Length).TrimStart(Path.DirectorySeparatorChar);
+						childLeftPath = Path.Combine(leftPath, relativeChildPath);
+					}
+
+					//if (!string.IsNullOrEmpty(rightPath) && child.RightNode != null)
+					{
+						var relativeChildPath = child.RelativePath.Substring(node.RelativePath.Length).TrimStart(Path.DirectorySeparatorChar);
+						childRightPath = Path.Combine(rightPath, relativeChildPath);
+					}
+
+					UpdateNodeAfterOperation(child, childLeftPath, childRightPath, child.IsDirectory);
+				}
+			}
         }
 
         private string GetRelativePath(DirectoryComparer.ComparisonItem item, string leftRoot, string rightRoot)

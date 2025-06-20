@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+//using System.IO
 using System.Linq;
 using Serilog;
 using System.Threading;
 using System.Security.Cryptography;
+using System.IO.Hashing;
 
 namespace dCompare.Compare
 {
@@ -221,8 +223,9 @@ namespace dCompare.Compare
             return hasDifferences;
         }
 
-        private ComparisonStatus DetermineStatus(FileSystemNode? left, FileSystemNode? right, string algorithm)
+        private ComparisonStatus DetermineStatus(FileSystemNode? left, FileSystemNode? right, string algorithm, double ratio = 1.0)
         {
+            Log.Debug($"Use {algorithm} to compare {left?.FullPath} and {right?.FullPath}");
             if (left == null && right != null)
                 return ComparisonStatus.RightOnly;
 
@@ -265,23 +268,38 @@ namespace dCompare.Compare
                                 return ComparisonStatus.Conflict;
                             }
 
-                        case "xxHash":
+                        case "MD5":
                             try
                             {
-                                using (var leftStream = File.OpenRead(left.FullPath))
-                                using (var rightStream = File.OpenRead(right.FullPath))
-                                {
-                                    var leftHash = ComputeXxHash(leftStream);
-                                    var rightHash = ComputeXxHash(rightStream);
-                                    if (leftHash.SequenceEqual(rightHash))
-                                        return ComparisonStatus.Identical;
-                                    else
-                                        return ComparisonStatus.Modified;
-                                }
+                                using var leftStream = File.OpenRead(left.FullPath);
+                                using var rightStream = File.OpenRead(right.FullPath);
+
+                                var leftHash = ComputeMD5(leftStream, ratio);
+                                var rightHash = ComputeMD5(rightStream, ratio);
+                                return leftHash.SequenceEqual(rightHash)
+                                    ? ComparisonStatus.Identical
+                                    : ComparisonStatus.Modified;
                             }
                             catch (Exception ex)
                             {
-                                Log.Error($"Error computing xxHash: {ex.Message}");
+                                Log.Error($"Error computing MD5: {ex.Message}");
+                                return ComparisonStatus.Conflict;
+                            }
+                        case "xxHash64":
+                            try
+                            {
+                                using var leftStream = File.OpenRead(left.FullPath);
+                                using var rightStream = File.OpenRead(right.FullPath);
+
+                                var leftHash = ComputeXxHash64(leftStream, ratio);
+                                var rightHash = ComputeXxHash64(rightStream, ratio);
+                                return leftHash.SequenceEqual(rightHash)
+                                    ? ComparisonStatus.Identical
+                                    : ComparisonStatus.Modified;
+                            }
+                        catch (Exception ex)
+                            {
+                                Log.Error($"Error computing XxHash64: {ex.Message}");
                                 return ComparisonStatus.Conflict;
                             }
 
@@ -299,13 +317,49 @@ namespace dCompare.Compare
             return ComparisonStatus.Unknown;
         }
 
-        private byte[] ComputeXxHash(Stream stream)
+        private static byte[] ComputeMD5(Stream stream, double ratio = 1.0)
         {
-            // This is a simplified implementation. In a real application, you'd want to use an actual xxHash library
-            using (var md5 = MD5.Create()) // Using MD5 as a placeholder since xxHash isn't natively available
+            if (stream.CanSeek)
+                stream.Position = 0;
+
+            long lengthToRead = (long)(stream.Length * ratio);
+            using var md5 = MD5.Create();
+            byte[] buffer = new byte[8192];
+            long totalRead = 0;
+
+            while (totalRead < lengthToRead)
             {
-                return md5.ComputeHash(stream);
+                int toRead = (int)Math.Min(buffer.Length, lengthToRead - totalRead);
+                int bytesRead = stream.Read(buffer, 0, toRead);
+                if (bytesRead == 0) break;
+
+                md5.TransformBlock(buffer, 0, bytesRead, null, 0);
+                totalRead += bytesRead;
             }
+            md5.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+            return md5.Hash!;
+        }
+
+        private static byte[] ComputeXxHash64(Stream stream, double ratio = 1.0)
+        {
+            if (stream.CanSeek)
+                stream.Position = 0;
+
+            long lengthToRead = (long)(stream.Length * ratio);
+            var hasher = new XxHash64();
+            byte[] buffer = new byte[8192];
+            long totalRead = 0;
+
+            while (totalRead < lengthToRead)
+            {
+                int toRead = (int)Math.Min(buffer.Length, lengthToRead - totalRead);
+                int bytesRead = stream.Read(buffer, 0, toRead);
+                if (bytesRead == 0) break;
+
+                hasher.Append(buffer.AsSpan(0, bytesRead));
+                totalRead += bytesRead;
+            }
+            return hasher.GetHashAndReset();
         }
     }
 }
