@@ -40,6 +40,13 @@ public class Kernel32FileCopyStrategy : IFileOperationStrategy
             {
                 CopyFileFlags flags = overwrite ? 0 : CopyFileFlags.COPY_FILE_FAIL_IF_EXISTS;
 
+                // Ensure destination directory exists
+                string? destDir = Path.GetDirectoryName(destFile);
+                if (!string.IsNullOrEmpty(destDir) && !Directory.Exists(destDir))
+                {
+                    Directory.CreateDirectory(destDir);
+                }
+
                 // The actual P/Invoke delegate needs a different signature.
                 // We adapt our public-facing delegate to the required one.
                 CopyProgressRoutine routine = (total, transferred, _, _, _, _, _, _, _) =>

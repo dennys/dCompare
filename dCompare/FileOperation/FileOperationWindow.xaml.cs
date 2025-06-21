@@ -36,8 +36,8 @@ namespace dCompare.FileOperation
             DataContext = this;
             _cancellationTokenSource = new CancellationTokenSource();
             _isPaused = false;
-            //_fileManager = new FileManager(new Kernel32FileCopyStrategy());
-            _fileManager = new FileManager(new FileStreamStrategy());
+            _fileManager = new FileManager(new Kernel32FileCopyStrategy());
+            //_fileManager = new FileManager(new FileStreamStrategy());
 
             var queuedView = CollectionViewSource.GetDefaultView(QueuedTransfers);
             var successfulView = CollectionViewSource.GetDefaultView(SuccessfulTransfers);
