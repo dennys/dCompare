@@ -175,6 +175,12 @@ namespace dCompare.Compare
                 node.LeftName = item.Left.Name;
                 node.LeftSize = FileSystemNode.FormatSize(item.Left.Size);
                 node.LeftDate = item.Left.ModifiedTime.ToString("yyyy/MM/dd HH:mm");
+            } 
+            else
+            {
+                node.LeftName = null;
+                node.LeftSize = null;
+                node.LeftDate = null;
             }
 
             if (item.Right != null)
@@ -182,6 +188,12 @@ namespace dCompare.Compare
                 node.RightName = item.Right.Name;
                 node.RightSize = FileSystemNode.FormatSize(item.Right.Size);
                 node.RightDate = item.Right.ModifiedTime.ToString("yyyy/MM/dd HH:mm");
+            }
+            else
+            {
+                node.RightName = null;
+                node.RightSize = null;
+                node.RightDate = null;
             }
 
             node.StatusSymbol = item.Status switch
