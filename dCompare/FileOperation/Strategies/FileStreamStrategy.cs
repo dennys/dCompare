@@ -15,6 +15,13 @@ namespace dCompare.FileOperation.Strategies
             long totalBytes = sourceInfo.Length;
             long bytesTransferred = 0;
 
+            // Ensure destination directory exists
+            string? destDirectory = Path.GetDirectoryName(destFile);
+            if (!string.IsNullOrEmpty(destDirectory))
+            {
+                Directory.CreateDirectory(destDirectory);
+            }
+
             using (var sourceStream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read))
             using (var targetStream = new FileStream(destFile, overwrite ? FileMode.Create : FileMode.CreateNew, FileAccess.Write))
             {
