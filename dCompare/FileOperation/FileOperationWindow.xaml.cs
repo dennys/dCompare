@@ -46,23 +46,27 @@ namespace dCompare.FileOperation
             failedView.Filter = FilterTransfers;
         }
 
-        public void CopyMultiple(List<(string Source, string TargetPath, SourceType Type)> items, bool overwrite = false)
+        public List<string> CopyMultiple(List<(string Source, string TargetPath, SourceType Type)> items, bool overwrite = false)
         {
+            var jobIds = new List<string>();
             foreach (var item in items)
             {
-                Transfer(item.Source, item.TargetPath, overwrite, true, item.Type);
+                jobIds.Add(Transfer(item.Source, item.TargetPath, overwrite, true, item.Type));
             }
+            return jobIds;
         }
 
-        public void MoveMultiple(List<(string Source, string TargetPath, SourceType Type)> items, bool overwrite = false)
+        public List<string> MoveMultiple(List<(string Source, string TargetPath, SourceType Type)> items, bool overwrite = false)
         {
+            var jobIds = new List<string>();
             foreach (var item in items)
             {
-                Transfer(item.Source, item.TargetPath, overwrite, false, item.Type);
+                jobIds.Add(Transfer(item.Source, item.TargetPath, overwrite, false, item.Type));
             }
+            return jobIds;
         }
 
-        private void Transfer(string source, string target, bool overwrite, bool isCopy, SourceType sourceType)
+        private string Transfer(string source, string target, bool overwrite, bool isCopy, SourceType sourceType)
         {
             Log.Information($"Start to cp/mv {source} to {target}");
             string jobId = Guid.NewGuid().ToString();
@@ -156,6 +160,7 @@ namespace dCompare.FileOperation
                     OnTransferStatusChanged?.Invoke(jobId, false, ex.Message);
                 }
             }, _cancellationTokenSource.Token);
+            return jobId;
         }
 
         private void LogTransfer(FileTransfer transfer)
