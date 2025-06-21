@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace dCompare.Compare
@@ -57,6 +58,40 @@ namespace dCompare.Compare
             return paths;
         }
 
+        public async Task DeleteAsync(List<(string Path, SourceType Type)> items)
+        {
+            if (items.Count == 0)
+            {
+                return;
+            }
+
+            try
+            {
+                OpenFileOperations();
+                if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
+                {
+                    // Get the list of job IDs for the operations we are starting
+                    var jobIds = _fileOperationWindow.DeleteMultiple(items);
+
+                    // Create a list of tasks to wait for
+                    var tasks = new List<Task>();
+                    foreach (var jobId in jobIds)
+                    {
+                        var tcs = new TaskCompletionSource<bool>();
+                        _activeJobs[jobId] = tcs;
+                        tasks.Add(tcs.Task);
+                    }
+
+                    // Asynchronously wait for all the file operation tasks to complete
+                    await Task.WhenAll(tasks);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error deleting items: {ex.Message}");
+            }
+        }
+
         public async Task CopyToLeft(List<TreeNode> selectedItems, string leftRoot, string rightRoot)
         {
             var items = GetItemsForTransfer(selectedItems, toLeft: true, leftRoot, rightRoot);
@@ -85,15 +120,6 @@ namespace dCompare.Compare
 
                     // Asynchronously wait for all the file operation tasks to complete.
                     await Task.WhenAll(tasks);
-
-                    //_fileOperationWindow.CopyMultiple(items, true);
-                    //foreach (var (source, target, type) in items)
-                    //{
-                    //    //bool isDirectory = Directory.Exists(source);
-                    //    //var relativePath = target.Substring(leftRoot.Length).TrimStart(Path.DirectorySeparatorChar);
-                    //    //var node = _treeNodeManager.FindOrCreateNode(relativePath, isDirectory);
-                    //    //_treeNodeManager.UpdateNodeAfterOperation(node, target, source, isDirectory);
-                    //}
                 }
             }
             catch (Exception ex)
@@ -130,15 +156,6 @@ namespace dCompare.Compare
 
                     // Asynchronously wait for all the file operation tasks to complete.
                     await Task.WhenAll(tasks);
-
-                    //_fileOperationWindow.CopyMultiple(items, true);
-                    //foreach (var (source, target, type) in items)
-                    //{
-                    //    //bool isDirectory = Directory.Exists(source);
-                    //    //var relativePath = target.Substring(rightRoot.Length).TrimStart(Path.DirectorySeparatorChar);
-                    //    //var node = _treeNodeManager.FindOrCreateNode(relativePath, isDirectory);
-                    //    //_treeNodeManager.UpdateNodeAfterOperation(node, source, target, isDirectory);
-                    //}
                 }
             }
             catch (Exception ex)
@@ -175,15 +192,6 @@ namespace dCompare.Compare
 
                     // Asynchronously wait for all the file operation tasks to complete.
                     await Task.WhenAll(tasks);
-
-                    //_fileOperationWindow.MoveMultiple(items, true);
-                    //foreach (var (source, target, type) in items)
-                    {
-                        //bool isDirectory = Directory.Exists(source);
-                        //var relativePath = target.Substring(leftRoot.Length).TrimStart(Path.DirectorySeparatorChar);
-                        //var node = _treeNodeManager.FindOrCreateNode(relativePath, isDirectory);
-                        //_treeNodeManager.UpdateNodeAfterOperation(node, target, null, isDirectory);
-                    }
                 }
             }
             catch (Exception ex)
@@ -220,15 +228,6 @@ namespace dCompare.Compare
 
                     // Asynchronously wait for all the file operation tasks to complete.
                     await Task.WhenAll(tasks);
-
-                    //_fileOperationWindow.MoveMultiple(items, true);
-                    //foreach (var (source, target, type) in items)
-                    //{
-                    //    //bool isDirectory = Directory.Exists(source);
-                    //    //var relativePath = target.Substring(rightRoot.Length).TrimStart(Path.DirectorySeparatorChar);
-                    //    //var node = _treeNodeManager.FindOrCreateNode(relativePath, isDirectory);
-                    //    //_treeNodeManager.UpdateNodeAfterOperation(node, null, target, isDirectory);
-                    //}
                 }
             }
             catch (Exception ex)
@@ -276,65 +275,10 @@ namespace dCompare.Compare
 
                 string relativePath = newPath.Substring(isLeft ? leftRoot.Length : rightRoot.Length).TrimStart(Path.DirectorySeparatorChar);
                 selectedItem.RelativePath = relativePath;
-                //_treeNodeManager.UpdateNodeAfterOperation(selectedItem, isLeft ? newPath : null, isLeft ? null : newPath, selectedItem.IsDirectory);
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error renaming: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        public async Task Delete(ObservableCollection<TreeNode> _treeNodes, List<TreeNode> selectedItems, bool isLeft)
-        {
-            if (selectedItems.Count == 0)
-            {
-                MessageBox.Show("請選擇至少一個項目");
-                return;
-            }
-
-            var items = GetItemsForDeletion(selectedItems, isLeft);
-            if (items.Count == 0)
-            {
-                MessageBox.Show("No valid file or directory paths selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            string itemList = string.Join("\n", items.Select(i => Path.GetFileName(i.Path)));
-            string message = $"Are you sure you want to delete the following {items.Count} item(s)?\n\n{itemList}";
-            var result = MessageBox.Show(
-                message,
-                "Confirm Delete",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-
-            if (result != MessageBoxResult.Yes)
-            {
-                return;
-            }
-
-            try
-            {
-                OpenFileOperations();
-                if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
-                {
-                    _fileManager.DeleteMultipleAsync(items.Select(i => i.Path).ToList()).GetAwaiter().GetResult();
-                    foreach (var (path, type) in items)
-                    {
-                        var node = selectedItems.FirstOrDefault(n => (isLeft ? n.LeftNode?.FullPath : n.RightNode?.FullPath) == path);
-                        if (node != null)
-                        {
-                            //_treeNodeManager.UpdateNodeAfterOperation(node, isLeft ? null : node.LeftNode?.FullPath, isLeft ? node.RightNode?.FullPath : null, node.IsDirectory);
-                            if (node.LeftNode == null && node.RightNode == null)
-                            {
-                                _treeNodes.Remove(node);
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error deleting items: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -352,6 +296,7 @@ namespace dCompare.Compare
                 _fileOperationWindow.Activate();
             }
         }
+
         private void FileOperation_OnTransferStatusChanged(string jobId, bool success, string message)
         {
             string a = $"Job {jobId}: {message}";

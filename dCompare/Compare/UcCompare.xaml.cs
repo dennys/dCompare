@@ -209,7 +209,7 @@ namespace dCompare.Compare
         public async Task RefreshNodeAsync(TreeNode nodeToRefresh)
         {
             if (IsComparing) { MessageBox.Show("Comparison is already in progress."); return; }
-            if (!nodeToRefresh.IsDirectory) { return; }
+            //if (!nodeToRefresh.IsDirectory) { return; }
 
             IsComparing = true;
             _cancellationTokenSource = new CancellationTokenSource();
@@ -326,15 +326,15 @@ namespace dCompare.Compare
         private void SetFilter(Predicate<TreeNode> filter)
         {
             _currentFilter = obj => obj is TreeNode node && (filter == null || filter(node));
-			_treeNodeManager.SetCurrentFilter(filter); // Pass filter to TreeNodeManager
+            _treeNodeManager.SetCurrentFilter(filter); // Pass filter to TreeNodeManager
             ApplyFilter();
         }
 
         private void ApplyFilter()
         {
             // CollectionViewSource.GetDefaultView(_treeNodes).Refresh();
-			ICollectionView? view = CollectionViewSource.GetDefaultView(_treeNodes);
-			view.Filter = _currentFilter;
+            ICollectionView? view = CollectionViewSource.GetDefaultView(_treeNodes);
+            view.Filter = _currentFilter;
         }
 
         private async void CompareFileContents(TreeNode selectedItem)
@@ -509,8 +509,6 @@ namespace dCompare.Compare
                     MessageBox.Show($"The copy operation failed and the view was not refreshed. Details: {ex.Message}", "Operation Failed");
                 }
             }
-            //_fileOperationHandler.CopyToLeft(ResultListView.SelectedItems.Cast<TreeNode>().ToList(),
-            //    LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
         }
 
         private async void ContextMenu_CopyToRight_Click(object sender, RoutedEventArgs e)
@@ -532,14 +530,6 @@ namespace dCompare.Compare
                     MessageBox.Show($"The copy operation failed and the view was not refreshed. Details: {ex.Message}", "Operation Failed");
                 }
             }
-
-            //_fileOperationHandler.CopyToRight(ResultListView.SelectedItems.Cast<TreeNode>().ToList(),
-            //    LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
-            //Thread.Sleep(2000);
-            //if (ResultListView.SelectedItem is TreeNode selectedNode)
-            //{
-            //    await RefreshNodeAsync(selectedNode);
-            //}
         }
 
         private async void ContextMenu_MoveToLeft_Click(object sender, RoutedEventArgs e)
@@ -561,8 +551,6 @@ namespace dCompare.Compare
                     MessageBox.Show($"The copy operation failed and the view was not refreshed. Details: {ex.Message}", "Operation Failed");
                 }
             }
-            //_fileOperationHandler.MoveToLeft(ResultListView.SelectedItems.Cast<TreeNode>().ToList(),
-            //    LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
         }
 
         private async void ContextMenu_MoveToRight_Click(object sender, RoutedEventArgs e)
@@ -584,8 +572,90 @@ namespace dCompare.Compare
                     MessageBox.Show($"The copy operation failed and the view was not refreshed. Details: {ex.Message}", "Operation Failed");
                 }
             }
-            //_fileOperationHandler.MoveToRight(ResultListView.SelectedItems.Cast<TreeNode>().ToList(),
-            //    LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
+        }
+
+        private async void ContextMenu_DeleteLeft_Click(object sender, RoutedEventArgs e)
+        {
+            if (ResultListView.SelectedItem is TreeNode selectedNode)
+            {
+                try
+                {
+                    // Get items to delete
+                    var items = _fileOperationHandler.GetItemsForDeletion(
+                        ResultListView.SelectedItems.Cast<TreeNode>().ToList(),
+                        isLeft: true);
+
+                    if (items.Count == 0)
+                    {
+                        MessageBox.Show("請選擇至少一個文件或目錄進行刪除");
+                        return;
+                    }
+
+                    // Confirm deletion
+                    var result = MessageBox.Show(
+                        "Are you sure you want to delete the selected items?",
+                        "Confirm Delete",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Warning);
+
+                    if (result != MessageBoxResult.Yes)
+                    {
+                        return;
+                    }
+
+                    // Perform deletion
+                    await _fileOperationHandler.DeleteAsync(items);
+
+                    // Refresh the view
+                    await RefreshNodeAsync(selectedNode);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"The delete operation failed and the view was not refreshed. Details: {ex.Message}", "Operation Failed");
+                }
+            }
+        }
+
+        private async void ContextMenu_DeleteRight_Click(object sender, RoutedEventArgs e)
+        {
+            if (ResultListView.SelectedItem is TreeNode selectedNode)
+            {
+                try
+                {
+                    // Get items to delete
+                    var items = _fileOperationHandler.GetItemsForDeletion(
+                        ResultListView.SelectedItems.Cast<TreeNode>().ToList(),
+                        isLeft: false);
+
+                    if (items.Count == 0)
+                    {
+                        MessageBox.Show("請選擇至少一個文件或目錄進行刪除");
+                        return;
+                    }
+
+                    // Confirm deletion
+                    var result = MessageBox.Show(
+                        "Are you sure you want to delete the selected items?",
+                        "Confirm Delete",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Warning);
+
+                    if (result != MessageBoxResult.Yes)
+                    {
+                        return;
+                    }
+
+                    // Perform deletion
+                    await _fileOperationHandler.DeleteAsync(items);
+
+                    // Refresh the view
+                    await RefreshNodeAsync(selectedNode);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"The delete operation failed and the view was not refreshed. Details: {ex.Message}", "Operation Failed");
+                }
+            }
         }
 
         private void ContextMenu_Rename_Click(object sender, RoutedEventArgs e)
@@ -595,13 +665,6 @@ namespace dCompare.Compare
                           contextMenu == FindResource("LeftContextMenu");
             _fileOperationHandler.Rename(selectedItem, isLeft,
                 LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
-        }
-
-        private void ContextMenu_Delete_Click(object sender, RoutedEventArgs e)
-        {
-            bool isLeft = (sender as MenuItem)?.Parent is ContextMenu contextMenu &&
-                          contextMenu == FindResource("LeftContextMenu");
-            _fileOperationHandler.Delete(_treeNodes, ResultListView.SelectedItems.Cast<TreeNode>().ToList(), isLeft);
         }
 
         private void ContextMenu_Properties_Click(object sender, RoutedEventArgs e)

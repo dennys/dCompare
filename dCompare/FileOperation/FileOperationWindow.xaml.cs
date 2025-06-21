@@ -4,6 +4,7 @@ using dCompare.FileOperation.Models;
 using dCompare.FileOperation.Strategies;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
@@ -64,6 +65,103 @@ namespace dCompare.FileOperation
                 jobIds.Add(Transfer(item.Source, item.TargetPath, overwrite, false, item.Type));
             }
             return jobIds;
+        }
+
+        public List<string> DeleteMultiple(List<(string Path, SourceType Type)> items)
+        {
+            var jobIds = new List<string>();
+            foreach (var item in items)
+            {
+                jobIds.Add(Delete(item.Path, item.Type));
+            }
+            return jobIds;
+        }
+
+        private string Delete(string path, SourceType sourceType)
+        {
+            Log.Information($"Start to delete {path}");
+            string jobId = Guid.NewGuid().ToString();
+            var transfer = new FileTransfer
+            {
+                JobId = jobId,
+                Operation = "Delete",
+                Source = path,
+                Target = string.Empty,
+                Status = "Queued",
+                FileSize = 0, // Not applicable for delete
+                SourceType = sourceType
+            };
+
+            Dispatcher.Invoke(() => QueuedTransfers.Add(transfer));
+
+            Task.Run(async () =>
+            {
+                try
+                {
+                    var progress = new Progress<OperationProgress>(p =>
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            transfer.Progress = p.Percentage / 100.0;
+                            transfer.Status = $"Deleting ({p.Percentage:P0})";
+                        });
+                    });
+
+                    while (_isPaused && !_cancellationTokenSource.Token.IsCancellationRequested)
+                    {
+                        await Task.Delay(100, _cancellationTokenSource.Token);
+                    }
+
+                    transfer.StartTime = DateTime.Now;
+
+                    // This assumes _fileManager has a DeleteAsync method that is similar to CopyAsync/MoveAsync.
+                    // You will need to implement this method in your FileManager class.
+                    OperationResult result = await _fileManager.DeleteAsync(path, progress, _cancellationTokenSource.Token);
+
+                    if (result.SuccessCount > 0)
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            QueuedTransfers.Remove(transfer);
+                            transfer.Status = "Completed";
+                            transfer.Progress = 1.0;
+                            SuccessfulTransfers.Add(transfer);
+                            LogTransfer(transfer);
+                        });
+
+                        OnTransferStatusChanged?.Invoke(jobId, true, "Operation completed successfully.");
+                    }
+                    else
+                    {
+                        throw new Exception(string.Join("; ", result.FailedItems));
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        QueuedTransfers.Remove(transfer);
+                        transfer.Status = "Cancelled";
+                        FailedTransfers.Add(transfer);
+                        LogTransfer(transfer);
+                    });
+
+                    OnTransferStatusChanged?.Invoke(jobId, false, "Operation cancelled.");
+                }
+                catch (Exception ex)
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        QueuedTransfers.Remove(transfer);
+                        transfer.Status = $"Failed: {ex.Message}";
+                        FailedTransfers.Add(transfer);
+                        LogTransfer(transfer);
+                    });
+
+                    OnTransferStatusChanged?.Invoke(jobId, false, ex.Message);
+                }
+            }, _cancellationTokenSource.Token);
+            return jobId;
         }
 
         private string Transfer(string source, string target, bool overwrite, bool isCopy, SourceType sourceType)
