@@ -197,32 +197,16 @@
         <!-- Menu Bar -->
         <Menu DockPanel.Dock="Top" Style="{StaticResource UnifiedMenuStyle}">
             <MenuItem Header="_File">
-                <MenuItem Header="_Save Session" Command="{Binding SaveSessionCommand}" InputGestureText="Ctrl+S">
-                    <MenuItem.Icon>
-                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="_Load Session" Command="{Binding LoadSessionCommand}" InputGestureText="Ctrl+O">
-                    <MenuItem.Icon>
-                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
-                    </MenuItem.Icon>
-                </MenuItem>
+                <MenuItem Header="_Save Session" Command="{Binding SaveSessionCommand}" InputGestureText="Ctrl+S" Icon="{StaticResource SaveSessionIcon}"/>
+                <MenuItem Header="_Load Session" Command="{Binding LoadSessionCommand}" InputGestureText="Ctrl+O" Icon="{StaticResource LoadSessionIcon}"/>
                 <MenuItem x:Name="RecentSessionsMenu" Header="_Recent Sessions...">
                     <MenuItem Header="Clear Recent Sessions" Command="{Binding ClearRecentSessionsCommand}"/>
                     <Separator/>
                     <!-- Recent sessions will be dynamically populated -->
                 </MenuItem>
                 <Separator/>
-                <MenuItem Header="_New Tab" Command="{Binding AddTabCommand}" InputGestureText="Ctrl+N">
-                    <MenuItem.Icon>
-                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="_Close Tab" Command="{Binding CloseTabCommand}" InputGestureText="Ctrl+W">
-                    <MenuItem.Icon>
-                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
-                    </MenuItem.Icon>
-                </MenuItem>
+                <MenuItem Header="_New Tab" Command="{Binding AddTabCommand}" InputGestureText="Ctrl+N" Icon="{StaticResource AddTabIcon}"/>
+                <MenuItem Header="_Close Tab" Command="{Binding CloseTabCommand}" InputGestureText="Ctrl+W" Icon="{StaticResource CloseTabIcon}"/>
                 <MenuItem Header="_Rename Tab" Click="RenameTab_Click">
                     <MenuItem.Icon>
                         <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
@@ -241,59 +225,19 @@
                 </MenuItem>
             </MenuItem>
             <MenuItem Header="_Action">
-                <MenuItem Header="_Compare" Command="{Binding CompareCommand}" InputGestureText="Ctrl+R">
-                    <MenuItem.Icon>
-                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
-                    </MenuItem.Icon>
-                </MenuItem>
+                <MenuItem Header="_Compare" Command="{Binding CompareCommand}" InputGestureText="Ctrl+R" Icon="{StaticResource CompareIcon}"/>
                 <Separator/>
-                <MenuItem Header="Copy to _Left" Command="{Binding CopyToLeftCommand}">
-                    <MenuItem.Icon>
-                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="Copy to _Right" Command="{Binding CopyToRightCommand}">
-                    <MenuItem.Icon>
-                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
-                    </MenuItem.Icon>
-                </MenuItem>
+                <MenuItem Header="Copy to _Left" Command="{Binding CopyToLeftCommand}" Icon="{StaticResource ShowLeftIcon}"/>
+                <MenuItem Header="Copy to _Right" Command="{Binding CopyToRightCommand}" Icon="{StaticResource CopyToRightIcon}"/>
             </MenuItem>
             <MenuItem Header="_View">
-                <MenuItem Header="_Expand All" Command="{Binding ExpandAllCommand}">
-                    <MenuItem.Icon>
-                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="_Collapse All" Command="{Binding CollapseAllCommand}">
-                    <MenuItem.Icon>
-                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="Show _All" Command="{Binding ShowAllCommand}">
-                    <MenuItem.Icon>
-                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="Show _Different" Command="{Binding ShowDifferentCommand}">
-                    <MenuItem.Icon>
-                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="Show _Identical" Command="{Binding ShowIdenticalCommand}">
-                    <MenuItem.Icon>
-                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="Show _Left Unique" Command="{Binding ShowLeftUniqueCommand}">
-                    <MenuItem.Icon>
-                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="Show _Right Unique" Command="{Binding ShowRightUniqueCommand}">
-                    <MenuItem.Icon>
-                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
-                    </MenuItem.Icon>
-                </MenuItem>
+                <MenuItem Header="_Expand All" Command="{Binding ExpandAllCommand}" Icon="{StaticResource ExpandAllIcon}"/>
+                <MenuItem Header="_Collapse All" Command="{Binding CollapseAllCommand}" Icon="{StaticResource CollapseAllIcon}"/>
+                <MenuItem Header="Show _All" Command="{Binding ShowAllCommand}" Icon="{StaticResource ShowAllIcon}"/>
+                <MenuItem Header="Show _Different" Command="{Binding ShowDifferentCommand}" Icon="{StaticResource ShowDifferentIcon}"/>
+                <MenuItem Header="Show _Identical" Command="{Binding ShowIdenticalCommand}" Icon="{StaticResource ShowIdenticalIcon}"/>
+                <MenuItem Header="Show _Left Unique" Command="{Binding ShowLeftUniqueCommand}" Icon="{StaticResource ShowLeftIcon}"/>
+                <MenuItem Header="Show _Right Unique" Command="{Binding ShowRightUniqueCommand}" Icon="{StaticResource ShowRightIcon}"/>
             </MenuItem>
             <MenuItem Header="_Help">
                 <MenuItem Header="_About" Click="About_Click">
@@ -307,14 +251,10 @@
         <!-- ToolBar -->
         <ToolBar DockPanel.Dock="Top" Style="{StaticResource UnifiedToolBarStyle}">
             <!-- New Tab Button -->
-            <Button Command="{Binding AddTabCommand}" ToolTip="Add new tab (Ctrl+N)">
-                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
-            </Button>
+            <Button Command="{Binding AddTabCommand}" ToolTip="Add new tab (Ctrl+N)" Content="{StaticResource AddTabIcon}" />
 
             <!-- Close Tab Button -->
-            <Button Command="{Binding CloseTabCommand}" ToolTip="Close current tab (Ctrl+W)">
-                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
-            </Button>
+            <Button Command="{Binding CloseTabCommand}" ToolTip="Close current tab (Ctrl+W)" Content="{StaticResource CloseTabIcon}" />
 
             <!-- Options Button -->
             <Button Command="{Binding OptionsCommand}" ToolTip="Open options">
@@ -324,69 +264,44 @@
             <Separator/>
 
             <!-- Save Session Button -->
-            <Button Command="{Binding SaveSessionCommand}" ToolTip="Save session (Ctrl+S)">
-                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
-            </Button>
+            <Button Command="{Binding SaveSessionCommand}" ToolTip="Save session (Ctrl+S)" Content="{StaticResource SaveSessionIcon}" />
 
             <!-- Load Session Button -->
-            <Button Command="{Binding LoadSessionCommand}" ToolTip="Load session (Ctrl+O)">
-                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
-            </Button>
+            <Button Command="{Binding LoadSessionCommand}" ToolTip="Load session (Ctrl+O)" Content="{StaticResource LoadSessionIcon}" />
 
             <Separator/>
 
             <!-- Compare Button -->
-            <Button Command="{Binding CompareCommand}" ToolTip="Compare directories (Ctrl+R)">
-                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
-            </Button>
+            <Button Command="{Binding CompareCommand}" ToolTip="Compare directories (Ctrl+R)" Content="{StaticResource CompareIcon}" />
 
             <!-- Copy to Left Button -->
-            <Button Command="{Binding CopyToLeftCommand}" ToolTip="Copy to left">
-                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
-            </Button>
+            <Button Command="{Binding CopyToLeftCommand}" ToolTip="Copy to left" Content="{StaticResource CopyToLeftIcon}" />
 
             <!-- Copy to Right Button -->
-            <Button Command="{Binding CopyToRightCommand}" ToolTip="Copy to right">
-                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
-            </Button>
+            <Button Command="{Binding CopyToRightCommand}" ToolTip="Copy to right" Content="{StaticResource CopyToRightIcon}" />
 
             <Separator/>
 
             <!-- Expand All Button -->
-            <Button Command="{Binding ExpandAllCommand}" ToolTip="Expand all">
-                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
-            </Button>
+            <Button Command="{Binding ExpandAllCommand}" ToolTip="Expand all" Content="{StaticResource ExpandAllIcon}" />
 
             <!-- Collapse All Button -->
-            <Button Command="{Binding CollapseAllCommand}" ToolTip="Collapse all">
-                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
-            </Button>
+            <Button Command="{Binding CollapseAllCommand}" ToolTip="Collapse all" Content="{StaticResource CollapseAllIcon}" />
 
             <!-- Show All Button -->
-            <Button Command="{Binding ShowAllCommand}" ToolTip="Show all">
-                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
-            </Button>
+            <Button Command="{Binding ShowAllCommand}" ToolTip="Show all" Content="{StaticResource ShowAllIcon}" />
 
             <!-- Show Different Button -->
-            <Button Command="{Binding ShowDifferentCommand}" ToolTip="Show different">
-                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
-            </Button>
+            <Button Command="{Binding ShowDifferentCommand}" ToolTip="Show different" Content="{StaticResource ShowDifferentIcon}" />
 
             <!-- Show Identical Button -->
-            <Button Command="{Binding ShowIdenticalCommand}" ToolTip="Show identical">
-                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
-            </Button>
+            <Button Command="{Binding ShowIdenticalCommand}" ToolTip="Show identical" Content="{StaticResource ShowIdenticalIcon}" />
 
             <!-- Show Left Unique Button -->
-            <Button Command="{Binding ShowLeftUniqueCommand}" ToolTip="Show left unique">
-                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
-            </Button>
+            <Button Command="{Binding ShowLeftUniqueCommand}" ToolTip="Show left unique" Content="{StaticResource ShowLeftIcon}" />
 
             <!-- Show Right Unique Button -->
-            <Button Command="{Binding ShowRightUniqueCommand}" ToolTip="Show right unique">
-                <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
-            </Button>
-
+            <Button Command="{Binding ShowRightUniqueCommand}" ToolTip="Show right unique" Content="{StaticResource ShowRightIcon}" />
             <Separator/>
 
             <!-- About Button -->
