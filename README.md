@@ -1,5 +1,7 @@
 # dCompare - A Directory/File Comparison Tool
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/de32efafbe5e4fff98e462db8e6ea603)](https://app.codacy.com/gh/dennys/dCompare?utm_source=github.com&utm_medium=referral&utm_content=dennys/dCompare&utm_campaign=Badge_Grade)
+
 <a href="docs/screenshot-main.webp">
   <img src="docs/screenshot-main.webp" alt="MainWindow" width="500">
 </a>
