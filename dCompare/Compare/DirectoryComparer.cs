@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-//using System.IO
 using System.Linq;
 using Serilog;
 using System.Threading;
@@ -87,50 +86,62 @@ namespace dCompare.Compare
             return result;
         }
 
-        // In DirectoryComparer.cs
-
-        public List<ComparisonItem> CompareSubtree(string leftRootPath, string rightRootPath, string subDirectoryRelativePath, 
+        public List<ComparisonItem> CompareSubtree(string leftRootPath, string rightRootPath, string subDirectoryRelativePath,
             CancellationToken cancellationToken, string algorithm)
         {
             string leftSubPath = Path.Combine(leftRootPath, subDirectoryRelativePath);
             string rightSubPath = Path.Combine(rightRootPath, subDirectoryRelativePath);
 
-            // Calculate the initial depth of the subdirectory being refreshed.
+            // Calculate the initial depth of the path being compared
             int subDirDepth = string.IsNullOrEmpty(subDirectoryRelativePath)
                 ? 0
                 : subDirectoryRelativePath.Count(c => c == Path.DirectorySeparatorChar);
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            // Build FileSystemNode trees for only the subdirectories, passing the correct starting depth.
-            FileSystemNode? leftSubRoot = Directory.Exists(leftSubPath) ? BuildTree(leftSubPath, subDirDepth, cancellationToken) : null;
+            // Check if paths are files or directories
+            bool leftIsFile = File.Exists(leftSubPath);
+            bool rightIsFile = File.Exists(rightSubPath);
+            bool leftIsDir = Directory.Exists(leftSubPath);
+            bool rightIsDir = Directory.Exists(rightSubPath);
+
+            // Build FileSystemNode trees for the paths
+            FileSystemNode? leftSubRoot = leftIsFile || leftIsDir ? BuildTree(leftSubPath, subDirDepth, cancellationToken) : null;
             cancellationToken.ThrowIfCancellationRequested();
-            FileSystemNode? rightSubRoot = Directory.Exists(rightSubPath) ? BuildTree(rightSubPath, subDirDepth, cancellationToken) : null;
+            FileSystemNode? rightSubRoot = rightIsFile || rightIsDir ? BuildTree(rightSubPath, subDirDepth, cancellationToken) : null;
             cancellationToken.ThrowIfCancellationRequested();
 
             List<ComparisonItem> result = new();
 
-            // Create the ComparisonItem for the subdirectory folder itself.
-            // Its status will be updated by CompareNodes if its children have differences.
-            ComparisonItem subDirectoryItem = new()
+            // Create the ComparisonItem for the path (file or directory)
+            ComparisonItem subPathItem = new()
             {
                 Status = DetermineStatus(leftSubRoot, rightSubRoot, algorithm),
                 Left = leftSubRoot,
                 Right = rightSubRoot,
+                TreeIndent = (leftIsDir || rightIsDir) ? "📁 " + Path.GetFileName(subDirectoryRelativePath)
+                    : "📄 " + Path.GetFileName(subDirectoryRelativePath)
             };
 
-            // Only add the item if the directory exists on at least one side.
+            // Add the item if the path exists on at least one side
             if (leftSubRoot != null || rightSubRoot != null)
             {
-                result.Add(subDirectoryItem);
+                result.Add(subPathItem);
             }
 
-            // Compare the children. This populates the 'result' list with all descendants
-            // and updates the Status of subDirectoryItem if differences are found.
-            CompareNodes(leftSubRoot, rightSubRoot, result, "", cancellationToken, algorithm);
+            // Compare children only if both paths are directories
+            if (leftIsDir || rightIsDir)
+            {
+                bool childHasDifferences = CompareNodes(leftSubRoot, rightSubRoot, result, "    ", cancellationToken, algorithm);
+                if (childHasDifferences)
+                {
+                    subPathItem.Status = ComparisonStatus.Modified;
+                }
+            }
 
             return result;
         }
+
         private int CountDirectories(string path)
         {
             if (!Directory.Exists(path)) return 0;
@@ -203,7 +214,7 @@ namespace dCompare.Compare
         }
 
         private bool CompareNodes(FileSystemNode? left, FileSystemNode? right, List<ComparisonItem> result,
-    string indent, CancellationToken cancellationToken, string algorithm)
+            string indent, CancellationToken cancellationToken, string algorithm)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -345,7 +356,7 @@ namespace dCompare.Compare
                                     ? ComparisonStatus.Identical
                                     : ComparisonStatus.Modified;
                             }
-                        catch (Exception ex)
+                            catch (Exception ex)
                             {
                                 Log.Error($"Error computing XxHash64: {ex.Message}");
                                 return ComparisonStatus.Conflict;
