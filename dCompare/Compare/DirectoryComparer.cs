@@ -87,6 +87,50 @@ namespace dCompare.Compare
             return result;
         }
 
+        // In DirectoryComparer.cs
+
+        public List<ComparisonItem> CompareSubtree(string leftRootPath, string rightRootPath, string subDirectoryRelativePath, 
+            CancellationToken cancellationToken, string algorithm)
+        {
+            string leftSubPath = Path.Combine(leftRootPath, subDirectoryRelativePath);
+            string rightSubPath = Path.Combine(rightRootPath, subDirectoryRelativePath);
+
+            // Calculate the initial depth of the subdirectory being refreshed.
+            int subDirDepth = string.IsNullOrEmpty(subDirectoryRelativePath)
+                ? 0
+                : subDirectoryRelativePath.Count(c => c == Path.DirectorySeparatorChar);
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // Build FileSystemNode trees for only the subdirectories, passing the correct starting depth.
+            FileSystemNode? leftSubRoot = Directory.Exists(leftSubPath) ? BuildTree(leftSubPath, subDirDepth, cancellationToken) : null;
+            cancellationToken.ThrowIfCancellationRequested();
+            FileSystemNode? rightSubRoot = Directory.Exists(rightSubPath) ? BuildTree(rightSubPath, subDirDepth, cancellationToken) : null;
+            cancellationToken.ThrowIfCancellationRequested();
+
+            List<ComparisonItem> result = new();
+
+            // Create the ComparisonItem for the subdirectory folder itself.
+            // Its status will be updated by CompareNodes if its children have differences.
+            ComparisonItem subDirectoryItem = new()
+            {
+                Status = DetermineStatus(leftSubRoot, rightSubRoot, algorithm),
+                Left = leftSubRoot,
+                Right = rightSubRoot,
+            };
+
+            // Only add the item if the directory exists on at least one side.
+            if (leftSubRoot != null || rightSubRoot != null)
+            {
+                result.Add(subDirectoryItem);
+            }
+
+            // Compare the children. This populates the 'result' list with all descendants
+            // and updates the Status of subDirectoryItem if differences are found.
+            CompareNodes(leftSubRoot, rightSubRoot, result, "", cancellationToken, algorithm);
+
+            return result;
+        }
         private int CountDirectories(string path)
         {
             if (!Directory.Exists(path)) return 0;

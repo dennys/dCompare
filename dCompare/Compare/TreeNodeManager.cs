@@ -92,7 +92,44 @@ namespace dCompare.Compare
                 _treeNodes.Remove(child);
             }
         }
+        /// <summary>
+        /// Refreshes a subtree in the UI by updating the root node, removing its old children,
+        /// and loading the new children from the updated cache.
+        /// </summary>
+        /// <param name="nodeToRefresh">The node representing the directory to refresh.</param>
+        /// <param name="updatedCachedResults">The entire, updated list of comparison results.</param>
+        /// <param name="leftRoot">The root path of the left side comparison.</param>
+        /// <param name="rightRoot">The root path of the right side comparison.</param>
+        public void RefreshSubtreeInView(TreeNode nodeToRefresh, List<DirectoryComparer.ComparisonItem> updatedCachedResults, string leftRoot, string rightRoot)
+        {
+            // Remember the node's current state
+            bool wasExpanded = nodeToRefresh.IsExpanded;
 
+            // Find the new comparison data for the node being refreshed.
+            var newRootComparisonItem = updatedCachedResults.FirstOrDefault(item =>
+                GetRelativePath(item, leftRoot, rightRoot).Equals(nodeToRefresh.RelativePath, StringComparison.OrdinalIgnoreCase));
+
+            // First, remove all currently visible children from the UI.
+            RemoveChildren(nodeToRefresh);
+
+            // If the new data is null, it means the directory was deleted from both sides. Remove it from the UI.
+            if (newRootComparisonItem == null)
+            {
+                _treeNodes.Remove(nodeToRefresh);
+                return;
+            }
+
+            // Update the properties of the existing TreeNode in-place.
+            // This will trigger data binding and update the single row in the ListView.
+            SetNodeDetails(nodeToRefresh, newRootComparisonItem, leftRoot, rightRoot);
+
+            // If the node was expanded before, re-load its children to show the new state.
+            nodeToRefresh.IsExpanded = wasExpanded;
+            if (nodeToRefresh.IsExpanded)
+            {
+                LoadChildren(nodeToRefresh, updatedCachedResults, leftRoot, rightRoot);
+            }
+        }
         public TreeNode FindOrCreateNode(string relativePath, bool isDirectory)
         {
             var node = _treeNodes.FirstOrDefault(n => n.RelativePath == relativePath);
@@ -111,116 +148,9 @@ namespace dCompare.Compare
             return node;
         }
 
-        public void UpdateNodeAfterOperation(TreeNode node, string leftPath, string rightPath, bool isDirectory)
-        {
-            if (!string.IsNullOrEmpty(leftPath) && (File.Exists(leftPath) || Directory.Exists(leftPath)))
-            {
-                node.LeftNode = new FileSystemNode
-                {
-                    FullPath = leftPath,
-                    Name = Path.GetFileName(leftPath),
-                    IsDirectory = isDirectory,
-                    Size = isDirectory ? 0 : new FileInfo(leftPath).Length,
-                    ModifiedTime = isDirectory ? Directory.GetLastWriteTime(leftPath) : File.GetLastWriteTime(leftPath)
-                };
-                node.LeftName = node.LeftNode.Name;
-                node.LeftSize = FileSystemNode.FormatSize(node.LeftNode.Size);
-                node.LeftDate = node.LeftNode.ModifiedTime.ToString("yyyy/MM/dd HH:mm");
-            }
-            else
-            {
-                node.LeftNode = null;
-                node.LeftName = null;
-                node.LeftSize = null;
-                node.LeftDate = null;
-            }
 
-            if (!string.IsNullOrEmpty(rightPath) && (File.Exists(rightPath) || Directory.Exists(rightPath)))
-            {
-                node.RightNode = new FileSystemNode
-                {
-                    FullPath = rightPath,
-                    Name = Path.GetFileName(rightPath),
-                    IsDirectory = isDirectory,
-                    Size = isDirectory ? 0 : new FileInfo(rightPath).Length,
-                    ModifiedTime = isDirectory ? Directory.GetLastWriteTime(rightPath) : File.GetLastWriteTime(rightPath)
-                };
-                node.RightName = node.RightNode.Name;
-                node.RightSize = FileSystemNode.FormatSize(node.RightNode.Size);
-                node.RightDate = node.RightNode.ModifiedTime.ToString("yyyy/MM/dd HH:mm");
-            }
-            else
-            {
-                node.RightNode = null;
-                node.RightName = null;
-                node.RightSize = null;
-                node.RightDate = null;
-            }
 
-            if (node.LeftNode != null && node.RightNode != null)
-            {
-                bool areIdentical = node.LeftNode.Size == node.RightNode.Size &&
-                                    node.LeftNode.ModifiedTime == node.RightNode.ModifiedTime;
-                node.Status = areIdentical ? ComparisonStatus.Identical : ComparisonStatus.Modified;
-                node.StatusSymbol = areIdentical ? "=" : "≠";
-            }
-            else if (node.LeftNode != null)
-            {
-                node.Status = ComparisonStatus.LeftOnly;
-                node.StatusSymbol = "<";
-            }
-            else if (node.RightNode != null)
-            {
-                node.Status = ComparisonStatus.RightOnly;
-                node.StatusSymbol = ">";
-            }
-            else
-            {
-                node.Status = ComparisonStatus.Conflict;
-                node.StatusSymbol = "X";
-            }
-
-            node.Name = node.LeftNode?.Name ?? node.RightNode?.Name ?? node.Name;
-            node.IsDirectory = isDirectory;
-
-			// Check if node should be removed based on current filter
-			if (_currentFilter != null && !_currentFilter(node))
-			{
-				_treeNodes.Remove(node);
-				return;
-			}
-
-			// Update child nodes if expanded
-			if (node.IsExpanded && node.IsDirectory)
-			{
-				var children = _treeNodes
-					.Where(n => n.RelativePath.StartsWith(node.RelativePath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
-							   n.Depth == node.Depth + 1)
-					.ToList();
-
-				foreach (var child in children)
-				{
-					string childLeftPath = null;
-					string childRightPath = null;
-
-					if (!string.IsNullOrEmpty(leftPath) && child.LeftNode != null)
-					{
-						var relativeChildPath = child.RelativePath.Substring(node.RelativePath.Length).TrimStart(Path.DirectorySeparatorChar);
-						childLeftPath = Path.Combine(leftPath, relativeChildPath);
-					}
-
-					//if (!string.IsNullOrEmpty(rightPath) && child.RightNode != null)
-					{
-						var relativeChildPath = child.RelativePath.Substring(node.RelativePath.Length).TrimStart(Path.DirectorySeparatorChar);
-						childRightPath = Path.Combine(rightPath, relativeChildPath);
-					}
-
-					UpdateNodeAfterOperation(child, childLeftPath, childRightPath, child.IsDirectory);
-				}
-			}
-        }
-
-        private string GetRelativePath(DirectoryComparer.ComparisonItem item, string leftRoot, string rightRoot)
+        public string GetRelativePath(DirectoryComparer.ComparisonItem item, string leftRoot, string rightRoot)
         {
             string path = "";
             if (item.Left != null && item.Left.FullPath.StartsWith(leftRoot, StringComparison.OrdinalIgnoreCase))

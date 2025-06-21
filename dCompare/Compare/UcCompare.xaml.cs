@@ -206,6 +206,54 @@ namespace dCompare.Compare
             }
         }
 
+        public async Task RefreshNodeAsync(TreeNode nodeToRefresh)
+        {
+            if (IsComparing) { MessageBox.Show("Comparison is already in progress."); return; }
+            if (!nodeToRefresh.IsDirectory) { return; }
+
+            IsComparing = true;
+            _cancellationTokenSource = new CancellationTokenSource();
+            string leftDirRoot = LeftPathBox.Text.Trim();
+            string rightDirRoot = RightPathBox.Text.Trim();
+
+            try
+            {
+                // 1. Re-compare just the subdirectory to get the new items.
+                List<DirectoryComparer.ComparisonItem> refreshedItems = await Task.Run(() =>
+                    _comparer.CompareSubtree(leftDirRoot, rightDirRoot, nodeToRefresh.RelativePath,
+                        _cancellationTokenSource.Token, SelectedAlgorithm),
+                    _cancellationTokenSource.Token);
+
+                // 2. Update the master cache (_cachedComparisonResults).
+                // Remove all old items belonging to the refreshed subtree.
+                _cachedComparisonResults.RemoveAll(item =>
+                    _treeNodeManager.GetRelativePath(item, leftDirRoot, rightDirRoot)
+                                   .StartsWith(nodeToRefresh.RelativePath, StringComparison.OrdinalIgnoreCase));
+
+                // Add the new, fresh items to the cache.
+                _cachedComparisonResults.AddRange(refreshedItems);
+
+                // 3. Update the UI collection (_treeNodes).
+                _treeNodeManager.RefreshSubtreeInView(nodeToRefresh, _cachedComparisonResults, leftDirRoot, rightDirRoot);
+
+                // 4. Re-apply any active filter to the updated view.
+                ApplyFilter();
+            }
+            catch (OperationCanceledException)
+            {
+                MessageBox.Show("Refresh was canceled.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occurred during refresh: {ex.Message}");
+            }
+            finally
+            {
+                IsComparing = false;
+                _cancellationTokenSource?.Dispose();
+                _cancellationTokenSource = null;
+            }
+        }
         private void ResultListView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             DependencyObject obj = (DependencyObject)e.OriginalSource;
@@ -442,28 +490,102 @@ namespace dCompare.Compare
             CompareFileContents(selectedItem);
         }
 
-        private void ContextMenu_CopyToLeft_Click(object sender, RoutedEventArgs e)
+        private async void ContextMenu_CopyToLeft_Click(object sender, RoutedEventArgs e)
         {
-            _fileOperationHandler.CopyToLeft(ResultListView.SelectedItems.Cast<TreeNode>().ToList(),
-                LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
+            if (ResultListView.SelectedItem is TreeNode selectedNode)
+            {
+                try
+                {
+                    // 1. "await" the file operation. Execution will pause here until all files are copied.
+                    await _fileOperationHandler.CopyToLeft(ResultListView.SelectedItems.Cast<TreeNode>().ToList(),
+                        LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
+
+                    // 2. This line is now guaranteed to run AFTER the copy operation is finished.
+                    // The unreliable Thread.Sleep is no longer needed.
+                    await RefreshNodeAsync(selectedNode);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"The copy operation failed and the view was not refreshed. Details: {ex.Message}", "Operation Failed");
+                }
+            }
+            //_fileOperationHandler.CopyToLeft(ResultListView.SelectedItems.Cast<TreeNode>().ToList(),
+            //    LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
         }
 
-        private void ContextMenu_CopyToRight_Click(object sender, RoutedEventArgs e)
+        private async void ContextMenu_CopyToRight_Click(object sender, RoutedEventArgs e)
         {
-            _fileOperationHandler.CopyToRight(ResultListView.SelectedItems.Cast<TreeNode>().ToList(),
-                LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
+            if (ResultListView.SelectedItem is TreeNode selectedNode)
+            {
+                try
+                {
+                    // 1. "await" the file operation. Execution will pause here until all files are copied.
+                    await _fileOperationHandler.CopyToRight(ResultListView.SelectedItems.Cast<TreeNode>().ToList(),
+                        LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
+
+                    // 2. This line is now guaranteed to run AFTER the copy operation is finished.
+                    // The unreliable Thread.Sleep is no longer needed.
+                    await RefreshNodeAsync(selectedNode);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"The copy operation failed and the view was not refreshed. Details: {ex.Message}", "Operation Failed");
+                }
+            }
+
+            //_fileOperationHandler.CopyToRight(ResultListView.SelectedItems.Cast<TreeNode>().ToList(),
+            //    LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
+            //Thread.Sleep(2000);
+            //if (ResultListView.SelectedItem is TreeNode selectedNode)
+            //{
+            //    await RefreshNodeAsync(selectedNode);
+            //}
         }
 
-        private void ContextMenu_MoveToLeft_Click(object sender, RoutedEventArgs e)
+        private async void ContextMenu_MoveToLeft_Click(object sender, RoutedEventArgs e)
         {
-            _fileOperationHandler.MoveToLeft(ResultListView.SelectedItems.Cast<TreeNode>().ToList(),
-                LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
+            if (ResultListView.SelectedItem is TreeNode selectedNode)
+            {
+                try
+                {
+                    // 1. "await" the file operation. Execution will pause here until all files are copied.
+                    await _fileOperationHandler.MoveToLeft(ResultListView.SelectedItems.Cast<TreeNode>().ToList(),
+                        LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
+
+                    // 2. This line is now guaranteed to run AFTER the copy operation is finished.
+                    // The unreliable Thread.Sleep is no longer needed.
+                    await RefreshNodeAsync(selectedNode);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"The copy operation failed and the view was not refreshed. Details: {ex.Message}", "Operation Failed");
+                }
+            }
+            //_fileOperationHandler.MoveToLeft(ResultListView.SelectedItems.Cast<TreeNode>().ToList(),
+            //    LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
         }
 
-        private void ContextMenu_MoveToRight_Click(object sender, RoutedEventArgs e)
+        private async void ContextMenu_MoveToRight_Click(object sender, RoutedEventArgs e)
         {
-            _fileOperationHandler.MoveToRight(ResultListView.SelectedItems.Cast<TreeNode>().ToList(),
-                LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
+            if (ResultListView.SelectedItem is TreeNode selectedNode)
+            {
+                try
+                {
+                    // 1. "await" the file operation. Execution will pause here until all files are copied.
+                    await _fileOperationHandler.MoveToRight(ResultListView.SelectedItems.Cast<TreeNode>().ToList(),
+                        LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
+
+                    // 2. This line is now guaranteed to run AFTER the copy operation is finished.
+                    // The unreliable Thread.Sleep is no longer needed.
+                    await RefreshNodeAsync(selectedNode);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"The copy operation failed and the view was not refreshed. Details: {ex.Message}", "Operation Failed");
+                }
+            }
+            //_fileOperationHandler.MoveToRight(ResultListView.SelectedItems.Cast<TreeNode>().ToList(),
+            //    LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
         }
 
         private void ContextMenu_Rename_Click(object sender, RoutedEventArgs e)

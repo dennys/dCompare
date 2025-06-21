@@ -16,6 +16,9 @@ namespace dCompare.Compare
         private readonly TreeNodeManager _treeNodeManager;
         private FileOperationWindow _fileOperationWindow;
 
+        // Dictionary to track active jobs and their completion sources.
+        private readonly Dictionary<string, TaskCompletionSource<bool>> _activeJobs = new Dictionary<string, TaskCompletionSource<bool>>();
+
         public FileOperationHandler(FileManager fileManager, TreeNodeManager treeNodeManager)
         {
             _fileManager = fileManager;
@@ -54,7 +57,7 @@ namespace dCompare.Compare
             return paths;
         }
 
-        public void CopyToLeft(List<TreeNode> selectedItems, string leftRoot, string rightRoot)
+        public async Task CopyToLeft(List<TreeNode> selectedItems, string leftRoot, string rightRoot)
         {
             var items = GetItemsForTransfer(selectedItems, toLeft: true, leftRoot, rightRoot);
             if (items.Count == 0)
@@ -68,14 +71,29 @@ namespace dCompare.Compare
                 OpenFileOperations();
                 if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
                 {
-                    _fileOperationWindow.CopyMultiple(items, true);
-                    foreach (var (source, target, type) in items)
+                    // Get the list of job IDs for the operations we are starting.
+                    var jobIds = _fileOperationWindow.CopyMultiple(items, true);
+
+                    // Create a list of tasks to wait for.
+                    var tasks = new List<Task>();
+                    foreach (var jobId in jobIds)
                     {
-                        bool isDirectory = Directory.Exists(source);
-                        var relativePath = target.Substring(leftRoot.Length).TrimStart(Path.DirectorySeparatorChar);
-                        var node = _treeNodeManager.FindOrCreateNode(relativePath, isDirectory);
-                        _treeNodeManager.UpdateNodeAfterOperation(node, target, source, isDirectory);
+                        var tcs = new TaskCompletionSource<bool>();
+                        _activeJobs[jobId] = tcs;
+                        tasks.Add(tcs.Task);
                     }
+
+                    // Asynchronously wait for all the file operation tasks to complete.
+                    await Task.WhenAll(tasks);
+
+                    //_fileOperationWindow.CopyMultiple(items, true);
+                    //foreach (var (source, target, type) in items)
+                    //{
+                    //    //bool isDirectory = Directory.Exists(source);
+                    //    //var relativePath = target.Substring(leftRoot.Length).TrimStart(Path.DirectorySeparatorChar);
+                    //    //var node = _treeNodeManager.FindOrCreateNode(relativePath, isDirectory);
+                    //    //_treeNodeManager.UpdateNodeAfterOperation(node, target, source, isDirectory);
+                    //}
                 }
             }
             catch (Exception ex)
@@ -84,7 +102,7 @@ namespace dCompare.Compare
             }
         }
 
-        public void CopyToRight(List<TreeNode> selectedItems, string leftRoot, string rightRoot)
+        public async Task CopyToRight(List<TreeNode> selectedItems, string leftRoot, string rightRoot)
         {
             var items = GetItemsForTransfer(selectedItems, toLeft: false, rightRoot, leftRoot);
             if (items.Count == 0)
@@ -98,14 +116,29 @@ namespace dCompare.Compare
                 OpenFileOperations();
                 if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
                 {
-                    _fileOperationWindow.CopyMultiple(items, true);
-                    foreach (var (source, target, type) in items)
+                    // Get the list of job IDs for the operations we are starting.
+                    var jobIds = _fileOperationWindow.CopyMultiple(items, true);
+
+                    // Create a list of tasks to wait for.
+                    var tasks = new List<Task>();
+                    foreach (var jobId in jobIds)
                     {
-                        bool isDirectory = Directory.Exists(source);
-                        var relativePath = target.Substring(rightRoot.Length).TrimStart(Path.DirectorySeparatorChar);
-                        var node = _treeNodeManager.FindOrCreateNode(relativePath, isDirectory);
-                        _treeNodeManager.UpdateNodeAfterOperation(node, source, target, isDirectory);
+                        var tcs = new TaskCompletionSource<bool>();
+                        _activeJobs[jobId] = tcs;
+                        tasks.Add(tcs.Task);
                     }
+
+                    // Asynchronously wait for all the file operation tasks to complete.
+                    await Task.WhenAll(tasks);
+
+                    //_fileOperationWindow.CopyMultiple(items, true);
+                    //foreach (var (source, target, type) in items)
+                    //{
+                    //    //bool isDirectory = Directory.Exists(source);
+                    //    //var relativePath = target.Substring(rightRoot.Length).TrimStart(Path.DirectorySeparatorChar);
+                    //    //var node = _treeNodeManager.FindOrCreateNode(relativePath, isDirectory);
+                    //    //_treeNodeManager.UpdateNodeAfterOperation(node, source, target, isDirectory);
+                    //}
                 }
             }
             catch (Exception ex)
@@ -114,7 +147,7 @@ namespace dCompare.Compare
             }
         }
 
-        public void MoveToLeft(List<TreeNode> selectedItems, string leftRoot, string rightRoot)
+        public async Task MoveToLeft(List<TreeNode> selectedItems, string leftRoot, string rightRoot)
         {
             var items = GetItemsForTransfer(selectedItems, toLeft: true, leftRoot, rightRoot);
             if (items.Count == 0)
@@ -128,13 +161,28 @@ namespace dCompare.Compare
                 OpenFileOperations();
                 if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
                 {
-                    _fileOperationWindow.MoveMultiple(items, true);
-                    foreach (var (source, target, type) in items)
+                    // Get the list of job IDs for the operations we are starting.
+                    var jobIds = _fileOperationWindow.MoveMultiple(items, true);
+
+                    // Create a list of tasks to wait for.
+                    var tasks = new List<Task>();
+                    foreach (var jobId in jobIds)
                     {
-                        bool isDirectory = Directory.Exists(source);
-                        var relativePath = target.Substring(leftRoot.Length).TrimStart(Path.DirectorySeparatorChar);
-                        var node = _treeNodeManager.FindOrCreateNode(relativePath, isDirectory);
-                        _treeNodeManager.UpdateNodeAfterOperation(node, target, null, isDirectory);
+                        var tcs = new TaskCompletionSource<bool>();
+                        _activeJobs[jobId] = tcs;
+                        tasks.Add(tcs.Task);
+                    }
+
+                    // Asynchronously wait for all the file operation tasks to complete.
+                    await Task.WhenAll(tasks);
+
+                    //_fileOperationWindow.MoveMultiple(items, true);
+                    //foreach (var (source, target, type) in items)
+                    {
+                        //bool isDirectory = Directory.Exists(source);
+                        //var relativePath = target.Substring(leftRoot.Length).TrimStart(Path.DirectorySeparatorChar);
+                        //var node = _treeNodeManager.FindOrCreateNode(relativePath, isDirectory);
+                        //_treeNodeManager.UpdateNodeAfterOperation(node, target, null, isDirectory);
                     }
                 }
             }
@@ -144,7 +192,7 @@ namespace dCompare.Compare
             }
         }
 
-        public void MoveToRight(List<TreeNode> selectedItems, string leftRoot, string rightRoot)
+        public async Task MoveToRight(List<TreeNode> selectedItems, string leftRoot, string rightRoot)
         {
             var items = GetItemsForTransfer(selectedItems, toLeft: false, rightRoot, leftRoot);
             if (items.Count == 0)
@@ -158,14 +206,29 @@ namespace dCompare.Compare
                 OpenFileOperations();
                 if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
                 {
-                    _fileOperationWindow.MoveMultiple(items, true);
-                    foreach (var (source, target, type) in items)
+                    // Get the list of job IDs for the operations we are starting.
+                    var jobIds = _fileOperationWindow.MoveMultiple(items, true);
+
+                    // Create a list of tasks to wait for.
+                    var tasks = new List<Task>();
+                    foreach (var jobId in jobIds)
                     {
-                        bool isDirectory = Directory.Exists(source);
-                        var relativePath = target.Substring(rightRoot.Length).TrimStart(Path.DirectorySeparatorChar);
-                        var node = _treeNodeManager.FindOrCreateNode(relativePath, isDirectory);
-                        _treeNodeManager.UpdateNodeAfterOperation(node, null, target, isDirectory);
+                        var tcs = new TaskCompletionSource<bool>();
+                        _activeJobs[jobId] = tcs;
+                        tasks.Add(tcs.Task);
                     }
+
+                    // Asynchronously wait for all the file operation tasks to complete.
+                    await Task.WhenAll(tasks);
+
+                    //_fileOperationWindow.MoveMultiple(items, true);
+                    //foreach (var (source, target, type) in items)
+                    //{
+                    //    //bool isDirectory = Directory.Exists(source);
+                    //    //var relativePath = target.Substring(rightRoot.Length).TrimStart(Path.DirectorySeparatorChar);
+                    //    //var node = _treeNodeManager.FindOrCreateNode(relativePath, isDirectory);
+                    //    //_treeNodeManager.UpdateNodeAfterOperation(node, null, target, isDirectory);
+                    //}
                 }
             }
             catch (Exception ex)
@@ -213,7 +276,7 @@ namespace dCompare.Compare
 
                 string relativePath = newPath.Substring(isLeft ? leftRoot.Length : rightRoot.Length).TrimStart(Path.DirectorySeparatorChar);
                 selectedItem.RelativePath = relativePath;
-                _treeNodeManager.UpdateNodeAfterOperation(selectedItem, isLeft ? newPath : null, isLeft ? null : newPath, selectedItem.IsDirectory);
+                //_treeNodeManager.UpdateNodeAfterOperation(selectedItem, isLeft ? newPath : null, isLeft ? null : newPath, selectedItem.IsDirectory);
             }
             catch (Exception ex)
             {
@@ -221,7 +284,7 @@ namespace dCompare.Compare
             }
         }
 
-        public void Delete(ObservableCollection<TreeNode> _treeNodes, List<TreeNode> selectedItems, bool isLeft)
+        public async Task Delete(ObservableCollection<TreeNode> _treeNodes, List<TreeNode> selectedItems, bool isLeft)
         {
             if (selectedItems.Count == 0)
             {
@@ -260,7 +323,7 @@ namespace dCompare.Compare
                         var node = selectedItems.FirstOrDefault(n => (isLeft ? n.LeftNode?.FullPath : n.RightNode?.FullPath) == path);
                         if (node != null)
                         {
-                            _treeNodeManager.UpdateNodeAfterOperation(node, isLeft ? null : node.LeftNode?.FullPath, isLeft ? node.RightNode?.FullPath : null, node.IsDirectory);
+                            //_treeNodeManager.UpdateNodeAfterOperation(node, isLeft ? null : node.LeftNode?.FullPath, isLeft ? node.RightNode?.FullPath : null, node.IsDirectory);
                             if (node.LeftNode == null && node.RightNode == null)
                             {
                                 _treeNodes.Remove(node);
@@ -294,6 +357,23 @@ namespace dCompare.Compare
             string a = $"Job {jobId}: {message}";
             Log.Information($"complete copy or move or delete: {a}");
             //MessageBox.Show(a);
+
+            // Find the TaskCompletionSource for the completed job.
+            if (_activeJobs.TryGetValue(jobId, out var tcs))
+            {
+                if (success)
+                {
+                    // Signal that the task completed successfully.
+                    tcs.TrySetResult(true);
+                }
+                else
+                {
+                    // Signal that the task failed.
+                    tcs.TrySetException(new Exception(message));
+                }
+                // Remove the completed job from tracking.
+                _activeJobs.Remove(jobId);
+            }
         }
     }
 }
