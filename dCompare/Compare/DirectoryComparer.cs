@@ -203,11 +203,11 @@ namespace dCompare.Compare
         }
 
         private bool CompareNodes(FileSystemNode? left, FileSystemNode? right, List<ComparisonItem> result,
-            string indent, CancellationToken cancellationToken, string algorithm)
+    string indent, CancellationToken cancellationToken, string algorithm)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            bool hasDifferences = false;
+            bool hasContentDifferences = false; // Track content differences (Modified/Conflict)
             SortedSet<string> names = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
 
             if (left != null)
@@ -240,9 +240,10 @@ namespace dCompare.Compare
 
                 result.Add(item);
 
-                if (status != ComparisonStatus.Identical)
+                // Only mark as having content differences for Modified or Conflict statuses
+                if (status == ComparisonStatus.Modified || status == ComparisonStatus.Conflict)
                 {
-                    hasDifferences = true;
+                    hasContentDifferences = true;
                 }
 
                 if ((leftNode?.IsDirectory ?? false) || (rightNode?.IsDirectory ?? false))
@@ -250,7 +251,7 @@ namespace dCompare.Compare
                     bool childHasDifferences = CompareNodes(leftNode, rightNode, result, indent + "    ", cancellationToken, algorithm);
                     if (childHasDifferences)
                     {
-                        hasDifferences = true;
+                        hasContentDifferences = true;
                     }
                 }
             }
@@ -258,13 +259,13 @@ namespace dCompare.Compare
             if ((left?.IsDirectory ?? false) || (right?.IsDirectory ?? false))
             {
                 ComparisonItem? parentItem = result.LastOrDefault(i => i.Left == left || i.Right == right);
-                if (parentItem != null && hasDifferences)
+                if (parentItem != null && hasContentDifferences)
                 {
                     parentItem.Status = ComparisonStatus.Modified;
                 }
             }
 
-            return hasDifferences;
+            return hasContentDifferences;
         }
 
         private ComparisonStatus DetermineStatus(FileSystemNode? left, FileSystemNode? right, string algorithm, double ratio = 1.0)
