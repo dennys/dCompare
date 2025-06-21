@@ -30,7 +30,7 @@
 
 
   <ItemGroup>
-    <Folder Include="Icons\" />
+    <Resource Include="Resources\Icons\*.ico" />
   </ItemGroup>
   
 
