@@ -35,7 +35,7 @@
             <Separator/>
             <MenuItem Header="Copy to Right" Click="ContextMenu_CopyToRight_Click" Tag="{Binding}" Icon="{StaticResource CopyToRightIcon}"/>
             <MenuItem Header="Move to Right" Click="ContextMenu_MoveToRight_Click" Tag="{Binding}"/>
-            <MenuItem Header="Delete..." Click="ContextMenu_Delete_Click" Tag="{Binding}" Icon="{StaticResource DeleteIcon}"/>
+            <MenuItem Header="Delete..." Click="ContextMenu_DeleteLeft_Click" Tag="{Binding}" Icon="{StaticResource DeleteIcon}"/>
             <MenuItem Header="Rename" Click="ContextMenu_Rename_Click" Tag="{Binding}" InputGestureText="F2"/>
             <Separator/>
             <MenuItem Header="Open File Location" Click="ContextMenu_OpenLeftLocation_Click" Tag="{Binding}"/>
@@ -51,7 +51,7 @@
             <Separator/>
             <MenuItem Header="Copy to Left" Click="ContextMenu_CopyToLeft_Click" Tag="{Binding}" Icon="{StaticResource CopyToLeftIcon}"/>
             <MenuItem Header="Move to Left" Click="ContextMenu_MoveToLeft_Click" Tag="{Binding}"/>
-            <MenuItem Header="Delete..." Click="ContextMenu_Delete_Click" Tag="{Binding}" Icon="{StaticResource DeleteIcon}"/>
+            <MenuItem Header="Delete..." Click="ContextMenu_DeleteRight_Click" Tag="{Binding}" Icon="{StaticResource DeleteIcon}"/>
             <MenuItem Header="Rename" Click="ContextMenu_Rename_Click" Tag="{Binding}" InputGestureText="F2"/>
             <Separator/>
             <MenuItem Header="Copy Pathname to clipboard" Click="ContextMenu_CopyPathnames_Click" Tag="{Binding}"/>
