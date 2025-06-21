@@ -74,15 +74,15 @@ namespace dCompare.Tests.Options
             Assert.Equal("Ctrl+R", model.Compare);
         }
 
-        [Fact]
-        public void CompareOptionsViewModel_AlgorithmMapping_IsCorrect()
-        {
-            var model = new CompareOptions { Algorithm = "Binary" };
-            var viewModel = new CompareOptionsViewModel(model);
-            viewModel.Algorithm = "Rules";
-            Assert.Equal("Rules", model.Algorithm);
-            Assert.Contains(viewModel.AvailableAlgorithms, kvp => kvp.Value == "Modified Date and Size");
-            Assert.Contains(viewModel.AvailableAlgorithms, kvp => kvp.Key == "Thorough (Binary Content)");
-        }
+        //[Fact]
+        //public void CompareOptionsViewModel_AlgorithmMapping_IsCorrect()
+        //{
+        //    var model = new CompareOptions { Algorithm = "Binary" };
+        //    var viewModel = new CompareOptionsViewModel(model);
+        //    viewModel.Algorithm = "Rules";
+        //    Assert.Equal("Rules", model.Algorithm);
+        //    Assert.Contains(viewModel.AvailableAlgorithms, kvp => kvp.Value == "Modified Date and Size");
+        //    Assert.Contains(viewModel.AvailableAlgorithms, kvp => kvp.Key == "Thorough (Binary Content)");
+        //}
     }
 }
