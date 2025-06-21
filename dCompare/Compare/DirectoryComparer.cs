@@ -207,7 +207,7 @@ namespace dCompare.Compare
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            bool hasContentDifferences = false; // Track content differences (Modified/Conflict)
+            bool hasContentDifferences = false; // Track content differences
             SortedSet<string> names = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
 
             if (left != null)
@@ -240,8 +240,11 @@ namespace dCompare.Compare
 
                 result.Add(item);
 
-                // Only mark as having content differences for Modified or Conflict statuses
-                if (status == ComparisonStatus.Modified || status == ComparisonStatus.Conflict)
+                // Mark as having differences for Modified, Conflict, LeftOnly, or RightOnly statuses
+                if (status == ComparisonStatus.Modified ||
+                    status == ComparisonStatus.Conflict ||
+                    status == ComparisonStatus.LeftOnly ||
+                    status == ComparisonStatus.RightOnly)
                 {
                     hasContentDifferences = true;
                 }
