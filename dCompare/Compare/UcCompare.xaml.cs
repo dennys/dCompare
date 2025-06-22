@@ -26,6 +26,15 @@ namespace dCompare.Compare
         Left,
         Right
     }
+    public enum FileOperationType
+    {
+        CopyToLeft,
+        CopyToRight,
+        MoveToLeft,
+        MoveToRight,
+        DeleteLeft,
+        DeleteRight
+    }
 
     public partial class UcCompare : UserControl, INotifyPropertyChanged
     {
@@ -483,179 +492,146 @@ namespace dCompare.Compare
             var selectedItem = ResultListView.SelectedItem as TreeNode;
             if (selectedItem == null)
             {
-                MessageBox.Show("請選擇一個項目");
+                MessageBox.Show("Please select an item.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             CompareFileContents(selectedItem);
         }
 
-        private async void ContextMenu_CopyToLeft_Click(object sender, RoutedEventArgs e)
+        private async Task ProcessFileOperationsAsync(
+            List<TreeNode> selectedNodes,
+            FileOperationType operationType,
+            string leftDir,
+            string rightDir,
+            string confirmationMessage,
+            Func<List<TreeNode>, string, string, Task> operationAction,
+            Func<List<TreeNode>, bool, List<(string Path, SourceType Type)>> getItemsForDeletion = null)
         {
-            if (ResultListView.SelectedItem is TreeNode selectedNode)
+            if (selectedNodes.Count == 0)
             {
-                try
-                {
-                    // 1. "await" the file operation. Execution will pause here until all files are copied.
-                    await _fileOperationHandler.CopyToLeft(ResultListView.SelectedItems.Cast<TreeNode>().ToList(),
-                        LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
+                MessageBox.Show("Please select at least one file or directory for the operation.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
-                    // 2. This line is now guaranteed to run AFTER the copy operation is finished.
-                    // The unreliable Thread.Sleep is no longer needed.
-                    await RefreshNodeAsync(selectedNode);
-                }
-                catch (Exception ex)
+            try
+            {
+                // Show confirmation for delete operations
+                if (confirmationMessage != null)
                 {
-                    MessageBox.Show($"The copy operation failed and the view was not refreshed. Details: {ex.Message}", "Operation Failed");
+                    var result = MessageBox.Show(
+                        confirmationMessage,
+                        "Confirm Operation",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Warning);
+
+                    if (result != MessageBoxResult.Yes)
+                    {
+                        return;
+                    }
+                }
+
+                // Process each selected node
+                foreach (var node in selectedNodes)
+                {
+                    if (operationType == FileOperationType.DeleteLeft || operationType == FileOperationType.DeleteRight)
+                    {
+                        bool isLeft = operationType == FileOperationType.DeleteLeft;
+                        var items = getItemsForDeletion(new List<TreeNode> { node }, isLeft);
+                        if (items.Count == 0)
+                        {
+                            MessageBox.Show($"No valid items to delete for {node.LeftDisplayName ?? node.RightDisplayName}", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            continue;
+                        }
+                        await _fileOperationHandler.DeleteAsync(items);
+                    }
+                    else
+                    {
+                        await operationAction(new List<TreeNode> { node }, leftDir, rightDir);
+                    }
+
+                    // Refresh the node
+                    await RefreshNodeAsync(node);
                 }
             }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"The operation failed and the view may not be fully refreshed. Details: {ex.Message}", "Operation Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async void ContextMenu_CopyToLeft_Click(object sender, RoutedEventArgs e)
+        {
+            var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
+            await ProcessFileOperationsAsync(
+                selectedNodes,
+                FileOperationType.CopyToLeft,
+                LeftPathBox.Text.Trim(),
+                RightPathBox.Text.Trim(),
+                null,
+                _fileOperationHandler.CopyToLeft);
         }
 
         private async void ContextMenu_CopyToRight_Click(object sender, RoutedEventArgs e)
         {
-            if (ResultListView.SelectedItem is TreeNode selectedNode)
-            {
-                try
-                {
-                    // 1. "await" the file operation. Execution will pause here until all files are copied.
-                    await _fileOperationHandler.CopyToRight(ResultListView.SelectedItems.Cast<TreeNode>().ToList(),
-                        LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
-
-                    // 2. This line is now guaranteed to run AFTER the copy operation is finished.
-                    // The unreliable Thread.Sleep is no longer needed.
-                    await RefreshNodeAsync(selectedNode);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"The copy operation failed and the view was not refreshed. Details: {ex.Message}", "Operation Failed");
-                }
-            }
+            var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
+            await ProcessFileOperationsAsync(
+                selectedNodes,
+                FileOperationType.CopyToRight,
+                LeftPathBox.Text.Trim(),
+                RightPathBox.Text.Trim(),
+                null,
+                _fileOperationHandler.CopyToRight);
         }
 
         private async void ContextMenu_MoveToLeft_Click(object sender, RoutedEventArgs e)
         {
-            if (ResultListView.SelectedItem is TreeNode selectedNode)
-            {
-                try
-                {
-                    // 1. "await" the file operation. Execution will pause here until all files are copied.
-                    await _fileOperationHandler.MoveToLeft(ResultListView.SelectedItems.Cast<TreeNode>().ToList(),
-                        LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
-
-                    // 2. This line is now guaranteed to run AFTER the copy operation is finished.
-                    // The unreliable Thread.Sleep is no longer needed.
-                    await RefreshNodeAsync(selectedNode);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"The copy operation failed and the view was not refreshed. Details: {ex.Message}", "Operation Failed");
-                }
-            }
+            var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
+            await ProcessFileOperationsAsync(
+                selectedNodes,
+                FileOperationType.MoveToLeft,
+                LeftPathBox.Text.Trim(),
+                RightPathBox.Text.Trim(),
+                null,
+                _fileOperationHandler.MoveToLeft);
         }
 
         private async void ContextMenu_MoveToRight_Click(object sender, RoutedEventArgs e)
         {
-            if (ResultListView.SelectedItem is TreeNode selectedNode)
-            {
-                try
-                {
-                    // 1. "await" the file operation. Execution will pause here until all files are copied.
-                    await _fileOperationHandler.MoveToRight(ResultListView.SelectedItems.Cast<TreeNode>().ToList(),
-                        LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
-
-                    // 2. This line is now guaranteed to run AFTER the copy operation is finished.
-                    // The unreliable Thread.Sleep is no longer needed.
-                    await RefreshNodeAsync(selectedNode);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"The copy operation failed and the view was not refreshed. Details: {ex.Message}", "Operation Failed");
-                }
-            }
+            var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
+            await ProcessFileOperationsAsync(
+                selectedNodes,
+                FileOperationType.MoveToRight,
+                LeftPathBox.Text.Trim(),
+                RightPathBox.Text.Trim(),
+                null,
+                _fileOperationHandler.MoveToRight);
         }
 
         private async void ContextMenu_DeleteLeft_Click(object sender, RoutedEventArgs e)
         {
-            if (ResultListView.SelectedItem is TreeNode selectedNode)
-            {
-                try
-                {
-                    // Get items to delete
-                    var items = _fileOperationHandler.GetItemsForDeletion(
-                        ResultListView.SelectedItems.Cast<TreeNode>().ToList(),
-                        isLeft: true);
-
-                    if (items.Count == 0)
-                    {
-                        MessageBox.Show("請選擇至少一個文件或目錄進行刪除");
-                        return;
-                    }
-
-                    // Confirm deletion
-                    var result = MessageBox.Show(
-                        "Are you sure you want to delete the selected items?",
-                        "Confirm Delete",
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Warning);
-
-                    if (result != MessageBoxResult.Yes)
-                    {
-                        return;
-                    }
-
-                    // Perform deletion
-                    await _fileOperationHandler.DeleteAsync(items);
-
-                    // Refresh the view
-                    await RefreshNodeAsync(selectedNode);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"The delete operation failed and the view was not refreshed. Details: {ex.Message}", "Operation Failed");
-                }
-            }
+            var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
+            await ProcessFileOperationsAsync(
+                selectedNodes,
+                FileOperationType.DeleteLeft,
+                LeftPathBox.Text.Trim(),
+                RightPathBox.Text.Trim(),
+                "Are you sure you want to delete the selected items from the left directory?",
+                null,
+                _fileOperationHandler.GetItemsForDeletion);
         }
 
         private async void ContextMenu_DeleteRight_Click(object sender, RoutedEventArgs e)
         {
-            if (ResultListView.SelectedItem is TreeNode selectedNode)
-            {
-                try
-                {
-                    // Get items to delete
-                    var items = _fileOperationHandler.GetItemsForDeletion(
-                        ResultListView.SelectedItems.Cast<TreeNode>().ToList(),
-                        isLeft: false);
-
-                    if (items.Count == 0)
-                    {
-                        MessageBox.Show("請選擇至少一個文件或目錄進行刪除");
-                        return;
-                    }
-
-                    // Confirm deletion
-                    var result = MessageBox.Show(
-                        "Are you sure you want to delete the selected items?",
-                        "Confirm Delete",
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Warning);
-
-                    if (result != MessageBoxResult.Yes)
-                    {
-                        return;
-                    }
-
-                    // Perform deletion
-                    await _fileOperationHandler.DeleteAsync(items);
-
-                    // Refresh the view
-                    await RefreshNodeAsync(selectedNode);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"The delete operation failed and the view was not refreshed. Details: {ex.Message}", "Operation Failed");
-                }
-            }
+            var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
+            await ProcessFileOperationsAsync(
+                selectedNodes,
+                FileOperationType.DeleteRight,
+                LeftPathBox.Text.Trim(),
+                RightPathBox.Text.Trim(),
+                "Are you sure you want to delete the selected items from the right directory?",
+                null,
+                _fileOperationHandler.GetItemsForDeletion);
         }
 
         private void ContextMenu_Rename_Click(object sender, RoutedEventArgs e)
@@ -672,7 +648,7 @@ namespace dCompare.Compare
             var selectedItem = ResultListView.SelectedItem as TreeNode;
             if (selectedItem == null)
             {
-                MessageBox.Show("請選擇一個項目");
+                MessageBox.Show("Please select an item.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             FileOperations.ShowPropertiesDialog(selectedItem);
