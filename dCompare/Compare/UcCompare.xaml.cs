@@ -55,6 +55,7 @@ namespace dCompare.Compare
         private readonly FileManager _fileManager = new FileManager(new Kernel32FileCopyStrategy());
         private readonly TreeNodeManager _treeNodeManager;
         private readonly FileOperationHandler _fileOperationHandler;
+        private readonly ConfigurationService _configService;
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName)
@@ -96,6 +97,8 @@ namespace dCompare.Compare
         public UcCompare()
         {
             InitializeComponent();
+            ConfigurationService configService = new ConfigurationService();
+            _configService = configService ?? new ConfigurationService("dcompare.json"); // Fallback to default
             _treeNodeManager = new TreeNodeManager(_treeNodes);
             _fileOperationHandler = new FileOperationHandler(_fileManager, _treeNodeManager);
             ResultListView.ItemsSource = _treeNodes;
@@ -103,7 +106,22 @@ namespace dCompare.Compare
             DataContext = this;
 
             //SelectedAlgorithm = ComparisonAlgorithms.AvailableAlgorithms.First().Value;
-            SelectedAlgorithm = ComparisonAlgorithm.FullContents;
+            // Load default algorithm from configuration
+            LoadConfigurationAsync();
+        }
+        private async void LoadConfigurationAsync()
+        {
+            try
+            {
+                var config = await _configService.LoadConfigurationAsync();
+                SelectedAlgorithm = config.Options.Compare.Algorithm; // Set default algorithm
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Failed to load configuration: {Message}", ex.Message);
+                MessageBox.Show($"Error loading configuration: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                SelectedAlgorithm = ComparisonAlgorithm.ModifiedDateAndSize; // Fallback default
+            }
         }
 
         private void UpdateTabHeader()
