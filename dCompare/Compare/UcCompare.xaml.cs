@@ -2,6 +2,7 @@
 using dCompare.Diff;
 using dCompare.FileOperation;
 using dCompare.FileOperation.Strategies;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualBasic;
 using Microsoft.Win32;
 using Serilog;
@@ -9,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -47,7 +49,7 @@ namespace dCompare.Compare
         private CancellationTokenSource _cancellationTokenSource;
         private bool _isComparing;
         private double _comparisonProgress;
-        private string _selectedAlgorithm;
+        private ComparisonAlgorithm _selectedAlgorithm;
 
         private FileOperationWindow _fileOperationWindow;
         private readonly FileManager _fileManager = new FileManager(new Kernel32FileCopyStrategy());
@@ -81,7 +83,7 @@ namespace dCompare.Compare
             }
         }
 
-        public string SelectedAlgorithm
+        public ComparisonAlgorithm SelectedAlgorithm
         {
             get => _selectedAlgorithm;
             set
@@ -99,7 +101,9 @@ namespace dCompare.Compare
             ResultListView.ItemsSource = _treeNodes;
             ResultListView.AddHandler(GridViewColumnHeader.ClickEvent, new RoutedEventHandler(GridViewColumnHeaderClickedHandler));
             DataContext = this;
-            SelectedAlgorithm = ComparisonAlgorithms.AvailableAlgorithms.First().Value;
+
+            //SelectedAlgorithm = ComparisonAlgorithms.AvailableAlgorithms.First().Value;
+            SelectedAlgorithm = ComparisonAlgorithm.FullContents;
         }
 
         private void UpdateTabHeader()
@@ -531,7 +535,7 @@ namespace dCompare.Compare
                     }
                 }
 
-                // Process each selected node
+                // Step 1: Perform all file operations first.
                 foreach (var node in selectedNodes)
                 {
                     if (operationType == FileOperationType.DeleteLeft || operationType == FileOperationType.DeleteRight)
@@ -549,9 +553,44 @@ namespace dCompare.Compare
                     {
                         await operationAction(new List<TreeNode> { node }, leftDir, rightDir);
                     }
+                }
 
-                    // Refresh the node
-                    await RefreshNodeAsync(node);
+                // Step 2: Iteratively refresh nodes and conditionally propagate changes upwards.
+                var processedNodes = new HashSet<string>();
+                var refreshQueue = new Queue<TreeNode>(selectedNodes);
+
+                while (refreshQueue.Count > 0)
+                {
+                    var currentNode = refreshQueue.Dequeue();
+
+                    // A parent could be queued multiple times; Add() returning false means we've already processed it.
+                    if (currentNode == null || !processedNodes.Add(currentNode.RelativePath))
+                    {
+                        continue;
+                    }
+
+                    // Store the status before refreshing.
+                    var oldStatus = currentNode.Status;
+
+                    // Refresh the node using the existing method.
+                    await RefreshNodeAsync(currentNode);
+
+                    // Get the status after refreshing.
+                    var newStatus = currentNode.Status;
+
+                    // OPTIMIZATION: If the status changed and this is not a root node,
+                    // we need to check its parent. Otherwise, the propagation stops.
+                    if (oldStatus != newStatus && currentNode.Depth > 0)
+                    {
+                        string parentPath = Path.GetDirectoryName(currentNode.RelativePath) ?? string.Empty;
+                        var parentNode = _treeNodes.FirstOrDefault(n => n.RelativePath.Equals(parentPath, StringComparison.OrdinalIgnoreCase));
+
+                        if (parentNode != null)
+                        {
+                            // Enqueue the parent for the next iteration.
+                            refreshQueue.Enqueue(parentNode);
+                        }
+                    }
                 }
             }
             catch (Exception ex)

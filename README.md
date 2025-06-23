@@ -25,6 +25,17 @@
 - **Toolbar and Menu**: Unified menu and toolbar with icons for quick access to common actions like compare (Ctrl+R), copy to left/right, expand/collapse all, and filtering options (show all, different, identical, unique).
 - **Progress Feedback**: Displays comparison progress with a cancelable overlay showing percentage and a progress bar, plus a status bar indicating tab count and application status.
 
+## Comparison
+
+Use these algorithm to compare calculate a 2.6GB file.
+
+| Algorithm | Speed |
+| --------- | ----- |
+| MD5       | 20s   |
+| xxHash64  | 5s    |
+
+- xxHash64: Use Microsoft's implementation: https://learn.microsoft.com/zh-tw/dotnet/api/system.io.hashing.xxhash64.hash
+
 ## Planned Features
 
 - **External File Comparison**: Integrate with external tools like WinMerge for advanced file content comparison.

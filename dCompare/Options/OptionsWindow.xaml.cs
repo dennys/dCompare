@@ -295,10 +295,10 @@ namespace dCompare.Options
         public CompareOptionsViewModel(CompareOptions model) { _model = model; }
 
         // Reference the static AvailableAlgorithms
-        public List<KeyValuePair<string, string>> AvailableAlgorithms => ComparisonAlgorithms.AvailableAlgorithms;
+        public List<KeyValuePair<string, ComparisonAlgorithm>> AvailableAlgorithms => ComparisonAlgorithms.AvailableAlgorithms;
         public List<string> AvailableDoubleClickActions => new List<string> { "view", "edit", "open" };
 
-        public string Algorithm { get => _model.Algorithm; set { _model.Algorithm = value; OnPropertyChanged(); } }
+        public ComparisonAlgorithm Algorithm { get => _model.Algorithm; set { _model.Algorithm = value; OnPropertyChanged(); } }
         public string DoubleClickAction { get => _model.DoubleClick; set { _model.DoubleClick = value; OnPropertyChanged(); } }
     }
 
