@@ -219,7 +219,7 @@ namespace dCompare.Compare
             }
         }
 
-        public async Task RefreshNodeAsync(TreeNode nodeToRefresh)
+        public async Task RefreshNodeAsync(TreeNode nodeToRefresh, HashSet<string> previouslyExpandedPaths = null)
         {
             if (IsComparing) { MessageBox.Show("Comparison is already in progress."); return; }
             //if (!nodeToRefresh.IsDirectory) { return; }
@@ -238,16 +238,14 @@ namespace dCompare.Compare
                     _cancellationTokenSource.Token);
 
                 // 2. Update the master cache (_cachedComparisonResults).
-                // Remove all old items belonging to the refreshed subtree.
                 _cachedComparisonResults.RemoveAll(item =>
                     _treeNodeManager.GetRelativePath(item, leftDirRoot, rightDirRoot)
                                    .StartsWith(nodeToRefresh.RelativePath, StringComparison.OrdinalIgnoreCase));
 
-                // Add the new, fresh items to the cache.
                 _cachedComparisonResults.AddRange(refreshedItems);
 
-                // 3. Update the UI collection (_treeNodes).
-                _treeNodeManager.RefreshSubtreeInView(nodeToRefresh, _cachedComparisonResults, leftDirRoot, rightDirRoot);
+                // 3. Update the UI collection (_treeNodes), passing the expanded state information.
+                _treeNodeManager.RefreshSubtreeInView(nodeToRefresh, _cachedComparisonResults, leftDirRoot, rightDirRoot, previouslyExpandedPaths);
 
                 // 4. Re-apply any active filter to the updated view.
                 ApplyFilter();
@@ -504,13 +502,13 @@ namespace dCompare.Compare
         }
 
         private async Task ProcessFileOperationsAsync(
-            List<TreeNode> selectedNodes,
-            FileOperationType operationType,
-            string leftDir,
-            string rightDir,
-            string confirmationMessage,
-            Func<List<TreeNode>, string, string, Task> operationAction,
-            Func<List<TreeNode>, bool, List<(string Path, SourceType Type)>> getItemsForDeletion = null)
+    List<TreeNode> selectedNodes,
+    FileOperationType operationType,
+    string leftDir,
+    string rightDir,
+    string confirmationMessage,
+    Func<List<TreeNode>, string, string, Task> operationAction,
+    Func<List<TreeNode>, bool, List<(string Path, SourceType Type)>> getItemsForDeletion = null)
         {
             if (selectedNodes.Count == 0)
             {
@@ -518,9 +516,14 @@ namespace dCompare.Compare
                 return;
             }
 
+            // *** STEP 1: Capture the state of all expanded nodes BEFORE the operation. ***
+            var previouslyExpandedPaths = new HashSet<string>(
+                _treeNodes.Where(n => n.IsDirectory && n.IsExpanded)
+                          .Select(n => n.RelativePath)
+            );
+
             try
             {
-                // Show confirmation for delete operations
                 if (confirmationMessage != null)
                 {
                     var result = MessageBox.Show(
@@ -535,19 +538,13 @@ namespace dCompare.Compare
                     }
                 }
 
-                // Step 1: Perform all file operations first.
                 foreach (var node in selectedNodes)
                 {
                     if (operationType == FileOperationType.DeleteLeft || operationType == FileOperationType.DeleteRight)
                     {
                         bool isLeft = operationType == FileOperationType.DeleteLeft;
                         var items = getItemsForDeletion(new List<TreeNode> { node }, isLeft);
-                        if (items.Count == 0)
-                        {
-                            MessageBox.Show($"No valid items to delete for {node.LeftDisplayName ?? node.RightDisplayName}", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
-                            continue;
-                        }
-                        await _fileOperationHandler.DeleteAsync(items);
+                        if (items.Count > 0) await _fileOperationHandler.DeleteAsync(items);
                     }
                     else
                     {
@@ -555,42 +552,32 @@ namespace dCompare.Compare
                     }
                 }
 
-                // Step 2: Iteratively refresh nodes and conditionally propagate changes upwards.
-                var processedNodes = new HashSet<string>();
-                var refreshQueue = new Queue<TreeNode>(selectedNodes);
+                var nodesToRefresh = new Dictionary<string, TreeNode>();
+                var queue = new Queue<TreeNode>(selectedNodes);
 
-                while (refreshQueue.Count > 0)
+                while (queue.Count > 0)
                 {
-                    var currentNode = refreshQueue.Dequeue();
+                    var node = queue.Dequeue();
+                    if (node == null || nodesToRefresh.ContainsKey(node.RelativePath)) continue;
 
-                    // A parent could be queued multiple times; Add() returning false means we've already processed it.
-                    if (currentNode == null || !processedNodes.Add(currentNode.RelativePath))
+                    nodesToRefresh.Add(node.RelativePath, node);
+
+                    if (node.Depth > 0)
                     {
-                        continue;
-                    }
-
-                    // Store the status before refreshing.
-                    var oldStatus = currentNode.Status;
-
-                    // Refresh the node using the existing method.
-                    await RefreshNodeAsync(currentNode);
-
-                    // Get the status after refreshing.
-                    var newStatus = currentNode.Status;
-
-                    // OPTIMIZATION: If the status changed and this is not a root node,
-                    // we need to check its parent. Otherwise, the propagation stops.
-                    if (oldStatus != newStatus && currentNode.Depth > 0)
-                    {
-                        string parentPath = Path.GetDirectoryName(currentNode.RelativePath) ?? string.Empty;
+                        string parentPath = Path.GetDirectoryName(node.RelativePath) ?? string.Empty;
                         var parentNode = _treeNodes.FirstOrDefault(n => n.RelativePath.Equals(parentPath, StringComparison.OrdinalIgnoreCase));
-
                         if (parentNode != null)
                         {
-                            // Enqueue the parent for the next iteration.
-                            refreshQueue.Enqueue(parentNode);
+                            queue.Enqueue(parentNode);
                         }
                     }
+                }
+
+                var orderedNodesToRefresh = nodesToRefresh.Values.OrderByDescending(n => n.Depth);
+                foreach (var nodeToRefresh in orderedNodesToRefresh)
+                {
+                    // *** Pass the captured state to the refresh method. ***
+                    await RefreshNodeAsync(nodeToRefresh, previouslyExpandedPaths);
                 }
             }
             catch (Exception ex)
