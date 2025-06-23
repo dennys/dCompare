@@ -7,6 +7,7 @@ namespace dCompare.Configuration
     {
         public string Left { get; set; } = string.Empty;
         public string Right { get; set; } = string.Empty;
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public ComparisonAlgorithm Algorithm { get; set; } = ComparisonAlgorithm.ModifiedDateAndSize;
     }
 
@@ -53,6 +54,7 @@ namespace dCompare.Configuration
     public class CompareOptions
     {
         [JsonPropertyName("Algorithm")]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public ComparisonAlgorithm Algorithm { get; set; } = ComparisonAlgorithm.ModifiedDateAndSize;
 
         [JsonPropertyName("DoubleClick")]

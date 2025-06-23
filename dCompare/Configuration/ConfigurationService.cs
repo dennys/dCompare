@@ -1,6 +1,8 @@
 ﻿using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 namespace dCompare.Configuration
 {
@@ -10,10 +12,12 @@ namespace dCompare.Configuration
     public class ConfigurationService
     {
         private readonly string _configPath;
+        private readonly IConfiguration _configuration;
         private static readonly JsonSerializerOptions _serializerOptions = new()
         {
             WriteIndented = true,
-            PropertyNameCaseInsensitive = true
+            PropertyNameCaseInsensitive = true,
+            Converters = { new JsonStringEnumConverter() }
         };
 
         /// <summary>
@@ -22,9 +26,11 @@ namespace dCompare.Configuration
         /// <param name="configFileName">The name of the configuration file, e.g., "appsettings.json".</param>
         public ConfigurationService(string configFileName = "appsettings.json")
         {
-            // For a real app, you might use AppContext.BaseDirectory
-            // For simplicity, we use the current directory.
             _configPath = Path.Combine(Directory.GetCurrentDirectory(), configFileName);
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile(configFileName, optional: true, reloadOnChange: false);
+            _configuration = builder.Build();
         }
 
         /// <summary>
@@ -41,17 +47,14 @@ namespace dCompare.Configuration
                 await SaveConfigurationAsync(defaultConfig);
                 return defaultConfig;
             }
-
             try
             {
-                var jsonString = await File.ReadAllTextAsync(_configPath);
-                var config = JsonSerializer.Deserialize<AppConfiguration>(jsonString, _serializerOptions);
-                return config ?? new AppConfiguration(); // Return new config if file is empty
+                var config = _configuration.Get<AppConfiguration>();
+                return config ?? new AppConfiguration(); // Return new config if file is empty or deserialization fails
             }
-            catch (JsonException ex)
+            catch (Exception ex)
             {
-                // Handle malformed JSON file. You might want to log this error
-                // and load default settings.
+                // Handle configuration errors
                 System.Diagnostics.Debug.WriteLine($"Error reading configuration file: {ex.Message}");
                 return new AppConfiguration(); // Return default config on error
             }
