@@ -1,11 +1,12 @@
-﻿using System;
+﻿using dCompare.Configuration;
+using Serilog;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using Serilog;
-using System.Threading;
-using System.Security.Cryptography;
 using System.IO.Hashing;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Threading;
 
 namespace dCompare.Compare
 {
@@ -20,7 +21,7 @@ namespace dCompare.Compare
         }
 
         public List<ComparisonItem> Compare(string leftPath, string rightPath, CancellationToken cancellationToken = default,
-            Action<double> progressCallback = null, string algorithm = "ModifiedDateAndSize")
+            Action<double> progressCallback = null, ComparisonAlgorithm algorithm = ComparisonAlgorithm.ModifiedDateAndSize)
         {
             Log.Information("Start to compare.");
             Log.Information("Start to build left path.");
@@ -87,7 +88,7 @@ namespace dCompare.Compare
         }
 
         public List<ComparisonItem> CompareSubtree(string leftRootPath, string rightRootPath, string subDirectoryRelativePath,
-            CancellationToken cancellationToken, string algorithm)
+            CancellationToken cancellationToken, ComparisonAlgorithm algorithm)
         {
             string leftSubPath = Path.Combine(leftRootPath, subDirectoryRelativePath);
             string rightSubPath = Path.Combine(rightRootPath, subDirectoryRelativePath);
@@ -214,7 +215,7 @@ namespace dCompare.Compare
         }
 
         private bool CompareNodes(FileSystemNode? left, FileSystemNode? right, List<ComparisonItem> result,
-            string indent, CancellationToken cancellationToken, string algorithm)
+            string indent, CancellationToken cancellationToken, ComparisonAlgorithm algorithm)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -282,7 +283,7 @@ namespace dCompare.Compare
             return hasContentDifferences;
         }
 
-        private ComparisonStatus DetermineStatus(FileSystemNode? left, FileSystemNode? right, string algorithm, double ratio = 1.0)
+        private ComparisonStatus DetermineStatus(FileSystemNode? left, FileSystemNode? right, ComparisonAlgorithm algorithm, double ratio = 1.0)
         {
             Log.Debug($"Use {algorithm} to compare {left?.FullPath} and {right?.FullPath}");
             if (left == null && right != null)
@@ -304,14 +305,14 @@ namespace dCompare.Compare
                 {
                     switch (algorithm)
                     {
-                        case "ModifiedDateAndSize":
+                        case ComparisonAlgorithm.ModifiedDateAndSize:
                             if (left.Size == right.Size &&
                                 Math.Abs((left.ModifiedTime - right.ModifiedTime).TotalSeconds) < 1)
                                 return ComparisonStatus.Identical;
                             else
                                 return ComparisonStatus.Modified;
 
-                        case "FullContents":
+                        case ComparisonAlgorithm.FullContents:
                             try
                             {
                                 byte[] leftContent = File.ReadAllBytes(left.FullPath);
@@ -327,7 +328,7 @@ namespace dCompare.Compare
                                 return ComparisonStatus.Conflict;
                             }
 
-                        case "MD5":
+                        case ComparisonAlgorithm.MD5:
                             try
                             {
                                 using var leftStream = File.OpenRead(left.FullPath);
@@ -344,7 +345,7 @@ namespace dCompare.Compare
                                 Log.Error($"Error computing MD5: {ex.Message}");
                                 return ComparisonStatus.Conflict;
                             }
-                        case "xxHash64":
+                        case ComparisonAlgorithm.xxHash64:
                             try
                             {
                                 using var leftStream = File.OpenRead(left.FullPath);

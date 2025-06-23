@@ -52,7 +52,7 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Algorithm:" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Default Algorithm:" VerticalAlignment="Center" Margin="0,5,10,5"/>
                     <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,5"
                               ItemsSource="{Binding AvailableAlgorithms}"
                               SelectedValue="{Binding Algorithm}"

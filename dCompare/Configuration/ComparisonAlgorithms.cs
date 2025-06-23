@@ -2,14 +2,22 @@
 
 namespace dCompare.Configuration
 {
+    public enum ComparisonAlgorithm
+    {
+        ModifiedDateAndSize,
+        xxHash64,
+        MD5,
+        FullContents
+    }
+
     public static class ComparisonAlgorithms
     {
-        public static readonly List<KeyValuePair<string, string>> AvailableAlgorithms = new List<KeyValuePair<string, string>>
-        {
-            new KeyValuePair<string, string>("Quick (Modified Date and Size)", "ModifiedDateAndSize"),
-            new KeyValuePair<string, string>("Hash (xxHash64)", "xxHash64"),
-            new KeyValuePair<string, string>("Hash (MD5)", "MD5"),
-            new KeyValuePair<string, string>("Full Contents)", "FullContents")
-        };
+        public static readonly List<KeyValuePair<string, ComparisonAlgorithm>> AvailableAlgorithms =
+        [
+            new KeyValuePair<string, ComparisonAlgorithm>("Quick (Modified Date and Size)", ComparisonAlgorithm.ModifiedDateAndSize),
+            new KeyValuePair<string, ComparisonAlgorithm>("Hash (xxHash64)", ComparisonAlgorithm.xxHash64),
+            new KeyValuePair<string, ComparisonAlgorithm>("Hash (MD5)", ComparisonAlgorithm.MD5),
+            new KeyValuePair<string, ComparisonAlgorithm>("Full Contents)", ComparisonAlgorithm.FullContents)
+        ];
     }
 }

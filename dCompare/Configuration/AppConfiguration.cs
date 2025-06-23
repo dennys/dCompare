@@ -7,7 +7,7 @@ namespace dCompare.Configuration
     {
         public string Left { get; set; } = string.Empty;
         public string Right { get; set; } = string.Empty;
-        public string Algorithm { get; set; } = "ModifiedDateAndSize";
+        public ComparisonAlgorithm Algorithm { get; set; } = ComparisonAlgorithm.ModifiedDateAndSize;
     }
 
     /// <summary>
@@ -53,7 +53,7 @@ namespace dCompare.Configuration
     public class CompareOptions
     {
         [JsonPropertyName("Algorithm")]
-        public string Algorithm { get; set; } = "ModifiedDateAndSize";
+        public ComparisonAlgorithm Algorithm { get; set; } = ComparisonAlgorithm.ModifiedDateAndSize;
 
         [JsonPropertyName("DoubleClick")]
         public string DoubleClick { get; set; } = "view";

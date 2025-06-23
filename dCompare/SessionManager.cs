@@ -258,7 +258,8 @@ namespace dCompare
                         };
                         ((UcCompare)newTab.Content).LeftPathBox.Text = session.Value.Left;
                         ((UcCompare)newTab.Content).RightPathBox.Text = session.Value.Right;
-                        ((UcCompare)newTab.Content).SelectedAlgorithm = session.Value.Algorithm ?? "ModifiedDateAndSize";
+                        //((UcCompare)newTab.Content).SelectedAlgorithm = session.Value.Algorithm ?? ComparisonAlgorithm.ModifiedDateAndSize;
+                        ((UcCompare)newTab.Content).SelectedAlgorithm = session.Value.Algorithm;
                         _tabControl.Items.Add(newTab);
                         _tabIdMap[tabName] = Guid.NewGuid().ToString();
 
