@@ -57,7 +57,7 @@ namespace dCompare.Compare
             }
             return flatNodes;
         }
-        public void LoadChildren(TreeNode parentNode, List<DirectoryComparer.ComparisonItem> cachedResults, string leftRoot, string rightRoot)
+        public void LoadChildren(TreeNode parentNode, List<DirectoryComparer.ComparisonItem> cachedResults, string leftRoot, string rightRoot, HashSet<string> previouslyExpandedPaths = null)
         {
             if (cachedResults == null) return;
 
@@ -65,19 +65,39 @@ namespace dCompare.Compare
                 .Where(item =>
                 {
                     string relativePath = GetRelativePath(item, leftRoot, rightRoot);
-                    return !string.IsNullOrEmpty(relativePath) &&
-                           relativePath.StartsWith(parentNode.RelativePath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
-                           relativePath.Count(c => c == Path.DirectorySeparatorChar) == parentNode.Depth + 1;
+                    if (string.IsNullOrEmpty(relativePath)) return false;
+
+                    string parentPath = Path.GetDirectoryName(relativePath);
+                    // Handle root-level items, whose parent path is empty
+                    if (parentPath == null) parentPath = "";
+
+                    return parentPath.Equals(parentNode.RelativePath, StringComparison.OrdinalIgnoreCase);
                 })
                 .ToList();
 
+            if (!childItems.Any()) return;
+
             var childNodes = CreateFlatTreeStructure(childItems, leftRoot, rightRoot, parentNode.Depth + 1);
             int insertIndex = _treeNodes.IndexOf(parentNode) + 1;
+            if (insertIndex == 0) return; // Parent not found in collection
 
-            foreach (var child in childNodes)
+            foreach (var child in childNodes.OrderBy(c => c.Name))
             {
-                child.IsExpanded = false;
                 _treeNodes.Insert(insertIndex++, child);
+
+                // *** If the child path was previously expanded, expand it and load its children recursively. ***
+                if (child.IsDirectory && previouslyExpandedPaths != null && previouslyExpandedPaths.Contains(child.RelativePath))
+                {
+                    child.IsExpanded = true;
+                    // The recursive call will now insert this child's children at the correct, updated index.
+                    LoadChildren(child, cachedResults, leftRoot, rightRoot, previouslyExpandedPaths);
+                    // We need to update the insertIndex to account for the grandchildren that were just added.
+                    insertIndex = _treeNodes.IndexOf(child) + 1 + childNodes.Count(n => n.RelativePath.StartsWith(child.RelativePath + Path.DirectorySeparatorChar));
+                }
+                else
+                {
+                    child.IsExpanded = false;
+                }
             }
         }
 
@@ -100,34 +120,32 @@ namespace dCompare.Compare
         /// <param name="updatedCachedResults">The entire, updated list of comparison results.</param>
         /// <param name="leftRoot">The root path of the left side comparison.</param>
         /// <param name="rightRoot">The root path of the right side comparison.</param>
-        public void RefreshSubtreeInView(TreeNode nodeToRefresh, List<DirectoryComparer.ComparisonItem> updatedCachedResults, string leftRoot, string rightRoot)
+        public void RefreshSubtreeInView(TreeNode nodeToRefresh, List<DirectoryComparer.ComparisonItem> updatedCachedResults, string leftRoot, string rightRoot, HashSet<string> previouslyExpandedPaths)
         {
-            // Remember the node's current state
+            // Remember the node's own current state, as it might have just been changed by the user.
             bool wasExpanded = nodeToRefresh.IsExpanded;
 
-            // Find the new comparison data for the node being refreshed.
             var newRootComparisonItem = updatedCachedResults.FirstOrDefault(item =>
                 GetRelativePath(item, leftRoot, rightRoot).Equals(nodeToRefresh.RelativePath, StringComparison.OrdinalIgnoreCase));
 
             // First, remove all currently visible children from the UI.
             RemoveChildren(nodeToRefresh);
 
-            // If the new data is null, it means the directory was deleted from both sides. Remove it from the UI.
             if (newRootComparisonItem == null)
             {
                 _treeNodes.Remove(nodeToRefresh);
                 return;
             }
 
-            // Update the properties of the existing TreeNode in-place.
-            // This will trigger data binding and update the single row in the ListView.
             SetNodeDetails(nodeToRefresh, newRootComparisonItem, leftRoot, rightRoot);
 
-            // If the node was expanded before, re-load its children to show the new state.
+            // Restore the node's expanded state.
             nodeToRefresh.IsExpanded = wasExpanded;
+
+            // If the node should be expanded, reload its children, restoring their states as well.
             if (nodeToRefresh.IsExpanded)
             {
-                LoadChildren(nodeToRefresh, updatedCachedResults, leftRoot, rightRoot);
+                LoadChildren(nodeToRefresh, updatedCachedResults, leftRoot, rightRoot, previouslyExpandedPaths);
             }
         }
         public TreeNode FindOrCreateNode(string relativePath, bool isDirectory)
