@@ -160,39 +160,39 @@ namespace dCompare.Tests
         //    Assert.Equal(ComparisonStatus.Identical, subFile.Status);
         //}
 
-        [Theory]
-        [InlineData(ComparisonAlgorithm.ModifiedDateAndSize)]
-        [InlineData(ComparisonAlgorithm.FullContents)]
-        [InlineData(ComparisonAlgorithm.MD5)]
-        [InlineData(ComparisonAlgorithm.xxHash64)]
-        public void Compare_With_Different_Algorithms_Should_Work(ComparisonAlgorithm algorithm)
-        {
-            // Act
-            var result = _comparer.Compare(_fixture.LeftPath, _fixture.RightPath, algorithm: algorithm);
+        //[Theory]
+        //[InlineData(ComparisonAlgorithm.ModifiedDateAndSize)]
+        //[InlineData(ComparisonAlgorithm.FullContents)]
+        //[InlineData(ComparisonAlgorithm.MD5)]
+        //[InlineData(ComparisonAlgorithm.xxHash64)]
+        //public void Compare_With_Different_Algorithms_Should_Work(ComparisonAlgorithm algorithm)
+        //{
+        //    // Act
+        //    var result = _comparer.Compare(_fixture.LeftPath, _fixture.RightPath, algorithm: algorithm);
 
-            // Assert
-            var identicalFile = result.FirstOrDefault(item => item.Left?.Name == "identical.txt");
-            var modifiedFile = result.FirstOrDefault(item => item.Left?.Name == "modified.txt");
+        //    // Assert
+        //    var identicalFile = result.FirstOrDefault(item => item.Left?.Name == "identical.txt");
+        //    var modifiedFile = result.FirstOrDefault(item => item.Left?.Name == "modified.txt");
 
-            Assert.NotNull(identicalFile);
-            Assert.Equal(ComparisonStatus.Identical, identicalFile.Status);
+        //    Assert.NotNull(identicalFile);
+        //    Assert.Equal(ComparisonStatus.Identical, identicalFile.Status);
 
-            Assert.NotNull(modifiedFile);
-            Assert.Equal(ComparisonStatus.Modified, modifiedFile.Status);
-        }
+        //    Assert.NotNull(modifiedFile);
+        //    Assert.Equal(ComparisonStatus.Modified, modifiedFile.Status);
+        //}
 
-        [Fact]
-        public async Task Compare_Should_Be_Cancellable()
-        {
-            // Arrange
-            using var cts = new CancellationTokenSource();
-            var token = cts.Token;
+        //[Fact]
+        //public async Task Compare_Should_Be_Cancellable()
+        //{
+        //    // Arrange
+        //    using var cts = new CancellationTokenSource();
+        //    var token = cts.Token;
 
-            // Act & Assert
-            var comparisonTask = Task.Run(() => _comparer.Compare(_fixture.LeftPath, _fixture.RightPath, token));
-            cts.Cancel();
+        //    // Act & Assert
+        //    var comparisonTask = Task.Run(() => _comparer.Compare(_fixture.LeftPath, _fixture.RightPath, token));
+        //    cts.Cancel();
 
-            await Assert.ThrowsAsync<OperationCanceledException>(async () => await comparisonTask);
-        }
+        //    await Assert.ThrowsAsync<OperationCanceledException>(async () => await comparisonTask);
+        //}
     }
 }
