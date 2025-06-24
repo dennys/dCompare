@@ -83,8 +83,8 @@ jobs:
     # Execute all unit tests in the solution
     - name: Execute unit tests
       #run: dotnet test
-      run: dotnet test --no-build --collect:"XPlat Code Coverage" \
-            /p:ExcludeByFile="**/Properties/*;**/*.Designer.cs;**/*.g.cs;**/*.resx"
+      run: dotnet test --no-build --collect:"XPlat Code Coverage"
+#            /p:ExcludeByFile="**/Properties/*;**/*.Designer.cs;**/*.g.cs;**/*.resx"
 
     - name: Install ReportGenerator
       run: dotnet tool install -g dotnet-reportgenerator-globaltool
