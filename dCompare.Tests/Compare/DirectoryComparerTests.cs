@@ -147,7 +147,7 @@ namespace dCompare.Tests
             Assert.Equal(ComparisonStatus.Identical, subFile.Status);
         }
 
-        [Fact]
+        //[Fact]
         //public void CompareSubtree_Should_Compare_Only_Specified_Subdirectory()
         //{
         //    // Act
