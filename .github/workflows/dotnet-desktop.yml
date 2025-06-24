@@ -100,7 +100,7 @@ jobs:
     - name: Codecov v5
       uses: codecov/codecov-action@v5
       with:
-        fail_ci_if_error: true # optional (default = false)
+        fail_ci_if_error: false # optional (default = false)
         files: ./coverage1.xml,./coverage2.xml # optional
         flags: unittests # optional
         name: codecov-umbrella # optional
@@ -110,8 +110,8 @@ jobs:
     - name: Upload to Codecov
       uses: codecov/codecov-action@v4
       with:
+        fail_ci_if_error: false
         files: '**/coverage.cobertura.xml'
-        fail_ci_if_error: true
 
     # Restore the application to populate the obj folder with RuntimeIdentifiers
     - name: Restore the application
