@@ -107,11 +107,11 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         verbose: true # optional (default = false)
 
-    - name: Upload to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        fail_ci_if_error: false
-        files: '**/coverage.cobertura.xml'
+    #- name: Upload to Codecov
+    #  uses: codecov/codecov-action@v4
+    #  with:
+    #    fail_ci_if_error: false
+    #    files: '**/coverage.cobertura.xml'
 
     # Restore the application to populate the obj folder with RuntimeIdentifiers
     - name: Restore the application
