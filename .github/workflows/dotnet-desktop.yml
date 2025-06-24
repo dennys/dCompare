@@ -88,11 +88,7 @@ jobs:
 
     - name: Generate coverage reports (HTML + JSONSummary)
       run: |
-        reportgenerator ^
-            -reports:**/coverage.cobertura.xml  ^
-            -targetdir:coveragereport  ^
-            -reporttypes:Html;JsonSummary  ^
-            -filefilters:"-**/Properties/*;-**/*.Designer.cs;-**/*.g.cs;-**/*.resx"
+        reportgenerator -reports:**/coverage.cobertura.xml -targetdir:coveragereport -reporttypes:Html;JsonSummary -filefilters:"-**/Properties/*"
 
     - name: Upload HTML coverage report
       uses: actions/upload-artifact@v4
