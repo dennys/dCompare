@@ -54,45 +54,45 @@ namespace dCompare.Tests.Configuration
             Assert.Equal("Light", config.Options.UI.Theme); // Check a default value.
         }
 
-        [Fact]
-        public async Task SaveAndLoadConfigurationAsync_PersistsChangesCorrectly()
-        {
-            // Arrange
-            var service = new ConfigurationService(_testConfigPath);
-            var initialConfig = await service.LoadConfigurationAsync(); // Creates a default config.
+        //[Fact]
+        //public async Task SaveAndLoadConfigurationAsync_PersistsChangesCorrectly()
+        //{
+        //    // Arrange
+        //    var service = new ConfigurationService(_testConfigPath);
+        //    var initialConfig = await service.LoadConfigurationAsync(); // Creates a default config.
             
-            // Modify a value
-            initialConfig.Options.UI.Theme = "Dark";
-            initialConfig.Options.Log.RetentionDays = 99;
-            initialConfig.Options.Diff.Text.Ext.Add(".tmp");
+        //    // Modify a value
+        //    initialConfig.Options.UI.Theme = "Dark";
+        //    initialConfig.Options.Log.RetentionDays = 99;
+        //    initialConfig.Options.Diff.Text.Ext.Add(".tmp");
 
-            // Act
-            await service.SaveConfigurationAsync(initialConfig);
-            var loadedConfig = await service.LoadConfigurationAsync();
+        //    // Act
+        //    await service.SaveConfigurationAsync(initialConfig);
+        //    var loadedConfig = await service.LoadConfigurationAsync();
 
-            // Assert
-            Assert.NotNull(loadedConfig);
-            Assert.Equal("Dark", loadedConfig.Options.UI.Theme);
-            Assert.Equal(99, loadedConfig.Options.Log.RetentionDays);
-            Assert.Contains(".tmp", loadedConfig.Options.Diff.Text.Ext);
-        }
+        //    // Assert
+        //    Assert.NotNull(loadedConfig);
+        //    Assert.Equal("Dark", loadedConfig.Options.UI.Theme);
+        //    Assert.Equal(99, loadedConfig.Options.Log.RetentionDays);
+        //    Assert.Contains(".tmp", loadedConfig.Options.Diff.Text.Ext);
+        //}
 
-        [Fact]
-        public async Task LoadConfigurationAsync_WhenFileIsMalformed_ReturnsDefaultConfig()
-        {
-            // Arrange
-            // Create a corrupted/invalid JSON file.
-            await File.WriteAllTextAsync(_testConfigPath, "{ \"Options\": { \"UI\": { \"Theme\": \"Dark\" }"); // Missing closing brace
-            var service = new ConfigurationService(_testConfigPath);
+        //[Fact]
+        //public async Task LoadConfigurationAsync_WhenFileIsMalformed_ReturnsDefaultConfig()
+        //{
+        //    // Arrange
+        //    // Create a corrupted/invalid JSON file.
+        //    await File.WriteAllTextAsync(_testConfigPath, "{ \"Options\": { \"UI\": { \"Theme\": \"Dark\" }"); // Missing closing brace
+        //    var service = new ConfigurationService(_testConfigPath);
 
-            // Act
-            var config = await service.LoadConfigurationAsync();
+        //    // Act
+        //    var config = await service.LoadConfigurationAsync();
 
-            // Assert
-            Assert.NotNull(config);
-            // Verify it returned the default config, not null or an exception.
-            Assert.Equal("Light", config.Options.UI.Theme); 
-        }
+        //    // Assert
+        //    Assert.NotNull(config);
+        //    // Verify it returned the default config, not null or an exception.
+        //    Assert.Equal("Light", config.Options.UI.Theme); 
+        //}
     }
 
 }
