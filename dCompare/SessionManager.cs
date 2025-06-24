@@ -189,7 +189,7 @@ namespace dCompare
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error saving session: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error saving session: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 updateStatus($"Error saving session: {ex.Message}");
             }
         }
@@ -281,7 +281,7 @@ namespace dCompare
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading session: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error loading session: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 updateStatus?.Invoke($"Error loading session: {ex.Message}");
             }
         }

@@ -194,7 +194,7 @@ namespace dCompare.Diff
         {
             if (string.IsNullOrEmpty(LeftPath) || string.IsNullOrEmpty(RightPath))
             {
-                MessageBox.Show("Both file paths must be set to refresh the comparison.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Both file paths must be set to refresh the comparison.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -213,7 +213,7 @@ namespace dCompare.Diff
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to refresh comparison: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Failed to refresh comparison: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
