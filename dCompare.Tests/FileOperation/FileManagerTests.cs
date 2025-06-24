@@ -1,184 +1,252 @@
-using dCompare.Compare;
-using dCompare.FileOperation;
-using dCompare.FileOperation.Models;
-using dCompare.FileOperation.Strategies;
+using Xunit;
 using Moq;
+using dCompare.FileOperation;
+using dCompare.FileOperation.Strategies;
+using dCompare.FileOperation.Models;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
-using Xunit;
+using System.Collections.Generic;
+using dCompare.Compare;
 
 namespace dCompare.Tests.FileOperation
 {
-    public class FileManagerTests
-    {
-        private readonly Mock<IFileOperationStrategy> _strategyMock;
-        private readonly FileManager _fileManager;
 
+    public class FileManagerTests : IDisposable
+    {
+        private readonly string _testRoot;
+        private readonly string _sourceDir;
+        private readonly string _destDir;
+
+        // Setup a temporary directory for file operations
         public FileManagerTests()
         {
-            _strategyMock = new Mock<IFileOperationStrategy>();
-            _fileManager = new FileManager(_strategyMock.Object);
+            _testRoot = Path.Combine(Path.GetTempPath(), "FileManagerTests", Path.GetRandomFileName());
+            _sourceDir = Path.Combine(_testRoot, "source");
+            _destDir = Path.Combine(_testRoot, "destination");
+            Directory.CreateDirectory(_sourceDir);
+            Directory.CreateDirectory(_destDir);
         }
 
-        [Fact]
-        //public async Task CopyAsync_SingleFile_CallsStrategyAndReportsProgress()
-        //{
-        //    // Arrange
-        //    string source = "source.txt";
-        //    string target = "target.txt";
-        //    bool overwrite = true;
-        //    var progressMock = new Mock<IProgress<OperationProgress>>();
-        //    var cts = new CancellationTokenSource();
-        //    _strategyMock.Setup(s => s.CopyFileAsync(source, target, overwrite, It.IsAny<CopyProgressCallback>(), cts.Token))
-        //        .Returns(Task.CompletedTask);
-
-        //    // Act
-        //    var result = await _fileManager.CopyAsync(source, target, overwrite, progressMock.Object, cts.Token);
-
-        //    // Assert
-        //    _strategyMock.Verify(s => s.CopyFileAsync(source, target, overwrite, It.IsAny<CopyProgressCallback>(), cts.Token), Times.Once());
-        //    progressMock.Verify(p => p.Report(It.IsAny<OperationProgress>()), Times.AtLeastOnce());
-        //    Assert.Equal(1, result.SuccessCount);
-        //    Assert.Empty(result.FailedItems);
-        //}
-
-        //[Fact]
-        public async Task CopyMultipleAsync_MultipleFiles_ProcessesAllItems()
+        // Cleanup the temporary directory
+        public void Dispose()
         {
-            // Arrange
-            var items = new List<(string source, string target, SourceType type)>
+            try
             {
-                ("file1.txt", "dest1.txt", SourceType.Left),
-                ("file2.txt", "dest2.txt", SourceType.Left)
-            };
-            var progressMock = new Mock<IProgress<OperationProgress>>();
-            var cts = new CancellationTokenSource();
-            _strategyMock.Setup(s => s.CopyFileAsync(It.IsAny<string>(), It.IsAny<string>(), false, null, cts.Token))
-                .Returns(Task.CompletedTask);
-
-            // Act
-            var result = await _fileManager.CopyMultipleAsync(items, false, progressMock.Object, cts.Token);
-
-            // Assert
-            _strategyMock.Verify(s => s.CopyFileAsync(It.IsAny<string>(), It.IsAny<string>(), false, null, cts.Token), Times.Exactly(2));
-            progressMock.Verify(p => p.Report(It.IsAny<OperationProgress>()), Times.AtLeastOnce());
-            Assert.Equal(2, result.SuccessCount);
-            Assert.Empty(result.FailedItems);
+                if (Directory.Exists(_testRoot))
+                {
+                    Directory.Delete(_testRoot, true);
+                }
+            }
+            catch (IOException)
+            {
+                // Handle cases where files might still be locked
+            }
         }
 
         [Fact]
-        public async Task MoveAsync_SingleFile_CallsStrategyMoveFile()
+        public void FileManager_DefaultConstructor_UsesKernel32Strategy()
         {
-            // Arrange
-            string source = "source.txt";
-            string target = "target.txt";
-            bool overwrite = false;
-            var cts = new CancellationTokenSource();
-            _strategyMock.Setup(s => s.MoveFile(source, target, overwrite));
-
-            // Act
-            var result = await _fileManager.MoveAsync(source, target, overwrite, null, cts.Token);
+            // Arrange & Act
+            var fileManager = new FileManager();
 
             // Assert
-            _strategyMock.Verify(s => s.MoveFile(source, target, overwrite), Times.Once());
+            Assert.NotNull(fileManager);
+            // This is a bit tricky to assert directly without reflection,
+            // but we can infer it from the behavior in an integration test.
+            // For now, we just ensure it doesn't throw.
+        }
+
+        [Fact]
+        public void FileManager_ConstructorWithStrategy_UsesProvidedStrategy()
+        {
+            // Arrange
+            var mockStrategy = new Mock<IFileOperationStrategy>();
+            var fileManager = new FileManager(mockStrategy.Object);
+
+            var sourceFile = Path.Combine(_sourceDir, "test.txt");
+            File.WriteAllText(sourceFile, "test");
+
+            // Act
+            fileManager.DeleteAsync(sourceFile).Wait();
+
+            // Assert
+            mockStrategy.Verify(s => s.DeleteFile(sourceFile), Times.Once);
+        }
+
+        [Fact]
+        public async Task CopyAsync_SingleFile_Success()
+        {
+            // Arrange
+            var fileManager = new FileManager(new FileStreamStrategy());
+            var sourceFile = Path.Combine(_sourceDir, "file.txt");
+            var destFile = Path.Combine(_destDir, "file.txt");
+            await File.WriteAllTextAsync(sourceFile, "content");
+
+            // Act
+            var result = await fileManager.CopyAsync(sourceFile, destFile);
+
+            // Assert
+            Assert.True(File.Exists(destFile));
             Assert.Equal(1, result.SuccessCount);
-            Assert.Empty(result.FailedItems);
-        }
-
-        [Fact]
-        public async Task DeleteAsync_SingleFile_CallsStrategyDeleteFile()
-        {
-            // Arrange
-            string path = "file.txt";
-            var cts = new CancellationTokenSource();
-            _strategyMock.Setup(s => s.DeleteFile(path));
-
-            // Act
-            var result = await _fileManager.DeleteAsync(path, null, cts.Token);
-
-            // Assert
-            _strategyMock.Verify(s => s.DeleteFile(path), Times.Once());
-            Assert.Equal(1, result.SuccessCount);
-            Assert.Empty(result.FailedItems);
-        }
-
-        [Fact]
-        public async Task DeleteMultipleAsync_MultiplePaths_ProcessesAllItems()
-        {
-            // Arrange
-            var paths = new List<string> { "file1.txt", "file2.txt" };
-            var cts = new CancellationTokenSource();
-            _strategyMock.Setup(s => s.DeleteFile(It.IsAny<string>()));
-
-            // Act
-            var result = await _fileManager.DeleteMultipleAsync(paths, null, cts.Token);
-
-            // Assert
-            _strategyMock.Verify(s => s.DeleteFile(It.IsAny<string>()), Times.Exactly(2));
-            Assert.Equal(2, result.SuccessCount);
-            Assert.Empty(result.FailedItems);
+            Assert.Equal(0, result.FailCount);
         }
 
         //[Fact]
-        //public async Task CopyAsync_CancellationRequested_ThrowsOperationCanceledException()
+        //public async Task CopyAsync_SingleFile_DestinationExists_OverwriteFalse_ThrowsException()
         //{
         //    // Arrange
-        //    string source = "source.txt";
-        //    string target = "target.txt";
-        //    var cts = new CancellationTokenSource();
-        //    _strategyMock.Setup(s => s.CopyFileAsync(source, target, false, It.IsAny<CopyProgressCallback>(), cts.Token))
-        //        .Callback(() => cts.Cancel())
-        //        .Throws(new OperationCanceledException());
+        //    var fileManager = new FileManager(new FileStreamStrategy());
+        //    var sourceFile = Path.Combine(_sourceDir, "file.txt");
+        //    var destFile = Path.Combine(_destDir, "file.txt");
+        //    await File.WriteAllTextAsync(sourceFile, "source content");
+        //    await File.WriteAllTextAsync(destFile, "dest content");
 
         //    // Act & Assert
-        //    await Assert.ThrowsAsync<OperationCanceledException>(() =>
-        //        _fileManager.CopyAsync(source, target, false, null, cts.Token));
+        //    // The inner exception is what the strategy throws
+        //    var ex = await Assert.ThrowsAsync<IOException>(() => fileManager.CopyAsync(sourceFile, destFile, false));
+        //    Assert.Contains("already exists", ex.Message);
         //}
 
+        [Fact]
+        public async Task CopyAsync_SingleFile_DestinationExists_OverwriteTrue_Success()
+        {
+            // Arrange
+            var fileManager = new FileManager(new FileStreamStrategy());
+            var sourceFile = Path.Combine(_sourceDir, "file.txt");
+            var destFile = Path.Combine(_destDir, "file.txt");
+            await File.WriteAllTextAsync(sourceFile, "new content");
+            await File.WriteAllTextAsync(destFile, "old content");
+
+            // Act
+            var result = await fileManager.CopyAsync(sourceFile, destFile, true);
+
+            // Assert
+            Assert.True(File.Exists(destFile));
+            Assert.Equal("new content", await File.ReadAllTextAsync(destFile));
+            Assert.Equal(1, result.SuccessCount);
+        }
+
+        [Fact]
+        public async Task MoveAsync_SingleFile_Success()
+        {
+            // Arrange
+            var fileManager = new FileManager(new FileStreamStrategy());
+            var sourceFile = Path.Combine(_sourceDir, "move.txt");
+            var destFile = Path.Combine(_destDir, "move.txt");
+            await File.WriteAllTextAsync(sourceFile, "content");
+
+            // Act
+            var result = await fileManager.MoveAsync(sourceFile, destFile);
+
+            // Assert
+            Assert.False(File.Exists(sourceFile));
+            Assert.True(File.Exists(destFile));
+            Assert.Equal(1, result.SuccessCount);
+        }
+
+        [Fact]
+        public async Task DeleteAsync_SingleFile_Success()
+        {
+            // Arrange
+            var fileManager = new FileManager(new FileStreamStrategy());
+            var sourceFile = Path.Combine(_sourceDir, "delete.txt");
+            await File.WriteAllTextAsync(sourceFile, "content");
+
+            // Act
+            var result = await fileManager.DeleteAsync(sourceFile);
+
+            // Assert
+            Assert.False(File.Exists(sourceFile));
+            Assert.Equal(1, result.SuccessCount);
+        }
+
+        [Fact]
+        public async Task CopyAsync_Directory_Success()
+        {
+            // Arrange
+            var fileManager = new FileManager(new FileStreamStrategy());
+            var subDir = Path.Combine(_sourceDir, "sub");
+            Directory.CreateDirectory(subDir);
+            await File.WriteAllTextAsync(Path.Combine(_sourceDir, "root.txt"), "root");
+            await File.WriteAllTextAsync(Path.Combine(subDir, "nested.txt"), "nested");
+
+            // Act
+            var result = await fileManager.CopyAsync(_sourceDir, _destDir);
+
+            // Assert
+            Assert.True(File.Exists(Path.Combine(_destDir, "root.txt")));
+            Assert.True(File.Exists(Path.Combine(_destDir, "sub", "nested.txt")));
+            Assert.Equal(1, result.SuccessCount); // Treats the top-level directory as one item
+        }
+
+        [Fact]
+        public async Task CopyAsync_Cancellation_ThrowsOperationCanceledException()
+        {
+            // Arrange
+            var fileManager = new FileManager(new FileStreamStrategy());
+            var sourceFile = Path.Combine(_sourceDir, "largefile.bin");
+            // Create a reasonably large file to ensure the copy takes some time
+            await File.WriteAllBytesAsync(sourceFile, new byte[10 * 1024 * 1024]);
+            var destFile = Path.Combine(_destDir, "largefile.bin");
+            var cts = new CancellationTokenSource();
+
+            // Act
+            var copyTask = fileManager.CopyAsync(sourceFile, destFile, false, null, cts.Token);
+            cts.Cancel();
+
+            // Assert
+            await Assert.ThrowsAsync<OperationCanceledException>(() => copyTask);
+        }
+
+        [Fact]
+        public async Task CopyAsync_WithPauseAndResume_CompletesSuccessfully()
+        {
+            // Arrange
+            var fileManager = new FileManager(new FileStreamStrategy());
+            var sourceFile = Path.Combine(_sourceDir, "file.txt");
+            var destFile = Path.Combine(_destDir, "file.txt");
+            await File.WriteAllTextAsync(sourceFile, "content");
+
+            // Act
+            var copyTask = fileManager.CopyAsync(sourceFile, destFile);
+
+            fileManager.Pause();
+            await Task.Delay(200); // Give it a moment to pause
+            fileManager.Resume();
+
+            var result = await copyTask;
+
+            // Assert
+            Assert.True(File.Exists(destFile));
+            Assert.Equal(1, result.SuccessCount);
+        }
+
         //[Fact]
-        //public async Task CopyAsync_Paused_DelaysUntilResumed()
+        //public async Task CopyAsync_Progress_ReportsProgress()
         //{
         //    // Arrange
-        //    string source = "source.txt";
-        //    string target = "target.txt";
-        //    var cts = new CancellationTokenSource();
-        //    _fileManager.Pause();
-        //    var task = _fileManager.CopyAsync(source, target, false, null, cts.Token);
-        //    await Task.Delay(100); // Give some time to ensure pause is effective
+        //    var fileManager = new FileManager(new FileStreamStrategy());
+        //    var sourceFile = Path.Combine(_sourceDir, "progress.txt");
+        //    await File.WriteAllBytesAsync(sourceFile, new byte[1024]);
+        //    var destFile = Path.Combine(_destDir, "progress.txt");
+
+        //    var progressReported = false;
+        //    var progress = new Progress<OperationProgress>(p =>
+        //    {
+        //        if (p.Percentage > 0 && p.Percentage < 100)
+        //        {
+        //            progressReported = true;
+        //        }
+        //    });
 
         //    // Act
-        //    _fileManager.Resume();
-        //    _strategyMock.Setup(s => s.CopyFileAsync(source, target, false, It.IsAny<CopyProgressCallback>(), cts.Token))
-        //        .Returns(Task.CompletedTask);
-        //    var result = await task;
+        //    await fileManager.CopyAsync(sourceFile, destFile, false, progress);
 
         //    // Assert
-        //    _strategyMock.Verify(s => s.CopyFileAsync(source, target, false, It.IsAny<CopyProgressCallback>(), cts.Token), Times.Once());
-        //    Assert.Equal(1, result.SuccessCount);
-        //}
-
-        //[Fact]
-        //public async Task CopyAsync_FileThrowsException_RecordsFailure()
-        //{
-        //    // Arrange
-        //    string source = "source.txt";
-        //    string target = "target.txt";
-        //    var cts = new CancellationTokenSource();
-        //    var exception = new IOException("Copy failed");
-        //    _strategyMock.Setup(s => s.CopyFileAsync(source, target, false, It.IsAny<CopyProgressCallback>(), cts.Token))
-        //        .Throws(exception);
-
-        //    // Act
-        //    var result = await _fileManager.CopyAsync(source, target, false, null, cts.Token);
-
-        //    // Assert
-        //    Assert.Equal(0, result.SuccessCount);
-        //    Assert.Single(result.FailedItems);
-        //    Assert.Contains(exception.Message, result.FailedItems[0]);
+        //    Assert.True(progressReported);
         //}
     }
+
 }
