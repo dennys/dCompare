@@ -78,7 +78,7 @@ jobs:
       uses: microsoft/setup-msbuild@v2
 
     - name: debug
-      run: pwd; ls -l;
+      run: pwd; dir;
 
     # Execute all unit tests in the solution
     - name: Execute unit tests
