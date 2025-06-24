@@ -91,11 +91,11 @@ jobs:
       run: |
         reportgenerator -reports:**/coverage.cobertura.xml -targetdir:coveragereport -reporttypes:Html,JsonSummary -filefilters:"-**/Properties/*"
 
-    - name: Upload HTML coverage report
-      uses: actions/upload-artifact@v4
-      with:
-          name: coverage-report
-          path: coveragereport/
+    #- name: Upload HTML coverage report
+    #  uses: actions/upload-artifact@v4
+    #  with:
+    #      name: coverage-report
+    #      path: coveragereport/
 
     - name: Codecov v5
       uses: codecov/codecov-action@v5
