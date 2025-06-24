@@ -85,7 +85,8 @@ jobs:
 
     - name: Install ReportGenerator
       run: dotnet tool install -g dotnet-reportgenerator-globaltool
-
+      timeout-minutes: 10
+  
     - name: Generate coverage reports (HTML + JSONSummary)
       run: |
         reportgenerator -reports:**/coverage.cobertura.xml -targetdir:coveragereport -reporttypes:Html;JsonSummary -filefilters:"-**/Properties/*"
