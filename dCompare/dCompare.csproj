@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <Content Include="Resources\app.ico" />
+    <Content Include="*.resx" />
   </ItemGroup>
 
 
@@ -32,6 +33,23 @@
   <ItemGroup>
     <Resource Include="Resources\Icons\*.ico" />
   </ItemGroup>
-  
+
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
 
 </Project>

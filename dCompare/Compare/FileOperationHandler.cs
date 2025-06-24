@@ -124,7 +124,7 @@ namespace dCompare.Compare
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error copying items: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error copying items: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -160,7 +160,7 @@ namespace dCompare.Compare
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error copying items: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error copying items: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -196,7 +196,7 @@ namespace dCompare.Compare
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error moving items: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error moving items: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -232,7 +232,7 @@ namespace dCompare.Compare
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error moving items: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error moving items: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -247,7 +247,7 @@ namespace dCompare.Compare
             string sourcePath = isLeft ? selectedItem.LeftNode?.FullPath : selectedItem.RightNode?.FullPath;
             if (string.IsNullOrEmpty(sourcePath))
             {
-                MessageBox.Show("No valid file or directory path selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("No valid file or directory path selected.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -278,7 +278,7 @@ namespace dCompare.Compare
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error renaming: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error renaming: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

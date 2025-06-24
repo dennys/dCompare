@@ -11,6 +11,7 @@ using Serilog.Extensions.Logging;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.IO.Abstractions;
 using System.Reflection;
@@ -98,7 +99,7 @@ namespace dCompare
             Loaded += MainWindow_Loaded; // Subscribe to Loaded event
         }
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
-        {
+        {          
             try
             {
                 AppConfiguration config = await _configService.LoadConfigurationAsync();
@@ -108,8 +109,7 @@ namespace dCompare
                 }
                 else
                 {
-                    Log.Information("Application ready.");
-                    UpdateStatus("Application ready");
+                    UpdateStatus(Properties.Resources.StatusAppReady);
                 }
             }
             catch (Exception ex)
@@ -197,7 +197,7 @@ namespace dCompare
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error adding tab: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"{Properties.Resources.ErrorAddTab}: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -208,7 +208,7 @@ namespace dCompare
                 TabItem tabToClose = tab ?? tabControl.SelectedItem as TabItem;
                 if (tabToClose == null || !tabControl.Items.Contains(tabToClose))
                 {
-                    UpdateStatus("No tab to close");
+                    UpdateStatus(Properties.Resources.StatusNoTabToClose);
                     return;
                 }
 
@@ -218,8 +218,8 @@ namespace dCompare
                 if (showConfirmation)
                 {
                     MessageBoxResult result = MessageBox.Show(
-                        $"Are you sure you want to close '{tabToClose.Header}'?",
-                        "Confirm Close",
+                        $"{Properties.Resources.ConfirmCloseTab} '{tabToClose.Header}'?",
+                        Properties.Resources.ConfirmCloseTitle,
                         MessageBoxButton.YesNo,
                         MessageBoxImage.Question);
 
@@ -254,8 +254,7 @@ namespace dCompare
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error closing tab: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                Log.Error("Error closing tab: {Message}", ex.Message);
+                MessageBox.Show($"{Properties.Resources.ErrorCloseTab}: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -289,7 +288,7 @@ namespace dCompare
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error opening options: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error opening options: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -312,17 +311,17 @@ namespace dCompare
                     }
                     else
                     {
-                        MessageBox.Show($"{methodName} method not found", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show($"{methodName} method not found", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
                 else
                 {
-                    MessageBox.Show("No active tab to execute action", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("No active tab to execute action", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error executing {methodName}: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error executing {methodName}: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -464,18 +463,6 @@ namespace dCompare
 
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
-            if (tabControl.Items.Count > 1)
-            {
-                MessageBoxResult result = MessageBox.Show(
-                    "Are you sure you want to exit? All tabs will be closed.",
-                    "Confirm Exit",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question);
-
-                if (result != MessageBoxResult.Yes)
-                    return;
-            }
-
             Close();
         }
 
@@ -494,8 +481,8 @@ namespace dCompare
         private string PromptForTabName(string currentName)
         {
             return Microsoft.VisualBasic.Interaction.InputBox(
-                "Enter new tab name:",
-                "Rename Tab",
+                Properties.Resources.RenameTabPrompt,
+                Properties.Resources.RenameTabTitle,
                 currentName);
         }
 
@@ -513,8 +500,8 @@ namespace dCompare
             if (tabControl.Items.Count > 1)
             {
                 MessageBoxResult result = MessageBox.Show(
-                    "Are you sure you want to exit? All tabs will be closed.",
-                    "Confirm Exit",
+                    Properties.Resources.ConfirmExit,
+                    Properties.Resources.ConfirmExitTitle,
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Question);
 
@@ -568,7 +555,7 @@ namespace dCompare
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Command execution failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Command execution failed: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

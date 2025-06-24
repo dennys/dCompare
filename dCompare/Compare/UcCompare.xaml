@@ -6,6 +6,7 @@
              xmlns:local="clr-namespace:dCompare.Compare"
              xmlns:config="clr-namespace:dCompare.Configuration"
              mc:Ignorable="d" 
+             xmlns:resx="clr-namespace:dCompare.Properties"
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <local:DepthToMarginConverter x:Key="DepthToMarginConverter"/>
@@ -31,33 +32,35 @@
         </Style>
         <!-- Left Side Context Menu -->
         <ContextMenu x:Key="LeftContextMenu">
-            <MenuItem Header="Compare contents" Click="ContextMenu_CompareContents_Click" Tag="{Binding}"/>
+            <MenuItem Header="{x:Static resx:Resources.CompareContentsMenu}" Click="ContextMenu_CompareContents_Click" Tag="{Binding}"/>
             <Separator/>
-            <MenuItem Header="Copy to Right" Click="ContextMenu_CopyToRight_Click" Tag="{Binding}" Icon="{StaticResource CopyToRightIcon}"/>
-            <MenuItem Header="Move to Right" Click="ContextMenu_MoveToRight_Click" Tag="{Binding}"/>
-            <MenuItem Header="Delete..." Click="ContextMenu_DeleteLeft_Click" Tag="{Binding}" Icon="{StaticResource DeleteIcon}"/>
-            <MenuItem Header="Rename" Click="ContextMenu_Rename_Click" Tag="{Binding}" InputGestureText="F2"/>
+            <MenuItem Header="{x:Static resx:Resources.CopyToRightMenu}" Click="ContextMenu_CopyToRight_Click" Tag="{Binding}" Icon="{StaticResource CopyToRightIcon}"/>
+            <MenuItem Header="{x:Static resx:Resources.MoveToRightMenu}" Click="ContextMenu_MoveToRight_Click" Tag="{Binding}"/>
+            <MenuItem Header="{x:Static resx:Resources.DeleteMenu}" Click="ContextMenu_DeleteLeft_Click" Tag="{Binding}" Icon="{StaticResource DeleteIcon}"/>
+            <MenuItem Header="{x:Static resx:Resources.RenameMenu}" Click="ContextMenu_Rename_Click" Tag="{Binding}" InputGestureText="F2"/>
             <Separator/>
-            <MenuItem Header="Open File Location" Click="ContextMenu_OpenLeftLocation_Click" Tag="{Binding}"/>
+            <MenuItem Header="{x:Static resx:Resources.OpenFileLocationMenu}" Click="ContextMenu_OpenLeftLocation_Click" Tag="{Binding}"/>
             <Separator/>
-            <MenuItem Header="Copy Pathname to clipboard" Click="ContextMenu_CopyPathnames_Click" Tag="{Binding}"/>
-            <MenuItem Header="Copy Filenames to clipboard" Click="ContextMenu_CopyFilenames_Click" Tag="{Binding}"/>
+            <MenuItem Header="{x:Static resx:Resources.CopyPathnameToClipboardMenu}" Click="ContextMenu_CopyPathnames_Click" Tag="{Binding}"/>
+            <MenuItem Header="{x:Static resx:Resources.CopyFilenameToClipboardMenu}" Click="ContextMenu_CopyFilenames_Click" Tag="{Binding}"/>
             <Separator/>
-            <MenuItem Header="Properties" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
+            <MenuItem Header="{x:Static resx:Resources.PropertiesMenu}" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
         </ContextMenu>
         <!-- Right Side Context Menu -->
         <ContextMenu x:Key="RightContextMenu">
-            <MenuItem Header="Compare contents" Click="ContextMenu_CompareContents_Click" Tag="{Binding}"/>
+            <MenuItem Header="{x:Static resx:Resources.CompareContentsMenu}" Click="ContextMenu_CompareContents_Click" Tag="{Binding}"/>
             <Separator/>
-            <MenuItem Header="Copy to Left" Click="ContextMenu_CopyToLeft_Click" Tag="{Binding}" Icon="{StaticResource CopyToLeftIcon}"/>
-            <MenuItem Header="Move to Left" Click="ContextMenu_MoveToLeft_Click" Tag="{Binding}"/>
-            <MenuItem Header="Delete..." Click="ContextMenu_DeleteRight_Click" Tag="{Binding}" Icon="{StaticResource DeleteIcon}"/>
-            <MenuItem Header="Rename" Click="ContextMenu_Rename_Click" Tag="{Binding}" InputGestureText="F2"/>
+            <MenuItem Header="{x:Static resx:Resources.CopyToLeftMenu}" Click="ContextMenu_CopyToLeft_Click" Tag="{Binding}" Icon="{StaticResource CopyToLeftIcon}"/>
+            <MenuItem Header="{x:Static resx:Resources.MoveToLeftMenu}" Click="ContextMenu_MoveToLeft_Click" Tag="{Binding}"/>
+            <MenuItem Header="{x:Static resx:Resources.DeleteMenu}" Click="ContextMenu_DeleteRight_Click" Tag="{Binding}" Icon="{StaticResource DeleteIcon}"/>
+            <MenuItem Header="{x:Static resx:Resources.RenameMenu}" Click="ContextMenu_Rename_Click" Tag="{Binding}" InputGestureText="F2"/>
             <Separator/>
-            <MenuItem Header="Copy Pathname to clipboard" Click="ContextMenu_CopyPathnames_Click" Tag="{Binding}"/>
-            <MenuItem Header="Copy Filenames to clipboard" Click="ContextMenu_CopyFilenames_Click" Tag="{Binding}"/>
+            <MenuItem Header="{x:Static resx:Resources.OpenFileLocationMenu}" Click="ContextMenu_OpenLeftLocation_Click" Tag="{Binding}"/>
             <Separator/>
-            <MenuItem Header="Properties" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
+            <MenuItem Header="{x:Static resx:Resources.CopyPathnameToClipboardMenu}" Click="ContextMenu_CopyPathnames_Click" Tag="{Binding}"/>
+            <MenuItem Header="{x:Static resx:Resources.CopyFilenameToClipboardMenu}" Click="ContextMenu_CopyFilenames_Click" Tag="{Binding}"/>
+            <Separator/>
+            <MenuItem Header="{x:Static resx:Resources.PropertiesMenu}" Click="ContextMenu_Properties_Click" Tag="{Binding}"/>
         </ContextMenu>
     </UserControl.Resources>
     <Grid>
@@ -81,7 +84,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <Label Grid.Column="0" Content="Left Path:" VerticalAlignment="Center"/>
+                <Label Grid.Column="0" Content="{x:Static resx:Resources.LeftPath}" VerticalAlignment="Center"/>
                 <TextBox Grid.Column="1" Name="LeftPathBox" Margin="5,0" VerticalAlignment="Center" 
                          IsReadOnly="False" IsEnabled="True" TextWrapping="NoWrap"/>
                 <Button Grid.Column="2" Name="BrowseLeftButton" Click="Browse_Click" Margin="2,0" 
@@ -93,8 +96,8 @@
                 <ComboBox Grid.Column="3" Name="AlgorithmComboBox" Margin="5,0" VerticalAlignment="Center" Width="200"
                           ItemsSource="{x:Static config:ComparisonAlgorithms.AvailableAlgorithms}"
                           DisplayMemberPath="Key" SelectedValuePath="Value" SelectedValue="{Binding SelectedAlgorithm}"/>
-                
-                <Label Grid.Column="5" Content="Right Path:" VerticalAlignment="Center"/>
+
+                <Label Grid.Column="5" Content="{x:Static resx:Resources.RightPath}" VerticalAlignment="Center"/>
                 <TextBox Grid.Column="6" Name="RightPathBox" Margin="5,0" VerticalAlignment="Center" 
                          IsReadOnly="False" IsEnabled="True" TextWrapping="NoWrap"/>
                 <Button Grid.Column="7" Name="BrowseRightButton" Click="Browse_Click" Margin="2,0" 

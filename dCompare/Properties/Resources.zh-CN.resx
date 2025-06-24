@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppTitle" xml:space="preserve">
+    <value>dCompare</value>
+  </data>
+  <data name="FileMenu" xml:space="preserve">
+    <value>档案(_F)</value>
+  </data>
+  <data name="AddTab" xml:space="preserve">
+    <value>新增标签</value>
+  </data>
+  <data name="Exit" xml:space="preserve">
+    <value>离开(_X)</value>
+  </data>
+  <data name="EditMenu" xml:space="preserve">
+    <value>_编辑</value>
+  </data>
+  <data name="RenameTab" xml:space="preserve">
+    <value>_重新命名标签</value>
+  </data>
+  <data name="CloseTab" xml:space="preserve">
+    <value>关闭标签</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>语言</value>
+  </data>
+  <data name="English" xml:space="preserve">
+    <value>英文</value>
+  </data>
+  <data name="TraditionalChinese" xml:space="preserve">
+    <value>繁体中文</value>
+  </data>
+  <data name="HelpMenu" xml:space="preserve">
+    <value>帮助(_H)</value>
+  </data>
+  <data name="About" xml:space="preserve">
+    <value>_关于</value>
+  </data>
+  <data name="StatusReady" xml:space="preserve">
+    <value>准备就绪</value>
+  </data>
+  <data name="TabCount" xml:space="preserve">
+    <value>标签数: {0}</value>
+  </data>
+  <data name="AddTabTooltip" xml:space="preserve">
+    <value>新增标签 (Ctrl+N)</value>
+  </data>
+  <data name="CloseTabTooltip" xml:space="preserve">
+    <value>关闭目前标签 (Ctrl+W)</value>
+  </data>
+  <data name="RenameTabTooltip" xml:space="preserve">
+    <value>重新命名目前标签</value>
+  </data>
+  <data name="AboutTooltip" xml:space="preserve">
+    <value>关于</value>
+  </data>
+  <data name="CloseTabButtonTooltip" xml:space="preserve">
+    <value>关闭标签</value>
+  </data>
+  <data name="AboutMessage" xml:space="preserve">
+    <value>dCompare - Chrome风格标签界面\n\n功能:\n• Chrome风格标签，带悬停效果\n• 拖放标签重新排序\n• 键盘快捷键 (Ctrl+N, Ctrl+W)\n• 标签关闭确认\n• 统一配色方案\n• 多语言支持\n\n键盘快捷键:\nCtrl+N: 新增标签\nCtrl+W: 关闭目前标签</value>
+  </data>
+  <data name="AboutTitle" xml:space="preserve">
+    <value>关于 dCompare</value>
+  </data>
+  <data name="ConfirmCloseTab" xml:space="preserve">
+    <value>您确定要关闭 '{0}' 吗？</value>
+  </data>
+  <data name="ConfirmCloseTitle" xml:space="preserve">
+    <value>确认关闭</value>
+  </data>
+  <data name="ConfirmExit" xml:space="preserve">
+    <value>您确定要退出吗？所有标签将被关闭。</value>
+  </data>
+  <data name="ConfirmExitTitle" xml:space="preserve">
+    <value>确认退出</value>
+  </data>
+  <data name="RenameTabPrompt" xml:space="preserve">
+    <value>输入新标签名称:</value>
+  </data>
+  <data name="RenameTabTitle" xml:space="preserve">
+    <value>重新命名标签</value>
+  </data>
+  <data name="ErrorAddTab" xml:space="preserve">
+    <value>新增标签错误: {0}</value>
+  </data>
+  <data name="ErrorCloseTab" xml:space="preserve">
+    <value>关闭标签错误: {0}</value>
+  </data>
+  <data name="ErrorTitle" xml:space="preserve">
+    <value>错误</value>
+  </data>
+  <data name="StatusNoTabToClose" xml:space="preserve">
+    <value>无标签可关闭</value>
+  </data>
+  <data name="StatusAddTab" xml:space="preserve">
+    <value>已新增标签: {0}</value>
+  </data>
+  <data name="StatusCloseTab" xml:space="preserve">
+    <value>已关闭标签: {0}</value>
+  </data>
+  <data name="StatusRenameTab" xml:space="preserve">
+    <value>标签重新命名为: {0}</value>
+  </data>
+  <data name="StatusDragFailed" xml:space="preserve">
+    <value>拖曳操作失败: {0}</value>
+  </data>
+  <data name="StatusDropFailed" xml:space="preserve">
+    <value>放置操作失败: {0}</value>
+  </data>
+  <data name="StatusMoveTab" xml:space="preserve">
+    <value>标签 '{0}' 已移动至位置 {1}</value>
+  </data>
+  <data name="StatusAppReady" xml:space="preserve">
+    <value>应用程序准备就绪</value>
+  </data>
+  <data name="CloseButton" xml:space="preserve">
+    <value>qq</value>
+  </data>
+  <data name="RecentSessionsMenu" xml:space="preserve">
+    <value>最近的工作階段... </value>
+  </data>
+  <data name="ActionMenu" xml:space="preserve">
+    <value>动作(_A)</value>
+  </data>
+  <data name="ViewMenu" xml:space="preserve">
+    <value>检视(_V)</value>
+  </data>
+  <data name="SaveSessionMenu" xml:space="preserve">
+    <value>儲存工作階段</value>
+  </data>
+  <data name="LoadSessionMenu" xml:space="preserve">
+    <value>載入工作階段 </value>
+  </data>
+  <data name="ClearRecentSessionsMenu" xml:space="preserve">
+    <value>清除最近的工作階段</value>
+  </data>
+  <data name="ExpandAllMenu" xml:space="preserve">
+    <value>展開所有子資料夾</value>
+  </data>
+  <data name="CollapseAllMenu" xml:space="preserve">
+    <value>收合所有子資料夾</value>
+  </data>
+  <data name="ShowAllMenu" xml:space="preserve">
+    <value>顯示全部項目</value>
+  </data>
+  <data name="ShowIdenticalMenu" xml:space="preserve">
+    <value>顯示相同項目</value>
+  </data>
+  <data name="ShowLeftUniqueMenu" xml:space="preserve">
+    <value>顯示左側獨有項目</value>
+  </data>
+  <data name="ShowRightUniqueMenu" xml:space="preserve">
+    <value>顯示右側獨有項目</value>
+  </data>
+  <data name="ShowDifferentMenu" xml:space="preserve">
+    <value>顯示差異項目</value>
+  </data>
+  <data name="OptionsMenu" xml:space="preserve">
+    <value>選項</value>
+  </data>
+  <data name="CopyToLeftMenu" xml:space="preserve">
+    <value>複製到左側目錄</value>
+  </data>
+  <data name="CopyToRightMenu" xml:space="preserve">
+    <value>複製到右側目錄</value>
+  </data>
+  <data name="CompareDirectoryMenu" xml:space="preserve">
+    <value>比較目錄</value>
+  </data>
+  <data name="CompareContentsMenu" xml:space="preserve">
+    <value>比較檔案內容...</value>
+  </data>
+  <data name="MoveToLeftMenu" xml:space="preserve">
+    <value>移動到左側目錄</value>
+  </data>
+  <data name="MoveToRightMenu" xml:space="preserve">
+    <value>移動到右側目錄</value>
+  </data>
+  <data name="RenameMenu" xml:space="preserve">
+    <value>改名...</value>
+  </data>
+  <data name="DeleteMenu" xml:space="preserve">
+    <value>刪除...</value>
+  </data>
+  <data name="CopyPathnameToClipboardMenu" xml:space="preserve">
+    <value>將路徑名複製到剪貼簿</value>
+  </data>
+  <data name="CopyFilenameToClipboardMenu" xml:space="preserve">
+    <value>將檔案名複製到剪貼簿</value>
+  </data>
+  <data name="PropertiesMenu" xml:space="preserve">
+    <value>內容</value>
+  </data>
+  <data name="OpenFileLocationMenu" xml:space="preserve">
+    <value>開啟檔案位置</value>
+  </data>
+  <data name="LeftPath" xml:space="preserve">
+    <value>左側目錄</value>
+  </data>
+  <data name="RightPath" xml:space="preserve">
+    <value>右側目錄</value>
+  </data>
+  <data name="Theme" xml:space="preserve">
+    <value>主題</value>
+  </data>
+  <data name="RestartRequiredHint" xml:space="preserve">
+    <value>變更將在重新啟動應用程式後生效。</value>
+  </data>
+  <data name="UISettings" xml:space="preserve">
+    <value>使用者介面設定</value>
+  </data>
+</root>

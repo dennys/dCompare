@@ -119,7 +119,7 @@ namespace dCompare.Compare
             catch (Exception ex)
             {
                 Log.Error("Failed to load configuration: {Message}", ex.Message);
-                MessageBox.Show($"Error loading configuration: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error loading configuration: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 SelectedAlgorithm = ComparisonAlgorithm.ModifiedDateAndSize; // Fallback default
             }
         }
@@ -370,7 +370,7 @@ namespace dCompare.Compare
         {
             if (selectedItem.IsDirectory)
             {
-                MessageBox.Show("Cannot compare contents of directories.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Cannot compare contents of directories.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -379,7 +379,7 @@ namespace dCompare.Compare
 
             if (string.IsNullOrEmpty(leftPath) && string.IsNullOrEmpty(rightPath))
             {
-                MessageBox.Show("No valid file paths to compare.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("No valid file paths to compare.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -402,12 +402,12 @@ namespace dCompare.Compare
                 }
                 else
                 {
-                    MessageBox.Show("Unsupported file type for comparison.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("Unsupported file type for comparison.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error comparing files: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error comparing files: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -424,7 +424,7 @@ namespace dCompare.Compare
             TabControl tabControl = LogicalTreeHelperExtensions.FindParent<TabControl>(parentTab);
             if (tabControl == null)
             {
-                MessageBox.Show("Cannot find parent TabControl.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Cannot find parent TabControl.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -445,7 +445,7 @@ namespace dCompare.Compare
             }
             else
             {
-                MessageBox.Show("Unsupported file type for comparison.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Unsupported file type for comparison.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -735,7 +735,7 @@ namespace dCompare.Compare
             }
             else
             {
-                MessageBox.Show("No valid paths selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("No valid paths selected.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -760,7 +760,7 @@ namespace dCompare.Compare
             }
             else
             {
-                MessageBox.Show("No valid files selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("No valid files selected.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
