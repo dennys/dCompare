@@ -40,7 +40,7 @@ name: .NET Core Desktop
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "test" ]
   pull_request:
     branches: [ "master" ]
 
@@ -79,7 +79,32 @@ jobs:
 
     # Execute all unit tests in the solution
     - name: Execute unit tests
-      run: dotnet test
+      #run: dotnet test
+      run: dotnet test --no-build --collect:"XPlat Code Coverage" \
+            /p:ExcludeByFile="**/Properties/*;**/*.Designer.cs;**/*.g.cs;**/*.resx"
+
+    - name: Install ReportGenerator
+      run: dotnet tool install -g dotnet-reportgenerator-globaltool
+
+    - name: Generate coverage reports (HTML + JSONSummary)
+      run: |
+        reportgenerator \
+            -reports:**/coverage.cobertura.xml \
+            -targetdir:coveragereport \
+            -reporttypes:Html;JsonSummary \
+            -filefilters:"-**/Properties/*;-**/*.Designer.cs;-**/*.g.cs;-**/*.resx"
+
+    - name: Upload HTML coverage report
+      uses: actions/upload-artifact@v4
+      with:
+          name: coverage-report
+          path: coveragereport/
+
+    - name: Upload to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        files: '**/coverage.cobertura.xml'
+        fail_ci_if_error: true
 
     # Restore the application to populate the obj folder with RuntimeIdentifiers
     - name: Restore the application
