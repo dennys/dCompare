@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dCompare", "dCompare\dCompa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dCompare.Tests", "dCompare.Tests\dCompare.Tests.csproj", "{A83C0098-FB6A-4FF8-959E-FF2BAFEB7729}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "i18n", "i18n\i18n.csproj", "{06C862A3-8CB7-4BE6-9DAC-F4FD66FC4EE8}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,14 +31,6 @@ Global
 		{A83C0098-FB6A-4FF8-959E-FF2BAFEB7729}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A83C0098-FB6A-4FF8-959E-FF2BAFEB7729}.Release|x64.ActiveCfg = Release|x64
 		{A83C0098-FB6A-4FF8-959E-FF2BAFEB7729}.Release|x64.Build.0 = Release|x64
-		{06C862A3-8CB7-4BE6-9DAC-F4FD66FC4EE8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{06C862A3-8CB7-4BE6-9DAC-F4FD66FC4EE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{06C862A3-8CB7-4BE6-9DAC-F4FD66FC4EE8}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{06C862A3-8CB7-4BE6-9DAC-F4FD66FC4EE8}.Debug|x64.Build.0 = Debug|Any CPU
-		{06C862A3-8CB7-4BE6-9DAC-F4FD66FC4EE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{06C862A3-8CB7-4BE6-9DAC-F4FD66FC4EE8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{06C862A3-8CB7-4BE6-9DAC-F4FD66FC4EE8}.Release|x64.ActiveCfg = Release|Any CPU
-		{06C862A3-8CB7-4BE6-9DAC-F4FD66FC4EE8}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
