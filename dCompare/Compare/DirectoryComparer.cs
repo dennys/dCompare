@@ -21,7 +21,7 @@ namespace dCompare.Compare
         }
 
         public List<ComparisonItem> Compare(string leftPath, string rightPath, CancellationToken cancellationToken = default,
-            Action<double> progressCallback = null, ComparisonAlgorithm algorithm = ComparisonAlgorithm.ModifiedDateAndSize)
+    Action<double>? progressCallback = null, ComparisonAlgorithm algorithm = ComparisonAlgorithm.ModifiedDateAndSize)
         {
             Log.Information("Start to compare.");
             Log.Information("Start to build left path.");
@@ -159,7 +159,7 @@ namespace dCompare.Compare
             return count;
         }
 
-        private FileSystemNode BuildTree(string path, int depth, CancellationToken cancellationToken, Action onDirectoryProcessed = null)
+        private FileSystemNode BuildTree(string path, int depth, CancellationToken cancellationToken, Action? onDirectoryProcessed = null)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
