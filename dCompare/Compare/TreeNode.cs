@@ -6,29 +6,29 @@ namespace dCompare.Compare
 {
     public class TreeNode : INotifyPropertyChanged
     {
-        private string _name;
-        private string _relativePath;
+        private string _name = string.Empty;
+        private string _relativePath = string.Empty;
         private bool _isDirectory;
         private int _depth;
         private bool _isExpanded;
-        private FileSystemNode _leftNode;
-        private FileSystemNode _rightNode;
+        private FileSystemNode? _leftNode;
+        private FileSystemNode? _rightNode;
         private ComparisonStatus _status;
-        private string _leftName;
-        private string _rightName;
-        private string _leftSize;
-        private string _rightSize;
-        private string _leftDate;
-        private string _rightDate;
-        private string _statusSymbol;
+        private string? _leftName;
+        private string? _rightName;
+        private string? _leftSize;
+        private string? _rightSize;
+        private string? _leftDate;
+        private string? _rightDate;
+        private string? _statusSymbol;
 
-        public string Name
+        public required string Name
         {
             get => _name;
             set { _name = value; OnPropertyChanged(nameof(Name)); }
         }
 
-        public string RelativePath
+        public required string RelativePath
         {
             get => _relativePath;
             set { _relativePath = value; OnPropertyChanged(nameof(RelativePath)); }
@@ -52,13 +52,13 @@ namespace dCompare.Compare
             set { _isExpanded = value; OnPropertyChanged(nameof(IsExpanded)); }
         }
 
-        public FileSystemNode LeftNode
+        public FileSystemNode? LeftNode
         {
             get => _leftNode;
             set { _leftNode = value; OnPropertyChanged(nameof(LeftNode)); }
         }
 
-        public FileSystemNode RightNode
+        public FileSystemNode? RightNode
         {
             get => _rightNode;
             set { _rightNode = value; OnPropertyChanged(nameof(RightNode)); }
@@ -70,49 +70,49 @@ namespace dCompare.Compare
             set { _status = value; OnPropertyChanged(nameof(Status)); }
         }
 
-        public string LeftName
+        public string? LeftName
         {
             get => GetDisplayName(_leftName);
             set { _leftName = value; OnPropertyChanged(nameof(LeftName)); OnPropertyChanged(nameof(LeftDisplayName)); }
         }
 
-        public string RightName
+        public string? RightName
         {
             get => GetDisplayName(_rightName);
             set { _rightName = value; OnPropertyChanged(nameof(RightName)); OnPropertyChanged(nameof(RightDisplayName)); }
         }
-        private string GetDisplayName(string name)
+        private string GetDisplayName(string? name)
         {
             if (string.IsNullOrEmpty(name)) return "";
             string icon = IsDirectory ? "📁 " : "📄 ";
             return icon + name; // Indentation handled by DepthToMarginConverter
         }
 
-        public string LeftSize
+        public string? LeftSize
         {
             get => _leftSize;
             set { _leftSize = value; OnPropertyChanged(nameof(LeftSize)); }
         }
 
-        public string RightSize
+        public string? RightSize
         {
             get => _rightSize;
             set { _rightSize = value; OnPropertyChanged(nameof(RightSize)); }
         }
 
-        public string LeftDate
+        public string? LeftDate
         {
             get => _leftDate;
             set { _leftDate = value; OnPropertyChanged(nameof(LeftDate)); }
         }
 
-        public string RightDate
+        public string? RightDate
         {
             get => _rightDate;
             set { _rightDate = value; OnPropertyChanged(nameof(RightDate)); }
         }
 
-        public string StatusSymbol
+        public string? StatusSymbol
         {
             get => _statusSymbol;
             set { _statusSymbol = value; OnPropertyChanged(nameof(StatusSymbol)); }
