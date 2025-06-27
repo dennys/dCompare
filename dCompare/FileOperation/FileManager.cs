@@ -12,7 +12,7 @@ namespace dCompare.FileOperation
     /// <summary>
     /// Manages background file and directory operations with progress and cancellation.
     /// </summary>
-    public class FileManager
+    public class FileManager : IFileManager
     {
         private readonly IFileOperationStrategy _strategy;
         private bool _isPaused;

@@ -13,14 +13,14 @@ namespace dCompare.Compare
 {
     public class FileOperationHandler
     {
-        private readonly FileManager _fileManager;
+        private readonly IFileManager _fileManager;
         private readonly TreeNodeManager _treeNodeManager;
         private FileOperationWindow _fileOperationWindow;
 
         // Dictionary to track active jobs and their completion sources.
         private readonly Dictionary<string, TaskCompletionSource<bool>> _activeJobs = new Dictionary<string, TaskCompletionSource<bool>>();
 
-        public FileOperationHandler(FileManager fileManager, TreeNodeManager treeNodeManager)
+        public FileOperationHandler(IFileManager fileManager, TreeNodeManager treeNodeManager)
         {
             _fileManager = fileManager;
             _treeNodeManager = treeNodeManager;

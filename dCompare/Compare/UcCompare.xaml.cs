@@ -52,10 +52,13 @@ namespace dCompare.Compare
         private ComparisonAlgorithm _selectedAlgorithm;
 
         private FileOperationWindow _fileOperationWindow;
-        private readonly FileManager _fileManager = new FileManager(new Kernel32FileCopyStrategy());
+        //private readonly FileManager _fileManager = new FileManager(new Kernel32FileCopyStrategy());
         private readonly TreeNodeManager _treeNodeManager;
         private readonly FileOperationHandler _fileOperationHandler;
-        private readonly ConfigurationService _configService;
+        //private readonly ConfigurationService _configService;
+
+        private readonly IFileManager _fileManager;
+        private readonly IConfigurationService _configService;
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName)
@@ -94,13 +97,18 @@ namespace dCompare.Compare
             }
         }
 
-        public UcCompare()
+        public UcCompare(IFileManager fileManager, IConfigurationService configService)
         {
             InitializeComponent();
-            ConfigurationService configService = new ConfigurationService();
-            _configService = configService ?? new ConfigurationService("dcompare.json"); // Fallback to default
+
+            _fileManager = fileManager;
+            _configService = configService;
+
+            //ConfigurationService configService = new ConfigurationService();
+            //_configService = configService ?? new ConfigurationService("dcompare.json"); // Fallback to default
             _treeNodeManager = new TreeNodeManager(_treeNodes);
             _fileOperationHandler = new FileOperationHandler(_fileManager, _treeNodeManager);
+
             ResultListView.ItemsSource = _treeNodes;
             ResultListView.AddHandler(GridViewColumnHeader.ClickEvent, new RoutedEventHandler(GridViewColumnHeaderClickedHandler));
             DataContext = this;
