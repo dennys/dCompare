@@ -2,7 +2,7 @@ name: .NET Core Desktop
 
 on:
   push:
-    branches: [ "dev" ]
+    branches: [ "dependency_injection" ]
   pull_request:
     branches: [ "master" ]
 
