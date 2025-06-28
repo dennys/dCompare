@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:dCompare"
         xmlns:compare="clr-namespace:dCompare.Compare"
+        xmlns:fileop="clr-namespace:dCompare.FileOperation"
         xmlns:resx="clr-namespace:dCompare.Properties"
         Title="dCompare" Height="600" Width="1000"
         Background="#F0F0F0">
@@ -311,24 +312,39 @@
             </Button>
         </ToolBar>
 
-        <!-- Status Bar -->
-        <StatusBar DockPanel.Dock="Bottom" Background="#F8F8F8" BorderBrush="#C0C0C0" BorderThickness="0,1,0,0">
-            <StatusBarItem>
-                <TextBlock x:Name="StatusText" Text="Ready" Foreground="#333333"/>
-            </StatusBarItem>
-            <StatusBarItem HorizontalAlignment="Right">
-                <TextBlock x:Name="TabCountText" Text="{Binding ElementName=tabControl, Path=Items.Count, StringFormat='Tabs: {0}'}" Foreground="#666666"/>
-            </StatusBarItem>
-        </StatusBar>
+        <!-- Main Content -->
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-        <!-- Main TabControl -->
-        <TabControl x:Name="tabControl" 
-                    Style="{StaticResource ChromeTabControlStyle}"
-                    ItemContainerStyle="{StaticResource ChromeTabStyle}"
-                    PreviewMouseMove="TabControl_PreviewMouseMove">
-            <TabItem Header="Welcome">
-                <!-- <compare:UcCompare/> -->
-            </TabItem>
-        </TabControl>
+            <!-- Main TabControl -->
+            <TabControl x:Name="tabControl" 
+                        Grid.Row="0"
+                        Style="{StaticResource ChromeTabControlStyle}"
+                        ItemContainerStyle="{StaticResource ChromeTabStyle}"
+                        PreviewMouseMove="TabControl_PreviewMouseMove">
+                <TabItem Header="Welcome">
+                    <!-- <compare:UcCompare/> -->
+                </TabItem>
+            </TabControl>
+
+            <!-- File Operation Control -->
+            <Expander x:Name="FileOperationExpander" Grid.Row="1" Header="File Operations" IsExpanded="False">
+                <fileop:FileOperationControl x:Name="fileOperationControl"/>
+            </Expander>
+
+            <!-- Status Bar -->
+            <StatusBar Grid.Row="2" Background="#F8F8F8" BorderBrush="#C0C0C0" BorderThickness="0,1,0,0">
+                <StatusBarItem>
+                    <TextBlock x:Name="StatusText" Text="Ready" Foreground="#333333"/>
+                </StatusBarItem>
+                <StatusBarItem HorizontalAlignment="Right">
+                    <TextBlock x:Name="TabCountText" Text="{Binding ElementName=tabControl, Path=Items.Count, StringFormat='Tabs: {0}'}" Foreground="#666666"/>
+                </StatusBarItem>
+            </StatusBar>
+        </Grid>
     </DockPanel>
 </Window>

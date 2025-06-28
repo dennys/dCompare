@@ -1,4 +1,5 @@
 ﻿using dCompare.FileOperation;
+using dCompare.FileOperation.Models;
 using Microsoft.VisualBasic;
 using Serilog;
 using System;
@@ -8,6 +9,8 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace dCompare.Compare
 {
@@ -15,6 +18,7 @@ namespace dCompare.Compare
     {
         private readonly IFileManager _fileManager;
         private readonly TreeNodeManager _treeNodeManager;
+        private FileOperationControl _fileOperationControl;
         private FileOperationWindow _fileOperationWindow;
 
         // Dictionary to track active jobs and their completion sources.
@@ -24,6 +28,66 @@ namespace dCompare.Compare
         {
             _fileManager = fileManager;
             _treeNodeManager = treeNodeManager;
+            FindFileOperationControl();
+        }
+
+        // Helper method to find FileOperationControl in the visual tree
+        private FileOperationControl FindFileOperationControl()
+        {
+            if (_fileOperationControl != null)
+            {
+                return _fileOperationControl; // Return cached instance
+            }
+
+            var mainWindow = Application.Current.MainWindow;
+            if (mainWindow == null)
+            {
+                Log.Warning("MainWindow is not available.");
+                return null;
+            }
+
+            // Find FileOperationControl by x:Name or type
+            _fileOperationControl = mainWindow.FindName("fileOperationControl") as FileOperationControl;
+            if (_fileOperationControl == null)
+            {
+                // Fallback: Traverse the visual tree to find FileOperationControl
+                _fileOperationControl = FindVisualChild<FileOperationControl>(mainWindow);
+            }
+
+            if (_fileOperationControl != null)
+            {
+                // Subscribe to the event if not already subscribed
+                _fileOperationControl.OnTransferStatusChanged += FileOperation_OnTransferStatusChanged;
+            }
+            else
+            {
+                Log.Error("Could not find FileOperationControl in the visual tree.");
+            }
+
+            return _fileOperationControl;
+        }
+
+        // Helper method to traverse the visual tree
+        private static T FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+        {
+            if (parent == null)
+                return null;
+
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                if (child is T found)
+                {
+                    return found;
+                }
+
+                var result = FindVisualChild<T>(child);
+                if (result != null)
+                {
+                    return result;
+                }
+            }
+            return null;
         }
 
         public List<(string Source, string TargetPath, SourceType Type)> GetItemsForTransfer(List<TreeNode> selectedItems, bool toLeft, string targetRoot, string sourceRoot)
@@ -67,24 +131,74 @@ namespace dCompare.Compare
 
             try
             {
-                OpenFileOperations();
-                if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
+                if (_fileOperationControl == null)
                 {
-                    // Get the list of job IDs for the operations we are starting
-                    var jobIds = _fileOperationWindow.DeleteMultiple(items);
-
-                    // Create a list of tasks to wait for
-                    var tasks = new List<Task>();
-                    foreach (var jobId in jobIds)
-                    {
-                        var tcs = new TaskCompletionSource<bool>();
-                        _activeJobs[jobId] = tcs;
-                        tasks.Add(tcs.Task);
-                    }
-
-                    // Asynchronously wait for all the file operation tasks to complete
-                    await Task.WhenAll(tasks);
+                    throw new Exception("FileOperationControl is not available.");
                 }
+
+                var jobIds = new List<string>();
+                var tasks = new List<Task>();
+
+                foreach (var item in items)
+                {
+                    string jobId = Guid.NewGuid().ToString();
+                    jobIds.Add(jobId);
+                    var tcs = new TaskCompletionSource<bool>();
+                    _activeJobs[jobId] = tcs;
+
+                    var transfer = new FileTransfer
+                    {
+                        JobId = jobId,
+                        Operation = "Delete",
+                        Source = item.Path,
+                        Target = string.Empty,
+                        Status = "Queued",
+                        FileSize = 0,
+                        SourceType = item.Type,
+                        StartTime = DateTime.Now
+                    };
+
+                    Application.Current.Dispatcher.Invoke(() => _fileOperationControl.QueuedTransfers.Add(transfer));
+
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        try
+                        {
+                            var progress = new Progress<OperationProgress>(p =>
+                            {
+                                Application.Current.Dispatcher.Invoke(() =>
+                                {
+                                    transfer.Progress = p.Percentage / 100.0;
+                                    transfer.Status = $"Deleting ({p.Percentage:P0})";
+                                });
+                            });
+
+                            OperationResult result = await _fileManager.DeleteAsync(item.Path, progress);
+                            if (result.SuccessCount > 0)
+                            {
+                                Application.Current.Dispatcher.Invoke(() =>
+                                {
+                                    _fileOperationControl.CompleteTransfer(transfer, true, "Operation completed successfully.");
+                                });
+                                tcs.TrySetResult(true);
+                            }
+                            else
+                            {
+                                throw new Exception(string.Join("; ", result.FailedItems));
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Application.Current.Dispatcher.Invoke(() =>
+                            {
+                                _fileOperationControl.CompleteTransfer(transfer, false, ex.Message);
+                            });
+                            tcs.TrySetException(ex);
+                        }
+                    }));
+                }
+
+                await Task.WhenAll(tasks);
             }
             catch (Exception ex)
             {
@@ -103,24 +217,78 @@ namespace dCompare.Compare
 
             try
             {
-                OpenFileOperations();
-                if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
+                if (_fileOperationControl == null)
                 {
-                    // Get the list of job IDs for the operations we are starting.
-                    var jobIds = _fileOperationWindow.CopyMultiple(items, true);
-
-                    // Create a list of tasks to wait for.
-                    var tasks = new List<Task>();
-                    foreach (var jobId in jobIds)
-                    {
-                        var tcs = new TaskCompletionSource<bool>();
-                        _activeJobs[jobId] = tcs;
-                        tasks.Add(tcs.Task);
-                    }
-
-                    // Asynchronously wait for all the file operation tasks to complete.
-                    await Task.WhenAll(tasks);
+                    throw new Exception("FileOperationControl is not available.");
                 }
+
+                var jobIds = new List<string>();
+                var tasks = new List<Task>();
+
+                foreach (var item in items)
+                {
+                    string jobId = Guid.NewGuid().ToString();
+                    jobIds.Add(jobId);
+                    var tcs = new TaskCompletionSource<bool>();
+                    _activeJobs[jobId] = tcs;
+
+                    var transfer = new FileTransfer
+                    {
+                        JobId = jobId,
+                        Operation = "Copy",
+                        Source = item.Source,
+                        Target = item.TargetPath,
+                        Status = "Queued",
+                        FileSize = Directory.Exists(item.Source) ? 0 : new FileInfo(item.Source).Length,
+                        SourceType = item.Type,
+                        StartTime = DateTime.Now
+                    };
+
+                    Application.Current.Dispatcher.Invoke(() => _fileOperationControl.QueuedTransfers.Add(transfer));
+
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        try
+                        {
+                            var progress = new Progress<OperationProgress>(p =>
+                            {
+                                Application.Current.Dispatcher.Invoke(() =>
+                                {
+                                    transfer.Progress = p.Percentage / 100.0;
+                                    transfer.Status = $"Transferring ({p.Percentage:P0})";
+                                    if (p.Percentage > 0)
+                                    {
+                                        transfer.TransferSpeed = (transfer.FileSize * (p.Percentage / 100.0) / 1024.0) / (DateTime.Now - transfer.StartTime).TotalSeconds;
+                                    }
+                                });
+                            });
+
+                            OperationResult result = await _fileManager.CopyAsync(item.Source, item.TargetPath, true, progress);
+                            if (result.SuccessCount > 0)
+                            {
+                                Application.Current.Dispatcher.Invoke(() =>
+                                {
+                                    _fileOperationControl.CompleteTransfer(transfer, true, "Operation completed successfully.");
+                                });
+                                tcs.TrySetResult(true);
+                            }
+                            else
+                            {
+                                throw new Exception(string.Join("; ", result.FailedItems));
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Application.Current.Dispatcher.Invoke(() =>
+                            {
+                                _fileOperationControl.CompleteTransfer(transfer, false, ex.Message);
+                            });
+                            tcs.TrySetException(ex);
+                        }
+                    }));
+                }
+
+                await Task.WhenAll(tasks);
             }
             catch (Exception ex)
             {
@@ -139,24 +307,78 @@ namespace dCompare.Compare
 
             try
             {
-                OpenFileOperations();
-                if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
+                if (_fileOperationControl == null)
                 {
-                    // Get the list of job IDs for the operations we are starting.
-                    var jobIds = _fileOperationWindow.CopyMultiple(items, true);
-
-                    // Create a list of tasks to wait for.
-                    var tasks = new List<Task>();
-                    foreach (var jobId in jobIds)
-                    {
-                        var tcs = new TaskCompletionSource<bool>();
-                        _activeJobs[jobId] = tcs;
-                        tasks.Add(tcs.Task);
-                    }
-
-                    // Asynchronously wait for all the file operation tasks to complete.
-                    await Task.WhenAll(tasks);
+                    throw new Exception("FileOperationControl is not available.");
                 }
+
+                var jobIds = new List<string>();
+                var tasks = new List<Task>();
+
+                foreach (var item in items)
+                {
+                    string jobId = Guid.NewGuid().ToString();
+                    jobIds.Add(jobId);
+                    var tcs = new TaskCompletionSource<bool>();
+                    _activeJobs[jobId] = tcs;
+
+                    var transfer = new FileTransfer
+                    {
+                        JobId = jobId,
+                        Operation = "Copy",
+                        Source = item.Source,
+                        Target = item.TargetPath,
+                        Status = "Queued",
+                        FileSize = Directory.Exists(item.Source) ? 0 : new FileInfo(item.Source).Length,
+                        SourceType = item.Type,
+                        StartTime = DateTime.Now
+                    };
+
+                    Application.Current.Dispatcher.Invoke(() => _fileOperationControl.QueuedTransfers.Add(transfer));
+
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        try
+                        {
+                            var progress = new Progress<OperationProgress>(p =>
+                            {
+                                Application.Current.Dispatcher.Invoke(() =>
+                                {
+                                    transfer.Progress = p.Percentage / 100.0;
+                                    transfer.Status = $"Transferring ({p.Percentage:P0})";
+                                    if (p.Percentage > 0)
+                                    {
+                                        transfer.TransferSpeed = (transfer.FileSize * (p.Percentage / 100.0) / 1024.0) / (DateTime.Now - transfer.StartTime).TotalSeconds;
+                                    }
+                                });
+                            });
+
+                            OperationResult result = await _fileManager.CopyAsync(item.Source, item.TargetPath, true, progress);
+                            if (result.SuccessCount > 0)
+                            {
+                                Application.Current.Dispatcher.Invoke(() =>
+                                {
+                                    _fileOperationControl.CompleteTransfer(transfer, true, "Operation completed successfully.");
+                                });
+                                tcs.TrySetResult(true);
+                            }
+                            else
+                            {
+                                throw new Exception(string.Join("; ", result.FailedItems));
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Application.Current.Dispatcher.Invoke(() =>
+                            {
+                                _fileOperationControl.CompleteTransfer(transfer, false, ex.Message);
+                            });
+                            tcs.TrySetException(ex);
+                        }
+                    }));
+                }
+
+                await Task.WhenAll(tasks);
             }
             catch (Exception ex)
             {
@@ -175,24 +397,78 @@ namespace dCompare.Compare
 
             try
             {
-                OpenFileOperations();
-                if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
+                if (_fileOperationControl == null)
                 {
-                    // Get the list of job IDs for the operations we are starting.
-                    var jobIds = _fileOperationWindow.MoveMultiple(items, true);
-
-                    // Create a list of tasks to wait for.
-                    var tasks = new List<Task>();
-                    foreach (var jobId in jobIds)
-                    {
-                        var tcs = new TaskCompletionSource<bool>();
-                        _activeJobs[jobId] = tcs;
-                        tasks.Add(tcs.Task);
-                    }
-
-                    // Asynchronously wait for all the file operation tasks to complete.
-                    await Task.WhenAll(tasks);
+                    throw new Exception("FileOperationControl is not available.");
                 }
+
+                var jobIds = new List<string>();
+                var tasks = new List<Task>();
+
+                foreach (var item in items)
+                {
+                    string jobId = Guid.NewGuid().ToString();
+                    jobIds.Add(jobId);
+                    var tcs = new TaskCompletionSource<bool>();
+                    _activeJobs[jobId] = tcs;
+
+                    var transfer = new FileTransfer
+                    {
+                        JobId = jobId,
+                        Operation = "Move",
+                        Source = item.Source,
+                        Target = item.TargetPath,
+                        Status = "Queued",
+                        FileSize = Directory.Exists(item.Source) ? 0 : new FileInfo(item.Source).Length,
+                        SourceType = item.Type,
+                        StartTime = DateTime.Now
+                    };
+
+                    Application.Current.Dispatcher.Invoke(() => _fileOperationControl.QueuedTransfers.Add(transfer));
+
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        try
+                        {
+                            var progress = new Progress<OperationProgress>(p =>
+                            {
+                                Application.Current.Dispatcher.Invoke(() =>
+                                {
+                                    transfer.Progress = p.Percentage / 100.0;
+                                    transfer.Status = $"Transferring ({p.Percentage:P0})";
+                                    if (p.Percentage > 0)
+                                    {
+                                        transfer.TransferSpeed = (transfer.FileSize * (p.Percentage / 100.0) / 1024.0) / (DateTime.Now - transfer.StartTime).TotalSeconds;
+                                    }
+                                });
+                            });
+
+                            OperationResult result = await _fileManager.MoveAsync(item.Source, item.TargetPath, true, progress);
+                            if (result.SuccessCount > 0)
+                            {
+                                Application.Current.Dispatcher.Invoke(() =>
+                                {
+                                    _fileOperationControl.CompleteTransfer(transfer, true, "Operation completed successfully.");
+                                });
+                                tcs.TrySetResult(true);
+                            }
+                            else
+                            {
+                                throw new Exception(string.Join("; ", result.FailedItems));
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Application.Current.Dispatcher.Invoke(() =>
+                            {
+                                _fileOperationControl.CompleteTransfer(transfer, false, ex.Message);
+                            });
+                            tcs.TrySetException(ex);
+                        }
+                    }));
+                }
+
+                await Task.WhenAll(tasks);
             }
             catch (Exception ex)
             {
@@ -211,24 +487,78 @@ namespace dCompare.Compare
 
             try
             {
-                OpenFileOperations();
-                if (_fileOperationWindow != null && _fileOperationWindow.IsLoaded)
+                if (_fileOperationControl == null)
                 {
-                    // Get the list of job IDs for the operations we are starting.
-                    var jobIds = _fileOperationWindow.MoveMultiple(items, true);
-
-                    // Create a list of tasks to wait for.
-                    var tasks = new List<Task>();
-                    foreach (var jobId in jobIds)
-                    {
-                        var tcs = new TaskCompletionSource<bool>();
-                        _activeJobs[jobId] = tcs;
-                        tasks.Add(tcs.Task);
-                    }
-
-                    // Asynchronously wait for all the file operation tasks to complete.
-                    await Task.WhenAll(tasks);
+                    throw new Exception("FileOperationControl is not available.");
                 }
+
+                var jobIds = new List<string>();
+                var tasks = new List<Task>();
+
+                foreach (var item in items)
+                {
+                    string jobId = Guid.NewGuid().ToString();
+                    jobIds.Add(jobId);
+                    var tcs = new TaskCompletionSource<bool>();
+                    _activeJobs[jobId] = tcs;
+
+                    var transfer = new FileTransfer
+                    {
+                        JobId = jobId,
+                        Operation = "Move",
+                        Source = item.Source,
+                        Target = item.TargetPath,
+                        Status = "Queued",
+                        FileSize = Directory.Exists(item.Source) ? 0 : new FileInfo(item.Source).Length,
+                        SourceType = item.Type,
+                        StartTime = DateTime.Now
+                    };
+
+                    Application.Current.Dispatcher.Invoke(() => _fileOperationControl.QueuedTransfers.Add(transfer));
+
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        try
+                        {
+                            var progress = new Progress<OperationProgress>(p =>
+                            {
+                                Application.Current.Dispatcher.Invoke(() =>
+                                {
+                                    transfer.Progress = p.Percentage / 100.0;
+                                    transfer.Status = $"Transferring ({p.Percentage:P0})";
+                                    if (p.Percentage > 0)
+                                    {
+                                        transfer.TransferSpeed = (transfer.FileSize * (p.Percentage / 100.0) / 1024.0) / (DateTime.Now - transfer.StartTime).TotalSeconds;
+                                    }
+                                });
+                            });
+
+                            OperationResult result = await _fileManager.MoveAsync(item.Source, item.TargetPath, true, progress);
+                            if (result.SuccessCount > 0)
+                            {
+                                Application.Current.Dispatcher.Invoke(() =>
+                                {
+                                    _fileOperationControl.CompleteTransfer(transfer, true, "Operation completed successfully.");
+                                });
+                                tcs.TrySetResult(true);
+                            }
+                            else
+                            {
+                                throw new Exception(string.Join("; ", result.FailedItems));
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Application.Current.Dispatcher.Invoke(() =>
+                            {
+                                _fileOperationControl.CompleteTransfer(transfer, false, ex.Message);
+                            });
+                            tcs.TrySetException(ex);
+                        }
+                    }));
+                }
+
+                await Task.WhenAll(tasks);
             }
             catch (Exception ex)
             {
@@ -282,26 +612,10 @@ namespace dCompare.Compare
             }
         }
 
-        private void OpenFileOperations()
-        {
-            if (_fileOperationWindow == null || !_fileOperationWindow.IsLoaded)
-            {
-                _fileOperationWindow = new FileOperationWindow();
-                _fileOperationWindow.Closed += (s, args) => _fileOperationWindow = null;
-                _fileOperationWindow.OnTransferStatusChanged += FileOperation_OnTransferStatusChanged;
-                _fileOperationWindow.Show();
-            }
-            else
-            {
-                _fileOperationWindow.Activate();
-            }
-        }
-
         private void FileOperation_OnTransferStatusChanged(string jobId, bool success, string message)
         {
             string a = $"Job {jobId}: {message}";
             Log.Information($"complete copy or move or delete: {a}");
-            //MessageBox.Show(a);
 
             // Find the TaskCompletionSource for the completed job.
             if (_activeJobs.TryGetValue(jobId, out var tcs))

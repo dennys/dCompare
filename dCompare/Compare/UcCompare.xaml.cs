@@ -96,7 +96,7 @@ namespace dCompare.Compare
             }
         }
 
-        public UcCompare(IFileManager fileManager, IConfigurationService configService)
+        public UcCompare(IConfigurationService configService, IFileManager fileManager)
         {
             InitializeComponent();
 
