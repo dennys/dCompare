@@ -44,6 +44,10 @@ namespace dCompare
         public ICommand ShowLeftUniqueCommand { get; }
         public ICommand ShowRightUniqueCommand { get; }
 
+        public ICommand RenameTabCommand { get; }
+        public ICommand AboutCommand { get; }
+        public ICommand ExitCommand { get; }
+
         private readonly IConfigurationService _configService;
         private readonly ISessionManager _sessionManager;
         private readonly IServiceProvider _serviceProvider;
@@ -58,8 +62,8 @@ namespace dCompare
         #region Constructor
 
         public MainWindow(
-            IConfigurationService configService, 
-            ISessionManager sessionManager, 
+            IConfigurationService configService,
+            ISessionManager sessionManager,
             IServiceProvider serviceProvider)
         {
             InitializeComponent();
@@ -90,13 +94,18 @@ namespace dCompare
             ShowLeftUniqueCommand = new RelayCommand(_ => ExecuteUcCompareMethod("ShowLeftUnique_Click"), _ => CanExecuteUcCompareMethod());
             ShowRightUniqueCommand = new RelayCommand(_ => ExecuteUcCompareMethod("ShowRightUnique_Click"), _ => CanExecuteUcCompareMethod());
 
+            RenameTabCommand = new RelayCommand(_ => ExecuteRenameTab(), _ => CanExecuteRenameTab());
+            AboutCommand = new RelayCommand(_ => ExecuteAbout(), _ => CanExecuteAbout());
+            ExitCommand = new RelayCommand(_ => ExecuteExit(), _ => CanExecuteExit());
+
             DataContext = this;
 
             Loaded += MainWindow_Loaded;
             Log.Information("MainWindow created and initialized.");
         }
+
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
-        {          
+        {
             try
             {
                 AppConfiguration config = await _configService.LoadConfigurationAsync();
@@ -115,54 +124,6 @@ namespace dCompare
                 // Handle error, e.g., show error message to user
             }
         }
-
-        //private void ConfigureServices(IServiceCollection services)
-        //{
-        //    // Configure configuration
-        //    var configuration = new ConfigurationBuilder()
-        //        .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-        //        .AddJsonFile("dcompare.json", optional: true, reloadOnChange: true)
-        //        .Build();
-        //    services.AddSingleton<IConfiguration>(configuration);
-
-        //    // Configure logging
-        //    ConfigureLogging(configuration);
-        //    services.AddSingleton<ILogger<ConfigurationService>>(provider =>
-        //        new SerilogLoggerFactory(Log.Logger).CreateLogger<ConfigurationService>());
-
-        //    // Configure file system
-        //    services.AddSingleton<IFileSystem>(new FileSystem());
-
-        //    // Configure services
-        //    services.AddSingleton<ConfigurationService>();
-        //    services.AddSingleton<SessionManager>();
-        //}
-
-        //private void ConfigureLogging(IConfiguration configuration)
-        //{
-        //    var logConfig = configuration.GetSection("options:log").Get<LogOptions>() ?? new LogOptions();
-
-        //    if (logConfig.Enabled)
-        //    {
-        //        var level = Enum.TryParse<LogEventLevel>(logConfig.Level, true, out var parsedLevel)
-        //            ? parsedLevel
-        //            : LogEventLevel.Information;
-
-        //        Log.Logger = new LoggerConfiguration()
-        //            .MinimumLevel.Is(level)
-        //            .Enrich.WithThreadId()
-        //            .WriteTo.File(
-        //                path: "logs\\dCompare.log",
-        //                rollingInterval: RollingInterval.Day,
-        //                retainedFileCountLimit: logConfig.RetentionDays,
-        //                outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss:fff} [ThreadId:{ThreadId}] {Level:u3}: {Message}{NewLine}")
-        //            .CreateLogger();
-        //    }
-        //    else
-        //    {
-        //        Log.Logger = new LoggerConfiguration().CreateLogger();
-        //    }
-        //}
 
         #endregion
 
@@ -294,6 +255,91 @@ namespace dCompare
             return true;
         }
 
+        private void ExecuteRenameTab()
+        {
+            try
+            {
+                if (tabControl.SelectedItem is TabItem selectedTab)
+                {
+                    string currentName = selectedTab.Header.ToString();
+                    string newName = PromptForTabName(currentName);
+
+                    if (!string.IsNullOrWhiteSpace(newName) && newName != currentName)
+                    {
+                        string oldName = selectedTab.Header.ToString();
+                        selectedTab.Header = newName;
+                        if (_sessionManager.TabIdMap.ContainsKey(oldName))
+                        {
+                            string tabId = _sessionManager.TabIdMap[oldName];
+                            _sessionManager.TabIdMap.Remove(oldName);
+                            _sessionManager.TabIdMap[newName] = tabId;
+                        }
+                        UpdateStatus($"Renamed tab to: {newName}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error renaming tab: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private bool CanExecuteRenameTab()
+        {
+            return tabControl?.SelectedItem is TabItem;
+        }
+
+        private void ExecuteAbout()
+        {
+            try
+            {
+                MessageBox.Show(
+                    "dCompare - Chrome-style Tabbed Interface\n\n" +
+                    "Features:\n" +
+                    "• Chrome-style tabs with hover effects\n" +
+                    "• Drag and drop tab reordering\n" +
+                    "• Keyboard shortcuts (Ctrl+N, Ctrl+W)\n" +
+                    "• Tab close confirmation\n" +
+                    "• Unified color scheme\n" +
+                    "• Recent sessions history\n\n" +
+                    "Keyboard Shortcuts:\n" +
+                    "Ctrl+N: New Tab\n" +
+                    "Ctrl+W: Close Current Tab\n" +
+                    "Ctrl+S: Save Session\n" +
+                    "Ctrl+O: Load Session",
+                    "About dCompare",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                UpdateStatus("About dialog opened");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error opening about dialog: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private bool CanExecuteAbout()
+        {
+            return true;
+        }
+
+        private void ExecuteExit()
+        {
+            try
+            {
+                Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error exiting application: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private bool CanExecuteExit()
+        {
+            return true;
+        }
+
         private void ExecuteUcCompareMethod(string methodName)
         {
             try
@@ -340,7 +386,7 @@ namespace dCompare
                 {
                     _draggedTab = tabItem;
                     _dragStartPoint = e.GetPosition(null);
-                }   
+                }
             }
         }
 
@@ -409,58 +455,6 @@ namespace dCompare
             {
                 _draggedTab = null;
             }
-        }
-
-        #endregion
-
-        #region Menu Event Handlers
-
-        private void RenameTab_Click(object sender, RoutedEventArgs e)
-        {
-            if (tabControl.SelectedItem is TabItem selectedTab)
-            {
-                string currentName = selectedTab.Header.ToString();
-                string newName = PromptForTabName(currentName);
-
-                if (!string.IsNullOrWhiteSpace(newName) && newName != currentName)
-                {
-                    string oldName = selectedTab.Header.ToString();
-                    selectedTab.Header = newName;
-                    if (_sessionManager.TabIdMap.ContainsKey(oldName))
-                    {
-                        string tabId = _sessionManager.TabIdMap[oldName];
-                        _sessionManager.TabIdMap.Remove(oldName);
-                        _sessionManager.TabIdMap[newName] = tabId;
-                    }
-                    UpdateStatus($"Renamed tab to: {newName}");
-                }
-            }
-        }
-
-        private void About_Click(object sender, RoutedEventArgs e)
-        {
-            MessageBox.Show(
-                "dCompare - Chrome-style Tabbed Interface\n\n" +
-                "Features:\n" +
-                "• Chrome-style tabs with hover effects\n" +
-                "• Drag and drop tab reordering\n" +
-                "• Keyboard shortcuts (Ctrl+N, Ctrl+W)\n" +
-                "• Tab close confirmation\n" +
-                "• Unified color scheme\n" +
-                "• Recent sessions history\n\n" +
-                "Keyboard Shortcuts:\n" +
-                "Ctrl+N: New Tab\n" +
-                "Ctrl+W: Close Current Tab\n" +
-                "Ctrl+S: Save Session\n" +
-                "Ctrl+O: Load Session",
-                "About dCompare",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-        }
-
-        private void Exit_Click(object sender, RoutedEventArgs e)
-        {
-            Close();
         }
 
         #endregion

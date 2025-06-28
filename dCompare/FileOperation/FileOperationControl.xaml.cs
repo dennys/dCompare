@@ -15,9 +15,43 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input; // Added for ICommand
 
 namespace dCompare.FileOperation
 {
+    public static class TextBoxBehaviors
+    {
+        public static readonly DependencyProperty TextChangedCommandProperty =
+            DependencyProperty.RegisterAttached("TextChangedCommand", typeof(ICommand), typeof(TextBoxBehaviors),
+                new UIPropertyMetadata(null, OnTextChangedCommandChanged));
+
+        public static ICommand GetTextChangedCommand(DependencyObject obj) =>
+            (ICommand)obj.GetValue(TextChangedCommandProperty);
+
+        public static void SetTextChangedCommand(DependencyObject obj, ICommand value) =>
+            obj.SetValue(TextChangedCommandProperty, value);
+
+        private static void OnTextChangedCommandChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is TextBox textBox)
+            {
+                if (e.OldValue == null && e.NewValue != null)
+                    textBox.TextChanged += TextBox_TextChanged;
+                else if (e.OldValue != null && e.NewValue == null)
+                    textBox.TextChanged -= TextBox_TextChanged;
+            }
+        }
+
+        private static void TextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (sender is TextBox textBox)
+            {
+                var command = GetTextChangedCommand(textBox);
+                if (command != null && command.CanExecute(e))
+                    command.Execute(e);
+            }
+        }
+    }
     public partial class FileOperationControl : UserControl
     {
         private CancellationTokenSource _cancellationTokenSource;
@@ -30,6 +64,14 @@ namespace dCompare.FileOperation
 
         public delegate void TransferStatusChangedHandler(string jobId, bool success, string message);
         public event TransferStatusChangedHandler OnTransferStatusChanged;
+
+        // ICommand properties
+        public ICommand StartCommand { get; }
+        public ICommand PauseCommand { get; }
+        public ICommand CancelCommand { get; }
+        public ICommand CancelTransferCommand { get; }
+        public ICommand RetryTransferCommand { get; }
+        public ICommand FilterTextChangedCommand { get; }
 
         public FileOperationControl()
         {
@@ -45,6 +87,14 @@ namespace dCompare.FileOperation
             queuedView.Filter = FilterTransfers;
             successfulView.Filter = FilterTransfers;
             failedView.Filter = FilterTransfers;
+
+            // Initialize commands
+            StartCommand = new RelayCommand(OnStart, CanStart);
+            PauseCommand = new RelayCommand(OnPause, CanPause);
+            CancelCommand = new RelayCommand(OnCancel, CanCancel);
+            CancelTransferCommand = new RelayCommand(OnCancelTransfer, CanCancelTransfer);
+            RetryTransferCommand = new RelayCommand(OnRetryTransfer, CanRetryTransfer);
+            FilterTextChangedCommand = new RelayCommand(OnFilterTextChanged, CanFilterTextChanged);
         }
 
         public List<string> CopyMultiple(List<(string Source, string TargetPath, SourceType Type)> items, bool overwrite = false)
@@ -293,24 +343,35 @@ namespace dCompare.FileOperation
             return transfer.Source.ToLower().Contains(filter) || transfer.Target.ToLower().Contains(filter);
         }
 
-        private void StartButton_Click(object sender, RoutedEventArgs e)
+        // Command handlers
+        private void OnStart(object parameter)
         {
+            // StartButton_Click logic
             _isPaused = false;
         }
 
-        private void PauseButton_Click(object sender, RoutedEventArgs e)
+        private bool CanStart(object parameter) => _isPaused;
+
+        private void OnPause(object parameter)
         {
+            // PauseButton_Click logic
             _isPaused = true;
         }
 
-        private void CancelButton_Click(object sender, RoutedEventArgs e)
+        private bool CanPause(object parameter) => !_isPaused;
+
+        private void OnCancel(object parameter)
         {
+            // CancelButton_Click logic
             _cancellationTokenSource.Cancel();
             _cancellationTokenSource = new CancellationTokenSource();
         }
 
-        private void CancelTransfer_Click(object sender, RoutedEventArgs e)
+        private bool CanCancel(object parameter) => QueuedTransfers.Any();
+
+        private void OnCancelTransfer(object parameter)
         {
+            // CancelTransfer_Click logic
             if (QueuedGrid.SelectedItem is FileTransfer transfer)
             {
                 _cancellationTokenSource.Cancel();
@@ -318,8 +379,11 @@ namespace dCompare.FileOperation
             }
         }
 
-        private void RetryTransfer_Click(object sender, RoutedEventArgs e)
+        private bool CanCancelTransfer(object parameter) => QueuedGrid.SelectedItem != null;
+
+        private void OnRetryTransfer(object parameter)
         {
+            // RetryTransfer_Click logic
             if (FailedGrid.SelectedItem is FileTransfer transfer)
             {
                 FailedTransfers.Remove(transfer);
@@ -327,12 +391,19 @@ namespace dCompare.FileOperation
             }
         }
 
-        private void FilterTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        private bool CanRetryTransfer(object parameter) => FailedGrid.SelectedItem != null;
+
+        private void OnFilterTextChanged(object parameter)
         {
+            // FilterTextBox_TextChanged logic
             CollectionViewSource.GetDefaultView(QueuedTransfers).Refresh();
-            CollectionViewSource.GetDefaultView(SuccessfulTransfers).Refresh();
+            CollectionViewSource.GetDefaultView(SuccessfulTransfers).Refresh
+
+();
             CollectionViewSource.GetDefaultView(FailedTransfers).Refresh();
         }
+
+        private bool CanFilterTextChanged(object parameter) => true;
     }
 
     public class FileTransfer : INotifyPropertyChanged

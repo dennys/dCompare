@@ -7,67 +7,67 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
              Height="200">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+		</Grid.RowDefinitions>
 
-        <!-- Toolbar -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="5">
-            <Button x:Name="StartButton" Content="Start" Click="StartButton_Click" Margin="5"/>
-            <Button x:Name="PauseButton" Content="Pause" Click="PauseButton_Click" Margin="5"/>
-            <Button x:Name="CancelButton" Content="Cancel" Click="CancelButton_Click" Margin="5"/>
-            <TextBox x:Name="FilterTextBox" Width="200" Margin="5" TextChanged="FilterTextBox_TextChanged" ToolTip="Filter by source or target path"/>
-        </StackPanel>
+		<!-- Toolbar -->
+		<StackPanel Grid.Row="0" Orientation="Horizontal" Margin="5">
+			<Button x:Name="StartButton" Content="Start" Command="{Binding StartCommand}" Margin="5"/>
+			<Button x:Name="PauseButton" Content="Pause" Command="{Binding PauseCommand}" Margin="5"/>
+			<Button x:Name="CancelButton" Content="Cancel" Command="{Binding CancelCommand}" Margin="5"/>
+			<TextBox x:Name="FilterTextBox" Width="200" Margin="5" local1:TextBoxBehaviors.TextChangedCommand="{Binding FilterTextChangedCommand}" ToolTip="Filter by source or target path"/>
+		</StackPanel>
 
-        <!-- TabControl for Queued, Successful, and Failed Transfers -->
-        <TabControl Grid.Row="1">
-            <TabItem Header="Queued">
-                <DataGrid x:Name="QueuedGrid" AutoGenerateColumns="False" IsReadOnly="True" ItemsSource="{Binding QueuedTransfers}">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Operation" Binding="{Binding Operation}" Width="100"/>
-                        <DataGridTextColumn Header="Source" Binding="{Binding Source}" Width="*"/>
-                        <DataGridTextColumn Header="Target" Binding="{Binding Target}" Width="*"/>
-                        <DataGridTextColumn Header="Size" Binding="{Binding FileSize, StringFormat={}{0:N0} bytes}" Width="100"/>
-                        <DataGridTextColumn Header="Progress" Binding="{Binding Progress, StringFormat={}{0:P0}}" Width="80"/>
-                        <DataGridTextColumn Header="Speed" Binding="{Binding TransferSpeed, StringFormat={}{0:N2} KB/s}" Width="80"/>
-                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="120"/>
-                    </DataGrid.Columns>
-                    <DataGrid.ContextMenu>
-                        <ContextMenu>
-                            <MenuItem Header="Cancel" Click="CancelTransfer_Click"/>
-                        </ContextMenu>
-                    </DataGrid.ContextMenu>
-                </DataGrid>
-            </TabItem>
-            <TabItem Header="Successful">
-                <DataGrid x:Name="SuccessfulGrid" AutoGenerateColumns="False" IsReadOnly="True" ItemsSource="{Binding SuccessfulTransfers}">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Operation" Binding="{Binding Operation}" Width="100"/>
-                        <DataGridTextColumn Header="Source" Binding="{Binding Source}" Width="*"/>
-                        <DataGridTextColumn Header="Target" Binding="{Binding Target}" Width="*"/>
-                        <DataGridTextColumn Header="Size" Binding="{Binding FileSize, StringFormat={}{0:N0} bytes}" Width="100"/>
-                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="120"/>
-                    </DataGrid.Columns>
-                </DataGrid>
-            </TabItem>
-            <TabItem Header="Failed">
-                <DataGrid x:Name="FailedGrid" AutoGenerateColumns="False" IsReadOnly="True" ItemsSource="{Binding FailedTransfers}">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Operation" Binding="{Binding Operation}" Width="100"/>
-                        <DataGridTextColumn Header="Source" Binding="{Binding Source}" Width="*"/>
-                        <DataGridTextColumn Header="Target" Binding="{Binding Target}" Width="*"/>
-                        <DataGridTextColumn Header="Size" Binding="{Binding FileSize, StringFormat={}{0:N0} bytes}" Width="100"/>
-                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="120"/>
-                    </DataGrid.Columns>
-                    <DataGrid.ContextMenu>
-                        <ContextMenu>
-                            <MenuItem Header="Retry" Click="RetryTransfer_Click"/>
-                        </ContextMenu>
-                    </DataGrid.ContextMenu>
-                </DataGrid>
-            </TabItem>
-        </TabControl>
-    </Grid>
+		<!-- TabControl for Queued, Successful, and Failed Transfers -->
+		<TabControl Grid.Row="1">
+			<TabItem Header="Queued">
+				<DataGrid x:Name="QueuedGrid" AutoGenerateColumns="False" IsReadOnly="True" ItemsSource="{Binding QueuedTransfers}">
+					<DataGrid.Columns>
+						<DataGridTextColumn Header="Operation" Binding="{Binding Operation}" Width="100"/>
+						<DataGridTextColumn Header="Source" Binding="{Binding Source}" Width="*"/>
+						<DataGridTextColumn Header="Target" Binding="{Binding Target}" Width="*"/>
+						<DataGridTextColumn Header="Size" Binding="{Binding FileSize, StringFormat={}{0:N0} bytes}" Width="100"/>
+						<DataGridTextColumn Header="Progress" Binding="{Binding Progress, StringFormat={}{0:P0}}" Width="80"/>
+						<DataGridTextColumn Header="Speed" Binding="{Binding TransferSpeed, StringFormat={}{0:N2} KB/s}" Width="80"/>
+						<DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="120"/>
+					</DataGrid.Columns>
+					<DataGrid.ContextMenu>
+						<ContextMenu>
+							<MenuItem Header="Cancel" Command="{Binding CancelTransferCommand}"/>
+						</ContextMenu>
+					</DataGrid.ContextMenu>
+				</DataGrid>
+			</TabItem>
+			<TabItem Header="Successful">
+				<DataGrid x:Name="SuccessfulGrid" AutoGenerateColumns="False" IsReadOnly="True" ItemsSource="{Binding SuccessfulTransfers}">
+					<DataGrid.Columns>
+						<DataGridTextColumn Header="Operation" Binding="{Binding Operation}" Width="100"/>
+						<DataGridTextColumn Header="Source" Binding="{Binding Source}" Width="*"/>
+						<DataGridTextColumn Header="Target" Binding="{Binding Target}" Width="*"/>
+						<DataGridTextColumn Header="Size" Binding="{Binding FileSize, StringFormat={}{0:N0} bytes}" Width="100"/>
+						<DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="120"/>
+					</DataGrid.Columns>
+				</DataGrid>
+			</TabItem>
+			<TabItem Header="Failed">
+				<DataGrid x:Name="FailedGrid" AutoGenerateColumns="False" IsReadOnly="True" ItemsSource="{Binding FailedTransfers}">
+					<DataGrid.Columns>
+						<DataGridTextColumn Header="Operation" Binding="{Binding Operation}" Width="100"/>
+						<DataGridTextColumn Header="Source" Binding="{Binding Source}" Width="*"/>
+						<DataGridTextColumn Header="Target" Binding="{Binding Target}" Width="*"/>
+						<DataGridTextColumn Header="Size" Binding="{Binding FileSize, StringFormat={}{0:N0} bytes}" Width="100"/>
+						<DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="120"/>
+					</DataGrid.Columns>
+					<DataGrid.ContextMenu>
+						<ContextMenu>
+							<MenuItem Header="Retry" Command="{Binding RetryTransferCommand}"/>
+						</ContextMenu>
+					</DataGrid.ContextMenu>
+				</DataGrid>
+			</TabItem>
+		</TabControl>
+	</Grid>
 </UserControl>

@@ -209,7 +209,7 @@
                 <Separator/>
                 <MenuItem Header="{x:Static resx:Resources.AddTab}" Command="{Binding AddTabCommand}" InputGestureText="Ctrl+N" Icon="{StaticResource AddTabIcon}"/>
                 <MenuItem Header="{x:Static resx:Resources.CloseTab}" Command="{Binding CloseTabCommand}" InputGestureText="Ctrl+W" Icon="{StaticResource CloseTabIcon}"/>
-                <MenuItem Header="{x:Static resx:Resources.RenameTab}" Click="RenameTab_Click">
+                <MenuItem Header="{x:Static resx:Resources.RenameTab}" Command="{Binding RenameTabCommand}">
                     <MenuItem.Icon>
                         <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
                     </MenuItem.Icon>
@@ -220,7 +220,7 @@
                     </MenuItem.Icon>
                 </MenuItem>
                 <Separator/>
-                <MenuItem Header="{x:Static resx:Resources.Exit}" Click="Exit_Click">
+                <MenuItem Header="{x:Static resx:Resources.Exit}" Command="{Binding ExitCommand}">
                     <MenuItem.Icon>
                         <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
                     </MenuItem.Icon>
@@ -242,7 +242,7 @@
                 <MenuItem Header="{x:Static resx:Resources.ShowRightUniqueMenu}" Command="{Binding ShowRightUniqueCommand}" Icon="{StaticResource ShowRightIcon}"/>
             </MenuItem>
             <MenuItem Header="{x:Static resx:Resources.HelpMenu}">
-                <MenuItem Header="{x:Static resx:Resources.About}" Click="About_Click">
+                <MenuItem Header="{x:Static resx:Resources.About}" Command="{Binding AboutCommand}">
                     <MenuItem.Icon>
                         <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
                     </MenuItem.Icon>
@@ -307,7 +307,7 @@
             <Separator/>
 
             <!-- About Button -->
-            <Button Click="About_Click" ToolTip="{x:Static resx:Resources.AboutTooltip}">
+            <Button Command="{Binding AboutCommand}" ToolTip="{x:Static resx:Resources.AboutTooltip}">
                 <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
             </Button>
         </ToolBar>
