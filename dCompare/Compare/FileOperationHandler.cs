@@ -19,7 +19,6 @@ namespace dCompare.Compare
         private readonly IFileManager _fileManager;
         private readonly TreeNodeManager _treeNodeManager;
         private FileOperationControl _fileOperationControl;
-        private FileOperationWindow _fileOperationWindow;
 
         // Dictionary to track active jobs and their completion sources.
         private readonly Dictionary<string, TaskCompletionSource<bool>> _activeJobs = new();
@@ -28,43 +27,33 @@ namespace dCompare.Compare
         {
             _fileManager = fileManager;
             _treeNodeManager = treeNodeManager;
-            FindFileOperationControl();
+            _fileOperationControl = FindFileOperationControl();
         }
 
         // Helper method to find FileOperationControl in the visual tree
         private FileOperationControl FindFileOperationControl()
         {
-            if (_fileOperationControl != null)
-            {
-                return _fileOperationControl; // Return cached instance
-            }
+            //if (xxx != null)
+            //{
+            //    return xxx; // Return cached instance
+            //}
 
             var mainWindow = Application.Current.MainWindow;
-            if (mainWindow == null)
-            {
-                Log.Warning("MainWindow is not available.");
-                return null;
-            }
 
             // Find FileOperationControl by x:Name or type
-            _fileOperationControl = mainWindow.FindName("fileOperationControl") as FileOperationControl;
-            if (_fileOperationControl == null)
+            FileOperationControl control = (FileOperationControl)mainWindow.FindName("fileOperationControl");
+            // Fallback: Traverse the visual tree to find FileOperationControl
+            control ??= WpfTreeHelperExtensions.FindVisualChild<FileOperationControl>(mainWindow);
+
+            if (control == null)
             {
-                // Fallback: Traverse the visual tree to find FileOperationControl
-                _fileOperationControl = WpfTreeHelperExtensions.FindVisualChild<FileOperationControl>(mainWindow);
+                const string message = "FileOperationControl not found in visual tree.";
+                Log.Error(message);
+                throw new InvalidOperationException(message);
             }
 
-            if (_fileOperationControl != null)
-            {
-                // Subscribe to the event if not already subscribed
-                _fileOperationControl.OnTransferStatusChanged += FileOperation_OnTransferStatusChanged;
-            }
-            else
-            {
-                Log.Error("Could not find FileOperationControl in the visual tree.");
-            }
-
-            return _fileOperationControl;
+            control.OnTransferStatusChanged += FileOperation_OnTransferStatusChanged;
+            return control;
         }
 
         public List<(string Source, string TargetPath, SourceType Type)> GetItemsForTransfer(List<TreeNode> selectedItems, bool toLeft, string targetRoot, string sourceRoot)
@@ -72,7 +61,7 @@ namespace dCompare.Compare
             List<(string Source, string TargetPath, SourceType Type)> items = new();
             foreach (var node in selectedItems)
             {
-                string sourcePath = toLeft ? node.RightNode?.FullPath : node.LeftNode?.FullPath;
+                string? sourcePath = toLeft ? node.RightNode?.FullPath : node.LeftNode?.FullPath;
                 if (string.IsNullOrEmpty(sourcePath)) continue;
 
                 string relativePath = node.RelativePath ?? string.Empty;
@@ -90,7 +79,7 @@ namespace dCompare.Compare
             List<(string Path, SourceType Type)> paths = new();
             foreach (var node in selectedItems)
             {
-                string path = isLeft ? node.LeftNode?.FullPath : node.RightNode?.FullPath;
+                string? path = isLeft ? node.LeftNode?.FullPath : node.RightNode?.FullPath;
                 if (!string.IsNullOrEmpty(path))
                 {
                     paths.Add((path, isLeft ? SourceType.Left : SourceType.Right));
@@ -308,7 +297,7 @@ namespace dCompare.Compare
                 return;
             }
 
-            string sourcePath = isLeft ? selectedItem.LeftNode?.FullPath : selectedItem.RightNode?.FullPath;
+            string? sourcePath = isLeft ? selectedItem.LeftNode?.FullPath : selectedItem.RightNode?.FullPath;
             if (string.IsNullOrEmpty(sourcePath))
             {
                 MessageBox.Show("No valid file or directory path selected.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
@@ -325,7 +314,12 @@ namespace dCompare.Compare
 
             try
             {
-                string parentDir = Path.GetDirectoryName(sourcePath);
+                string? parentDir = Path.GetDirectoryName(sourcePath);
+                if (string.IsNullOrEmpty(parentDir))
+                {
+                    MessageBox.Show("Cannot determine parent directory.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
                 string newPath = Path.Combine(parentDir, newName);
 
                 if (selectedItem.IsDirectory)
