@@ -44,9 +44,8 @@ namespace dCompare
         public ICommand ShowLeftUniqueCommand { get; }
         public ICommand ShowRightUniqueCommand { get; }
 
-        private readonly ConfigurationService _configService;
-        private readonly SessionManager _sessionManager;
-        private readonly ILogger<ConfigurationService> _logger;
+        private readonly IConfigurationService _configService;
+        private readonly ISessionManager _sessionManager;
         private readonly IServiceProvider _serviceProvider;
 
         private TabItem _draggedTab;
@@ -58,19 +57,16 @@ namespace dCompare
 
         #region Constructor
 
-        public MainWindow()
+        public MainWindow(
+            IConfigurationService configService, 
+            ISessionManager sessionManager, 
+            IServiceProvider serviceProvider)
         {
             InitializeComponent();
 
-            // Set up dependency injection
-            var services = new ServiceCollection();
-            ConfigureServices(services);
-            _serviceProvider = services.BuildServiceProvider();
-
-            // Resolve dependencies
-            _configService = _serviceProvider.GetRequiredService<ConfigurationService>();
-            _sessionManager = _serviceProvider.GetRequiredService<SessionManager>();
-            _logger = _serviceProvider.GetRequiredService<ILogger<ConfigurationService>>();
+            _configService = configService;
+            _sessionManager = sessionManager;
+            _serviceProvider = serviceProvider;
 
             // Initialize session manager
             _sessionManager.Initialize(tabControl, RecentSessionsMenu);
@@ -96,7 +92,8 @@ namespace dCompare
 
             DataContext = this;
 
-            Loaded += MainWindow_Loaded; // Subscribe to Loaded event
+            Loaded += MainWindow_Loaded;
+            Log.Information("MainWindow created and initialized.");
         }
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {          
@@ -119,53 +116,53 @@ namespace dCompare
             }
         }
 
-        private void ConfigureServices(IServiceCollection services)
-        {
-            // Configure configuration
-            var configuration = new ConfigurationBuilder()
-                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-                .AddJsonFile("dcompare.json", optional: true, reloadOnChange: true)
-                .Build();
-            services.AddSingleton<IConfiguration>(configuration);
+        //private void ConfigureServices(IServiceCollection services)
+        //{
+        //    // Configure configuration
+        //    var configuration = new ConfigurationBuilder()
+        //        .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+        //        .AddJsonFile("dcompare.json", optional: true, reloadOnChange: true)
+        //        .Build();
+        //    services.AddSingleton<IConfiguration>(configuration);
 
-            // Configure logging
-            ConfigureLogging(configuration);
-            services.AddSingleton<ILogger<ConfigurationService>>(provider =>
-                new SerilogLoggerFactory(Log.Logger).CreateLogger<ConfigurationService>());
+        //    // Configure logging
+        //    ConfigureLogging(configuration);
+        //    services.AddSingleton<ILogger<ConfigurationService>>(provider =>
+        //        new SerilogLoggerFactory(Log.Logger).CreateLogger<ConfigurationService>());
 
-            // Configure file system
-            services.AddSingleton<IFileSystem>(new FileSystem());
+        //    // Configure file system
+        //    services.AddSingleton<IFileSystem>(new FileSystem());
 
-            // Configure services
-            services.AddSingleton<ConfigurationService>();
-            services.AddSingleton<SessionManager>();
-        }
+        //    // Configure services
+        //    services.AddSingleton<ConfigurationService>();
+        //    services.AddSingleton<SessionManager>();
+        //}
 
-        private void ConfigureLogging(IConfiguration configuration)
-        {
-            var logConfig = configuration.GetSection("options:log").Get<LogOptions>() ?? new LogOptions();
+        //private void ConfigureLogging(IConfiguration configuration)
+        //{
+        //    var logConfig = configuration.GetSection("options:log").Get<LogOptions>() ?? new LogOptions();
 
-            if (logConfig.Enabled)
-            {
-                var level = Enum.TryParse<LogEventLevel>(logConfig.Level, true, out var parsedLevel)
-                    ? parsedLevel
-                    : LogEventLevel.Information;
+        //    if (logConfig.Enabled)
+        //    {
+        //        var level = Enum.TryParse<LogEventLevel>(logConfig.Level, true, out var parsedLevel)
+        //            ? parsedLevel
+        //            : LogEventLevel.Information;
 
-                Log.Logger = new LoggerConfiguration()
-                    .MinimumLevel.Is(level)
-                    .Enrich.WithThreadId()
-                    .WriteTo.File(
-                        path: "logs\\dCompare.log",
-                        rollingInterval: RollingInterval.Day,
-                        retainedFileCountLimit: logConfig.RetentionDays,
-                        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss:fff} [ThreadId:{ThreadId}] {Level:u3}: {Message}{NewLine}")
-                    .CreateLogger();
-            }
-            else
-            {
-                Log.Logger = new LoggerConfiguration().CreateLogger();
-            }
-        }
+        //        Log.Logger = new LoggerConfiguration()
+        //            .MinimumLevel.Is(level)
+        //            .Enrich.WithThreadId()
+        //            .WriteTo.File(
+        //                path: "logs\\dCompare.log",
+        //                rollingInterval: RollingInterval.Day,
+        //                retainedFileCountLimit: logConfig.RetentionDays,
+        //                outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss:fff} [ThreadId:{ThreadId}] {Level:u3}: {Message}{NewLine}")
+        //            .CreateLogger();
+        //    }
+        //    else
+        //    {
+        //        Log.Logger = new LoggerConfiguration().CreateLogger();
+        //    }
+        //}
 
         #endregion
 
@@ -180,7 +177,7 @@ namespace dCompare
                 var newTab = new TabItem
                 {
                     Header = $"Tab {_sessionManager.TabCounter}",
-                    Content = new UcCompare()
+                    Content = _serviceProvider.GetRequiredService<UcCompare>()
                 };
                 tabControl.Items.Add(newTab);
                 tabControl.SelectedItem = newTab;

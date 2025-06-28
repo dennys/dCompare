@@ -1,5 +1,6 @@
 ﻿using dCompare.Compare;
 using dCompare.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using Serilog;
 using System;
@@ -11,9 +12,11 @@ using System.Windows.Controls;
 
 namespace dCompare
 {
-    public class SessionManager
+    public class SessionManager: ISessionManager
     {
-        private readonly ConfigurationService _configService;
+        //private readonly ConfigurationService _configService;
+        private readonly IConfigurationService _configService;
+        private readonly IServiceProvider _serviceProvider;
         private readonly List<string> _recentSessions;
         private readonly Dictionary<string, string> _tabIdMap;
         private const int MaxRecentSessions = 5;
@@ -21,9 +24,10 @@ namespace dCompare
         private TabControl _tabControl;
         private int _tabCounter;
 
-        public SessionManager(ConfigurationService configService)
+        public SessionManager(IConfigurationService configService, IServiceProvider serviceProvider)
         {
             _configService = configService ?? throw new ArgumentNullException(nameof(configService));
+            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _recentSessions = new List<string>();
             _tabIdMap = new Dictionary<string, string>();
             _tabCounter = 1;
@@ -251,15 +255,16 @@ namespace dCompare
                     {
                         _tabCounter++;
                         var tabName = session.Key;
+                        var ucCompareInstance = _serviceProvider.GetRequiredService<UcCompare>();
                         var newTab = new TabItem
                         {
                             Header = tabName,
-                            Content = new UcCompare()
+                            Content = ucCompareInstance
                         };
-                        ((UcCompare)newTab.Content).LeftPathBox.Text = session.Value.Left;
-                        ((UcCompare)newTab.Content).RightPathBox.Text = session.Value.Right;
+                        ucCompareInstance.LeftPathBox.Text = session.Value.Left;
+                        ucCompareInstance.RightPathBox.Text = session.Value.Right;
                         //((UcCompare)newTab.Content).SelectedAlgorithm = session.Value.Algorithm ?? ComparisonAlgorithm.ModifiedDateAndSize;
-                        ((UcCompare)newTab.Content).SelectedAlgorithm = session.Value.Algorithm;
+                        ucCompareInstance.SelectedAlgorithm = session.Value.Algorithm;
                         _tabControl.Items.Add(newTab);
                         _tabIdMap[tabName] = Guid.NewGuid().ToString();
 

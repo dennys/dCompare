@@ -9,7 +9,7 @@ namespace dCompare.Configuration
     /// <summary>
     /// Service to manage loading and saving application configuration.
     /// </summary>
-    public class ConfigurationService
+    public class ConfigurationService: IConfigurationService
     {
         private readonly string _configPath;
         private readonly IConfiguration _configuration;
