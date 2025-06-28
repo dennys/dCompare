@@ -51,7 +51,7 @@ namespace dCompare.Compare
             if (_fileOperationControl == null)
             {
                 // Fallback: Traverse the visual tree to find FileOperationControl
-                _fileOperationControl = FindVisualChild<FileOperationControl>(mainWindow);
+                _fileOperationControl = WpfTreeHelperExtensions.FindVisualChild<FileOperationControl>(mainWindow);
             }
 
             if (_fileOperationControl != null)
@@ -65,29 +65,6 @@ namespace dCompare.Compare
             }
 
             return _fileOperationControl;
-        }
-
-        // Helper method to traverse the visual tree
-        private static T FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
-        {
-            if (parent == null)
-                return null;
-
-            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
-            {
-                var child = VisualTreeHelper.GetChild(parent, i);
-                if (child is T found)
-                {
-                    return found;
-                }
-
-                var result = FindVisualChild<T>(child);
-                if (result != null)
-                {
-                    return result;
-                }
-            }
-            return null;
         }
 
         public List<(string Source, string TargetPath, SourceType Type)> GetItemsForTransfer(List<TreeNode> selectedItems, bool toLeft, string targetRoot, string sourceRoot)
@@ -206,12 +183,12 @@ namespace dCompare.Compare
             }
         }
 
-        public async Task CopyToLeft(List<TreeNode> selectedItems, string leftRoot, string rightRoot)
+        // Common method to handle copy or move operations
+        private async Task ExecuteTransferAsync(List<(string Source, string TargetPath, SourceType Type)> items, string operation, string errorMessage)
         {
-            var items = GetItemsForTransfer(selectedItems, toLeft: true, leftRoot, rightRoot);
             if (items.Count == 0)
             {
-                MessageBox.Show("請選擇至少一個文件或目錄進行同步");
+                MessageBox.Show($"請選擇至少一個文件或目錄進行{operation.ToLower()}");
                 return;
             }
 
@@ -235,7 +212,7 @@ namespace dCompare.Compare
                     var transfer = new FileTransfer
                     {
                         JobId = jobId,
-                        Operation = "Copy",
+                        Operation = operation,
                         Source = item.Source,
                         Target = item.TargetPath,
                         Status = "Queued",
@@ -263,7 +240,10 @@ namespace dCompare.Compare
                                 });
                             });
 
-                            OperationResult result = await _fileManager.CopyAsync(item.Source, item.TargetPath, true, progress);
+                            OperationResult result = operation == "Copy"
+                                ? await _fileManager.CopyAsync(item.Source, item.TargetPath, true, progress)
+                                : await _fileManager.MoveAsync(item.Source, item.TargetPath, true, progress);
+
                             if (result.SuccessCount > 0)
                             {
                                 Application.Current.Dispatcher.Invoke(() =>
@@ -292,278 +272,32 @@ namespace dCompare.Compare
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error copying items: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"{errorMessage}: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        public async Task CopyToLeft(List<TreeNode> selectedItems, string leftRoot, string rightRoot)
+        {
+            var items = GetItemsForTransfer(selectedItems, toLeft: true, leftRoot, rightRoot);
+            await ExecuteTransferAsync(items, "Copy", "Error copying items");
         }
 
         public async Task CopyToRight(List<TreeNode> selectedItems, string leftRoot, string rightRoot)
         {
             var items = GetItemsForTransfer(selectedItems, toLeft: false, rightRoot, leftRoot);
-            if (items.Count == 0)
-            {
-                MessageBox.Show("請選擇至少一個文件或目錄進行同步");
-                return;
-            }
-
-            try
-            {
-                if (_fileOperationControl == null)
-                {
-                    throw new Exception("FileOperationControl is not available.");
-                }
-
-                var jobIds = new List<string>();
-                var tasks = new List<Task>();
-
-                foreach (var item in items)
-                {
-                    string jobId = Guid.NewGuid().ToString();
-                    jobIds.Add(jobId);
-                    var tcs = new TaskCompletionSource<bool>();
-                    _activeJobs[jobId] = tcs;
-
-                    var transfer = new FileTransfer
-                    {
-                        JobId = jobId,
-                        Operation = "Copy",
-                        Source = item.Source,
-                        Target = item.TargetPath,
-                        Status = "Queued",
-                        FileSize = Directory.Exists(item.Source) ? 0 : new FileInfo(item.Source).Length,
-                        SourceType = item.Type,
-                        StartTime = DateTime.Now
-                    };
-
-                    Application.Current.Dispatcher.Invoke(() => _fileOperationControl.QueuedTransfers.Add(transfer));
-
-                    tasks.Add(Task.Run(async () =>
-                    {
-                        try
-                        {
-                            var progress = new Progress<OperationProgress>(p =>
-                            {
-                                Application.Current.Dispatcher.Invoke(() =>
-                                {
-                                    transfer.Progress = p.Percentage / 100.0;
-                                    transfer.Status = $"Transferring ({p.Percentage:P0})";
-                                    if (p.Percentage > 0)
-                                    {
-                                        transfer.TransferSpeed = (transfer.FileSize * (p.Percentage / 100.0) / 1024.0) / (DateTime.Now - transfer.StartTime).TotalSeconds;
-                                    }
-                                });
-                            });
-
-                            OperationResult result = await _fileManager.CopyAsync(item.Source, item.TargetPath, true, progress);
-                            if (result.SuccessCount > 0)
-                            {
-                                Application.Current.Dispatcher.Invoke(() =>
-                                {
-                                    _fileOperationControl.CompleteTransfer(transfer, true, "Operation completed successfully.");
-                                });
-                                tcs.TrySetResult(true);
-                            }
-                            else
-                            {
-                                throw new Exception(string.Join("; ", result.FailedItems));
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Application.Current.Dispatcher.Invoke(() =>
-                            {
-                                _fileOperationControl.CompleteTransfer(transfer, false, ex.Message);
-                            });
-                            tcs.TrySetException(ex);
-                        }
-                    }));
-                }
-
-                await Task.WhenAll(tasks);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error copying items: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            await ExecuteTransferAsync(items, "Copy", "Error copying items");
         }
 
         public async Task MoveToLeft(List<TreeNode> selectedItems, string leftRoot, string rightRoot)
         {
             var items = GetItemsForTransfer(selectedItems, toLeft: true, leftRoot, rightRoot);
-            if (items.Count == 0)
-            {
-                MessageBox.Show("請選擇至少一個文件或目錄進行移動");
-                return;
-            }
-
-            try
-            {
-                if (_fileOperationControl == null)
-                {
-                    throw new Exception("FileOperationControl is not available.");
-                }
-
-                var jobIds = new List<string>();
-                var tasks = new List<Task>();
-
-                foreach (var item in items)
-                {
-                    string jobId = Guid.NewGuid().ToString();
-                    jobIds.Add(jobId);
-                    var tcs = new TaskCompletionSource<bool>();
-                    _activeJobs[jobId] = tcs;
-
-                    var transfer = new FileTransfer
-                    {
-                        JobId = jobId,
-                        Operation = "Move",
-                        Source = item.Source,
-                        Target = item.TargetPath,
-                        Status = "Queued",
-                        FileSize = Directory.Exists(item.Source) ? 0 : new FileInfo(item.Source).Length,
-                        SourceType = item.Type,
-                        StartTime = DateTime.Now
-                    };
-
-                    Application.Current.Dispatcher.Invoke(() => _fileOperationControl.QueuedTransfers.Add(transfer));
-
-                    tasks.Add(Task.Run(async () =>
-                    {
-                        try
-                        {
-                            var progress = new Progress<OperationProgress>(p =>
-                            {
-                                Application.Current.Dispatcher.Invoke(() =>
-                                {
-                                    transfer.Progress = p.Percentage / 100.0;
-                                    transfer.Status = $"Transferring ({p.Percentage:P0})";
-                                    if (p.Percentage > 0)
-                                    {
-                                        transfer.TransferSpeed = (transfer.FileSize * (p.Percentage / 100.0) / 1024.0) / (DateTime.Now - transfer.StartTime).TotalSeconds;
-                                    }
-                                });
-                            });
-
-                            OperationResult result = await _fileManager.MoveAsync(item.Source, item.TargetPath, true, progress);
-                            if (result.SuccessCount > 0)
-                            {
-                                Application.Current.Dispatcher.Invoke(() =>
-                                {
-                                    _fileOperationControl.CompleteTransfer(transfer, true, "Operation completed successfully.");
-                                });
-                                tcs.TrySetResult(true);
-                            }
-                            else
-                            {
-                                throw new Exception(string.Join("; ", result.FailedItems));
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Application.Current.Dispatcher.Invoke(() =>
-                            {
-                                _fileOperationControl.CompleteTransfer(transfer, false, ex.Message);
-                            });
-                            tcs.TrySetException(ex);
-                        }
-                    }));
-                }
-
-                await Task.WhenAll(tasks);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error moving items: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            await ExecuteTransferAsync(items, "Move", "Error moving items");
         }
 
         public async Task MoveToRight(List<TreeNode> selectedItems, string leftRoot, string rightRoot)
         {
             var items = GetItemsForTransfer(selectedItems, toLeft: false, rightRoot, leftRoot);
-            if (items.Count == 0)
-            {
-                MessageBox.Show("請選擇至少一個文件或目錄進行移動");
-                return;
-            }
-
-            try
-            {
-                if (_fileOperationControl == null)
-                {
-                    throw new Exception("FileOperationControl is not available.");
-                }
-
-                var jobIds = new List<string>();
-                var tasks = new List<Task>();
-
-                foreach (var item in items)
-                {
-                    string jobId = Guid.NewGuid().ToString();
-                    jobIds.Add(jobId);
-                    var tcs = new TaskCompletionSource<bool>();
-                    _activeJobs[jobId] = tcs;
-
-                    var transfer = new FileTransfer
-                    {
-                        JobId = jobId,
-                        Operation = "Move",
-                        Source = item.Source,
-                        Target = item.TargetPath,
-                        Status = "Queued",
-                        FileSize = Directory.Exists(item.Source) ? 0 : new FileInfo(item.Source).Length,
-                        SourceType = item.Type,
-                        StartTime = DateTime.Now
-                    };
-
-                    Application.Current.Dispatcher.Invoke(() => _fileOperationControl.QueuedTransfers.Add(transfer));
-
-                    tasks.Add(Task.Run(async () =>
-                    {
-                        try
-                        {
-                            var progress = new Progress<OperationProgress>(p =>
-                            {
-                                Application.Current.Dispatcher.Invoke(() =>
-                                {
-                                    transfer.Progress = p.Percentage / 100.0;
-                                    transfer.Status = $"Transferring ({p.Percentage:P0})";
-                                    if (p.Percentage > 0)
-                                    {
-                                        transfer.TransferSpeed = (transfer.FileSize * (p.Percentage / 100.0) / 1024.0) / (DateTime.Now - transfer.StartTime).TotalSeconds;
-                                    }
-                                });
-                            });
-
-                            OperationResult result = await _fileManager.MoveAsync(item.Source, item.TargetPath, true, progress);
-                            if (result.SuccessCount > 0)
-                            {
-                                Application.Current.Dispatcher.Invoke(() =>
-                                {
-                                    _fileOperationControl.CompleteTransfer(transfer, true, "Operation completed successfully.");
-                                });
-                                tcs.TrySetResult(true);
-                            }
-                            else
-                            {
-                                throw new Exception(string.Join("; ", result.FailedItems));
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Application.Current.Dispatcher.Invoke(() =>
-                            {
-                                _fileOperationControl.CompleteTransfer(transfer, false, ex.Message);
-                            });
-                            tcs.TrySetException(ex);
-                        }
-                    }));
-                }
-
-                await Task.WhenAll(tasks);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error moving items: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            await ExecuteTransferAsync(items, "Move", "Error moving items");
         }
 
         public void Rename(TreeNode selectedItem, bool isLeft, string leftRoot, string rightRoot)
