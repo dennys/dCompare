@@ -42,7 +42,7 @@ on:
   push:
     branches: [ "test" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "main" ]
 
 jobs:
 
