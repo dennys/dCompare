@@ -1,5 +1,6 @@
 ﻿using dCompare.FileOperation.Strategies;
 using dCompare.FileOperation.Models;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,10 +13,11 @@ namespace dCompare.FileOperation
     /// <summary>
     /// Manages background file and directory operations with progress and cancellation.
     /// </summary>
-    public class FileManager
+    public class FileManager : IFileManager
     {
         private readonly IFileOperationStrategy _strategy;
         private bool _isPaused;
+        public Guid InstanceId { get; } = Guid.NewGuid();
 
         public FileManager(IFileOperationStrategy? strategy = null)
         {
@@ -27,7 +29,10 @@ namespace dCompare.FileOperation
         public void Resume() => _isPaused = false;
 
         #region Public API Methods
-
+        public void WhoAmI()
+        {
+            Log.Information($"FileManager ({InstanceId}) is performing an operation with data: ");
+        }
         public Task<OperationResult> CopyAsync(string source, string destination, bool overwrite = false, IProgress<OperationProgress>? progress = null, CancellationToken cancellationToken = default)
         {
             var items = new List<(string, string, SourceType)> { (source, destination, SourceType.Left) };
