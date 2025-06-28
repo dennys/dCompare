@@ -18,7 +18,7 @@ namespace dCompare.Compare
         private FileOperationWindow _fileOperationWindow;
 
         // Dictionary to track active jobs and their completion sources.
-        private readonly Dictionary<string, TaskCompletionSource<bool>> _activeJobs = new Dictionary<string, TaskCompletionSource<bool>>();
+        private readonly Dictionary<string, TaskCompletionSource<bool>> _activeJobs = new();
 
         public FileOperationHandler(IFileManager fileManager, TreeNodeManager treeNodeManager)
         {

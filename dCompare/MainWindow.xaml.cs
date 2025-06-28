@@ -44,12 +44,9 @@ namespace dCompare
         public ICommand ShowLeftUniqueCommand { get; }
         public ICommand ShowRightUniqueCommand { get; }
 
-        //private readonly ConfigurationService _configService;
-        //private readonly SessionManager _sessionManager;
         private readonly IConfigurationService _configService;
         private readonly ISessionManager _sessionManager;
         private readonly IServiceProvider _serviceProvider;
-        private readonly ILogger<MainWindow> _logger;
 
         private TabItem _draggedTab;
         private Point _dragStartPoint;
@@ -63,25 +60,13 @@ namespace dCompare
         public MainWindow(
             IConfigurationService configService, 
             ISessionManager sessionManager, 
-            IServiceProvider serviceProvider,
-            ILogger<MainWindow> logger)
+            IServiceProvider serviceProvider)
         {
             InitializeComponent();
 
             _configService = configService;
             _sessionManager = sessionManager;
             _serviceProvider = serviceProvider;
-            _logger = logger;
-
-            // Set up dependency injection
-            //var services = new ServiceCollection();
-            //ConfigureServices(services);
-            //_serviceProvider = services.BuildServiceProvider();
-
-            // Resolve dependencies
-            //_configService = _serviceProvider.GetRequiredService<ConfigurationService>();
-            //_sessionManager = _serviceProvider.GetRequiredService<SessionManager>();
-            //_logger = _serviceProvider.GetRequiredService<ILogger<ConfigurationService>>();
 
             // Initialize session manager
             _sessionManager.Initialize(tabControl, RecentSessionsMenu);
@@ -108,7 +93,7 @@ namespace dCompare
             DataContext = this;
 
             Loaded += MainWindow_Loaded;
-            _logger.LogInformation("MainWindow created and initialized.");
+            Log.Information("MainWindow created and initialized.");
         }
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {          

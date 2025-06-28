@@ -9,6 +9,7 @@ namespace dCompare.FileOperation
 {
     public interface IFileManager
     {
+        void WhoAmI();
         void Pause();
         void Resume();
         Task<OperationResult> CopyAsync(string source, string destination, bool overwrite = false, IProgress<OperationProgress>? progress = null, CancellationToken cancellationToken = default);

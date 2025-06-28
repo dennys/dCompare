@@ -55,7 +55,6 @@ namespace dCompare.Compare
         //private readonly FileManager _fileManager = new FileManager(new Kernel32FileCopyStrategy());
         private readonly TreeNodeManager _treeNodeManager;
         private readonly FileOperationHandler _fileOperationHandler;
-        //private readonly ConfigurationService _configService;
 
         private readonly IFileManager _fileManager;
         private readonly IConfigurationService _configService;
@@ -104,8 +103,6 @@ namespace dCompare.Compare
             _fileManager = fileManager;
             _configService = configService;
 
-            //ConfigurationService configService = new ConfigurationService();
-            //_configService = configService ?? new ConfigurationService("dcompare.json"); // Fallback to default
             _treeNodeManager = new TreeNodeManager(_treeNodes);
             _fileOperationHandler = new FileOperationHandler(_fileManager, _treeNodeManager);
 
@@ -113,7 +110,6 @@ namespace dCompare.Compare
             ResultListView.AddHandler(GridViewColumnHeader.ClickEvent, new RoutedEventHandler(GridViewColumnHeaderClickedHandler));
             DataContext = this;
 
-            //SelectedAlgorithm = ComparisonAlgorithms.AvailableAlgorithms.First().Value;
             // Load default algorithm from configuration
             LoadConfigurationAsync();
         }
