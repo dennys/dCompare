@@ -8,7 +8,7 @@ namespace dCompare
         void Initialize(TabControl tabControl, MenuItem recentSessionsMenu);
         void SaveSession(Action<string> updateStatus);
         bool CanSaveSession();
-        void LoadSession(string filePath = null, bool executeCompare = false, Action<string> updateStatus = null, Action<string> executeCompareMethod = null);
+        void LoadSession(string filePath, bool executeCompare = false, Action<string>? updateStatus = null, Action<string>? executeCompareMethod = null);
         bool CanLoadSession();
         void AddRecentSession(string filePath);
         void ClearRecentSessions();

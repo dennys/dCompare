@@ -335,12 +335,13 @@ namespace dCompare.FileOperation
 
         private bool FilterTransfers(object item)
         {
-            if (string.IsNullOrEmpty(FilterTextBox.Text))
+            if (string.IsNullOrEmpty(FilterTextBox?.Text)) 
                 return true;
 
             var transfer = item as FileTransfer;
-            string filter = FilterTextBox.Text.ToLower();
-            return transfer.Source.ToLower().Contains(filter) || transfer.Target.ToLower().Contains(filter);
+            string filter = FilterTextBox.Text.ToLowerInvariant(); // Use ToLowerInvariant for culture-independent comparison
+            return transfer?.Source?.Contains(filter, StringComparison.OrdinalIgnoreCase) == true ||
+                   transfer?.Target?.Contains(filter, StringComparison.OrdinalIgnoreCase) == true; // Use StringComparison.OrdinalIgnoreCase and null-safe checks
         }
 
         // Command handlers
@@ -408,14 +409,14 @@ namespace dCompare.FileOperation
 
     public class FileTransfer : INotifyPropertyChanged
     {
-        private string _status;
+        private string _status = string.Empty;
         private double _progress;
         private double _transferSpeed;
 
-        public string JobId { get; set; }
-        public string Operation { get; set; }
-        public string Source { get; set; }
-        public string Target { get; set; }
+        public required string JobId { get; set; }
+        public required string Operation { get; set; }
+        public required string Source { get; set; }
+        public required string Target { get; set; }
         public long FileSize { get; set; }
         public DateTime StartTime { get; set; }
         public SourceType SourceType { get; set; }

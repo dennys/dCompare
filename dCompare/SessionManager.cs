@@ -165,7 +165,7 @@ namespace dCompare
                 {
                     if (tab.Content is UcCompare ucCompare)
                     {
-                        string tabName = tab.Header.ToString();
+                        string tabName = tab.Header?.ToString() ?? "Untitled";
                         sessions[tabName] = new SessionConfig
                         {
                             Left = ucCompare.LeftPathBox.Text,
@@ -203,7 +203,7 @@ namespace dCompare
             return _tabControl.Items.Count > 0;
         }
 
-        public void LoadSession(string filePath = null, bool executeCompare = false, Action<string> updateStatus = null, Action<string> executeCompareMethod = null)
+        public void LoadSession(string filePath, bool executeCompare = false, Action<string>? updateStatus = null, Action<string>? executeCompareMethod = null)
         {
             try
             {

@@ -221,19 +221,8 @@ namespace dCompare
             return tabControl?.Items.Count < 20;
         }
 
-        private bool CanCloseTab()
-        {
-            if (tabControl?.Items.Count == 0)
-                return false;
+        private bool CanCloseTab() => tabControl?.Items.Count > 1; // Only allow closing when more than one tab exists
 
-            if (tabControl.Items.Count == 1)
-            {
-                var singleTab = tabControl.Items[0] as TabItem;
-                return !singleTab?.Header.ToString().Equals("Welcome", StringComparison.OrdinalIgnoreCase) ?? false;
-            }
-
-            return true;
-        }
 
         private void ExecuteOptions()
         {
@@ -261,16 +250,15 @@ namespace dCompare
             {
                 if (tabControl.SelectedItem is TabItem selectedTab)
                 {
-                    string currentName = selectedTab.Header.ToString();
-                    string newName = PromptForTabName(currentName);
+                    string currentName = selectedTab.Header?.ToString() ?? string.Empty;
+                    string? newName = PromptForTabName(currentName);
 
                     if (!string.IsNullOrWhiteSpace(newName) && newName != currentName)
                     {
-                        string oldName = selectedTab.Header.ToString();
                         selectedTab.Header = newName;
-                        if (_sessionManager.TabIdMap.ContainsKey(oldName))
+                        string oldName = currentName;
+                        if (_sessionManager.TabIdMap.TryGetValue(oldName, out string? tabId))
                         {
-                            string tabId = _sessionManager.TabIdMap[oldName];
                             _sessionManager.TabIdMap.Remove(oldName);
                             _sessionManager.TabIdMap[newName] = tabId;
                         }
