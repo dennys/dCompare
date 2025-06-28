@@ -1,198 +1,217 @@
-using dCompare.Compare;
+﻿using dCompare.Compare;
 using dCompare.Configuration;
+using Moq;
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace dCompare.Tests
 {
-    /// <summary>
-    /// Test fixture for DirectoryComparer. Creates temporary directories and files for tests.
-    /// </summary>
-    public class DirectoryComparerTestFixture : IDisposable
+    public class DirectoryComparerTests : IDisposable
     {
-        public string LeftPath { get; }
-        public string RightPath { get; }
+        private readonly Mock<IFileSystem> _fileSystemMock;
+        private readonly Mock<IHashProvider> _hashProviderMock;
+        private readonly DirectoryComparer _comparer;
+        private readonly string _tempDir;
 
-        public DirectoryComparerTestFixture()
+        public DirectoryComparerTests()
         {
-            // Create unique root directories for test run
-            string baseTestDir = Path.Combine(Path.GetTempPath(), "DirectoryComparerTests", Guid.NewGuid().ToString());
-            LeftPath = Path.Combine(baseTestDir, "left");
-            RightPath = Path.Combine(baseTestDir, "right");
+            _fileSystemMock = new Mock<IFileSystem>();
+            _hashProviderMock = new Mock<IHashProvider>();
+            _comparer = new DirectoryComparer(_fileSystemMock.Object, _hashProviderMock.Object);
 
-            // Create directories
-            Directory.CreateDirectory(LeftPath);
-            Directory.CreateDirectory(RightPath);
-            Directory.CreateDirectory(Path.Combine(LeftPath, "subdir"));
-            Directory.CreateDirectory(Path.Combine(RightPath, "subdir"));
-
-            // Create test files
-            // 1. Identical file
-            File.WriteAllText(Path.Combine(LeftPath, "identical.txt"), "This is an identical file.");
-            File.WriteAllText(Path.Combine(RightPath, "identical.txt"), "This is an identical file.");
-
-            // 2. Modified file
-            File.WriteAllText(Path.Combine(LeftPath, "modified.txt"), "This is the original file.");
-            File.WriteAllText(Path.Combine(RightPath, "modified.txt"), "This is the modified file.");
-
-            // 3. File only in left
-            File.WriteAllText(Path.Combine(LeftPath, "left-only.txt"), "This file is only in the left directory.");
-
-            // 4. File only in right
-            File.WriteAllText(Path.Combine(RightPath, "right-only.txt"), "This file is only in the right directory.");
-
-            // 5. Files in subdirectory
-            File.WriteAllText(Path.Combine(LeftPath, "subdir", "subfile.txt"), "Subdirectory file.");
-            File.WriteAllText(Path.Combine(RightPath, "subdir", "subfile.txt"), "Subdirectory file.");
+            // Create a temporary directory for test files
+            _tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(_tempDir);
         }
 
         public void Dispose()
         {
-            // Cleanup: delete the temporary directories and files
-            try
+            // Clean up temporary directory
+            if (Directory.Exists(_tempDir))
             {
-                if (Directory.Exists(LeftPath))
-                {
-                    Directory.Delete(Path.GetDirectoryName(LeftPath)!, recursive: true);
-                }
-                if (Directory.Exists(RightPath))
-                {
-                    Directory.Delete(Path.GetDirectoryName(RightPath)!, recursive: true);
-                }
-            }
-            catch (Exception)
-            {
-                // Ignore cleanup errors
+                Directory.Delete(_tempDir, true);
             }
         }
-    }
 
-    /// <summary>
-    /// xUnit tests for the DirectoryComparer class.
-    /// This uses a test fixture to share setup and cleanup logic.
-    /// </summary>
-    public class DirectoryComparerTests : IClassFixture<DirectoryComparerTestFixture>
-    {
-        private readonly DirectoryComparerTestFixture _fixture;
-        private readonly DirectoryComparer _comparer;
-
-        public DirectoryComparerTests(DirectoryComparerTestFixture fixture)
+        [Fact]
+        public async Task CompareAsync_IdenticalDirectories_ReturnsIdenticalStatus()
         {
-            _fixture = fixture;
-            _comparer = new DirectoryComparer();
+            // Arrange
+            string leftPath = Path.Combine(_tempDir, "left");
+            string rightPath = Path.Combine(_tempDir, "right");
+            Directory.CreateDirectory(leftPath);
+            Directory.CreateDirectory(rightPath);
+
+            _fileSystemMock.Setup(fs => fs.DirectoryExists(leftPath)).Returns(true);
+            _fileSystemMock.Setup(fs => fs.DirectoryExists(rightPath)).Returns(true);
+            _fileSystemMock.Setup(fs => fs.GetDirectories(It.IsAny<string>())).Returns(new string[] { });
+            _fileSystemMock.Setup(fs => fs.GetFiles(It.IsAny<string>())).Returns(new string[] { });
+            _fileSystemMock.Setup(fs => fs.GetLastWriteTime(It.IsAny<string>())).Returns(DateTime.Now);
+
+            // Act
+            var result = await _comparer.CompareAsync(leftPath, rightPath, CancellationToken.None, null, ComparisonAlgorithm.ModifiedDateAndSize, false);
+
+            // Assert
+            Assert.Single(result);
+            Assert.Equal(ComparisonStatus.Identical, result[0].Status);
         }
 
         [Fact]
-        public void Compare_Should_Identify_Identical_File()
+        public async Task CompareAsync_DifferentFiles_ReturnsModifiedStatus()
         {
+            // Arrange
+            string leftPath = Path.Combine(_tempDir, "left");
+            string rightPath = Path.Combine(_tempDir, "right");
+            string fileName = "test.txt";
+            string leftFilePath = Path.Combine(leftPath, fileName);
+            string rightFilePath = Path.Combine(rightPath, fileName);
+
+            Directory.CreateDirectory(leftPath);
+            Directory.CreateDirectory(rightPath);
+            File.WriteAllBytes(leftFilePath, new byte[100]); // 100 bytes
+            File.WriteAllBytes(rightFilePath, new byte[200]); // 200 bytes
+            File.SetLastWriteTime(rightFilePath, DateTime.Now.AddSeconds(2));
+
+            _fileSystemMock.Setup(fs => fs.DirectoryExists(leftPath)).Returns(true);
+            _fileSystemMock.Setup(fs => fs.DirectoryExists(rightPath)).Returns(true);
+            _fileSystemMock.Setup(fs => fs.GetDirectories(It.IsAny<string>())).Returns(new string[] { });
+            _fileSystemMock.Setup(fs => fs.GetFiles(leftPath)).Returns(new[] { leftFilePath });
+            _fileSystemMock.Setup(fs => fs.GetFiles(rightPath)).Returns(new[] { rightFilePath });
+            _fileSystemMock.Setup(fs => fs.FileExists(It.IsAny<string>())).Returns(true);
+            _fileSystemMock.Setup(fs => fs.GetFileInfo(leftFilePath)).Returns(new FileInfo(leftFilePath));
+            _fileSystemMock.Setup(fs => fs.GetFileInfo(rightFilePath)).Returns(new FileInfo(rightFilePath));
+            _fileSystemMock.Setup(fs => fs.GetLastWriteTime(It.IsAny<string>())).Returns(DateTime.Now);
+
             // Act
-            var result = _comparer.Compare(_fixture.LeftPath, _fixture.RightPath);
+            var result = await _comparer.CompareAsync(leftPath, rightPath, CancellationToken.None, null, ComparisonAlgorithm.ModifiedDateAndSize, false);
 
             // Assert
-            var identicalFile = result.FirstOrDefault(item => item.Left?.Name == "identical.txt");
-            Assert.NotNull(identicalFile);
-            Assert.Equal(ComparisonStatus.Identical, identicalFile.Status);
+            Assert.Equal(2, result.Count);
+            Assert.Equal(ComparisonStatus.Modified, result[0].Status);
+            Assert.Equal(ComparisonStatus.Modified, result[1].Status);
+            Assert.Equal("📄 " + fileName, result[1].TreeIndent);
         }
 
         [Fact]
-        public void Compare_Should_Identify_Modified_File()
+        public async Task CompareAsync_OneSidedFile_ReturnsLeftOnlyStatus()
         {
+            // Arrange
+            string leftPath = Path.Combine(_tempDir, "left");
+            string rightPath = Path.Combine(_tempDir, "right");
+            string fileName = "test.txt";
+            string leftFilePath = Path.Combine(leftPath, fileName);
+
+            Directory.CreateDirectory(leftPath);
+            Directory.CreateDirectory(rightPath);
+            File.WriteAllBytes(leftFilePath, new byte[100]); // 100 bytes
+
+            _fileSystemMock.Setup(fs => fs.DirectoryExists(leftPath)).Returns(true);
+            _fileSystemMock.Setup(fs => fs.DirectoryExists(rightPath)).Returns(true);
+            _fileSystemMock.Setup(fs => fs.GetDirectories(It.IsAny<string>())).Returns(new string[] { });
+            _fileSystemMock.Setup(fs => fs.GetFiles(leftPath)).Returns(new[] { leftFilePath });
+            _fileSystemMock.Setup(fs => fs.GetFiles(rightPath)).Returns(new string[] { });
+            _fileSystemMock.Setup(fs => fs.FileExists(leftFilePath)).Returns(true);
+            _fileSystemMock.Setup(fs => fs.FileExists(Path.Combine(rightPath, fileName))).Returns(false);
+            _fileSystemMock.Setup(fs => fs.GetFileInfo(leftFilePath)).Returns(new FileInfo(leftFilePath));
+            _fileSystemMock.Setup(fs => fs.GetLastWriteTime(It.IsAny<string>())).Returns(DateTime.Now);
+
             // Act
-            var result = _comparer.Compare(_fixture.LeftPath, _fixture.RightPath, algorithm: ComparisonAlgorithm.FullContents);
+            var result = await _comparer.CompareAsync(leftPath, rightPath, CancellationToken.None, null, ComparisonAlgorithm.ModifiedDateAndSize, false);
 
             // Assert
-            var modifiedFile = result.FirstOrDefault(item => item.Left?.Name == "modified.txt");
-            Assert.NotNull(modifiedFile);
-            Assert.Equal(ComparisonStatus.Modified, modifiedFile.Status);
+            Assert.Equal(2, result.Count);
+            Assert.Equal(ComparisonStatus.Modified, result[0].Status);
+            Assert.Equal(ComparisonStatus.LeftOnly, result[1].Status);
+            Assert.Equal("📄 " + fileName, result[1].TreeIndent);
         }
 
         [Fact]
-        public void Compare_Should_Identify_LeftOnly_File()
+        public async Task CompareAsync_MD5Comparison_DifferentContent_ReturnsModifiedStatus()
         {
+            // Arrange
+            string leftPath = Path.Combine(_tempDir, "left");
+            string rightPath = Path.Combine(_tempDir, "right");
+            string fileName = "test.txt";
+            string leftFilePath = Path.Combine(leftPath, fileName);
+            string rightFilePath = Path.Combine(rightPath, fileName);
+
+            Directory.CreateDirectory(leftPath);
+            Directory.CreateDirectory(rightPath);
+            File.WriteAllBytes(leftFilePath, new byte[] { 1, 2, 3 });
+            File.WriteAllBytes(rightFilePath, new byte[] { 4, 5, 6 });
+
+            _fileSystemMock.Setup(fs => fs.DirectoryExists(leftPath)).Returns(true);
+            _fileSystemMock.Setup(fs => fs.DirectoryExists(rightPath)).Returns(true);
+            _fileSystemMock.Setup(fs => fs.GetDirectories(It.IsAny<string>())).Returns(new string[] { });
+            _fileSystemMock.Setup(fs => fs.GetFiles(leftPath)).Returns(new[] { leftFilePath });
+            _fileSystemMock.Setup(fs => fs.GetFiles(rightPath)).Returns(new[] { rightFilePath });
+            _fileSystemMock.Setup(fs => fs.FileExists(It.IsAny<string>())).Returns(true);
+            _fileSystemMock.Setup(fs => fs.GetFileInfo(leftFilePath)).Returns(new FileInfo(leftFilePath));
+            _fileSystemMock.Setup(fs => fs.GetFileInfo(rightFilePath)).Returns(new FileInfo(rightFilePath));
+            _fileSystemMock.Setup(fs => fs.OpenRead(leftFilePath)).Returns(new MemoryStream(new byte[] { 1, 2, 3 }));
+            _fileSystemMock.Setup(fs => fs.OpenRead(rightFilePath)).Returns(new MemoryStream(new byte[] { 4, 5, 6 }));
+            _hashProviderMock.Setup(h => h.ComputeMD5(It.IsAny<Stream>(), 1.0)).Returns<Stream, double>((s, _) =>
+            {
+                s.Position = 0;
+                return s.ReadByte() == 1 ? new byte[] { 1 } : new byte[] { 2 };
+            });
+
             // Act
-            var result = _comparer.Compare(_fixture.LeftPath, _fixture.RightPath);
+            var result = await _comparer.CompareAsync(leftPath, rightPath, CancellationToken.None, null, ComparisonAlgorithm.MD5, false);
 
             // Assert
-            var leftOnlyFile = result.FirstOrDefault(item => item.Left?.Name == "left-only.txt");
-            Assert.NotNull(leftOnlyFile);
-            Assert.Equal(ComparisonStatus.LeftOnly, leftOnlyFile.Status);
+            Assert.Equal(2, result.Count);
+            Assert.Equal(ComparisonStatus.Modified, result[0].Status);
+            Assert.Equal(ComparisonStatus.Modified, result[1].Status);
         }
 
         [Fact]
-        public void Compare_Should_Identify_RightOnly_File()
+        public async Task CompareAsync_Cancellation_ThrowsOperationCanceledException()
         {
-            // Act
-            var result = _comparer.Compare(_fixture.LeftPath, _fixture.RightPath);
+            // Arrange
+            string leftPath = Path.Combine(_tempDir, "left");
+            string rightPath = Path.Combine(_tempDir, "right");
+            var cts = new CancellationTokenSource();
+            cts.Cancel();
 
-            // Assert
-            var rightOnlyFile = result.FirstOrDefault(item => item.Right?.Name == "right-only.txt");
-            Assert.NotNull(rightOnlyFile);
-            Assert.Equal(ComparisonStatus.RightOnly, rightOnlyFile.Status);
+            _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>())).Returns(true);
+
+            // Act & Assert
+            await Assert.ThrowsAsync<OperationCanceledException>(
+                () => _comparer.CompareAsync(leftPath, rightPath, cts.Token, null, ComparisonAlgorithm.ModifiedDateAndSize, false));
         }
 
         [Fact]
-        public void Compare_Should_Handle_Subdirectories_Correctly()
+        public void CompareSubtree_FileConflict_ReturnsConflictStatus()
         {
+            // Arrange
+            string leftPath = Path.Combine(_tempDir, "left");
+            string rightPath = Path.Combine(_tempDir, "right");
+            string subPath = "test";
+            string leftFilePath = Path.Combine(leftPath, subPath);
+            string rightDirPath = Path.Combine(rightPath, subPath);
+
+            Directory.CreateDirectory(leftPath);
+            Directory.CreateDirectory(rightPath);
+            Directory.CreateDirectory(rightDirPath);
+            File.WriteAllBytes(leftFilePath, new byte[100]);
+
+            _fileSystemMock.Setup(fs => fs.FileExists(leftFilePath)).Returns(true);
+            _fileSystemMock.Setup(fs => fs.DirectoryExists(rightDirPath)).Returns(true);
+            _fileSystemMock.Setup(fs => fs.GetFileInfo(leftFilePath)).Returns(new FileInfo(leftFilePath));
+
             // Act
-            var result = _comparer.Compare(_fixture.LeftPath, _fixture.RightPath);
+            var result = _comparer.CompareSubtree(leftPath, rightPath, subPath, CancellationToken.None, ComparisonAlgorithm.ModifiedDateAndSize);
 
             // Assert
-            var subDir = result.FirstOrDefault(item => (item.Left?.Name ?? item.Right?.Name) == "subdir");
-            Assert.NotNull(subDir);
-            Assert.True(subDir.Left.IsDirectory, "Subdirectory on the left should be identified as a directory.");
-            Assert.True(subDir.Right.IsDirectory, "Subdirectory on the right should be identified as a directory.");
-
-            var subFile = result.FirstOrDefault(item => (item.Left?.Name ?? item.Right?.Name) == "subfile.txt" && (item.Left?.FullPath.Contains("subdir") ?? item.Right.FullPath.Contains("subdir")));
-            Assert.NotNull(subFile);
-            Assert.Equal(ComparisonStatus.Identical, subFile.Status);
+            Assert.Single(result);
+            Assert.Equal(ComparisonStatus.Conflict, result[0].Status);
+            Assert.Equal("📁 test", result[0].TreeIndent);
         }
-
-        //[Fact]
-        //public void CompareSubtree_Should_Compare_Only_Specified_Subdirectory()
-        //{
-        //    // Act
-        //    var result = _comparer.CompareSubtree(_fixture.LeftPath, _fixture.RightPath, "subdir", CancellationToken.None, ComparisonAlgorithm.ModifiedDateAndSize);
-
-        //    // Assert
-        //    Assert.Single(result.Where(r => r.Left != null || r.Right != null)); // Root of subtree
-        //    var subFile = result.FirstOrDefault(item => (item.Left?.Name ?? item.Right?.Name) == "subfile.txt");
-        //    Assert.NotNull(subFile);
-        //    Assert.Equal(ComparisonStatus.Identical, subFile.Status);
-        //}
-
-        //[Theory]
-        //[InlineData(ComparisonAlgorithm.ModifiedDateAndSize)]
-        //[InlineData(ComparisonAlgorithm.FullContents)]
-        //[InlineData(ComparisonAlgorithm.MD5)]
-        //[InlineData(ComparisonAlgorithm.xxHash64)]
-        //public void Compare_With_Different_Algorithms_Should_Work(ComparisonAlgorithm algorithm)
-        //{
-        //    // Act
-        //    var result = _comparer.Compare(_fixture.LeftPath, _fixture.RightPath, algorithm: algorithm);
-
-        //    // Assert
-        //    var identicalFile = result.FirstOrDefault(item => item.Left?.Name == "identical.txt");
-        //    var modifiedFile = result.FirstOrDefault(item => item.Left?.Name == "modified.txt");
-
-        //    Assert.NotNull(identicalFile);
-        //    Assert.Equal(ComparisonStatus.Identical, identicalFile.Status);
-
-        //    Assert.NotNull(modifiedFile);
-        //    Assert.Equal(ComparisonStatus.Modified, modifiedFile.Status);
-        //}
-
-        //[Fact]
-        //public async Task Compare_Should_Be_Cancellable()
-        //{
-        //    // Arrange
-        //    using var cts = new CancellationTokenSource();
-        //    var token = cts.Token;
-
-        //    // Act & Assert
-        //    var comparisonTask = Task.Run(() => _comparer.Compare(_fixture.LeftPath, _fixture.RightPath, token));
-        //    cts.Cancel();
-
-        //    await Assert.ThrowsAsync<OperationCanceledException>(async () => await comparisonTask);
-        //}
     }
 }
