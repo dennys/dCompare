@@ -131,7 +131,7 @@ namespace dCompare.Compare
         private void UpdateTabHeader()
         {
             string baseHeader = LeftPathBox.Text.Trim() + " - " + RightPathBox.Text.Trim();
-            if (LogicalTreeHelperExtensions.FindParent<TabItem>(this) is TabItem tabItem)
+            if (WpfTreeHelperExtensions.FindParent<TabItem>(this) is TabItem tabItem)
             {
                 tabItem.Header = IsComparing ? $"(Comparing...) {baseHeader}" : baseHeader;
             }
@@ -139,7 +139,7 @@ namespace dCompare.Compare
 
         public void ChangeTabHeader(string newHeader)
         {
-            TabItem tabItem = LogicalTreeHelperExtensions.FindParent<TabItem>(this);
+            TabItem tabItem = WpfTreeHelperExtensions.FindParent<TabItem>(this);
             if (tabItem != null && !IsComparing)
             {
                 tabItem.Header = newHeader;
@@ -424,8 +424,8 @@ namespace dCompare.Compare
 
         private void OpenFileComparisonTab(string leftPath, string rightPath, object comparisonResult, FileType fileType)
         {
-            TabItem parentTab = LogicalTreeHelperExtensions.FindParent<TabItem>(this);
-            TabControl tabControl = LogicalTreeHelperExtensions.FindParent<TabControl>(parentTab);
+            TabItem parentTab = WpfTreeHelperExtensions.FindParent<TabItem>(this);
+            TabControl tabControl = WpfTreeHelperExtensions.FindParent<TabControl>(parentTab);
             if (tabControl == null)
             {
                 MessageBox.Show("Cannot find parent TabControl.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
