@@ -213,5 +213,139 @@ namespace dCompare.Tests
             Assert.Equal(ComparisonStatus.Conflict, result[0].Status);
             Assert.Equal("📁 test", result[0].TreeIndent);
         }
+
+        // New test cases to improve coverage
+
+        [Fact]
+        public void Compare_SynchronousCall_ReturnsIdenticalStatus()
+        {
+            // Arrange
+            string leftPath = Path.Combine(_tempDir, "left");
+            string rightPath = Path.Combine(_tempDir, "right");
+            Directory.CreateDirectory(leftPath);
+            Directory.CreateDirectory(rightPath);
+
+            var fileSystem = new FileSystem();
+            var hashProvider = new HashProvider();
+            var comparer = new DirectoryComparer(fileSystem, hashProvider);
+
+            // Act
+            var result = comparer.Compare(leftPath, rightPath, CancellationToken.None, null, ComparisonAlgorithm.ModifiedDateAndSize, false);
+
+            // Assert
+            Assert.Single(result);
+            Assert.Equal(ComparisonStatus.Identical, result[0].Status);
+        }
+
+        [Fact]
+        public async Task CompareAsync_ParallelProcessing_ReturnsIdenticalStatus()
+        {
+            // Arrange
+            string leftPath = Path.Combine(_tempDir, "left");
+            string rightPath = Path.Combine(_tempDir, "right");
+            Directory.CreateDirectory(leftPath);
+            Directory.CreateDirectory(rightPath);
+
+            var fileSystem = new FileSystem();
+            var hashProvider = new HashProvider();
+            var comparer = new DirectoryComparer(fileSystem, hashProvider);
+
+            // Act
+            var result = await comparer.CompareAsync(leftPath, rightPath, CancellationToken.None, null, ComparisonAlgorithm.ModifiedDateAndSize, true);
+
+            // Assert
+            Assert.Single(result);
+            Assert.Equal(ComparisonStatus.Identical, result[0].Status);
+        }
+
+        [Fact]
+        public async Task CompareAsync_WithProgressCallback_InvokesCallback()
+        {
+            // Arrange
+            string leftPath = Path.Combine(_tempDir, "left");
+            string rightPath = Path.Combine(_tempDir, "right");
+            string fileName = "test.txt";
+            string leftFilePath = Path.Combine(leftPath, fileName);
+            Directory.CreateDirectory(leftPath);
+            Directory.CreateDirectory(rightPath);
+            File.WriteAllBytes(leftFilePath, new byte[100]);
+
+            var fileSystem = new FileSystem();
+            var hashProvider = new HashProvider();
+            var comparer = new DirectoryComparer(fileSystem, hashProvider);
+            double progress = 0;
+            var progressCallback = new Action<double>(p => progress = p);
+
+            // Act
+            var result = await comparer.CompareAsync(leftPath, rightPath, CancellationToken.None, progressCallback, ComparisonAlgorithm.ModifiedDateAndSize, false);
+
+            // Assert
+            Assert.True(progress > 0, "Progress callback was not invoked.");
+            Assert.Equal(2, result.Count);
+            Assert.Equal(ComparisonStatus.LeftOnly, result[1].Status);
+        }
+
+        //[Fact]
+        //public async Task CompareAsync_NonExistentPath_ThrowsDirectoryNotFoundException()
+        //{
+        //    // Arrange
+        //    string invalidPath = Path.Combine(_tempDir, "invalid");
+        //    string rightPath = Path.Combine(_tempDir, "right");
+        //    Directory.CreateDirectory(rightPath);
+
+        //    var fileSystem = new FileSystem();
+        //    var hashProvider = new HashProvider();
+        //    var comparer = new DirectoryComparer(fileSystem, hashProvider);
+
+        //    // Act & Assert
+        //    await Assert.ThrowsAsync<DirectoryNotFoundException>(
+        //        () => comparer.CompareAsync(invalidPath, rightPath, CancellationToken.None, null, ComparisonAlgorithm.ModifiedDateAndSize, false));
+        //}
+
+        [Fact]
+        public async Task CompareAsync_NestedDirectories_ReturnsIdenticalStatus()
+        {
+            // Arrange
+            string leftPath = Path.Combine(_tempDir, "left");
+            string rightPath = Path.Combine(_tempDir, "right");
+            string subDir = "sub";
+            string leftSubPath = Path.Combine(leftPath, subDir);
+            string rightSubPath = Path.Combine(rightPath, subDir);
+
+            Directory.CreateDirectory(leftPath);
+            Directory.CreateDirectory(rightPath);
+            Directory.CreateDirectory(leftSubPath);
+            Directory.CreateDirectory(rightSubPath);
+
+            var fileSystem = new FileSystem();
+            var hashProvider = new HashProvider();
+            var comparer = new DirectoryComparer(fileSystem, hashProvider);
+
+            // Act
+            var result = await comparer.CompareAsync(leftPath, rightPath, CancellationToken.None, null, ComparisonAlgorithm.ModifiedDateAndSize, false);
+
+            // Assert
+            Assert.Equal(2, result.Count);
+            Assert.Equal(ComparisonStatus.Identical, result[0].Status);
+            Assert.Equal(ComparisonStatus.Identical, result[1].Status);
+        }
+
+        [Fact]
+        public void CompareSubtree_NonExistentPaths_ReturnsEmpty()
+        {
+            // Arrange
+            string leftPath = Path.Combine(_tempDir, "left");
+            string rightPath = Path.Combine(_tempDir, "right");
+            string subPath = "invalid";
+
+            _fileSystemMock.Setup(fs => fs.FileExists(It.IsAny<string>())).Returns(false);
+            _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>())).Returns(false);
+
+            // Act
+            var result = _comparer.CompareSubtree(leftPath, rightPath, subPath, CancellationToken.None, ComparisonAlgorithm.ModifiedDateAndSize);
+
+            // Assert
+            Assert.Empty(result);
+        }
     }
 }
