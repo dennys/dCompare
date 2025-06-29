@@ -289,55 +289,45 @@ namespace dCompare.Compare
             await ExecuteTransferAsync(items, "Move", "Error moving items");
         }
 
-        public void Rename(TreeNode selectedItem, bool isLeft, string leftRoot, string rightRoot)
+        /// <summary>
+        /// Renames a file or directory on the file system. This method is testable.
+        /// </summary>
+        /// <param name="sourcePath">The full path of the item to rename.</param>
+        /// <param name="newName">The new name for the item (name and extension only).</param>
+        /// <returns>The new full path of the renamed item.</returns>
+        public string RenameFileOrDirectory(string sourcePath, string newName)
         {
-            if (selectedItem == null)
+            if (string.IsNullOrWhiteSpace(sourcePath))
+                throw new ArgumentException("Source path cannot be null or empty.", nameof(sourcePath));
+
+            if (string.IsNullOrWhiteSpace(newName))
+                throw new ArgumentException("New name cannot be null or empty.", nameof(newName));
+
+            if (newName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+                throw new ArgumentException("New name contains invalid characters.", nameof(newName));
+
+            string? parentDir = Path.GetDirectoryName(sourcePath);
+            if (string.IsNullOrEmpty(parentDir))
             {
-                MessageBox.Show("請選擇一個項目");
-                return;
+                throw new InvalidOperationException($"Cannot determine parent directory for '{sourcePath}'.");
             }
 
-            string? sourcePath = isLeft ? selectedItem.LeftNode?.FullPath : selectedItem.RightNode?.FullPath;
-            if (string.IsNullOrEmpty(sourcePath))
+            string newPath = Path.Combine(parentDir, newName);
+
+            if (Directory.Exists(sourcePath))
             {
-                MessageBox.Show("No valid file or directory path selected.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
+                Directory.Move(sourcePath, newPath);
+            }
+            else if (File.Exists(sourcePath))
+            {
+                File.Move(sourcePath, newPath);
+            }
+            else
+            {
+                throw new FileNotFoundException("The specified file or directory does not exist.", sourcePath);
             }
 
-            string currentName = Path.GetFileName(sourcePath);
-            string newName = Interaction.InputBox("Enter new name:", "Rename File/Directory", currentName);
-
-            if (string.IsNullOrEmpty(newName) || newName == currentName)
-            {
-                return;
-            }
-
-            try
-            {
-                string? parentDir = Path.GetDirectoryName(sourcePath);
-                if (string.IsNullOrEmpty(parentDir))
-                {
-                    MessageBox.Show("Cannot determine parent directory.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-                string newPath = Path.Combine(parentDir, newName);
-
-                if (selectedItem.IsDirectory)
-                {
-                    Directory.Move(sourcePath, newPath);
-                }
-                else
-                {
-                    File.Move(sourcePath, newPath);
-                }
-
-                string relativePath = newPath.Substring(isLeft ? leftRoot.Length : rightRoot.Length).TrimStart(Path.DirectorySeparatorChar);
-                selectedItem.RelativePath = relativePath;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error renaming: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            return newPath;
         }
 
         private void FileOperation_OnTransferStatusChanged(string jobId, bool success, string message)
