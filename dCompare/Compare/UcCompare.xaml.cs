@@ -682,13 +682,66 @@ namespace dCompare.Compare
                 _fileOperationHandler.GetItemsForDeletion);
         }
 
-        private void ContextMenu_Rename_Click(object sender, RoutedEventArgs e)
+        private async void ContextMenu_Rename_Click(object sender, RoutedEventArgs e)
         {
-            var selectedItem = ResultListView.SelectedItem as TreeNode;
-            bool isLeft = (sender as MenuItem)?.Parent is ContextMenu contextMenu &&
-                          contextMenu == FindResource("LeftContextMenu");
-            _fileOperationHandler.Rename(selectedItem, isLeft,
-                LeftPathBox.Text.Trim(), RightPathBox.Text.Trim());
+            if (ResultListView.SelectedItem is not TreeNode selectedItem)
+            {
+                MessageBox.Show("Please select an item to rename.", "Selection Required", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var menuItem = sender as MenuItem;
+            var contextMenu = menuItem?.Parent as ContextMenu;
+            bool isLeft = contextMenu == FindResource("LeftContextMenu");
+
+            string? sourcePath = isLeft ? selectedItem.LeftNode?.FullPath : selectedItem.RightNode?.FullPath;
+            if (string.IsNullOrEmpty(sourcePath))
+            {
+                MessageBox.Show("The selected item does not have a valid path to rename.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            string currentName = Path.GetFileName(sourcePath);
+            string newName = Interaction.InputBox("Enter the new name for the item:", "Rename", currentName);
+
+            if (string.IsNullOrWhiteSpace(newName) || newName == currentName)
+            {
+                return; // User cancelled or entered the same name
+            }
+
+            try
+            {
+                // Find parent BEFORE the operation, as the selectedItem's path will become invalid.
+                string parentRelativePath = Path.GetDirectoryName(selectedItem.RelativePath) ?? string.Empty;
+                TreeNode parentNode = null;
+                // A non-empty parent path indicates the item is not at the root.
+                if (!string.IsNullOrEmpty(parentRelativePath))
+                {
+                    parentNode = _treeNodes.FirstOrDefault(n => n.RelativePath.Equals(parentRelativePath, StringComparison.OrdinalIgnoreCase));
+                }
+
+                // Execute the rename operation using the new testable method
+                _fileOperationHandler.RenameFileOrDirectory(sourcePath, newName);
+
+                // Refresh the UI to reflect the change.
+                if (parentNode != null)
+                {
+                    // Preserve the expanded state of the tree for a better user experience.
+                    var previouslyExpandedPaths = new HashSet<string>(
+                        _treeNodes.Where(n => n.IsDirectory && n.IsExpanded).Select(n => n.RelativePath)
+                    );
+                    await RefreshNodeAsync(parentNode, previouslyExpandedPaths);
+                }
+                else
+                {
+                    // The item was a root-level item, so a full comparison refresh is the safest way to update the view.
+                    RefreshComparison();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error renaming item: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void ContextMenu_Properties_Click(object sender, RoutedEventArgs e)
