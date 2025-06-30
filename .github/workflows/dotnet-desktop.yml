@@ -38,6 +38,15 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         name: codecov-umbrella
         verbose: true
+    - name: Upload Coverage to Codacy
+      run: |
+        curl -Ls -o codacy-coverage-reporter https://github.com/codacy/codacy-coverage-reporter/releases/latest/download/codacy-coverage-reporter-windows
+        chmod +x codacy-coverage-reporter
+        $coverage_file = Get-ChildItem -Path ./dCompare.Tests/TestResults -Recurse -Include coverage.cobertura.xml | Select-Object -First 1 -ExpandProperty FullName
+        if (-not $coverage_file) { Write-Error "Coverage file not found"; exit 1 }
+        ./codacy-coverage-reporter report -r "$coverage_file"
+      env:
+        CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
     - name: 🔨 Build App
       run: dotnet build $env:Solution_Name --configuration ${{ matrix.configuration }} --no-restore
     - name: 🚀 Publish - Framework-dependent (.NET 8)
