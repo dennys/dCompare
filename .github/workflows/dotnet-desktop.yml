@@ -1,10 +1,3 @@
-name: .NET App Build & Release
-
-on:
-  push:
-    branches: [ "main","dev" ]
-  workflow_dispatch:
-
 jobs:
   build:
     runs-on: windows-latest
@@ -12,123 +5,53 @@ jobs:
       matrix:
         configuration: [Release]
         platform: [x64, x86]
-
     env:
       Solution_Name: dCompare.sln
       Project_Path: dCompare/dCompare.csproj
       Test_Project_Path: dCompare.Tests/dCompare.Tests.csproj
-
     steps:
     - name: 📥 Checkout
       uses: actions/checkout@v4
-
     - name: 🛠 Setup .NET SDK
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
-
     - name: 📦 Restore packages
       run: dotnet restore $env:Solution_Name
-
     - name: 🧪 Run unit tests
       run: dotnet test $env:Test_Project_Path --configuration ${{ matrix.configuration }} --collect:"XPlat Code Coverage" /p:ExcludeByFile="**/Properties/*"
-
     - name: 📈 Install ReportGenerator
       run: dotnet tool install -g dotnet-reportgenerator-globaltool
-
     - name: 🧾 Generate coverage reports
       run: |
         reportgenerator -reports:**/coverage.cobertura.xml -targetdir:coveragereport -reporttypes:Html,JsonSummary -filefilters:"-**/Properties/*"
-
     - name: 📤 Upload to Codecov
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         name: codecov-umbrella
         verbose: true
-
     - name: 🔨 Build App
       run: dotnet build $env:Solution_Name --configuration ${{ matrix.configuration }} --no-restore
-
     - name: 🚀 Publish - Framework-dependent (.NET 8)
       run: |
         dotnet publish $env:Project_Path -c ${{ matrix.configuration }} -r win-${{ matrix.platform }} --self-contained false -o publish/net8-${{ matrix.platform }}
-
     - name: 🚀 Publish - Self-contained
       run: |
-        dotnet publish $env:Project_Path -c ${{ matrix.configuration }} -r win-${{ matrix.platform }} --self-contained true `
-          -p:PublishSingleFile=true `
-          -p:EnableCompressionInSingleFile=true `
-          -o publish/self-${{ matrix.platform }}
-
-#    - name: 📄 Generate README
-#      run: |
-#        $version = "${{ github.run_number }}"
-#        $platform = "${{ matrix.platform }}"
-#        $readme = @"
-#📦 Application: dCompress
-#🧩 Version: v${version}
-#🛠️ .NET Runtime: .NET 8.0
-#
-#---
-#
-#🔸 dCompress-net8-$platform.zip (Requires installed .NET 8 Runtime)
-#Get it here: https://dotnet.microsoft.com/en-us/download/dotnet/8.0
-#
-#🔸 dCompress-self-$platform.zip (Self-contained version, no runtime required)
-#
-#---
-#
-#Thank you for using dCompress!
-#"@
-#        $readme | Out-File -Encoding utf8 publish/README.txt
-#        Copy-Item publish/README.txt publish/net8-${{ matrix.platform }}/README.txt
-#        Copy-Item publish/README.txt publish/self-${{ matrix.platform }}/README.txt
-
+        dotnet publish $env:Project_Path -c ${{ matrix.configuration }} -r win-${{ matrix.platform }} --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o publish/self-${{ matrix.platform }}
     - name: 📦 Zip Artifacts
       run: |
         Compress-Archive -Path publish/net8-${{ matrix.platform }}/* -DestinationPath dCompress-net8-${{ matrix.platform }}.zip
         Compress-Archive -Path publish/self-${{ matrix.platform }}/* -DestinationPath dCompress-self-${{ matrix.platform }}.zip
-
-    - name: 🏷️ Get Previous Tag
-      id: previoustag
-      uses: WyriHaximus/github-action-get-previous-tag@v1
-
-#    - name: 🔢 Get Next Patch Version
-#      id: semver
-#      uses: WyriHaximus/github-action-next-semvers@v1
-#      with:
-#        version: ${{ steps.previoustag.outputs.tag }}
-# => Container action is only supported on Linux
-
-    - name: 🏷️ Create Git Tag
-      run: |
-        git config user.name "${{ github.actor }}"
-        git config user.email "${{ github.actor }}@users.noreply.github.com"
-        git tag ${{ steps.semver.outputs.patch }}
-        git push origin ${{ steps.semver.outputs.patch }}
-
-    - name: 🚀 Create GitHub Release
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: ${{ steps.semver.outputs.patch }}
-        name: Release ${{ steps.semver.outputs.patch }}
-        files: |
-          dCompress-net8-${{ matrix.platform }}.zip
-          dCompress-self-${{ matrix.platform }}.zip
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: 📤 Upload ZIP Artifacts (備用)
+    - name: 📤 Upload ZIP Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: dCompress-${{ matrix.platform }}-zips
         path: |
           dCompress-net8-${{ matrix.platform }}.zip
           dCompress-self-${{ matrix.platform }}.zip
-        retention-days: 14  # optional, defaults to 90
-        if-no-files-found: error  # or 'warn' or 'ignore'
-
+        retention-days: 14
+        if-no-files-found: error
     # - name: 🧱 Build MSI (future)
     #   uses: caphyon/advinst-github-action@main
     #   with:
@@ -145,3 +68,43 @@ jobs:
     #   with:
     #     name: dCompress-${{ matrix.platform }}-msi
     #     path: msi/dCompress-${{ matrix.platform }}.msi
+	
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - name: 📥 Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Required for git tag operations
+    - name: 📥 Download ZIP Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: dCompress-${{ matrix.platform }}-zips
+        path: artifacts/
+    - name: 🏷️ Get Previous Tag
+      id: previoustag
+      uses: WyriHaximus/github-action-get-previous-tag@v1
+    - name: 🔢 Get Next Patch Version
+      id: semver
+      uses: WyriHaximus/github-action-next-semvers@v1
+      with:
+        version: ${{ steps.previoustag.outputs.tag }}
+    - name: 🏷️ Create Git Tag
+      run: |
+        git config user.name "${{ github.actor }}"
+        git config user.email "${{ github.actor }}@users.noreply.github.com"
+        git tag ${{ steps.semver.outputs.patch }}
+        git push origin ${{ steps.semver.outputs.patch }}
+    - name: 🚀 Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.semver.outputs.patch }}
+        name: Release ${{ steps.semver.outputs.patch }}
+        files: |
+          artifacts/dCompress-net8-x64.zip
+          artifacts/dCompress-self-x64.zip
+          artifacts/dCompress-net8-x86.zip
+          artifacts/dCompress-self-x86.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
