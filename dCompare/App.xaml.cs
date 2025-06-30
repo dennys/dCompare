@@ -7,7 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using System.IO;
-using System.IO.Abstractions;
 using System.Windows;
 
 namespace dCompare
@@ -28,6 +27,7 @@ namespace dCompare
             // Configure the static logger
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
+                .Enrich.WithThreadId()
                 .CreateLogger();
 
             // --- Host Setup ---
