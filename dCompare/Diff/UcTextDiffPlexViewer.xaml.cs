@@ -13,12 +13,12 @@ namespace dCompare.Diff
 {
     public partial class UcFileCompare : UserControl, INotifyPropertyChanged
     {
-        private string _leftPath;
-        private string _rightPath;
+        private string _leftPath = string.Empty;
+        private string _rightPath = string.Empty;
         private ObservableCollection<DiffPiece> _leftLines;
         private ObservableCollection<DiffPiece> _rightLines;
-        private ScrollViewer _leftScrollViewer;
-        private ScrollViewer _rightScrollViewer;
+        private ScrollViewer? _leftScrollViewer;
+        private ScrollViewer? _rightScrollViewer;
         private bool _isSyncingScroll;
 
         public string LeftPath
@@ -61,11 +61,13 @@ namespace dCompare.Diff
             }
         }
 
-        public UcFileCompare()
+        public UcFileCompare(string leftPath, string rightPath, object comparisonResult)
         {
             InitializeComponent();
             DataContext = this;
             Loaded += UcFileCompare_Loaded;
+
+            SetComparisonResult(leftPath, rightPath, comparisonResult);
 
             // Add F5 keybinding for refresh
             InputBindings.Add(new KeyBinding(new RelayCommand(Refresh), Key.F5, ModifierKeys.None));
@@ -86,7 +88,7 @@ namespace dCompare.Diff
             }
         }
 
-        private ScrollViewer FindScrollViewer(DependencyObject depObj)
+        private ScrollViewer? FindScrollViewer(DependencyObject depObj)
         {
             if (depObj is ScrollViewer scrollViewer)
             {
@@ -128,7 +130,7 @@ namespace dCompare.Diff
             _isSyncingScroll = false;
         }
 
-        public void SetComparisonResult(string leftPath, string rightPath, object comparisonResult)
+        private void SetComparisonResult(string leftPath, string rightPath, object comparisonResult)
         {
             LeftPath = leftPath;
             RightPath = rightPath;

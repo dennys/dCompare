@@ -9,7 +9,7 @@ namespace dCompare.Compare
     public class TreeNodeManager
     {
         private readonly ObservableCollection<TreeNode> _treeNodes;
-        private Predicate<TreeNode> _currentFilter;
+        private Predicate<TreeNode>? _currentFilter;
 
         public TreeNodeManager(ObservableCollection<TreeNode> treeNodes)
         {
@@ -17,7 +17,7 @@ namespace dCompare.Compare
         }
 
 		// Method to set the current filter
-		public void SetCurrentFilter(Predicate<TreeNode> filter)
+		public void SetCurrentFilter(Predicate<TreeNode>? filter)
 		{
 			_currentFilter = filter;
 		}

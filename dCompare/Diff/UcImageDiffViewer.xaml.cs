@@ -8,10 +8,10 @@ namespace dCompare.Diff
 {
     public partial class UcImageDiffViewer : UserControl, INotifyPropertyChanged
     {
-        private string _leftPath;
-        private string _rightPath;
-        private BitmapImage _leftImageSource;
-        private BitmapImage _rightImageSource;
+        private string _leftPath = string.Empty;
+        private string _rightPath = string.Empty;
+        private BitmapImage? _leftImageSource;
+        private BitmapImage? _rightImageSource;
 
         public string LeftPath
         {
@@ -35,7 +35,7 @@ namespace dCompare.Diff
             }
         }
 
-        public BitmapImage LeftImageSource
+        public BitmapImage? LeftImageSource
         {
             get => _leftImageSource;
             set
@@ -45,7 +45,7 @@ namespace dCompare.Diff
             }
         }
 
-        public BitmapImage RightImageSource
+        public BitmapImage? RightImageSource
         {
             get => _rightImageSource;
             set
@@ -55,10 +55,11 @@ namespace dCompare.Diff
             }
         }
 
-        public UcImageDiffViewer()
+        public UcImageDiffViewer(string leftPath, string rightPath)
         {
             InitializeComponent();
             DataContext = this;
+            SetImagePaths(leftPath, rightPath);
         }
 
         private void LoadLeftImage()
@@ -109,7 +110,7 @@ namespace dCompare.Diff
             }
         }
 
-        public void SetImagePaths(string leftPath, string rightPath)
+        private void SetImagePaths(string leftPath, string rightPath)
         {
             LeftPath = leftPath;
             RightPath = rightPath;
