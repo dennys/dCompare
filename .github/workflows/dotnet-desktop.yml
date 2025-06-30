@@ -1,3 +1,10 @@
+name: .NET App Build & Release
+
+on:
+  push:
+    branches: [ "main","dev" ]
+  workflow_dispatch:
+    
 jobs:
   build:
     runs-on: windows-latest
