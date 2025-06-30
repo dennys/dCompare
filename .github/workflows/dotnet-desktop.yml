@@ -61,29 +61,29 @@ jobs:
           -p:EnableCompressionInSingleFile=true `
           -o publish/self-${{ matrix.platform }}
 
-    - name: 📄 Generate README
-      run: |
-        $version = "${{ github.run_number }}"
-        $platform = "${{ matrix.platform }}"
-        $readme = @"
-📦 Application: dCompress
-🧩 Version: v${version}
-🛠️ .NET Runtime: .NET 8.0
-
----
-
-🔸 dCompress-net8-$platform.zip (Requires installed .NET 8 Runtime)
-Get it here: https://dotnet.microsoft.com/en-us/download/dotnet/8.0
-
-🔸 dCompress-self-$platform.zip (Self-contained version, no runtime required)
-
----
-
-Thank you for using dCompress!
-"@
-        $readme | Out-File -Encoding utf8 publish/README.txt
-        Copy-Item publish/README.txt publish/net8-${{ matrix.platform }}/README.txt
-        Copy-Item publish/README.txt publish/self-${{ matrix.platform }}/README.txt
+#    - name: 📄 Generate README
+#      run: |
+#        $version = "${{ github.run_number }}"
+#        $platform = "${{ matrix.platform }}"
+#        $readme = @"
+#📦 Application: dCompress
+#🧩 Version: v${version}
+#🛠️ .NET Runtime: .NET 8.0
+#
+#---
+#
+#🔸 dCompress-net8-$platform.zip (Requires installed .NET 8 Runtime)
+#Get it here: https://dotnet.microsoft.com/en-us/download/dotnet/8.0
+#
+#🔸 dCompress-self-$platform.zip (Self-contained version, no runtime required)
+#
+#---
+#
+#Thank you for using dCompress!
+#"@
+#        $readme | Out-File -Encoding utf8 publish/README.txt
+#        Copy-Item publish/README.txt publish/net8-${{ matrix.platform }}/README.txt
+#        Copy-Item publish/README.txt publish/self-${{ matrix.platform }}/README.txt
 
     - name: 📦 Zip Artifacts
       run: |
