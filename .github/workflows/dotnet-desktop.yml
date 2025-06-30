@@ -83,12 +83,17 @@ jobs:
     - name: 📥 Checkout
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0  # Required for git tag operations
-    - name: 📥 Download ZIP Artifacts
+        fetch-depth: 0
+    - name: 📥 Download ZIP Artifacts (x64)
       uses: actions/download-artifact@v4
       with:
-        name: dCompress-${{ matrix.platform }}-zips
-        path: artifacts/
+        name: dCompress-x64-zips
+        path: artifacts/x64/
+    - name: 📥 Download ZIP Artifacts (x86)
+      uses: actions/download-artifact@v4
+      with:
+        name: dCompress-x86-zips
+        path: artifacts/x86/
     - name: 🏷️ Get Previous Tag
       id: previoustag
       uses: WyriHaximus/github-action-get-previous-tag@v1
@@ -109,9 +114,9 @@ jobs:
         tag_name: ${{ steps.semver.outputs.patch }}
         name: Release ${{ steps.semver.outputs.patch }}
         files: |
-          artifacts/dCompress-net8-x64.zip
-          artifacts/dCompress-self-x64.zip
-          artifacts/dCompress-net8-x86.zip
-          artifacts/dCompress-self-x86.zip
+          artifacts/x64/dCompress-net8-x64.zip
+          artifacts/x64/dCompress-self-x64.zip
+          artifacts/x86/dCompress-net8-x86.zip
+          artifacts/x86/dCompress-self-x86.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
