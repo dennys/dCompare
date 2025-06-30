@@ -94,11 +94,12 @@ jobs:
       id: previoustag
       uses: WyriHaximus/github-action-get-previous-tag@v1
 
-    - name: 🔢 Get Next Patch Version
-      id: semver
-      uses: WyriHaximus/github-action-next-semvers@v1
-      with:
-        version: ${{ steps.previoustag.outputs.tag }}
+#    - name: 🔢 Get Next Patch Version
+#      id: semver
+#      uses: WyriHaximus/github-action-next-semvers@v1
+#      with:
+#        version: ${{ steps.previoustag.outputs.tag }}
+# => Container action is only supported on Linux
 
     - name: 🏷️ Create Git Tag
       run: |
