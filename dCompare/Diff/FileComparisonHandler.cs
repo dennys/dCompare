@@ -26,11 +26,14 @@ namespace dCompare.Diff
 
         public FileType DetermineFileType(string filePath)
         {
-            string extension = Path.GetExtension(filePath)?.ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(filePath))
+                return FileType.Unsupported;
+
+            string? extension = Path.GetExtension(filePath)?.ToLowerInvariant();
             return extension switch
             {
                 ".cs" or ".json" or ".log" or ".md" or ".txt" or ".xaml" or ".xml" => FileType.Text,
-                ".png" or ".jpg" or ".jpeg" or ".bmp" => FileType.Image,
+                ".png" or ".jpg" or ".jpeg" or ".bmp" or ".webp" => FileType.Image,
                 _ => FileType.Unsupported
             };
         }

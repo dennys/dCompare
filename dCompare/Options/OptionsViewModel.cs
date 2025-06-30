@@ -40,7 +40,6 @@ namespace dCompare.Options
         private AppConfiguration _appConfig;
         private string _filterText = "Filter settings...";
         private ViewModelBase _selectedViewModel;
-        private SettingsMenuItem _selectedMenuItem;
 
         public ObservableCollection<SettingsMenuItem> MenuItems { get; } = new();
         public ICommand SaveCommand { get; }

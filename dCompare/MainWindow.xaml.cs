@@ -52,7 +52,7 @@ namespace dCompare
         private readonly ISessionManager _sessionManager;
         private readonly IServiceProvider _serviceProvider;
 
-        private TabItem _draggedTab;
+        private TabItem? _draggedTab;
         private Point _dragStartPoint;
 
         public event PropertyChangedEventHandler PropertyChanged;
