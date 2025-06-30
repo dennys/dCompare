@@ -12,11 +12,11 @@ using System.Windows.Controls;
 
 namespace dCompare
 {
-    public class SessionManager : ISessionManager
+    public class SessionManager: ISessionManager
     {
+        //private readonly ConfigurationService _configService;
         private readonly IConfigurationService _configService;
         private readonly IServiceProvider _serviceProvider;
-        private readonly ISessionFileSystem _fileSystem;
         private readonly List<string> _recentSessions;
         private readonly Dictionary<string, string> _tabIdMap;
         private const int MaxRecentSessions = 5;
@@ -24,11 +24,10 @@ namespace dCompare
         private TabControl _tabControl;
         private int _tabCounter;
 
-        public SessionManager(IConfigurationService configService, IServiceProvider serviceProvider, ISessionFileSystem fileSystem)
+        public SessionManager(IConfigurationService configService, IServiceProvider serviceProvider)
         {
             _configService = configService ?? throw new ArgumentNullException(nameof(configService));
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
             _recentSessions = new List<string>();
             _tabIdMap = new Dictionary<string, string>();
             _tabCounter = 1;
@@ -49,9 +48,9 @@ namespace dCompare
             try
             {
                 string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "recentSessions.json");
-                if (_fileSystem.FileExists(configPath))
+                if (File.Exists(configPath))
                 {
-                    string json = _fileSystem.ReadAllText(configPath);
+                    string json = File.ReadAllText(configPath);
                     var sessions = JsonSerializer.Deserialize<List<string>>(json);
                     if (sessions != null)
                     {
@@ -73,7 +72,7 @@ namespace dCompare
                 string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "recentSessions.json");
                 var options = new JsonSerializerOptions { WriteIndented = true };
                 string json = JsonSerializer.Serialize(_recentSessions, options);
-                _fileSystem.WriteAllText(configPath, json);
+                File.WriteAllText(configPath, json);
             }
             catch (Exception ex)
             {
@@ -187,7 +186,7 @@ namespace dCompare
                 {
                     var options = new JsonSerializerOptions { WriteIndented = true };
                     var json = JsonSerializer.Serialize(sessions, options);
-                    _fileSystem.WriteAllText(saveFileDialog.FileName, json);
+                    File.WriteAllText(saveFileDialog.FileName, json);
                     AddRecentSession(saveFileDialog.FileName);
                     updateStatus($"Session saved to {saveFileDialog.FileName}");
                 }
@@ -222,17 +221,17 @@ namespace dCompare
                     if (openFileDialog.ShowDialog() != true)
                         return;
 
-                    json = _fileSystem.ReadAllText(openFileDialog.FileName);
+                    json = File.ReadAllText(openFileDialog.FileName);
                     sessionFileName = openFileDialog.FileName;
                 }
                 else
                 {
-                    if (!_fileSystem.FileExists(filePath))
+                    if (!File.Exists(filePath))
                     {
                         updateStatus?.Invoke($"Session file not found: {filePath}");
                         return;
                     }
-                    json = _fileSystem.ReadAllText(filePath);
+                    json = File.ReadAllText(filePath);
                     sessionFileName = filePath;
                 }
 
@@ -264,6 +263,7 @@ namespace dCompare
                         };
                         ucCompareInstance.LeftPathBox.Text = session.Value.Left;
                         ucCompareInstance.RightPathBox.Text = session.Value.Right;
+                        //((UcCompare)newTab.Content).SelectedAlgorithm = session.Value.Algorithm ?? ComparisonAlgorithm.ModifiedDateAndSize;
                         ucCompareInstance.SelectedAlgorithm = session.Value.Algorithm;
                         _tabControl.Items.Add(newTab);
                         _tabIdMap[tabName] = Guid.NewGuid().ToString();
