@@ -119,12 +119,14 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: 📤 Upload ZIP Artifacts (備用)
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: dCompress-${{ matrix.platform }}-zips
         path: |
           dCompress-net8-${{ matrix.platform }}.zip
           dCompress-self-${{ matrix.platform }}.zip
+        retention-days: 14  # optional, defaults to 90
+        if-no-files-found: error  # or 'warn' or 'ignore'
 
     # - name: 🧱 Build MSI (future)
     #   uses: caphyon/advinst-github-action@main
