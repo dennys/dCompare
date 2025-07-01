@@ -15,8 +15,8 @@ namespace dCompare.Diff
     {
         private string _leftPath = string.Empty;
         private string _rightPath = string.Empty;
-        private ObservableCollection<DiffPiece> _leftLines;
-        private ObservableCollection<DiffPiece> _rightLines;
+        private ObservableCollection<DiffPiece>? _leftLines;
+        private ObservableCollection<DiffPiece>? _rightLines;
         private ScrollViewer? _leftScrollViewer;
         private ScrollViewer? _rightScrollViewer;
         private bool _isSyncingScroll;
@@ -38,26 +38,6 @@ namespace dCompare.Diff
             {
                 _rightPath = value;
                 OnPropertyChanged(nameof(RightPath));
-            }
-        }
-
-        public ObservableCollection<DiffPiece> LeftLines
-        {
-            get => _leftLines;
-            set
-            {
-                _leftLines = value;
-                OnPropertyChanged(nameof(LeftLines));
-            }
-        }
-
-        public ObservableCollection<DiffPiece> RightLines
-        {
-            get => _rightLines;
-            set
-            {
-                _rightLines = value;
-                OnPropertyChanged(nameof(RightLines));
             }
         }
 
@@ -158,11 +138,11 @@ namespace dCompare.Diff
                     rightLines.Add(piece);
                 }
 
-                LeftLines = leftLines;
-                RightLines = rightLines;
+                _leftLines = leftLines;
+                _rightLines = rightLines;
 
                 // Debug: Log DiffPiece types and subpieces
-                foreach (var piece in LeftLines)
+                foreach (var piece in _leftLines)
                 {
                     Debug.WriteLine($"Left DiffPiece: Text='{piece.Text}', Type={piece.Type}, SubPieces={piece.SubPieces?.Count ?? 0}");
                     if (piece.SubPieces != null)
@@ -173,7 +153,7 @@ namespace dCompare.Diff
                         }
                     }
                 }
-                foreach (var piece in RightLines)
+                foreach (var piece in _rightLines)
                 {
                     Debug.WriteLine($"Right DiffPiece: Text='{piece.Text}', Type={piece.Type}, SubPieces={piece.SubPieces?.Count ?? 0}");
                     if (piece.SubPieces != null)
@@ -187,8 +167,8 @@ namespace dCompare.Diff
             }
             else
             {
-                LeftLines = new ObservableCollection<DiffPiece>();
-                RightLines = new ObservableCollection<DiffPiece>();
+                _leftLines = new ObservableCollection<DiffPiece>();
+                _rightLines = new ObservableCollection<DiffPiece>();
             }
         }
 
@@ -219,7 +199,7 @@ namespace dCompare.Diff
             }
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         protected virtual void OnPropertyChanged(string propertyName)
         {
@@ -229,14 +209,14 @@ namespace dCompare.Diff
         // RelayCommand implementation for keybinding
         private class RelayCommand : ICommand
         {
-            private readonly Action<object> _execute;
-            public RelayCommand(Action<object> execute)
+            private readonly Action<object?> _execute;
+            public RelayCommand(Action<object?>? execute)
             {
-                _execute = execute;
+                _execute = execute ?? throw new ArgumentNullException(nameof(execute));
             }
-            public bool CanExecute(object parameter) => true;
-            public void Execute(object parameter) => _execute(parameter);
-            public event EventHandler CanExecuteChanged;
+            public bool CanExecute(object? parameter) => true;
+            public void Execute(object? parameter) => _execute(parameter);
+            public event EventHandler? CanExecuteChanged;
         }
     }
 }

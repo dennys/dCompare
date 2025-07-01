@@ -55,7 +55,7 @@ namespace dCompare
         private TabItem? _draggedTab;
         private Point _dragStartPoint;
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         #endregion
 

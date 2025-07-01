@@ -58,7 +58,7 @@ namespace dCompare.Compare
         private readonly IFileManager _fileManager;
         private readonly IConfigurationService _configService;
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

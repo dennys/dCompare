@@ -121,7 +121,7 @@ namespace dCompare.Compare
         public string LeftDisplayName => LeftName ?? string.Empty;
         public string RightDisplayName => RightName ?? string.Empty;
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         protected void OnPropertyChanged(string propertyName)
         {
