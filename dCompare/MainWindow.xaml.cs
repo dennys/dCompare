@@ -1,5 +1,6 @@
 ﻿using dCompare.Compare;
 using dCompare.Configuration;
+using dCompare.Diff;
 using dCompare.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -83,7 +84,8 @@ namespace dCompare
             ClearRecentSessionsCommand = new RelayCommand(_ => _sessionManager.ClearRecentSessions(), _ => _sessionManager.CanClearRecentSessions());
 
             OptionsCommand = new RelayCommand(_ => ExecuteOptions(), _ => CanExecuteOptions());
-            CompareCommand = new RelayCommand(_ => ExecuteUcCompareMethod("Compare_Click"), _ => CanExecuteUcCompareMethod());
+            //CompareCommand = new RelayCommand(_ => ExecuteUcCompareMethod("Compare_Click"), _ => CanExecuteUcCompareMethod());
+            CompareCommand = new RelayCommand(_ => ExecuteRefresh(), _ => CanExecuteRefresh());
             CopyToLeftCommand = new RelayCommand(_ => ExecuteUcCompareMethod("CopyToLeft_Click"), _ => CanExecuteUcCompareMethod());
             CopyToRightCommand = new RelayCommand(_ => ExecuteUcCompareMethod("CopyToRight_Click"), _ => CanExecuteUcCompareMethod());
             ExpandAllCommand = new RelayCommand(_ => ExecuteUcCompareMethod("ExpandAll_Click"), _ => CanExecuteUcCompareMethod());
@@ -126,6 +128,73 @@ namespace dCompare
         }
 
         #endregion
+
+        private void ExecuteRefresh()
+        {
+            try
+            {
+                if (tabControl.SelectedItem is TabItem selectedTab)
+                {
+                    if (selectedTab.Content is UcCompare ucCompare)
+                    {
+                        MethodInfo methodInfo = typeof(UcCompare).GetMethod("Compare_Click", BindingFlags.NonPublic | BindingFlags.Instance);
+                        if (methodInfo != null)
+                        {
+                            methodInfo.Invoke(ucCompare, new object[] { null, null });
+                            UpdateStatus("Compare executed");
+                        }
+                        else
+                        {
+                            MessageBox.Show("Compare_Click method not found", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                    }
+                    else if (selectedTab.Content is UcFileCompare ucFileCompare)
+                    {
+                        MethodInfo methodInfo = typeof(UcFileCompare).GetMethod("Refresh", BindingFlags.NonPublic | BindingFlags.Instance);
+                        if (methodInfo != null)
+                        {
+                            methodInfo.Invoke(ucFileCompare, new object[] { null });
+                            UpdateStatus("Text comparison refreshed");
+                        }
+                        else
+                        {
+                            MessageBox.Show("Refresh method not found in UcFileCompare", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                    }
+                    else if (selectedTab.Content is UcImageDiffViewer ucImageDiffViewer)
+                    {
+                        MethodInfo methodInfo = typeof(UcImageDiffViewer).GetMethod("Refresh", BindingFlags.NonPublic | BindingFlags.Instance);
+                        if (methodInfo != null)
+                        {
+                            methodInfo.Invoke(ucImageDiffViewer, new object[] { null });
+                            UpdateStatus("Image comparison refreshed");
+                        }
+                        else
+                        {
+                            MessageBox.Show("Refresh method not found in UcImageDiffViewer", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("No active tab or unsupported tab type", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("No active tab to execute refresh", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error executing refresh: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private bool CanExecuteRefresh()
+        {
+            return tabControl?.SelectedItem is TabItem selectedTab &&
+                   (selectedTab.Content is UcCompare || selectedTab.Content is UcFileCompare || selectedTab.Content is UcImageDiffViewer);
+        }
 
         #region Tab Management
 

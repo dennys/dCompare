@@ -115,7 +115,24 @@ namespace dCompare.Diff
             LeftPath = leftPath;
             RightPath = rightPath;
         }
+        private void Refresh(object parameter)
+        {
+            if (string.IsNullOrEmpty(LeftPath) || string.IsNullOrEmpty(RightPath))
+            {
+                MessageBox.Show("Both image paths must be set to refresh the comparison.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
 
+            try
+            {
+                LoadLeftImage();
+                LoadRightImage();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to refresh images: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
         public event PropertyChangedEventHandler? PropertyChanged;
 
         protected virtual void OnPropertyChanged(string propertyName)

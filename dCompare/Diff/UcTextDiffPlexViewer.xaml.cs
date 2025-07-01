@@ -15,8 +15,8 @@ namespace dCompare.Diff
     {
         private string _leftPath = string.Empty;
         private string _rightPath = string.Empty;
-        private ObservableCollection<DiffPiece>? _leftLines;
-        private ObservableCollection<DiffPiece>? _rightLines;
+        private ObservableCollection<DiffPiece> _leftLines;
+        private ObservableCollection<DiffPiece> _rightLines;
         private ScrollViewer? _leftScrollViewer;
         private ScrollViewer? _rightScrollViewer;
         private bool _isSyncingScroll;
@@ -41,6 +41,26 @@ namespace dCompare.Diff
             }
         }
 
+        public ObservableCollection<DiffPiece> LeftLines
+        {
+            get => _leftLines;
+            set
+            {
+                _leftLines = value;
+                OnPropertyChanged(nameof(LeftLines));
+            }
+        }
+
+        public ObservableCollection<DiffPiece> RightLines
+        {
+            get => _rightLines;
+            set
+            {
+                _rightLines = value;
+                OnPropertyChanged(nameof(RightLines));
+            }
+        }
+
         public UcFileCompare(string leftPath, string rightPath, object comparisonResult)
         {
             InitializeComponent();
@@ -50,7 +70,7 @@ namespace dCompare.Diff
             SetComparisonResult(leftPath, rightPath, comparisonResult);
 
             // Add F5 keybinding for refresh
-            InputBindings.Add(new KeyBinding(new RelayCommand(Refresh), Key.F5, ModifierKeys.None));
+            //InputBindings.Add(new KeyBinding(new RelayCommand(Refresh), Key.F5, ModifierKeys.None));
         }
 
         private void UcFileCompare_Loaded(object sender, RoutedEventArgs e)
@@ -138,11 +158,11 @@ namespace dCompare.Diff
                     rightLines.Add(piece);
                 }
 
-                _leftLines = leftLines;
-                _rightLines = rightLines;
+                LeftLines = leftLines;
+                RightLines = rightLines;
 
                 // Debug: Log DiffPiece types and subpieces
-                foreach (var piece in _leftLines)
+                foreach (var piece in LeftLines)
                 {
                     Debug.WriteLine($"Left DiffPiece: Text='{piece.Text}', Type={piece.Type}, SubPieces={piece.SubPieces?.Count ?? 0}");
                     if (piece.SubPieces != null)
@@ -153,7 +173,7 @@ namespace dCompare.Diff
                         }
                     }
                 }
-                foreach (var piece in _rightLines)
+                foreach (var piece in RightLines)
                 {
                     Debug.WriteLine($"Right DiffPiece: Text='{piece.Text}', Type={piece.Type}, SubPieces={piece.SubPieces?.Count ?? 0}");
                     if (piece.SubPieces != null)
@@ -167,8 +187,8 @@ namespace dCompare.Diff
             }
             else
             {
-                _leftLines = new ObservableCollection<DiffPiece>();
-                _rightLines = new ObservableCollection<DiffPiece>();
+                LeftLines = new ObservableCollection<DiffPiece>();
+                RightLines = new ObservableCollection<DiffPiece>();
             }
         }
 
@@ -207,16 +227,16 @@ namespace dCompare.Diff
         }
 
         // RelayCommand implementation for keybinding
-        private class RelayCommand : ICommand
-        {
-            private readonly Action<object?> _execute;
-            public RelayCommand(Action<object?>? execute)
-            {
-                _execute = execute ?? throw new ArgumentNullException(nameof(execute));
-            }
-            public bool CanExecute(object? parameter) => true;
-            public void Execute(object? parameter) => _execute(parameter);
-            public event EventHandler? CanExecuteChanged;
-        }
+        //private class RelayCommand : ICommand
+        //{
+        //    private readonly Action<object?> _execute;
+        //    public RelayCommand(Action<object?> execute)
+        //    {
+        //        _execute = execute;
+        //    }
+        //    public bool CanExecute(object? parameter) => true;
+        //    public void Execute(object? parameter) => _execute(parameter);
+        //    public event EventHandler? CanExecuteChanged;
+        //}
     }
 }
