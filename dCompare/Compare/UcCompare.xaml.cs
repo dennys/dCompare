@@ -207,12 +207,11 @@ namespace dCompare.Compare
         }
 
         private void CancelCompare_Click(object sender, RoutedEventArgs e) => _cancellationTokenSource?.Cancel();
-
-        private void GridViewColumnHeaderClickedHandler(object sender, RoutedEventArgs e)
+        private void ColumnHeader_Click(object sender, RoutedEventArgs e)
         {
-            if (e.OriginalSource is GridViewColumnHeader headerClicked)
+            if (e.OriginalSource is GridViewColumnHeader headerClicked && headerClicked.Column?.Header is string sortBy)
             {
-                string sortBy = headerClicked.Column.Header as string;
+                //Log.Information("Column header clicked: {Header}", sortBy);
                 ListSortDirection direction = _lastHeaderClicked == headerClicked && _lastSortDirection == ListSortDirection.Ascending
                     ? ListSortDirection.Descending
                     : ListSortDirection.Ascending;
@@ -236,6 +235,36 @@ namespace dCompare.Compare
                 _lastHeaderClicked = headerClicked;
                 _lastSortDirection = direction;
             }
+        }
+        private void GridViewColumnHeaderClickedHandler(object sender, RoutedEventArgs e)
+        {
+            //if (e.OriginalSource is GridViewColumnHeader headerClicked)
+            //{
+            //    if (headerClicked?.Column?.Header is not string sortBy) return;
+
+            //    ListSortDirection direction = _lastHeaderClicked == headerClicked && _lastSortDirection == ListSortDirection.Ascending
+            //            ? ListSortDirection.Descending
+            //            : ListSortDirection.Ascending;
+
+            //    ICollectionView view = CollectionViewSource.GetDefaultView(_treeNodes);
+            //    view.SortDescriptions.Clear();
+
+            //    string propertyName = sortBy switch
+            //    {
+            //        "Left Name" => "LeftDisplayName",
+            //        "Left Size" => "LeftSize",
+            //        "Left Date" => "LeftDate",
+            //        "Right Name" => "RightDisplayName",
+            //        "Right Size" => "RightSize",
+            //        "Right Date" => "RightDate",
+            //        "Status" => "StatusSymbol",
+            //        _ => "LeftDisplayName"
+            //    };
+
+            //    view.SortDescriptions.Add(new SortDescription(propertyName, direction));
+            //    _lastHeaderClicked = headerClicked;
+            //    _lastSortDirection = direction;
+            //}
         }
 
         public async Task RefreshNodeAsync(TreeNode nodeToRefresh, HashSet<string> previouslyExpandedPaths = null)
@@ -416,11 +445,10 @@ namespace dCompare.Compare
 
         private void OpenFileComparisonTab(string leftPath, string rightPath, FileType fileType, object? comparisonResult)
         {
-            TabItem parentTab = WpfTreeHelperExtensions.FindParent<TabItem>(this);
-            TabControl tabControl = WpfTreeHelperExtensions.FindParent<TabControl>(parentTab);
-            if (tabControl == null)
+            if (WpfTreeHelperExtensions.FindParent<TabItem>(this) is not TabItem parentTab ||
+                WpfTreeHelperExtensions.FindParent<TabControl>(parentTab) is not TabControl tabControl)
             {
-                MessageBox.Show("Cannot find parent TabControl.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Cannot locate parent TabControl or TabItem.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -579,6 +607,7 @@ namespace dCompare.Compare
                 }
 
                 var orderedNodesToRefresh = nodesToRefresh.Values.OrderByDescending(n => n.Depth);
+                //var orderedNodesToRefresh = nodesToRefresh.Values;
                 foreach (var nodeToRefresh in orderedNodesToRefresh)
                 {
                     // *** Pass the captured state to the refresh method. ***

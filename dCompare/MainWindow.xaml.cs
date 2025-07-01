@@ -79,7 +79,7 @@ namespace dCompare
             AddTabCommand = new RelayCommand(_ => AddNewTab(), _ => CanAddTab());
             CloseTabCommand = new RelayCommand(param => CloseTab(param as TabItem), param => CanCloseTab());
             SaveSessionCommand = new RelayCommand(_ => _sessionManager.SaveSession(UpdateStatus), _ => _sessionManager.CanSaveSession());
-            LoadSessionCommand = new RelayCommand(_ => _sessionManager.LoadSession(null, false, UpdateStatus, ExecuteUcCompareMethod), _ => _sessionManager.CanLoadSession());
+            LoadSessionCommand = new RelayCommand(_ => _sessionManager.LoadSession(string.Empty, false, UpdateStatus, ExecuteUcCompareMethod), _ => _sessionManager.CanLoadSession());
             ClearRecentSessionsCommand = new RelayCommand(_ => _sessionManager.ClearRecentSessions(), _ => _sessionManager.CanClearRecentSessions());
 
             OptionsCommand = new RelayCommand(_ => ExecuteOptions(), _ => CanExecuteOptions());
@@ -142,7 +142,7 @@ namespace dCompare
                 };
                 tabControl.Items.Add(newTab);
                 tabControl.SelectedItem = newTab;
-                _sessionManager.TabIdMap[newTab.Header.ToString()] = tabId;
+                _sessionManager.TabIdMap[newTab.Header.ToString()!] = tabId;
 
                 AppConfiguration config = await _configService.LoadConfigurationAsync();
                 if (!config.Sessions.ContainsKey(tabId))
@@ -159,19 +159,19 @@ namespace dCompare
             }
         }
 
-        private async void CloseTab(TabItem tab)
+        private async void CloseTab(TabItem? tab)
         {
             try
             {
-                TabItem tabToClose = tab ?? tabControl.SelectedItem as TabItem;
-                if (tabToClose == null || !tabControl.Items.Contains(tabToClose))
+                TabItem tabToClose = tab ?? (tabControl?.SelectedItem as TabItem);
+                if (tabToClose == null || tabControl?.Items?.Contains(tabToClose) != true)
                 {
                     UpdateStatus(Properties.Resources.StatusNoTabToClose);
                     return;
                 }
 
                 bool showConfirmation = tabControl.Items.Count > 1 &&
-                                       !tabToClose.Header.ToString().Equals("Welcome", StringComparison.OrdinalIgnoreCase);
+                                       !string.Equals(tabToClose.Header?.ToString(), "Welcome", StringComparison.OrdinalIgnoreCase);
 
                 if (showConfirmation)
                 {
@@ -191,9 +191,12 @@ namespace dCompare
                 tabControl.Items.Remove(tabToClose);
                 try
                 {
-                    var tabId = _sessionManager.TabIdMap[tabToClose.Header.ToString()];
-                    _sessionManager.TabIdMap.Remove(tabToClose.Header.ToString());
-                    await _configService.RemoveSessionAsync(tabId);
+                    var headerString = tabToClose.Header?.ToString();
+                    if (headerString != null && _sessionManager.TabIdMap.TryGetValue(headerString, out string? tabId))
+                    {
+                        _sessionManager.TabIdMap.Remove(headerString);
+                        await _configService.RemoveSessionAsync(tabId);
+                    }
                 }
                 catch (Exception ex)
                 {

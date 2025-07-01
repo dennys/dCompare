@@ -51,10 +51,6 @@ namespace dCompare
                     // Register other dependencies
                     services.AddSingleton<IFileOperationStrategy, Kernel32FileCopyStrategy>();
                     services.AddSingleton<IFileSystem, FileSystem>();
-
-                    // If you have logging, configure it here as well
-                    // services.AddLogging(...);
-
                 })
                 // --- Integrate Serilog with the Host ---
                 .UseSerilog() // This replaces the default logger with Serilog
