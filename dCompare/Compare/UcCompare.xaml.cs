@@ -1,4 +1,4 @@
-﻿using dCompare.Configuration;
+using dCompare.Configuration;
 using dCompare.Diff;
 using dCompare.FileOperation;
 using dCompare.FileOperation.Strategies;
@@ -38,7 +38,7 @@ namespace dCompare.Compare
         DeleteRight
     }
 
-    public partial class UcCompare : UserControl, INotifyPropertyChanged, IRefreshable
+    public partial class UcCompare : UserControl, INotifyPropertyChanged
     {
         private ObservableCollection<TreeNode> _treeNodes = new();
         private DirectoryComparer _comparer = new DirectoryComparer();
@@ -51,6 +51,7 @@ namespace dCompare.Compare
         private double _comparisonProgress;
         private ComparisonAlgorithm _selectedAlgorithm;
 
+        private FileOperationWindow _fileOperationWindow;
         private readonly TreeNodeManager _treeNodeManager;
         private readonly FileOperationHandler _fileOperationHandler;
 
@@ -105,17 +106,21 @@ namespace dCompare.Compare
             _fileOperationHandler = new FileOperationHandler(_fileManager, _treeNodeManager);
 
             ResultListView.ItemsSource = _treeNodes;
-            ResultListView.AddHandler(GridViewColumnHeader.ClickEvent, new RoutedEventHandler(GridViewColumnHeaderClickedHandler));
+            ResultListView.AddHandler(GridViewColumnHeader.ClickEvent, new RoutedEventHandler(ColumnHeader_Click));
             DataContext = this;
 
             LoadConfigurationAsync();
         }
+
         private async void LoadConfigurationAsync()
         {
             try
             {
                 var config = await _configService.LoadConfigurationAsync();
-                SelectedAlgorithm = config.Options.Compare.Algorithm;
+                var defaultAlgorithm = ComparisonAlgorithms.AlgorithmSettings
+                    .FirstOrDefault(kvp => kvp.Value.IsDefault && kvp.Value.IsEnabled)
+                    .Key;
+                SelectedAlgorithm = defaultAlgorithm;
             }
             catch (Exception ex)
             {
@@ -136,7 +141,7 @@ namespace dCompare.Compare
 
         public void ChangeTabHeader(string newHeader)
         {
-            TabItem? tabItem = WpfTreeHelperExtensions.FindParent<TabItem>(this);
+            TabItem tabItem = WpfTreeHelperExtensions.FindParent<TabItem>(this);
             if (tabItem != null && !IsComparing)
             {
                 tabItem.Header = newHeader;
@@ -155,10 +160,10 @@ namespace dCompare.Compare
 
         private void Compare_Click(object sender, RoutedEventArgs e)
         {
-            Refresh();
+            RefreshComparison();
         }
 
-        public async void Refresh()
+        private async void RefreshComparison()
         {
             if (IsComparing) { MessageBox.Show("Comparison is already in progress."); return; }
 
@@ -180,7 +185,8 @@ namespace dCompare.Compare
             {
                 List<DirectoryComparer.ComparisonItem> comparisonResults = await Task.Run(() =>
                     _comparer.Compare(leftDir, rightDir, _cancellationTokenSource.Token,
-                        progress => Dispatcher.Invoke(() => ComparisonProgress = progress * 100), SelectedAlgorithm),
+                        progress => Dispatcher.Invoke(() => ComparisonProgress = progress * 100),
+                        SelectedAlgorithm),
                     _cancellationTokenSource.Token);
 
                 _cachedComparisonResults = comparisonResults;
@@ -206,11 +212,11 @@ namespace dCompare.Compare
         }
 
         private void CancelCompare_Click(object sender, RoutedEventArgs e) => _cancellationTokenSource?.Cancel();
+
         private void ColumnHeader_Click(object sender, RoutedEventArgs e)
         {
             if (e.OriginalSource is GridViewColumnHeader headerClicked && headerClicked.Column?.Header is string sortBy)
             {
-                //Log.Information("Column header clicked: {Header}", sortBy);
                 ListSortDirection direction = _lastHeaderClicked == headerClicked && _lastSortDirection == ListSortDirection.Ascending
                     ? ListSortDirection.Descending
                     : ListSortDirection.Ascending;
@@ -234,36 +240,6 @@ namespace dCompare.Compare
                 _lastHeaderClicked = headerClicked;
                 _lastSortDirection = direction;
             }
-        }
-        private void GridViewColumnHeaderClickedHandler(object sender, RoutedEventArgs e)
-        {
-            //if (e.OriginalSource is GridViewColumnHeader headerClicked)
-            //{
-            //    if (headerClicked?.Column?.Header is not string sortBy) return;
-
-            //    ListSortDirection direction = _lastHeaderClicked == headerClicked && _lastSortDirection == ListSortDirection.Ascending
-            //            ? ListSortDirection.Descending
-            //            : ListSortDirection.Ascending;
-
-            //    ICollectionView view = CollectionViewSource.GetDefaultView(_treeNodes);
-            //    view.SortDescriptions.Clear();
-
-            //    string propertyName = sortBy switch
-            //    {
-            //        "Left Name" => "LeftDisplayName",
-            //        "Left Size" => "LeftSize",
-            //        "Left Date" => "LeftDate",
-            //        "Right Name" => "RightDisplayName",
-            //        "Right Size" => "RightSize",
-            //        "Right Date" => "RightDate",
-            //        "Status" => "StatusSymbol",
-            //        _ => "LeftDisplayName"
-            //    };
-
-            //    view.SortDescriptions.Add(new SortDescription(propertyName, direction));
-            //    _lastHeaderClicked = headerClicked;
-            //    _lastSortDirection = direction;
-            //}
         }
 
         public async Task RefreshNodeAsync(TreeNode nodeToRefresh, HashSet<string> previouslyExpandedPaths = null)
@@ -526,7 +502,6 @@ namespace dCompare.Compare
                     listViewItem.ContextMenu.IsOpen = true;
                 }
 
-                // Mark the event as handled to prevent default selection behavior
                 e.Handled = true;
             }
         }
@@ -557,7 +532,6 @@ namespace dCompare.Compare
                 return;
             }
 
-            // *** STEP 1: Capture the state of all expanded nodes BEFORE the operation. ***
             var previouslyExpandedPaths = new HashSet<string>(
                 _treeNodes.Where(n => n.IsDirectory && n.IsExpanded)
                           .Select(n => n.RelativePath)
@@ -570,7 +544,7 @@ namespace dCompare.Compare
                     var result = MessageBox.Show(
                         confirmationMessage,
                         "Confirm Operation",
-                        MessageBoxButton.YesNoCancel,
+                        MessageBoxButton.YesNo,
                         MessageBoxImage.Warning);
 
                     if (result != MessageBoxResult.Yes)
@@ -606,10 +580,8 @@ namespace dCompare.Compare
                 }
 
                 var orderedNodesToRefresh = nodesToRefresh.Values.OrderByDescending(n => n.Depth);
-                //var orderedNodesToRefresh = nodesToRefresh.Values;
                 foreach (var nodeToRefresh in orderedNodesToRefresh)
                 {
-                    // *** Pass the captured state to the refresh method. ***
                     await RefreshNodeAsync(nodeToRefresh, previouslyExpandedPaths);
                 }
             }
@@ -728,22 +700,17 @@ namespace dCompare.Compare
 
             try
             {
-                // Find parent BEFORE the operation, as the selectedItem's path will become invalid.
                 string parentRelativePath = Path.GetDirectoryName(selectedItem.RelativePath) ?? string.Empty;
                 TreeNode? parentNode = null;
-                // A non-empty parent path indicates the item is not at the root.
                 if (!string.IsNullOrEmpty(parentRelativePath))
                 {
                     parentNode = _treeNodes.FirstOrDefault(n => n.RelativePath.Equals(parentRelativePath, StringComparison.OrdinalIgnoreCase));
                 }
 
-                // Execute the rename operation using the new testable method
                 _fileOperationHandler.RenameFileOrDirectory(sourcePath, newName);
 
-                // Refresh the UI to reflect the change.
                 if (parentNode != null)
                 {
-                    // Preserve the expanded state of the tree for a better user experience.
                     var previouslyExpandedPaths = new HashSet<string>(
                         _treeNodes.Where(n => n.IsDirectory && n.IsExpanded).Select(n => n.RelativePath)
                     );
@@ -751,8 +718,7 @@ namespace dCompare.Compare
                 }
                 else
                 {
-                    // The item was a root-level item, so a full comparison refresh is the safest way to update the view.
-                    Refresh();
+                    RefreshComparison();
                 }
             }
             catch (Exception ex)
@@ -837,7 +803,6 @@ namespace dCompare.Compare
                 MessageBox.Show("No valid files selected.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
 
         private void FileOperation_OnTransferStatusChanged(string jobId, bool success, string message)
         {

@@ -1,4 +1,4 @@
-﻿using dCompare.Configuration;
+using dCompare.Configuration;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -470,7 +470,7 @@ namespace dCompare.Compare
                                 Log.Error($"Error computing MD5: {ex.Message}");
                                 return ComparisonStatus.Conflict;
                             }
-                        case ComparisonAlgorithm.xxHash64:
+                        case ComparisonAlgorithm.xxHash64_Full:
                             try
                             {
                                 using var leftStream = _fileSystem.OpenRead(left.FullPath);
