@@ -1,4 +1,4 @@
-using dCompare.Configuration;
+﻿using dCompare.Configuration;
 using Serilog;
 using System;
 using System.Collections.Generic;

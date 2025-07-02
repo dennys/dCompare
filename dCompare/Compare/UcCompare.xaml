@@ -59,7 +59,7 @@
             <MenuItem Header="{x:Static resx:Resources.DeleteMenu}" Click="ContextMenu_DeleteRight_Click" Tag="{Binding}" Icon="{StaticResource DeleteIcon}"/>
             <MenuItem Header="{x:Static resx:Resources.RenameMenu}" Click="ContextMenu_Rename_Click" Tag="{Binding}" InputGestureText="F2"/>
             <Separator/>
-            <MenuItem Header="{x:Static resx:Resources.OpenFileLocationMenu}" Click="ContextMenu_OpenLeftLocation_Click" Tag="{Binding}"/>
+            <MenuItem Header="{x:Static resx:Resources.OpenFileLocationMenu}" Click="ContextMenu_OpenRightLocation_Click" Tag="{Binding}"/>
             <Separator/>
             <MenuItem Header="{x:Static resx:Resources.CopyPathnameToClipboardMenu}" Click="ContextMenu_CopyPathnames_Click" Tag="{Binding}"/>
             <MenuItem Header="{x:Static resx:Resources.CopyFilenameToClipboardMenu}" Click="ContextMenu_CopyFilenames_Click" Tag="{Binding}"/>
@@ -98,7 +98,7 @@
                 </Button>
 
                 <ComboBox Grid.Column="3" Name="AlgorithmComboBox" Margin="5,0" VerticalAlignment="Center" Width="200"
-                          ItemsSource="{x:Static config:ComparisonAlgorithms.AvailableAlgorithms}"
+                          ItemsSource="{x:Static config:ComparisonAlgorithms.EnabledAlgorithms}"
                           DisplayMemberPath="Key" SelectedValuePath="Value" SelectedValue="{Binding SelectedAlgorithm}"/>
 
                 <Label Grid.Column="5" Content="{x:Static resx:Resources.RightPath}" VerticalAlignment="Center"/>
@@ -167,7 +167,7 @@
                                                 <DataTrigger Binding="{Binding StatusSymbol}" Value="&lt;">
                                                     <Setter Property="Foreground" Value="Blue"/>
                                                 </DataTrigger>
-                                                <DataTrigger Binding="{Binding StatusSymbol}" Value=">">
+                                                <DataTrigger Binding="{Binding StatusSymbol}" Value="&gt;">
                                                     <Setter Property="Foreground" Value="Red"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
