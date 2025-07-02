@@ -6,7 +6,7 @@ using System.Windows.Media.Imaging;
 
 namespace dCompare.Diff
 {
-    public partial class UcImageDiffViewer : UserControl, INotifyPropertyChanged
+    public partial class UcImageDiffViewer : UserControl, INotifyPropertyChanged, IRefreshable
     {
         private string _leftPath = string.Empty;
         private string _rightPath = string.Empty;
@@ -115,8 +115,25 @@ namespace dCompare.Diff
             LeftPath = leftPath;
             RightPath = rightPath;
         }
+        public void Refresh()
+        {
+            if (string.IsNullOrEmpty(LeftPath) || string.IsNullOrEmpty(RightPath))
+            {
+                MessageBox.Show("Both image paths must be set to refresh the comparison.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+            try
+            {
+                LoadLeftImage();
+                LoadRightImage();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to refresh images: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         protected virtual void OnPropertyChanged(string propertyName)
         {

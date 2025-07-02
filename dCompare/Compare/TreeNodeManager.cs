@@ -52,7 +52,7 @@ namespace dCompare.Compare
                     Depth = depth
                 };
 
-                SetNodeDetails(node, item, leftRoot, rightRoot);
+                SetNodeDetails(node, item);
                 flatNodes.Add(node);
             }
             return flatNodes;
@@ -67,15 +67,12 @@ namespace dCompare.Compare
                     string relativePath = GetRelativePath(item, leftRoot, rightRoot);
                     if (string.IsNullOrEmpty(relativePath)) return false;
 
-                    string parentPath = Path.GetDirectoryName(relativePath);
-                    // Handle root-level items, whose parent path is empty
-                    if (parentPath == null) parentPath = "";
-
+                    string parentPath = Path.GetDirectoryName(relativePath) ?? "";  // Handle root-level items, whose parent path is empty
                     return parentPath.Equals(parentNode.RelativePath, StringComparison.OrdinalIgnoreCase);
                 })
                 .ToList();
 
-            if (!childItems.Any()) return;
+            if (childItems.Count == 0) return;
 
             var childNodes = CreateFlatTreeStructure(childItems, leftRoot, rightRoot, parentNode.Depth + 1);
             int insertIndex = _treeNodes.IndexOf(parentNode) + 1;
@@ -137,7 +134,7 @@ namespace dCompare.Compare
                 return;
             }
 
-            SetNodeDetails(nodeToRefresh, newRootComparisonItem, leftRoot, rightRoot);
+            SetNodeDetails(nodeToRefresh, newRootComparisonItem);
 
             // Restore the node's expanded state.
             nodeToRefresh.IsExpanded = wasExpanded;
@@ -182,7 +179,7 @@ namespace dCompare.Compare
             return path;
         }
 
-        private void SetNodeDetails(TreeNode node, DirectoryComparer.ComparisonItem item, string leftRoot, string rightRoot)
+        private void SetNodeDetails(TreeNode node, DirectoryComparer.ComparisonItem item)
         {
             node.LeftNode = item.Left;
             node.RightNode = item.Right;

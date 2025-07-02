@@ -1,5 +1,6 @@
 ﻿using dCompare.Compare;
 using dCompare.Configuration;
+using dCompare.Diff;
 using dCompare.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -52,10 +53,10 @@ namespace dCompare
         private readonly ISessionManager _sessionManager;
         private readonly IServiceProvider _serviceProvider;
 
-        private TabItem _draggedTab;
+        private TabItem? _draggedTab;
         private Point _dragStartPoint;
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         #endregion
 
@@ -79,11 +80,12 @@ namespace dCompare
             AddTabCommand = new RelayCommand(_ => AddNewTab(), _ => CanAddTab());
             CloseTabCommand = new RelayCommand(param => CloseTab(param as TabItem), param => CanCloseTab());
             SaveSessionCommand = new RelayCommand(_ => _sessionManager.SaveSession(UpdateStatus), _ => _sessionManager.CanSaveSession());
-            LoadSessionCommand = new RelayCommand(_ => _sessionManager.LoadSession(null, false, UpdateStatus, ExecuteUcCompareMethod), _ => _sessionManager.CanLoadSession());
+            LoadSessionCommand = new RelayCommand(_ => _sessionManager.LoadSession(string.Empty, false, UpdateStatus, ExecuteUcCompareMethod), _ => _sessionManager.CanLoadSession());
             ClearRecentSessionsCommand = new RelayCommand(_ => _sessionManager.ClearRecentSessions(), _ => _sessionManager.CanClearRecentSessions());
 
             OptionsCommand = new RelayCommand(_ => ExecuteOptions(), _ => CanExecuteOptions());
-            CompareCommand = new RelayCommand(_ => ExecuteUcCompareMethod("Compare_Click"), _ => CanExecuteUcCompareMethod());
+            //CompareCommand = new RelayCommand(_ => ExecuteUcCompareMethod("Compare_Click"), _ => CanExecuteUcCompareMethod());
+            CompareCommand = new RelayCommand(_ => ExecuteRefresh(), _ => CanExecuteRefresh());
             CopyToLeftCommand = new RelayCommand(_ => ExecuteUcCompareMethod("CopyToLeft_Click"), _ => CanExecuteUcCompareMethod());
             CopyToRightCommand = new RelayCommand(_ => ExecuteUcCompareMethod("CopyToRight_Click"), _ => CanExecuteUcCompareMethod());
             ExpandAllCommand = new RelayCommand(_ => ExecuteUcCompareMethod("ExpandAll_Click"), _ => CanExecuteUcCompareMethod());
@@ -127,6 +129,31 @@ namespace dCompare
 
         #endregion
 
+        void ExecuteRefresh()
+        {
+            try
+            {
+                if (tabControl.SelectedItem is TabItem selectedTab && selectedTab.Content is IRefreshable refreshable)
+                {
+                    refreshable.Refresh();
+                    UpdateStatus("Comparison refreshed");
+                }
+                else
+                {
+                    MessageBox.Show("No active tab or tab does not support refresh", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error executing refresh: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private bool CanExecuteRefresh()
+        {
+            return tabControl?.SelectedItem is TabItem selectedTab && selectedTab.Content is IRefreshable;
+        }
+
         #region Tab Management
 
         private async void AddNewTab()
@@ -142,7 +169,7 @@ namespace dCompare
                 };
                 tabControl.Items.Add(newTab);
                 tabControl.SelectedItem = newTab;
-                _sessionManager.TabIdMap[newTab.Header.ToString()] = tabId;
+                _sessionManager.TabIdMap[newTab.Header.ToString()!] = tabId;
 
                 AppConfiguration config = await _configService.LoadConfigurationAsync();
                 if (!config.Sessions.ContainsKey(tabId))
@@ -159,26 +186,26 @@ namespace dCompare
             }
         }
 
-        private async void CloseTab(TabItem tab)
+        private async void CloseTab(TabItem? tab)
         {
             try
             {
-                TabItem tabToClose = tab ?? tabControl.SelectedItem as TabItem;
-                if (tabToClose == null || !tabControl.Items.Contains(tabToClose))
+                TabItem? tabToClose = tab ?? (tabControl?.SelectedItem as TabItem);
+                if (tabToClose == null || tabControl?.Items?.Contains(tabToClose) != true)
                 {
                     UpdateStatus(Properties.Resources.StatusNoTabToClose);
                     return;
                 }
 
                 bool showConfirmation = tabControl.Items.Count > 1 &&
-                                       !tabToClose.Header.ToString().Equals("Welcome", StringComparison.OrdinalIgnoreCase);
+                                       !string.Equals(tabToClose.Header?.ToString(), "Welcome", StringComparison.OrdinalIgnoreCase);
 
                 if (showConfirmation)
                 {
                     MessageBoxResult result = MessageBox.Show(
                         $"{Properties.Resources.ConfirmCloseTab} '{tabToClose.Header}'?",
                         Properties.Resources.ConfirmCloseTitle,
-                        MessageBoxButton.YesNo,
+                        MessageBoxButton.YesNoCancel,
                         MessageBoxImage.Question);
 
                     if (result != MessageBoxResult.Yes)
@@ -191,9 +218,12 @@ namespace dCompare
                 tabControl.Items.Remove(tabToClose);
                 try
                 {
-                    var tabId = _sessionManager.TabIdMap[tabToClose.Header.ToString()];
-                    _sessionManager.TabIdMap.Remove(tabToClose.Header.ToString());
-                    await _configService.RemoveSessionAsync(tabId);
+                    var headerString = tabToClose.Header?.ToString();
+                    if (headerString != null && _sessionManager.TabIdMap.TryGetValue(headerString, out string? tabId))
+                    {
+                        _sessionManager.TabIdMap.Remove(headerString);
+                        await _configService.RemoveSessionAsync(tabId);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -334,7 +364,7 @@ namespace dCompare
             {
                 if (tabControl.SelectedItem is TabItem selectedTab && selectedTab.Content is UcCompare ucCompare)
                 {
-                    MethodInfo methodInfo = typeof(UcCompare).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
+                    MethodInfo? methodInfo = typeof(UcCompare).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
                     if (methodInfo != null)
                     {
                         methodInfo.Invoke(ucCompare, new object[] { null, null });
@@ -369,7 +399,7 @@ namespace dCompare
         {
             if (sender is TextBlock textBlock)
             {
-                TabItem tabItem = FindAncestor<TabItem>(textBlock);
+                TabItem? tabItem = FindAncestor<TabItem>(textBlock);
                 if (tabItem != null)
                 {
                     _draggedTab = tabItem;
@@ -379,7 +409,7 @@ namespace dCompare
         }
 
         // Helper method to find the parent TabItem
-        private static T FindAncestor<T>(DependencyObject current) where T : DependencyObject
+        private static T? FindAncestor<T>(DependencyObject current) where T : DependencyObject
         {
             while (current != null && !(current is T))
             {
@@ -481,7 +511,7 @@ namespace dCompare
                 MessageBoxResult result = MessageBox.Show(
                     Properties.Resources.ConfirmExit,
                     Properties.Resources.ConfirmExitTitle,
-                    MessageBoxButton.YesNo,
+                    MessageBoxButton.YesNoCancel,
                     MessageBoxImage.Question);
 
                 if (result != MessageBoxResult.Yes)

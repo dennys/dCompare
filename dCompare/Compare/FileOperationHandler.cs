@@ -33,11 +33,6 @@ namespace dCompare.Compare
         // Helper method to find FileOperationControl in the visual tree
         private FileOperationControl FindFileOperationControl()
         {
-            //if (xxx != null)
-            //{
-            //    return xxx; // Return cached instance
-            //}
-
             var mainWindow = Application.Current.MainWindow;
 
             // Find FileOperationControl by x:Name or type

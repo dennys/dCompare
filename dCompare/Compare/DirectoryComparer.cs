@@ -1,4 +1,4 @@
-﻿using dCompare.Configuration;
+using dCompare.Configuration;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -92,7 +92,7 @@ namespace dCompare.Compare
         private readonly IFileSystem _fileSystem;
         private readonly IHashProvider _hashProvider;
 
-        public DirectoryComparer(IFileSystem fileSystem = null, IHashProvider hashProvider = null)
+        public DirectoryComparer(IFileSystem? fileSystem = null, IHashProvider? hashProvider = null)
         {
             _fileSystem = fileSystem ?? new FileSystem();
             _hashProvider = hashProvider ?? new HashProvider();
@@ -470,7 +470,7 @@ namespace dCompare.Compare
                                 Log.Error($"Error computing MD5: {ex.Message}");
                                 return ComparisonStatus.Conflict;
                             }
-                        case ComparisonAlgorithm.xxHash64:
+                        case ComparisonAlgorithm.xxHash64_Full:
                             try
                             {
                                 using var leftStream = _fileSystem.OpenRead(left.FullPath);

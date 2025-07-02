@@ -14,7 +14,6 @@ namespace dCompare
 {
     public class SessionManager: ISessionManager
     {
-        //private readonly ConfigurationService _configService;
         private readonly IConfigurationService _configService;
         private readonly IServiceProvider _serviceProvider;
         private readonly List<string> _recentSessions;
@@ -263,7 +262,6 @@ namespace dCompare
                         };
                         ucCompareInstance.LeftPathBox.Text = session.Value.Left;
                         ucCompareInstance.RightPathBox.Text = session.Value.Right;
-                        //((UcCompare)newTab.Content).SelectedAlgorithm = session.Value.Algorithm ?? ComparisonAlgorithm.ModifiedDateAndSize;
                         ucCompareInstance.SelectedAlgorithm = session.Value.Algorithm;
                         _tabControl.Items.Add(newTab);
                         _tabIdMap[tabName] = Guid.NewGuid().ToString();
