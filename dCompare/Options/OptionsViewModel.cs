@@ -12,9 +12,7 @@ using Microsoft.VisualBasic; // For InputBox
 
 namespace dCompare.Options
 {
-
     // ================== Base Classes for MVVM ==================
-
     public class ViewModelBase : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -30,10 +28,8 @@ namespace dCompare.Options
             return true;
         }
     }
-	
-	
-    // ================== Main ViewModel ==================
 
+    // ================== Main ViewModel ==================
     public class SettingsViewModel : ViewModelBase
     {
         private readonly ConfigurationService _configService;
@@ -48,7 +44,6 @@ namespace dCompare.Options
         {
             _configService = configService;
             SaveCommand = new RelayCommand(async _ => await SaveConfiguration());
-            // Use async void carefully. It's acceptable for top-level event handlers.
             LoadConfigurationAsync();
         }
 
@@ -56,7 +51,6 @@ namespace dCompare.Options
         public SettingsViewModel()
         {
             _filterText = "Filter...";
-            // Create dummy data for the designer
             _appConfig = new AppConfiguration();
             BuildMenu();
         }
@@ -69,7 +63,6 @@ namespace dCompare.Options
 
         private async Task SaveConfiguration()
         {
-            // Before saving, ensure all child VMs have pushed their changes to the model
             foreach (var menuItem in MenuItems.SelectMany(m => m.Children).Where(c => c.ViewModel != null))
             {
                 if (menuItem.ViewModel is IConfigurationUpdater updater)
@@ -80,6 +73,7 @@ namespace dCompare.Options
             await _configService.SaveConfigurationAsync(_appConfig);
             MessageBox.Show("Settings saved successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
         }
+
         private void BuildMenu()
         {
             MenuItems.Clear();
@@ -107,16 +101,15 @@ namespace dCompare.Options
 
             MenuItems.Add(optionsNode);
 
-            // Select the first item by default
             optionsNode.IsExpanded = true;
             if (uiNode != null) uiNode.IsSelected = true;
         }
+
         public string FilterText
         {
             get => _filterText;
             set
             {
-                // Check if the value is actually different to avoid cycles
                 if (SetProperty(ref _filterText, value))
                 {
                     ApplyFilter();
@@ -165,7 +158,6 @@ namespace dCompare.Options
     }
 
     // ================== TreeView Menu Item ViewModel ==================
-
     public class SettingsMenuItem : ViewModelBase
     {
         private bool _isSelected;
@@ -183,6 +175,7 @@ namespace dCompare.Options
             ViewModel = viewModel;
             _mainViewModel = mainViewModel;
         }
+
         public bool IsSelected
         {
             get => _isSelected;
@@ -207,14 +200,13 @@ namespace dCompare.Options
             set => SetProperty(ref _isVisible, value);
         }
     }
-	
-    // ================== Individual Settings ViewModels ==================
 
-    // Interface to ensure ViewModels can update the master config object
+    // ================== Individual Settings ViewModels ==================
     public interface IConfigurationUpdater
     {
         void UpdateModel();
     }
+
     public class UIOptionsViewModel : ViewModelBase
     {
         private readonly UIOptions _model;
@@ -232,17 +224,167 @@ namespace dCompare.Options
         public string Language { get => _model.Language; set { _model.Language = value; OnPropertyChanged(); } }
     }
 
-    public class CompareOptionsViewModel : ViewModelBase
+    public class AlgorithmItemViewModel : ViewModelBase
+    {
+        private readonly ComparisonAlgorithm _algorithm;
+        private readonly ComparisonAlgorithmInfo _info;
+        private readonly CompareOptionsViewModel _parent;
+        private readonly bool _supportsPercentage;
+
+        public AlgorithmItemViewModel(ComparisonAlgorithm algorithm, ComparisonAlgorithmInfo info, CompareOptionsViewModel parent)
+        {
+            _algorithm = algorithm;
+            _info = info;
+            _parent = parent;
+            _supportsPercentage = _info.ComparisonPercentage.HasValue;
+        }
+
+        public ComparisonAlgorithm Algorithm => _algorithm;
+        public string Description => _info.Description;
+        public bool IsPercentageSettingEnabled
+        {
+            get
+            {
+                // The setting is disabled if the algorithm fundamentally doesn't support it,
+                // OR if it's the specific "Quick" algorithm.
+                if (!_supportsPercentage || this.Description == "Quick (ModifiedDate and Size)")
+                {
+                    return false;
+                }
+                return true;
+            }
+        }
+        public bool IsEnabled
+        {
+            get => _info.IsEnabled;
+            set
+            {
+                _info.IsEnabled = value;
+                OnPropertyChanged();
+                if (!value && IsDefault)
+                {
+                    IsDefault = false; // Unselect default if disabled
+                    _parent.UpdateDefaultAlgorithm(null);
+                }
+            }
+        }
+
+        public bool IsDefault
+        {
+            get => _info.IsDefault;
+            set
+            {
+                if (_info.IsDefault == value) return;
+
+                if (value && _info.IsEnabled)
+                {
+                    _info.IsDefault = true;
+                    OnPropertyChanged();
+                    _parent.UpdateDefaultAlgorithm(_algorithm);
+                }
+                else if (!value)
+                {
+                    _info.IsDefault = false;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        public string ComparisonPercentage
+        {
+            get => _info.ComparisonPercentage?.ToString();
+            set
+            {
+                // If the input is empty or a valid number from 1-100, update the model
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    _info.ComparisonPercentage = null;
+                }
+                else if (int.TryParse(value, out int percentage) && percentage >= 1 && percentage <= 100)
+                {
+                    _info.ComparisonPercentage = percentage;
+                }
+
+                // Notify the UI to re-validate
+                OnPropertyChanged();
+            }
+        }
+        // Implementation of IDataErrorInfo for validation feedback
+        public string Error => null;
+
+        public string this[string columnName]
+        {
+            get
+            {
+                string result = null;
+                if (columnName == nameof(ComparisonPercentage))
+                {
+                    if (!string.IsNullOrWhiteSpace(ComparisonPercentage))
+                    {
+                        if (!int.TryParse(ComparisonPercentage, out int percentage))
+                        {
+                            result = "Value must be a number.";
+                        }
+                        else if (percentage < 1 || percentage > 100)
+                        {
+                            result = "Value must be between 1 and 100.";
+                        }
+                    }
+                }
+                return result;
+            }
+        }
+    }
+
+    public class CompareOptionsViewModel : ViewModelBase, IConfigurationUpdater
     {
         private readonly CompareOptions _model;
-        public CompareOptionsViewModel(CompareOptions model) { _model = model; }
+        public ObservableCollection<AlgorithmItemViewModel> AlgorithmItems { get; } = new();
 
-        // Reference the static AvailableAlgorithms
-        public List<KeyValuePair<string, ComparisonAlgorithm>> AvailableAlgorithms => ComparisonAlgorithms.AvailableAlgorithms;
+        public CompareOptionsViewModel(CompareOptions model)
+        {
+            _model = model;
+            foreach (var kvp in _model.Algorithms)
+            {
+                AlgorithmItems.Add(new AlgorithmItemViewModel(kvp.Key, kvp.Value, this));
+            }
+        }
+
         public List<string> AvailableDoubleClickActions => new List<string> { "view", "edit", "open" };
 
-        public ComparisonAlgorithm Algorithm { get => _model.Algorithm; set { _model.Algorithm = value; OnPropertyChanged(); } }
-        public string DoubleClickAction { get => _model.DoubleClick; set { _model.DoubleClick = value; OnPropertyChanged(); } }
+        public string DoubleClickAction
+        {
+            get => _model.DoubleClick;
+            set
+            {
+                _model.DoubleClick = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public void UpdateDefaultAlgorithm(ComparisonAlgorithm? algorithm)
+        {
+            foreach (var item in AlgorithmItems)
+            {
+                if (item.Algorithm != algorithm)
+                {
+                    item.IsDefault = false; // Use public property to update IsDefault
+                }
+            }
+        }
+
+        public void UpdateModel()
+        {
+            //foreach (var item in AlgorithmItems)
+            //{
+            //    _model.Algorithms[item.Algorithm] = new ComparisonAlgorithmInfo
+            //    {
+            //        Description = item.Description,
+            //        IsEnabled = item.IsEnabled,
+            //        IsDefault = item.IsDefault,
+            //        ComparisonPercentage = item.ComparisonPercentage
+            //    };
+            //}
+        }
     }
 
     public abstract class ListEditorViewModelBase<TModel, TItem> : ViewModelBase where TModel : class
@@ -267,6 +409,7 @@ namespace dCompare.Options
         }
 
         public string SelectedExtension { get => _selectedExtension; set => SetProperty(ref _selectedExtension, value); }
+
         private void AddExtension(object obj)
         {
             string newExt = Interaction.InputBox("Enter new file extension (e.g., .txt):", "Add Extension", "");
@@ -279,7 +422,14 @@ namespace dCompare.Options
                 MessageBox.Show("Extension must start with a dot (e.g., .txt).", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
-        private void RemoveExtension(object obj) { if (!string.IsNullOrEmpty(SelectedExtension)) Extensions.Remove(SelectedExtension); }
+
+        private void RemoveExtension(object obj)
+        {
+            if (!string.IsNullOrEmpty(SelectedExtension))
+            {
+                Extensions.Remove(SelectedExtension);
+            }
+        }
     }
 
     public class TextDiffOptionsViewModel : ListEditorViewModelBase<TextDiffOptions, string>
@@ -358,7 +508,7 @@ namespace dCompare.Options
     public class HotKeyItemViewModel : ViewModelBase
     {
         private string _combination;
-        public string Name { get; } // The name (e.g., "Add Tab") doesn't change
+        public string Name { get; }
         public string Combination { get => _combination; set => SetProperty(ref _combination, value); }
         public HotKeyItemViewModel(string name, string combination)
         {
@@ -375,7 +525,6 @@ namespace dCompare.Options
         public HotKeysOptionsViewModel(HotKeysOptions model)
         {
             _model = model;
-            // Use the new mutable ViewModel
             HotKeyItems.Add(new HotKeyItemViewModel("Add Tab", _model.AddTab));
             HotKeyItems.Add(new HotKeyItemViewModel("Close Tab", _model.CloseTab));
             HotKeyItems.Add(new HotKeyItemViewModel("Compare", _model.Compare));
@@ -383,10 +532,8 @@ namespace dCompare.Options
             HotKeyItems.Add(new HotKeyItemViewModel("Load Session", _model.LoadSession));
         }
 
-        // This method is called before saving to push UI changes back to the data model
         public void UpdateModel()
         {
-            // A more robust solution could use a dictionary or reflection
             _model.AddTab = HotKeyItems.FirstOrDefault(i => i.Name == "Add Tab")?.Combination ?? _model.AddTab;
             _model.CloseTab = HotKeyItems.FirstOrDefault(i => i.Name == "Close Tab")?.Combination ?? _model.CloseTab;
             _model.Compare = HotKeyItems.FirstOrDefault(i => i.Name == "Compare")?.Combination ?? _model.Compare;
@@ -399,7 +546,6 @@ namespace dCompare.Options
     {
         private readonly LogOptions _model;
         public LogOptionsViewModel(LogOptions model) { _model = model; }
-
         public List<string> AvailableLogLevels => new List<string> { "Verbose", "Debug", "Information", "Warning", "Error" };
         public bool IsEnabled { get => _model.Enabled; set { _model.Enabled = value; OnPropertyChanged(); } }
         public string Level { get => _model.Level; set { _model.Level = value; OnPropertyChanged(); } }
