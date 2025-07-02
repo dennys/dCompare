@@ -16,7 +16,7 @@ namespace dCompare.Compare
         /// <typeparam name="T">The type of the parent to find.</typeparam>
         /// <param name="child">The starting dependency object.</param>
         /// <returns>The found parent or null if not found.</returns>
-        public static T FindParent<T>(DependencyObject child) where T : DependencyObject
+        public static T? FindParent<T>(DependencyObject child) where T : DependencyObject
         {
             while (child != null)
             {
@@ -30,7 +30,7 @@ namespace dCompare.Compare
         }
 
         // Helper method to traverse the visual tree
-        public static T FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+        public static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
         {
             if (parent == null)
                 return null;

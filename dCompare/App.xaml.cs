@@ -21,7 +21,7 @@ namespace dCompare
             // Build a config object to read the json file
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("dcompare.json", optional: false, reloadOnChange: true)
+                .AddJsonFile("dCompare.json", optional: false, reloadOnChange: true)
                 .Build();
 
             // Configure the static logger
@@ -51,10 +51,6 @@ namespace dCompare
                     // Register other dependencies
                     services.AddSingleton<IFileOperationStrategy, Kernel32FileCopyStrategy>();
                     services.AddSingleton<IFileSystem, FileSystem>();
-
-                    // If you have logging, configure it here as well
-                    // services.AddLogging(...);
-
                 })
                 // --- Integrate Serilog with the Host ---
                 .UseSerilog() // This replaces the default logger with Serilog

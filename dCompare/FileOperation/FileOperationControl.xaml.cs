@@ -63,7 +63,7 @@ namespace dCompare.FileOperation
         public ObservableCollection<FileTransfer> FailedTransfers { get; } = new ObservableCollection<FileTransfer>();
 
         public delegate void TransferStatusChangedHandler(string jobId, bool success, string message);
-        public event TransferStatusChangedHandler OnTransferStatusChanged;
+        public event TransferStatusChangedHandler? OnTransferStatusChanged;
 
         // ICommand properties
         public ICommand StartCommand { get; }
@@ -451,7 +451,7 @@ namespace dCompare.FileOperation
             }
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         protected void OnPropertyChanged(string propertyName)
         {

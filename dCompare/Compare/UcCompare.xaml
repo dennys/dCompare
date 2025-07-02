@@ -10,6 +10,10 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <local:DepthToMarginConverter x:Key="DepthToMarginConverter"/>
+        <Style x:Key="SortableColumnHeaderStyle" TargetType="GridViewColumnHeader">
+            <Setter Property="Background" Value="Transparent"/>
+            <EventSetter Event="MouseLeftButtonUp" Handler="ColumnHeader_Click"/>
+        </Style>
         <Style x:Key="SpinnerStyle" TargetType="Ellipse">
             <Setter Property="Width" Value="12"/>
             <Setter Property="Height" Value="12"/>
@@ -120,7 +124,7 @@
                 </Style>
             </ListView.ItemContainerStyle>
             <ListView.View>
-                <GridView>
+                <GridView ColumnHeaderContainerStyle="{StaticResource SortableColumnHeaderStyle}">
                     <GridViewColumn Header="Left Name" Width="250">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
