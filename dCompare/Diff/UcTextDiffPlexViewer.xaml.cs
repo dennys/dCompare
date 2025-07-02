@@ -11,7 +11,7 @@ using System.Windows.Media;
 
 namespace dCompare.Diff
 {
-    public partial class UcFileCompare : UserControl, INotifyPropertyChanged
+    public partial class UcFileCompare : UserControl, INotifyPropertyChanged, IRefreshable
     {
         private string _leftPath = string.Empty;
         private string _rightPath = string.Empty;
@@ -68,9 +68,6 @@ namespace dCompare.Diff
             Loaded += UcFileCompare_Loaded;
 
             SetComparisonResult(leftPath, rightPath, comparisonResult);
-
-            // Add F5 keybinding for refresh
-            //InputBindings.Add(new KeyBinding(new RelayCommand(Refresh), Key.F5, ModifierKeys.None));
         }
 
         private void UcFileCompare_Loaded(object sender, RoutedEventArgs e)
@@ -132,6 +129,8 @@ namespace dCompare.Diff
 
         private void SetComparisonResult(string leftPath, string rightPath, object comparisonResult)
         {
+            bool EnableVerboseLogging = false;
+
             LeftPath = leftPath;
             RightPath = rightPath;
 
@@ -161,26 +160,29 @@ namespace dCompare.Diff
                 LeftLines = leftLines;
                 RightLines = rightLines;
 
-                // Debug: Log DiffPiece types and subpieces
-                foreach (var piece in LeftLines)
+                if (EnableVerboseLogging)
                 {
-                    Debug.WriteLine($"Left DiffPiece: Text='{piece.Text}', Type={piece.Type}, SubPieces={piece.SubPieces?.Count ?? 0}");
-                    if (piece.SubPieces != null)
+                    //Debug: Log DiffPiece types and subpieces
+                    foreach (var piece in LeftLines)
                     {
-                        foreach (var subPiece in piece.SubPieces)
+                        Debug.WriteLine($"Left DiffPiece: Text='{piece.Text}', Type={piece.Type}, SubPieces={piece.SubPieces?.Count ?? 0}");
+                        if (piece.SubPieces != null)
                         {
-                            Debug.WriteLine($"  SubPiece: Text='{subPiece.Text}', Type={subPiece.Type}");
+                            foreach (var subPiece in piece.SubPieces)
+                            {
+                                Debug.WriteLine($"  SubPiece: Text='{subPiece.Text}', Type={subPiece.Type}");
+                            }
                         }
                     }
-                }
-                foreach (var piece in RightLines)
-                {
-                    Debug.WriteLine($"Right DiffPiece: Text='{piece.Text}', Type={piece.Type}, SubPieces={piece.SubPieces?.Count ?? 0}");
-                    if (piece.SubPieces != null)
+                    foreach (var piece in RightLines)
                     {
-                        foreach (var subPiece in piece.SubPieces)
+                        Debug.WriteLine($"Right DiffPiece: Text='{piece.Text}', Type={piece.Type}, SubPieces={piece.SubPieces?.Count ?? 0}");
+                        if (piece.SubPieces != null)
                         {
-                            Debug.WriteLine($"  SubPiece: Text='{subPiece.Text}', Type={subPiece.Type}");
+                            foreach (var subPiece in piece.SubPieces)
+                            {
+                                Debug.WriteLine($"  SubPiece: Text='{subPiece.Text}', Type={subPiece.Type}");
+                            }
                         }
                     }
                 }
@@ -192,7 +194,7 @@ namespace dCompare.Diff
             }
         }
 
-        private void Refresh(object parameter)
+        public void Refresh()
         {
             if (string.IsNullOrEmpty(LeftPath) || string.IsNullOrEmpty(RightPath))
             {

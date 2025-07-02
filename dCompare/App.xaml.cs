@@ -21,7 +21,7 @@ namespace dCompare
             // Build a config object to read the json file
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("dcompare.json", optional: false, reloadOnChange: true)
+                .AddJsonFile("dCompare.json", optional: false, reloadOnChange: true)
                 .Build();
 
             // Configure the static logger

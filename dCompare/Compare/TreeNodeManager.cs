@@ -72,7 +72,7 @@ namespace dCompare.Compare
                 })
                 .ToList();
 
-            if (!childItems.Any()) return;
+            if (childItems.Count == 0) return;
 
             var childNodes = CreateFlatTreeStructure(childItems, leftRoot, rightRoot, parentNode.Depth + 1);
             int insertIndex = _treeNodes.IndexOf(parentNode) + 1;

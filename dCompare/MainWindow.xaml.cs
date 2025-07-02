@@ -129,59 +129,18 @@ namespace dCompare
 
         #endregion
 
-        private void ExecuteRefresh()
+        void ExecuteRefresh()
         {
             try
             {
-                if (tabControl.SelectedItem is TabItem selectedTab)
+                if (tabControl.SelectedItem is TabItem selectedTab && selectedTab.Content is IRefreshable refreshable)
                 {
-                    if (selectedTab.Content is UcCompare ucCompare)
-                    {
-                        MethodInfo methodInfo = typeof(UcCompare).GetMethod("Compare_Click", BindingFlags.NonPublic | BindingFlags.Instance);
-                        if (methodInfo != null)
-                        {
-                            methodInfo.Invoke(ucCompare, new object[] { null, null });
-                            UpdateStatus("Compare executed");
-                        }
-                        else
-                        {
-                            MessageBox.Show("Compare_Click method not found", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                        }
-                    }
-                    else if (selectedTab.Content is UcFileCompare ucFileCompare)
-                    {
-                        MethodInfo methodInfo = typeof(UcFileCompare).GetMethod("Refresh", BindingFlags.NonPublic | BindingFlags.Instance);
-                        if (methodInfo != null)
-                        {
-                            methodInfo.Invoke(ucFileCompare, new object[] { null });
-                            UpdateStatus("Text comparison refreshed");
-                        }
-                        else
-                        {
-                            MessageBox.Show("Refresh method not found in UcFileCompare", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                        }
-                    }
-                    else if (selectedTab.Content is UcImageDiffViewer ucImageDiffViewer)
-                    {
-                        MethodInfo methodInfo = typeof(UcImageDiffViewer).GetMethod("Refresh", BindingFlags.NonPublic | BindingFlags.Instance);
-                        if (methodInfo != null)
-                        {
-                            methodInfo.Invoke(ucImageDiffViewer, new object[] { null });
-                            UpdateStatus("Image comparison refreshed");
-                        }
-                        else
-                        {
-                            MessageBox.Show("Refresh method not found in UcImageDiffViewer", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                        }
-                    }
-                    else
-                    {
-                        MessageBox.Show("No active tab or unsupported tab type", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
+                    refreshable.Refresh();
+                    UpdateStatus("Comparison refreshed");
                 }
                 else
                 {
-                    MessageBox.Show("No active tab to execute refresh", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("No active tab or tab does not support refresh", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             catch (Exception ex)
@@ -192,8 +151,7 @@ namespace dCompare
 
         private bool CanExecuteRefresh()
         {
-            return tabControl?.SelectedItem is TabItem selectedTab &&
-                   (selectedTab.Content is UcCompare || selectedTab.Content is UcFileCompare || selectedTab.Content is UcImageDiffViewer);
+            return tabControl?.SelectedItem is TabItem selectedTab && selectedTab.Content is IRefreshable;
         }
 
         #region Tab Management
@@ -232,7 +190,7 @@ namespace dCompare
         {
             try
             {
-                TabItem tabToClose = tab ?? (tabControl?.SelectedItem as TabItem);
+                TabItem? tabToClose = tab ?? (tabControl?.SelectedItem as TabItem);
                 if (tabToClose == null || tabControl?.Items?.Contains(tabToClose) != true)
                 {
                     UpdateStatus(Properties.Resources.StatusNoTabToClose);
@@ -247,7 +205,7 @@ namespace dCompare
                     MessageBoxResult result = MessageBox.Show(
                         $"{Properties.Resources.ConfirmCloseTab} '{tabToClose.Header}'?",
                         Properties.Resources.ConfirmCloseTitle,
-                        MessageBoxButton.YesNo,
+                        MessageBoxButton.YesNoCancel,
                         MessageBoxImage.Question);
 
                     if (result != MessageBoxResult.Yes)
@@ -406,7 +364,7 @@ namespace dCompare
             {
                 if (tabControl.SelectedItem is TabItem selectedTab && selectedTab.Content is UcCompare ucCompare)
                 {
-                    MethodInfo methodInfo = typeof(UcCompare).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
+                    MethodInfo? methodInfo = typeof(UcCompare).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
                     if (methodInfo != null)
                     {
                         methodInfo.Invoke(ucCompare, new object[] { null, null });
@@ -441,7 +399,7 @@ namespace dCompare
         {
             if (sender is TextBlock textBlock)
             {
-                TabItem tabItem = FindAncestor<TabItem>(textBlock);
+                TabItem? tabItem = FindAncestor<TabItem>(textBlock);
                 if (tabItem != null)
                 {
                     _draggedTab = tabItem;
@@ -451,7 +409,7 @@ namespace dCompare
         }
 
         // Helper method to find the parent TabItem
-        private static T FindAncestor<T>(DependencyObject current) where T : DependencyObject
+        private static T? FindAncestor<T>(DependencyObject current) where T : DependencyObject
         {
             while (current != null && !(current is T))
             {
@@ -553,7 +511,7 @@ namespace dCompare
                 MessageBoxResult result = MessageBox.Show(
                     Properties.Resources.ConfirmExit,
                     Properties.Resources.ConfirmExitTitle,
-                    MessageBoxButton.YesNo,
+                    MessageBoxButton.YesNoCancel,
                     MessageBoxImage.Question);
 
                 if (result != MessageBoxResult.Yes)

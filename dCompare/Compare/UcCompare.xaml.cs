@@ -38,7 +38,7 @@ namespace dCompare.Compare
         DeleteRight
     }
 
-    public partial class UcCompare : UserControl, INotifyPropertyChanged
+    public partial class UcCompare : UserControl, INotifyPropertyChanged, IRefreshable
     {
         private ObservableCollection<TreeNode> _treeNodes = new();
         private DirectoryComparer _comparer = new DirectoryComparer();
@@ -51,7 +51,6 @@ namespace dCompare.Compare
         private double _comparisonProgress;
         private ComparisonAlgorithm _selectedAlgorithm;
 
-        private FileOperationWindow _fileOperationWindow;
         private readonly TreeNodeManager _treeNodeManager;
         private readonly FileOperationHandler _fileOperationHandler;
 
@@ -137,7 +136,7 @@ namespace dCompare.Compare
 
         public void ChangeTabHeader(string newHeader)
         {
-            TabItem tabItem = WpfTreeHelperExtensions.FindParent<TabItem>(this);
+            TabItem? tabItem = WpfTreeHelperExtensions.FindParent<TabItem>(this);
             if (tabItem != null && !IsComparing)
             {
                 tabItem.Header = newHeader;
@@ -156,10 +155,10 @@ namespace dCompare.Compare
 
         private void Compare_Click(object sender, RoutedEventArgs e)
         {
-            RefreshComparison();
+            Refresh();
         }
 
-        private async void RefreshComparison()
+        public async void Refresh()
         {
             if (IsComparing) { MessageBox.Show("Comparison is already in progress."); return; }
 
@@ -571,7 +570,7 @@ namespace dCompare.Compare
                     var result = MessageBox.Show(
                         confirmationMessage,
                         "Confirm Operation",
-                        MessageBoxButton.YesNo,
+                        MessageBoxButton.YesNoCancel,
                         MessageBoxImage.Warning);
 
                     if (result != MessageBoxResult.Yes)
@@ -753,7 +752,7 @@ namespace dCompare.Compare
                 else
                 {
                     // The item was a root-level item, so a full comparison refresh is the safest way to update the view.
-                    RefreshComparison();
+                    Refresh();
                 }
             }
             catch (Exception ex)

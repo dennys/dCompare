@@ -24,7 +24,7 @@ namespace dCompare.Configuration
         /// Initializes a new instance of the ConfigurationService.
         /// </summary>
         /// <param name="configFileName">The name of the configuration file, e.g., "appsettings.json".</param>
-        public ConfigurationService(string configFileName = "appsettings.json")
+        public ConfigurationService(string configFileName = "dCompare.json")
         {
             _configPath = Path.Combine(Directory.GetCurrentDirectory(), configFileName);
             var builder = new ConfigurationBuilder()

@@ -10,7 +10,7 @@ namespace dCompare.FileOperation
             InitializeComponent();
         }
 
-        public Action<string, bool, string> OnTransferStatusChanged { get; internal set; }
+        public Action<string, bool, string>? OnTransferStatusChanged { get; internal set; }
 
         internal List<string> CopyMultiple(List<(string Source, string TargetPath, SourceType Type)> items, bool v)
         {
