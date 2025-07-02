@@ -1,4 +1,4 @@
-using dCompare.Configuration;
+﻿using dCompare.Configuration;
 using dCompare.Diff;
 using dCompare.FileOperation;
 using dCompare.FileOperation.Strategies;
@@ -51,7 +51,6 @@ namespace dCompare.Compare
         private double _comparisonProgress;
         private ComparisonAlgorithm _selectedAlgorithm;
 
-        private FileOperationWindow _fileOperationWindow;
         private readonly TreeNodeManager _treeNodeManager;
         private readonly FileOperationHandler _fileOperationHandler;
 

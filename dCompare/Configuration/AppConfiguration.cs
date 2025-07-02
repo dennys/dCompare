@@ -53,9 +53,9 @@ namespace dCompare.Configuration
 
     public class CompareOptions
     {
-        [JsonPropertyName("Algorithm")]
-        [JsonConverter(typeof(JsonStringEnumConverter))]
-        public ComparisonAlgorithm Algorithm { get; set; } = ComparisonAlgorithm.ModifiedDateAndSize;
+        [JsonPropertyName("Algorithms")]
+        public Dictionary<ComparisonAlgorithm, ComparisonAlgorithmInfo> Algorithms { get; set; } =
+            new Dictionary<ComparisonAlgorithm, ComparisonAlgorithmInfo>(ComparisonAlgorithms.AlgorithmSettings);
 
         [JsonPropertyName("DoubleClick")]
         public string DoubleClick { get; set; } = "view";
