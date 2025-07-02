@@ -10,6 +10,16 @@
         d:DataContext="{d:DesignInstance Type=local:SettingsViewModel, IsDesignTimeCreatable=True}">
     <Window.Resources>
         <local:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <Style TargetType="TextBox">
+            <Style.Triggers>
+                <Trigger Property="Validation.HasError" Value="true">
+                    <Setter Property="BorderBrush" Value="Red"/>
+                    <Setter Property="BorderThickness" Value="1.5"/>
+                    <Setter Property="ToolTip"
+                        Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors)[0].ErrorContent}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
         <!-- DataTemplate for UI Settings -->
         <DataTemplate DataType="{x:Type local:UIOptionsViewModel}">
             <StackPanel Margin="20">
@@ -23,7 +33,6 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
-                        <!-- For hint message -->
                     </Grid.RowDefinitions>
 
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="{x:Static resx:Resources.Theme}" VerticalAlignment="Center" Margin="0,5,10,5"/>
@@ -58,12 +67,41 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Default Algorithm:" VerticalAlignment="Center" Margin="0,5,10,5"/>
-                    <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,5"
-                              ItemsSource="{Binding AvailableAlgorithms}"
-                              SelectedValue="{Binding Algorithm}"
-                              DisplayMemberPath="Key"
-                              SelectedValuePath="Value" />
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Algorithms:" VerticalAlignment="Top" Margin="0,5,10,5"/>
+<StackPanel Grid.Row="0" Grid.Column="1">
+                    <Grid Margin="0,0,0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="55"/>
+                            <ColumnDefinition Width="55"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="75"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Enable" FontWeight="Bold" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="Default" FontWeight="Bold" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="Algorithm" FontWeight="Bold"/>
+                        <TextBlock Grid.Column="3" Text="Percent %" FontWeight="Bold" HorizontalAlignment="Center"/>
+                    </Grid>
+                    <Separator/>
+                    
+                    <ItemsControl Grid.Row="0" Grid.Column="1" ItemsSource="{Binding AlgorithmItems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <CheckBox IsChecked="{Binding IsEnabled}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <RadioButton Grid.Column="1" IsChecked="{Binding IsDefault}" Content="{Binding Description}" VerticalAlignment="Center" IsEnabled="{Binding IsEnabled}"/>
+                                    <TextBox Grid.Column="2" Width="50" Margin="10,0,0,0"
+                                        IsEnabled="{Binding IsPercentageSettingEnabled}"
+                                        Text="{Binding ComparisonPercentage, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+            </StackPanel>
 
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Double Click Action:" VerticalAlignment="Center" Margin="0,5,10,5"/>
                     <ComboBox Grid.Row="1" Grid.Column="1" Margin="0,5"
@@ -85,12 +123,10 @@
         <DataTemplate DataType="{x:Type local:TextDiffOptionsViewModel}">
             <StackPanel Margin="20">
                 <TextBlock Text="Text Diff Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
-
                 <TextBlock Text="Viewer:" VerticalAlignment="Center" Margin="0,5,10,5"/>
                 <ComboBox Margin="0,0,0,15"
                           ItemsSource="{Binding AvailableViewers}"
                           SelectedItem="{Binding Viewer}"/>
-
                 <TextBlock Text="File Extensions:" Margin="0,5,10,5"/>
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -106,16 +142,14 @@
             </StackPanel>
         </DataTemplate>
 
-        <!-- DataTemplate for Image Diff Settings (Similar to Text Diff) -->
+        <!-- DataTemplate for Image Diff Settings -->
         <DataTemplate DataType="{x:Type local:ImageDiffOptionsViewModel}">
             <StackPanel Margin="20">
                 <TextBlock Text="Image Diff Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
-
                 <TextBlock Text="Viewer:" VerticalAlignment="Center" Margin="0,5,10,5"/>
                 <ComboBox Margin="0,0,0,15"
                           ItemsSource="{Binding AvailableViewers}"
                           SelectedItem="{Binding Viewer}"/>
-
                 <TextBlock Text="File Extensions:" Margin="0,5,10,5"/>
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -140,12 +174,10 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-
                     <TextBlock Text="Default Session File:" VerticalAlignment="Center" Margin="0,5,10,5"/>
                     <TextBox Text="{Binding DefaultSessionFile, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" Margin="0,5"/>
                     <Button Grid.Column="1" Content="..." VerticalAlignment="Center" Padding="10,2" Margin="5,0" Command="{Binding BrowseSessionFileCommand}"/>
                 </Grid>
-
                 <CheckBox IsChecked="{Binding AutoLoadDefaultSession}" Content="Auto-load default session on startup" Margin="0,10"/>
                 <CheckBox IsChecked="{Binding AutoCompareAfterSessionLoad}" 
                           IsEnabled="{Binding AutoLoadDefaultSession}" 
@@ -179,7 +211,6 @@
             <StackPanel Margin="20">
                 <TextBlock Text="Log Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
                 <CheckBox IsChecked="{Binding IsEnabled}" Content="Enable logging" Margin="0,10"/>
-
                 <Grid IsEnabled="{Binding IsEnabled}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
@@ -189,27 +220,18 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Log Level:" VerticalAlignment="Center" Margin="0,5,10,5"/>
                     <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,5"
                               ItemsSource="{Binding AvailableLogLevels}" 
                               SelectedItem="{Binding Level}"/>
-
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Retention (days):" VerticalAlignment="Center" Margin="0,5,10,5"/>
                     <TextBox Grid.Row="1" Grid.Column="1" Margin="0,5"
                              Text="{Binding RetentionDays}"/>
                 </Grid>
             </StackPanel>
         </DataTemplate>
-
     </Window.Resources>
 
-    <!-- 
-    ==========================================================================================
-    MAIN LAYOUT
-    - A 3-row, 2-column grid defines the main structure.
-    ==========================================================================================
-    -->
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="250" MinWidth="200"/>
@@ -226,10 +248,8 @@
                 <TextBox DockPanel.Dock="Top" Margin="5" Name="FilterTextBox"
                          Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}"
                          Tag="Filter settings..." GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
-
                 <TreeView ItemsSource="{Binding MenuItems}" x:Name="SettingsTree">
                     <TreeView.ItemContainerStyle>
-                        <!-- Bind IsSelected to the view model and set Visibility based on filter -->
                         <Style TargetType="TreeViewItem">
                             <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
                             <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
@@ -237,14 +257,9 @@
                         </Style>
                     </TreeView.ItemContainerStyle>
                     <TreeView.Resources>
-                        <!-- Template for parent nodes -->
                         <HierarchicalDataTemplate DataType="{x:Type local:SettingsMenuItem}" ItemsSource="{Binding Children}">
                             <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
                         </HierarchicalDataTemplate>
-                        <!-- Template for leaf nodes (settings pages) 
-                        <DataTemplate DataType="{x:Type local:SettingsMenuItem}">
-                            <TextBlock Text="{Binding Name}" />
-                        </DataTemplate>-->
                     </TreeView.Resources>
                 </TreeView>
             </DockPanel>
