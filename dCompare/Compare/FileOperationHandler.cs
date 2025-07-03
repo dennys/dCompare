@@ -18,7 +18,7 @@ namespace dCompare.Compare
     {
         private readonly IFileManager _fileManager;
         private readonly TreeNodeManager _treeNodeManager;
-        private FileOperationControl _fileOperationControl;
+        private readonly FileOperationControl _fileOperationControl;
 
         // Dictionary to track active jobs and their completion sources.
         private readonly Dictionary<string, TaskCompletionSource<bool>> _activeJobs = new();
@@ -36,11 +36,11 @@ namespace dCompare.Compare
             var mainWindow = Application.Current.MainWindow;
 
             // Find FileOperationControl by x:Name or type
-            FileOperationControl control = (FileOperationControl)mainWindow.FindName("fileOperationControl");
+            FileOperationControl? control = (FileOperationControl)mainWindow.FindName("fileOperationControl");
             // Fallback: Traverse the visual tree to find FileOperationControl
             control ??= WpfTreeHelperExtensions.FindVisualChild<FileOperationControl>(mainWindow);
 
-            if (control == null)
+            if (control is null)
             {
                 const string message = "FileOperationControl not found in visual tree.";
                 Log.Error(message);

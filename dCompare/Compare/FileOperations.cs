@@ -9,7 +9,7 @@ namespace dCompare.Compare
     {
         public static void ShowPropertiesDialog(TreeNode node)
         {
-            StringBuilder properties = new StringBuilder();
+            StringBuilder properties = new();
             properties.AppendLine($"名稱: {node.Name}");
             properties.AppendLine($"狀態: {GetStatusText(node.Status)}");
             properties.AppendLine($"相對路徑: {node.RelativePath}");

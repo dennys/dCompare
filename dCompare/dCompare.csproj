@@ -9,6 +9,7 @@
     <ApplicationIcon>Resources\app.ico</ApplicationIcon>
     <Platforms>AnyCPU;x64</Platforms>
     <SatelliteResourceLanguages>en;zh-TW;zh-CN</SatelliteResourceLanguages>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
 
   <ItemGroup>
@@ -54,6 +55,11 @@
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Folder Include="FileSystem\" />
   </ItemGroup>
 
 

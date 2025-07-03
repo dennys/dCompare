@@ -53,6 +53,8 @@ namespace dCompare.Configuration
 
     public class CompareOptions
     {
+        [JsonPropertyName("ScanMethod")]
+        public string ScanMethod { get; set; } = "MFT";
         [JsonPropertyName("Algorithms")]
         public Dictionary<ComparisonAlgorithm, ComparisonAlgorithmInfo> Algorithms { get; set; } =
             new Dictionary<ComparisonAlgorithm, ComparisonAlgorithmInfo>(ComparisonAlgorithms.AlgorithmSettings);

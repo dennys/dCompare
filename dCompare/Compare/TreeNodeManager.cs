@@ -1,4 +1,5 @@
-﻿using System;
+﻿using dCompare.DirTreeSystem;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -6,18 +7,13 @@ using System.Linq;
 
 namespace dCompare.Compare
 {
-    public class TreeNodeManager
+    public class TreeNodeManager(ObservableCollection<TreeNode> treeNodes)
     {
-        private readonly ObservableCollection<TreeNode> _treeNodes;
+        private readonly ObservableCollection<TreeNode> _treeNodes = treeNodes;
         private Predicate<TreeNode>? _currentFilter;
 
-        public TreeNodeManager(ObservableCollection<TreeNode> treeNodes)
-        {
-            _treeNodes = treeNodes;
-        }
-
-		// Method to set the current filter
-		public void SetCurrentFilter(Predicate<TreeNode>? filter)
+        // Method to set the current filter
+        public void SetCurrentFilter(Predicate<TreeNode>? filter)
 		{
 			_currentFilter = filter;
 		}

@@ -1,4 +1,4 @@
-namespace dCompare
+namespace dCompare.Compare
 {
     public interface IRefreshable
     {

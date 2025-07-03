@@ -212,13 +212,13 @@ namespace dCompare.Options
         private readonly UIOptions _model;
         public UIOptionsViewModel(UIOptions model) { _model = model; }
         public UIOptionsViewModel() : this(new UIOptions()) { } // For designer
-        public List<string> AvailableThemes => new List<string> { "Light", "Dark" };
-        public List<KeyValuePair<string, string>> AvailableLanguages => new List<KeyValuePair<string, string>>
-        {
+        public static List<string> AvailableThemes => ["Light", "Dark"];
+        public static List<KeyValuePair<string, string>> AvailableLanguages =>
+        [
             new KeyValuePair<string, string>("English", "en"),
             new KeyValuePair<string, string>("繁體中文", "zh_TW"),
             new KeyValuePair<string, string>("简体中文", "zh_CN")
-        };
+        ];
 
         public string Theme { get => _model.Theme; set { _model.Theme = value; OnPropertyChanged(); } }
         public string Language { get => _model.Language; set { _model.Language = value; OnPropertyChanged(); } }
@@ -351,7 +351,7 @@ namespace dCompare.Options
 
         public List<string> AvailableDoubleClickActions => new List<string> { "view", "edit", "open" };
 
-        public string DoubleClickAction
+        public string DoubleClickActiony
         {
             get => _model.DoubleClick;
             set

@@ -1,3 +1,4 @@
+using dCompare.Compare;
 using DiffPlex.DiffBuilder;
 using DiffPlex.DiffBuilder.Model;
 using System.Collections.ObjectModel;
