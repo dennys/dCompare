@@ -349,9 +349,31 @@ namespace dCompare.Options
             }
         }
 
+        public List<string> AvailableScanMethods => new List<string> { "General", "MFT" };
+
+        public string ScanMethod
+        {
+            get => _model.ScanMethod.MethodOptions;
+            set
+            {
+                _model.ScanMethod.MethodOptions = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool Parallel
+        {
+            get => _model.ScanMethod.ParallelOptions;
+            set
+            {
+                _model.ScanMethod.ParallelOptions = value;
+                OnPropertyChanged();
+            }
+        }
+
         public List<string> AvailableDoubleClickActions => new List<string> { "view", "edit", "open" };
 
-        public string DoubleClickActiony
+        public string DoubleClickAction
         {
             get => _model.DoubleClick;
             set
@@ -374,16 +396,21 @@ namespace dCompare.Options
 
         public void UpdateModel()
         {
-            //foreach (var item in AlgorithmItems)
-            //{
-            //    _model.Algorithms[item.Algorithm] = new ComparisonAlgorithmInfo
-            //    {
-            //        Description = item.Description,
-            //        IsEnabled = item.IsEnabled,
-            //        IsDefault = item.IsDefault,
-            //        ComparisonPercentage = item.ComparisonPercentage
-            //    };
-            //}
+            // Update ScanMethod properties
+            _model.ScanMethod.MethodOptions = ScanMethod;
+            _model.ScanMethod.ParallelOptions = Parallel;
+
+            // Update Algorithms (uncommented and fixed)
+            foreach (var item in AlgorithmItems)
+            {
+                _model.Algorithms[item.Algorithm] = new ComparisonAlgorithmInfo
+                {
+                    Description = item.Description,
+                    IsEnabled = item.IsEnabled,
+                    IsDefault = item.IsDefault,
+                    ComparisonPercentage = item.ComparisonPercentage != null && int.TryParse(item.ComparisonPercentage, out int percentage) ? percentage : null
+                };
+            }
         }
     }
 

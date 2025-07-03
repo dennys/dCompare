@@ -93,13 +93,17 @@ namespace dCompare.Compare
         private readonly IFileSystem _fileSystem;
         private readonly IHashProvider _hashProvider;
         private readonly IFileSystemTreeBuilder _treeBuilder;
+        private readonly bool _parallel;
 
-        public DirectoryComparer(IFileSystem? fileSystem = null, IHashProvider? hashProvider = null, IFileSystemTreeBuilder? treeBuilder = null)
+        public DirectoryComparer(AppConfiguration? config = null, IFileSystem? fileSystem = null, IHashProvider? hashProvider = null)
         {
             _fileSystem = fileSystem ?? new FileSystem();
             _hashProvider = hashProvider ?? new HashProvider();
-            //_treeBuilder = treeBuilder ?? new MftFileSystemTreeBuilder();
-            _treeBuilder = treeBuilder ?? new DotnetFileSystemTreeBuilder(_fileSystem);
+            string scanMethod = config?.Options?.Compare?.ScanMethod?.MethodOptions ?? "General";
+            _treeBuilder = scanMethod.Equals("MFT", StringComparison.OrdinalIgnoreCase)
+                ? new MftFileSystemTreeBuilder()
+                : new DotnetFileSystemTreeBuilder(_fileSystem);
+            _parallel = config?.Options?.Compare?.ScanMethod?.ParallelOptions ?? true;
         }
 
         public class ComparisonItem
@@ -115,12 +119,11 @@ namespace dCompare.Compare
             string rightPath,
             CancellationToken cancellationToken = default,
             Action<double>? progressCallback = null,
-            ComparisonAlgorithm algorithm = ComparisonAlgorithm.ModifiedDateAndSize,
-            bool parallel = true)
+            ComparisonAlgorithm algorithm = ComparisonAlgorithm.ModifiedDateAndSize)
         {
-            return CompareAsync(leftPath, rightPath, cancellationToken, progressCallback, algorithm, parallel)
+            return CompareAsync(leftPath, rightPath, cancellationToken, progressCallback, algorithm)
                    .GetAwaiter()
-                   .GetResult(); // ⚠️ Only for non UI thread (console or server backgorund)
+                   .GetResult(); // ⚠️ Only for non UI thread (console or server background)
         }
 
         public async Task<List<ComparisonItem>> CompareAsync(
@@ -128,10 +131,10 @@ namespace dCompare.Compare
             string rightPath,
             CancellationToken cancellationToken = default,
             Action<double>? progressCallback = null,
-            ComparisonAlgorithm algorithm = ComparisonAlgorithm.ModifiedDateAndSize,
-            bool parallel = true)
+            ComparisonAlgorithm algorithm = ComparisonAlgorithm.ModifiedDateAndSize)
         {
-            Log.Information("Start to compare.");
+            Log.Information("Start to compare with method: {Method}, parallel: {Parallel}",
+                _treeBuilder is MftFileSystemTreeBuilder ? "MFT" : "General", _parallel);
             int totalDirs = CountDirectories(leftPath) + CountDirectories(rightPath);
             int processedDirs = 0;
             double progressPerDir = totalDirs > 0 ? 1.0 / totalDirs : 1.0;
@@ -151,7 +154,7 @@ namespace dCompare.Compare
             FileSystemNode? leftRoot = null;
             FileSystemNode? rightRoot = null;
 
-            if (parallel)
+            if (_parallel)
             {   // This is the parallel execution path (multi-threaded)
                 Task leftTask = Task.Run(() =>
                 {
@@ -185,7 +188,7 @@ namespace dCompare.Compare
             };
             result.Add(rootItem);
 
-            Log.Information("Start to compare.");
+            Log.Information("Start to compare nodes.");
             bool hasDifferences = CompareNodes(leftRoot, rightRoot, result, "", cancellationToken, algorithm);
 
             if (hasDifferences)
@@ -212,10 +215,10 @@ namespace dCompare.Compare
             cancellationToken.ThrowIfCancellationRequested();
 
             // Check if paths are files or directories
-            bool leftIsFile = File.Exists(leftSubPath);
-            bool rightIsFile = File.Exists(rightSubPath);
-            bool leftIsDir = Directory.Exists(leftSubPath);
-            bool rightIsDir = Directory.Exists(rightSubPath);
+            bool leftIsFile = _fileSystem.FileExists(leftSubPath);
+            bool rightIsFile = _fileSystem.FileExists(rightSubPath);
+            bool leftIsDir = _fileSystem.DirectoryExists(leftSubPath);
+            bool rightIsDir = _fileSystem.DirectoryExists(rightSubPath);
 
             // Build FileSystemNode trees for the paths
             FileSystemNode? leftSubRoot = leftIsFile || leftIsDir ? _treeBuilder.BuildTreeRecursive(leftSubPath, subDirDepth, cancellationToken) : null;
