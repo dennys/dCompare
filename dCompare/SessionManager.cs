@@ -124,7 +124,7 @@ namespace dCompare
                 var itemsToRemove = new List<MenuItem>();
                 foreach (var item in _recentSessionsMenu.Items)
                 {
-                    if (item is MenuItem menuItem && menuItem != _recentSessionsMenu.Items[0] && !(item is Separator))
+                    if (item is MenuItem menuItem && menuItem != _recentSessionsMenu.Items[0] && item is not Separator)
                     {
                         itemsToRemove.Add(menuItem);
                     }

@@ -65,19 +65,20 @@ public class Kernel32FileCopyStrategy : IFileOperationStrategy
                 }
 
                 // Preserve metadata
-                var originalFile = new FileInfo(sourceFile);
-                var copiedFile = new FileInfo(destFile);
-                copiedFile.CreationTimeUtc = originalFile.CreationTimeUtc;
-                copiedFile.LastAccessTimeUtc = originalFile.LastAccessTimeUtc;
-                copiedFile.LastWriteTimeUtc = originalFile.LastWriteTimeUtc;
+                FileInfo originalFile = new(sourceFile);
+                FileInfo copiedFile = new(destFile)
+                {
+                    CreationTimeUtc = originalFile.CreationTimeUtc,
+                    LastAccessTimeUtc = originalFile.LastAccessTimeUtc,
+                    LastWriteTimeUtc = originalFile.LastWriteTimeUtc
+                };
             }
         }, cancellationToken);
     }
 
     public void MoveFile(string sourceFile, string destFile, bool overwrite)
     {
-        File.Move(sourceFile, destFile, overwrite);
-        // File.Move preserves metadata on the same volume.
+        File.Move(sourceFile, destFile, overwrite);  // File.Move preserves metadata on the same volume.
     }
 
     public void DeleteFile(string filePath)

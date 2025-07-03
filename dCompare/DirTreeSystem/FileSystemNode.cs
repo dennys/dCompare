@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace dCompare.Compare
+namespace dCompare.DirTreeSystem
 {
 
     public class FileSystemNode

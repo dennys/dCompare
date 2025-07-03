@@ -12,7 +12,6 @@ using dCompare.Compare;
 
 namespace dCompare.Tests.FileOperation
 {
-
     public class FileManagerTests : IDisposable
     {
         private readonly string _testRoot;

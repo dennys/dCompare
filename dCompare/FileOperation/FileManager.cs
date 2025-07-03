@@ -35,19 +35,19 @@ namespace dCompare.FileOperation
         }
         public Task<OperationResult> CopyAsync(string source, string destination, bool overwrite = false, IProgress<OperationProgress>? progress = null, CancellationToken cancellationToken = default)
         {
-            var items = new List<(string, string, SourceType)> { (source, destination, SourceType.Left) };
+            List<(string, string, SourceType)>  items = [(source, destination, SourceType.Left)];
             return ProcessItemsAsync(items, OperationType.Copy, overwrite, progress, cancellationToken);
         }
 
         public Task<OperationResult> MoveAsync(string source, string destination, bool overwrite = false, IProgress<OperationProgress>? progress = null, CancellationToken cancellationToken = default)
         {
-            var items = new List<(string, string, SourceType)> { (source, destination, SourceType.Left) };
+            List<(string, string, SourceType)> items = [(source, destination, SourceType.Left)];
             return ProcessItemsAsync(items, OperationType.Move, overwrite, progress, cancellationToken);
         }
 
         public Task<OperationResult> DeleteAsync(string path, IProgress<OperationProgress>? progress = null, CancellationToken cancellationToken = default)
         {
-            var items = new List<(string, string, SourceType)> { (path, string.Empty, SourceType.Left) };
+            List<(string, string, SourceType)> items = [(path, string.Empty, SourceType.Left)];
             return ProcessItemsAsync(items, OperationType.Delete, false, progress, cancellationToken);
         }
 
@@ -73,9 +73,9 @@ namespace dCompare.FileOperation
 
         private async Task<OperationResult> ProcessItemsAsync(List<(string source, string target, SourceType type)> items, OperationType opType, bool overwrite, IProgress<OperationProgress>? progress, CancellationToken cancellationToken)
         {
-            var stopwatch = Stopwatch.StartNew();
+            Stopwatch stopwatch = Stopwatch.StartNew();
             int successCount = 0;
-            var failedItems = new List<string>();
+            List<string> failedItems = [];
             int totalCount = items.Count;
             int processedCount = 0;
             int lastReportedProgress = -1;
@@ -175,15 +175,17 @@ namespace dCompare.FileOperation
         {
             // Create target directory
             Directory.CreateDirectory(targetDir);
-            var sourceInfo = new DirectoryInfo(sourceDir);
-            var targetInfo = new DirectoryInfo(targetDir);
-            targetInfo.CreationTimeUtc = sourceInfo.CreationTimeUtc;
-            targetInfo.LastAccessTimeUtc = sourceInfo.LastAccessTimeUtc;
-            targetInfo.LastWriteTimeUtc = sourceInfo.LastWriteTimeUtc;
+            DirectoryInfo sourceInfo = new(sourceDir);
+            DirectoryInfo targetInfo = new(targetDir)
+            {
+                CreationTimeUtc = sourceInfo.CreationTimeUtc,
+                LastAccessTimeUtc = sourceInfo.LastAccessTimeUtc,
+                LastWriteTimeUtc = sourceInfo.LastWriteTimeUtc
+            };
 
             // Get all files and subdirectories
-            var files = Directory.GetFiles(sourceDir);
-            var subDirs = Directory.GetDirectories(sourceDir);
+            string[] files = Directory.GetFiles(sourceDir);
+            string[] subDirs = Directory.GetDirectories(sourceDir);
             int totalItems = files.Length + subDirs.Length;
             int processedItems = 0;
 
@@ -238,12 +240,11 @@ namespace dCompare.FileOperation
 
         private async Task MoveDirectoryAsync(string sourceDir, string targetDir, bool overwrite, int totalCount, int processedCount, Action<int, string> reportProgress, CancellationToken cancellationToken)
         {
-            // Create target directory
             Directory.CreateDirectory(targetDir);
 
             // Get all files and subdirectories
-            var files = Directory.GetFiles(sourceDir);
-            var subDirs = Directory.GetDirectories(sourceDir);
+            string[] files = Directory.GetFiles(sourceDir);
+            string[] subDirs = Directory.GetDirectories(sourceDir);
             int totalItems = files.Length + subDirs.Length;
             int processedItems = 0;
 
@@ -294,8 +295,8 @@ namespace dCompare.FileOperation
         private async Task DeleteDirectoryAsync(string dirPath, int totalCount, int processedCount, Action<int, string> reportProgress, CancellationToken cancellationToken)
         {
             // Get all files and subdirectories
-            var files = Directory.GetFiles(dirPath);
-            var subDirs = Directory.GetDirectories(dirPath);
+            string[] files = Directory.GetFiles(dirPath);
+            string[] subDirs = Directory.GetDirectories(dirPath);
             int totalItems = files.Length + subDirs.Length;
             int processedItems = 0;
 

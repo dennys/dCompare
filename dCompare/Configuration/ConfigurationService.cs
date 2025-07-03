@@ -11,6 +11,7 @@ namespace dCompare.Configuration
     /// </summary>
     public class ConfigurationService: IConfigurationService
     {
+        private const string jsonFileName = "dCompare.json";
         private readonly string _configPath;
         private readonly IConfiguration _configuration;
         private static readonly JsonSerializerOptions _serializerOptions = new()
@@ -24,7 +25,7 @@ namespace dCompare.Configuration
         /// Initializes a new instance of the ConfigurationService.
         /// </summary>
         /// <param name="configFileName">The name of the configuration file, e.g., "appsettings.json".</param>
-        public ConfigurationService(string configFileName = "dCompare.json")
+        public ConfigurationService(string configFileName = jsonFileName)
         {
             _configPath = Path.Combine(Directory.GetCurrentDirectory(), configFileName);
             var builder = new ConfigurationBuilder()

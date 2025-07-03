@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using dCompare.DirTreeSystem;
+using System.ComponentModel;
 using System.IO;
 using System.Xml.Linq;
 
