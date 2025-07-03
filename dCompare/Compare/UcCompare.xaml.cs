@@ -38,7 +38,7 @@ namespace dCompare.Compare
         DeleteRight
     }
 
-    public partial class UcCompare : UserControl, INotifyPropertyChanged
+    public partial class UcCompare : UserControl, INotifyPropertyChanged, IRefreshable
     {
         private ObservableCollection<TreeNode> _treeNodes = new();
         private DirectoryComparer _comparer = new DirectoryComparer();
@@ -159,10 +159,10 @@ namespace dCompare.Compare
 
         private void Compare_Click(object sender, RoutedEventArgs e)
         {
-            RefreshComparison();
+            Refresh();
         }
 
-        private async void RefreshComparison()
+        public async void Refresh()
         {
             if (IsComparing) { MessageBox.Show("Comparison is already in progress."); return; }
 
@@ -717,7 +717,7 @@ namespace dCompare.Compare
                 }
                 else
                 {
-                    RefreshComparison();
+                    Refresh();
                 }
             }
             catch (Exception ex)

@@ -90,14 +90,14 @@ namespace dCompare.Options
 
             var sessionNode = new SettingsMenuItem("Session", new SessionOptionsViewModel(_appConfig.Options.Session), this);
             var hotkeysNode = new SettingsMenuItem("HotKeys", new HotKeysOptionsViewModel(_appConfig.Options.HotKeys), this);
-            var logNode = new SettingsMenuItem("Log", new LogOptionsViewModel(_appConfig.Options.Log), this);
+            //var logNode = new SettingsMenuItem("Log", new LogOptionsViewModel(_appConfig.Options.Log), this);
 
             optionsNode.Children.Add(uiNode);
             optionsNode.Children.Add(compareNode);
             optionsNode.Children.Add(diffNode);
             optionsNode.Children.Add(sessionNode);
             optionsNode.Children.Add(hotkeysNode);
-            optionsNode.Children.Add(logNode);
+            //optionsNode.Children.Add(logNode);
 
             MenuItems.Add(optionsNode);
 
@@ -571,11 +571,11 @@ namespace dCompare.Options
 
     public class LogOptionsViewModel : ViewModelBase
     {
-        private readonly LogOptions _model;
-        public LogOptionsViewModel(LogOptions model) { _model = model; }
+        //private readonly LogOptions _model;
+        //public LogOptionsViewModel(LogOptions model) { _model = model; }
         public List<string> AvailableLogLevels => new List<string> { "Verbose", "Debug", "Information", "Warning", "Error" };
-        public bool IsEnabled { get => _model.Enabled; set { _model.Enabled = value; OnPropertyChanged(); } }
-        public string Level { get => _model.Level; set { _model.Level = value; OnPropertyChanged(); } }
-        public int RetentionDays { get => _model.RetentionDays; set { _model.RetentionDays = value; OnPropertyChanged(); } }
+        //public bool IsEnabled { get => _model.Enabled; set { _model.Enabled = value; OnPropertyChanged(); } }
+        //public string Level { get => _model.Level; set { _model.Level = value; OnPropertyChanged(); } }
+        //public int RetentionDays { get => _model.RetentionDays; set { _model.RetentionDays = value; OnPropertyChanged(); } }
     }
 }
