@@ -1,4 +1,4 @@
-﻿using dCompare.Configuration;
+using dCompare.Configuration;
 using dCompare.DirTreeSystem;
 using Serilog;
 using System;
