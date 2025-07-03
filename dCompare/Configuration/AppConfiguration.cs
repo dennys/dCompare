@@ -54,7 +54,7 @@ namespace dCompare.Configuration
     public class CompareOptions
     {
         [JsonPropertyName("ScanMethod")]
-        public string ScanMethod { get; set; } = "MFT";
+        public ScanMethodOptions ScanMethod { get; set; } = new();
         [JsonPropertyName("Algorithms")]
         public Dictionary<ComparisonAlgorithm, ComparisonAlgorithmInfo> Algorithms { get; set; } =
             new Dictionary<ComparisonAlgorithm, ComparisonAlgorithmInfo>(ComparisonAlgorithms.AlgorithmSettings);
@@ -63,6 +63,14 @@ namespace dCompare.Configuration
         public string DoubleClick { get; set; } = "view";
     }
 
+    public class ScanMethodOptions
+    {
+        [JsonPropertyName("Method")]
+        public string MethodOptions { get; set; } = "General";
+
+        [JsonPropertyName("Parallel")]
+        public bool ParallelOptions  { get; set; } = true;
+    }
     public class DiffOptions
     {
         [JsonPropertyName("Text")]
