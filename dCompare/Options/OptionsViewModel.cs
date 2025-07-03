@@ -90,14 +90,14 @@ namespace dCompare.Options
 
             var sessionNode = new SettingsMenuItem("Session", new SessionOptionsViewModel(_appConfig.Options.Session), this);
             var hotkeysNode = new SettingsMenuItem("HotKeys", new HotKeysOptionsViewModel(_appConfig.Options.HotKeys), this);
-            var logNode = new SettingsMenuItem("Log", new LogOptionsViewModel(_appConfig.Options.Log), this);
+            //var logNode = new SettingsMenuItem("Log", new LogOptionsViewModel(_appConfig.Options.Log), this);
 
             optionsNode.Children.Add(uiNode);
             optionsNode.Children.Add(compareNode);
             optionsNode.Children.Add(diffNode);
             optionsNode.Children.Add(sessionNode);
             optionsNode.Children.Add(hotkeysNode);
-            optionsNode.Children.Add(logNode);
+            //optionsNode.Children.Add(logNode);
 
             MenuItems.Add(optionsNode);
 
@@ -212,13 +212,13 @@ namespace dCompare.Options
         private readonly UIOptions _model;
         public UIOptionsViewModel(UIOptions model) { _model = model; }
         public UIOptionsViewModel() : this(new UIOptions()) { } // For designer
-        public List<string> AvailableThemes => new List<string> { "Light", "Dark" };
-        public List<KeyValuePair<string, string>> AvailableLanguages => new List<KeyValuePair<string, string>>
-        {
+        public static List<string> AvailableThemes => ["Light", "Dark"];
+        public static List<KeyValuePair<string, string>> AvailableLanguages =>
+        [
             new KeyValuePair<string, string>("English", "en"),
             new KeyValuePair<string, string>("繁體中文", "zh_TW"),
             new KeyValuePair<string, string>("简体中文", "zh_CN")
-        };
+        ];
 
         public string Theme { get => _model.Theme; set { _model.Theme = value; OnPropertyChanged(); } }
         public string Language { get => _model.Language; set { _model.Language = value; OnPropertyChanged(); } }
@@ -349,6 +349,28 @@ namespace dCompare.Options
             }
         }
 
+        public List<string> AvailableScanMethods => new List<string> { "General", "MFT" };
+
+        public string ScanMethod
+        {
+            get => _model.ScanMethod.MethodOptions;
+            set
+            {
+                _model.ScanMethod.MethodOptions = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool Parallel
+        {
+            get => _model.ScanMethod.ParallelOptions;
+            set
+            {
+                _model.ScanMethod.ParallelOptions = value;
+                OnPropertyChanged();
+            }
+        }
+
         public List<string> AvailableDoubleClickActions => new List<string> { "view", "edit", "open" };
 
         public string DoubleClickAction
@@ -374,16 +396,21 @@ namespace dCompare.Options
 
         public void UpdateModel()
         {
-            //foreach (var item in AlgorithmItems)
-            //{
-            //    _model.Algorithms[item.Algorithm] = new ComparisonAlgorithmInfo
-            //    {
-            //        Description = item.Description,
-            //        IsEnabled = item.IsEnabled,
-            //        IsDefault = item.IsDefault,
-            //        ComparisonPercentage = item.ComparisonPercentage
-            //    };
-            //}
+            // Update ScanMethod properties
+            _model.ScanMethod.MethodOptions = ScanMethod;
+            _model.ScanMethod.ParallelOptions = Parallel;
+
+            // Update Algorithms (uncommented and fixed)
+            foreach (var item in AlgorithmItems)
+            {
+                _model.Algorithms[item.Algorithm] = new ComparisonAlgorithmInfo
+                {
+                    Description = item.Description,
+                    IsEnabled = item.IsEnabled,
+                    IsDefault = item.IsDefault,
+                    ComparisonPercentage = item.ComparisonPercentage != null && int.TryParse(item.ComparisonPercentage, out int percentage) ? percentage : null
+                };
+            }
         }
     }
 
@@ -544,11 +571,11 @@ namespace dCompare.Options
 
     public class LogOptionsViewModel : ViewModelBase
     {
-        private readonly LogOptions _model;
-        public LogOptionsViewModel(LogOptions model) { _model = model; }
+        //private readonly LogOptions _model;
+        //public LogOptionsViewModel(LogOptions model) { _model = model; }
         public List<string> AvailableLogLevels => new List<string> { "Verbose", "Debug", "Information", "Warning", "Error" };
-        public bool IsEnabled { get => _model.Enabled; set { _model.Enabled = value; OnPropertyChanged(); } }
-        public string Level { get => _model.Level; set { _model.Level = value; OnPropertyChanged(); } }
-        public int RetentionDays { get => _model.RetentionDays; set { _model.RetentionDays = value; OnPropertyChanged(); } }
+        //public bool IsEnabled { get => _model.Enabled; set { _model.Enabled = value; OnPropertyChanged(); } }
+        //public string Level { get => _model.Level; set { _model.Level = value; OnPropertyChanged(); } }
+        //public int RetentionDays { get => _model.RetentionDays; set { _model.RetentionDays = value; OnPropertyChanged(); } }
     }
 }

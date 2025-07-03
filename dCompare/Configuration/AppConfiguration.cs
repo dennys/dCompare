@@ -1,4 +1,3 @@
-﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace dCompare.Configuration
@@ -19,6 +18,8 @@ namespace dCompare.Configuration
         public Dictionary<string, SessionConfig> Sessions { get; set; } = new();
         [JsonPropertyName("Options")]
         public Options Options { get; set; } = new();
+        [JsonPropertyName("Log")]
+        public LogOptions LogOptions { get; set; } = new();
     }
 
     public class Options
@@ -37,9 +38,6 @@ namespace dCompare.Configuration
 
         [JsonPropertyName("HotKeys")]
         public HotKeysOptions HotKeys { get; set; } = new();
-
-        [JsonPropertyName("Log")]
-        public LogOptions Log { get; set; } = new();
     }
 
     public class UIOptions
@@ -53,6 +51,8 @@ namespace dCompare.Configuration
 
     public class CompareOptions
     {
+        [JsonPropertyName("ScanMethod")]
+        public ScanMethodOptions ScanMethod { get; set; } = new();
         [JsonPropertyName("Algorithms")]
         public Dictionary<ComparisonAlgorithm, ComparisonAlgorithmInfo> Algorithms { get; set; } =
             new Dictionary<ComparisonAlgorithm, ComparisonAlgorithmInfo>(ComparisonAlgorithms.AlgorithmSettings);
@@ -61,6 +61,14 @@ namespace dCompare.Configuration
         public string DoubleClick { get; set; } = "view";
     }
 
+    public class ScanMethodOptions
+    {
+        [JsonPropertyName("Method")]
+        public string MethodOptions { get; set; } = "General";
+
+        [JsonPropertyName("Parallel")]
+        public bool ParallelOptions  { get; set; } = true;
+    }
     public class DiffOptions
     {
         [JsonPropertyName("Text")]
@@ -117,16 +125,44 @@ namespace dCompare.Configuration
         [JsonPropertyName("LoadSession")]
         public string LoadSession { get; set; } = "Ctrl+O";
     }
-
     public class LogOptions
     {
         [JsonPropertyName("Enabled")]
         public bool Enabled { get; set; } = true;
 
-        [JsonPropertyName("Level")]
-        public string Level { get; set; } = "Information";
+        [JsonPropertyName("Using")]
+        public List<string> Using { get; set; } = ["Serilog.Sinks.File"];
 
-        [JsonPropertyName("RetentionDays")]
-        public int RetentionDays { get; set; } = 10;
+        [JsonPropertyName("MinimumLevel")]
+        public string MinimumLevel { get; set; } = "Information";
+
+        [JsonPropertyName("Enrich")]
+        public List<string> Enrich { get; set; } = ["WithThreadId"];
+
+        [JsonPropertyName("WriteTo")]
+        public List<SerilogWriteToOption> WriteTo { get; set; } = new();
     }
+
+    public class SerilogWriteToOption
+    {
+        [JsonPropertyName("Name")]
+        public string Name { get; set; } = string.Empty;
+
+        [JsonPropertyName("Args")]
+        public SerilogSinkArgs Args { get; set; } = new();
+    }
+
+    public class SerilogSinkArgs
+    {
+        [JsonPropertyName("path")]
+        public string Path { get; set; } = "logs/dCompare.log";
+
+        [JsonPropertyName("rollingInterval")]
+        public string RollingInterval { get; set; } = "Day";
+
+        [JsonPropertyName("outputTemplate")]
+        public string OutputTemplate { get; set; } =
+            "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff} {Level:u3}] [T{ThreadId:D2}] {Message:lj}{NewLine}{Exception}";
+    }
+
 }

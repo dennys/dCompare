@@ -1,4 +1,4 @@
-﻿<Window x:Class="dCompare.Options.OptionsWindow"
+<Window x:Class="dCompare.Options.OptionsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -65,46 +65,61 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Algorithms:" VerticalAlignment="Top" Margin="0,5,10,5"/>
-<StackPanel Grid.Row="0" Grid.Column="1">
-                    <Grid Margin="0,0,0,5">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="55"/>
-                            <ColumnDefinition Width="55"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="75"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Enable" FontWeight="Bold" HorizontalAlignment="Center"/>
-                        <TextBlock Grid.Column="1" Text="Default" FontWeight="Bold" HorizontalAlignment="Center"/>
-                        <TextBlock Grid.Column="2" Text="Algorithm" FontWeight="Bold"/>
-                        <TextBlock Grid.Column="3" Text="Percent %" FontWeight="Bold" HorizontalAlignment="Center"/>
-                    </Grid>
-                    <Separator/>
-                    
-                    <ItemsControl Grid.Row="0" Grid.Column="1" ItemsSource="{Binding AlgorithmItems}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Grid Margin="0,4">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <CheckBox IsChecked="{Binding IsEnabled}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                    <RadioButton Grid.Column="1" IsChecked="{Binding IsDefault}" Content="{Binding Description}" VerticalAlignment="Center" IsEnabled="{Binding IsEnabled}"/>
-                                    <TextBox Grid.Column="2" Width="50" Margin="10,0,0,0"
-                                        IsEnabled="{Binding IsPercentageSettingEnabled}"
-                                        Text="{Binding ComparisonPercentage, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
-                                </Grid>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-            </StackPanel>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Scan Method:" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                    <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,5"
+                              ItemsSource="{Binding AvailableScanMethods}"
+                              SelectedItem="{Binding ScanMethod}"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="Choose 'General' for standard file system scanning or 'MFT' for faster scanning using the Master File Table (Windows NTFS only)."
+                               FontStyle="Italic" Margin="0,0,0,10" TextWrapping="Wrap"/>
 
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Double Click Action:" VerticalAlignment="Center" Margin="0,5,10,5"/>
-                    <ComboBox Grid.Row="1" Grid.Column="1" Margin="0,5"
+                    <CheckBox Grid.Row="2" Grid.Column="1" IsChecked="{Binding Parallel}" Content="Enable Parallel Scanning" Margin="0,5"/>
+                    <TextBlock Grid.Row="3" Grid.Column="1" Text="Enable to perform file comparisons in parallel for faster processing (recommended for multi-core systems)."
+                               FontStyle="Italic" Margin="0,0,0,10" TextWrapping="Wrap"/>
+
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Algorithms:" VerticalAlignment="Top" Margin="0,5,10,5"/>
+                    <StackPanel Grid.Row="4" Grid.Column="1">
+                        <Grid Margin="0,0,0,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="55"/>
+                                <ColumnDefinition Width="55"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="75"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Enable" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="Default" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock Grid.Column="2" Text="Algorithm" FontWeight="Bold"/>
+                            <TextBlock Grid.Column="3" Text="Percent %" FontWeight="Bold" HorizontalAlignment="Center"/>
+                        </Grid>
+                        <Separator/>
+
+                        <ItemsControl ItemsSource="{Binding AlgorithmItems}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <CheckBox IsChecked="{Binding IsEnabled}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                        <RadioButton Grid.Column="1" IsChecked="{Binding IsDefault}" Content="{Binding Description}" VerticalAlignment="Center" IsEnabled="{Binding IsEnabled}"/>
+                                        <TextBox Grid.Column="2" Width="50" Margin="10,0,0,0"
+                                            IsEnabled="{Binding IsPercentageSettingEnabled}"
+                                            Text="{Binding ComparisonPercentage, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Double Click Action:" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                    <ComboBox Grid.Row="5" Grid.Column="1" Margin="0,5"
                               ItemsSource="{Binding AvailableDoubleClickActions}"
                               SelectedItem="{Binding DoubleClickAction}"/>
                 </Grid>

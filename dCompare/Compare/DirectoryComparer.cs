@@ -1,4 +1,5 @@
-﻿using dCompare.Configuration;
+using dCompare.Configuration;
+using dCompare.DirTreeSystem;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -35,7 +36,7 @@ namespace dCompare.Compare
         public IEnumerable<string> GetDirectories(string path) => Directory.GetDirectories(path);
         public IEnumerable<string> GetFiles(string path) => Directory.GetFiles(path);
         public DateTime GetLastWriteTime(string path) => Directory.GetLastWriteTime(path);
-        public FileInfo GetFileInfo(string path) => new FileInfo(path);
+        public FileInfo GetFileInfo(string path) => new(path);
         public Stream OpenRead(string path) => File.OpenRead(path);
     }
 
@@ -91,11 +92,18 @@ namespace dCompare.Compare
     {
         private readonly IFileSystem _fileSystem;
         private readonly IHashProvider _hashProvider;
+        private readonly IFileSystemTreeBuilder _treeBuilder;
+        private readonly bool _parallel;
 
-        public DirectoryComparer(IFileSystem? fileSystem = null, IHashProvider? hashProvider = null)
+        public DirectoryComparer(AppConfiguration? config = null, IFileSystem? fileSystem = null, IHashProvider? hashProvider = null)
         {
             _fileSystem = fileSystem ?? new FileSystem();
             _hashProvider = hashProvider ?? new HashProvider();
+            string scanMethod = config?.Options?.Compare?.ScanMethod?.MethodOptions ?? "General";
+            _treeBuilder = scanMethod.Equals("MFT", StringComparison.OrdinalIgnoreCase)
+                ? new MftFileSystemTreeBuilder()
+                : new DotnetFileSystemTreeBuilder(_fileSystem);
+            _parallel = config?.Options?.Compare?.ScanMethod?.ParallelOptions ?? true;
         }
 
         public class ComparisonItem
@@ -111,12 +119,11 @@ namespace dCompare.Compare
             string rightPath,
             CancellationToken cancellationToken = default,
             Action<double>? progressCallback = null,
-            ComparisonAlgorithm algorithm = ComparisonAlgorithm.ModifiedDateAndSize,
-            bool parallel = true)
+            ComparisonAlgorithm algorithm = ComparisonAlgorithm.ModifiedDateAndSize)
         {
-            return CompareAsync(leftPath, rightPath, cancellationToken, progressCallback, algorithm, parallel)
+            return CompareAsync(leftPath, rightPath, cancellationToken, progressCallback, algorithm)
                    .GetAwaiter()
-                   .GetResult(); // ⚠️ Only for non UI thread (console or server backgorund)
+                   .GetResult(); // ⚠️ Only for non UI thread (console or server background)
         }
 
         public async Task<List<ComparisonItem>> CompareAsync(
@@ -124,10 +131,10 @@ namespace dCompare.Compare
             string rightPath,
             CancellationToken cancellationToken = default,
             Action<double>? progressCallback = null,
-            ComparisonAlgorithm algorithm = ComparisonAlgorithm.ModifiedDateAndSize,
-            bool parallel = true)
+            ComparisonAlgorithm algorithm = ComparisonAlgorithm.ModifiedDateAndSize)
         {
-            Log.Information("Start to compare.");
+            Log.Information("Start to compare with method: {Method}, parallel: {Parallel}",
+                _treeBuilder is MftFileSystemTreeBuilder ? "MFT" : "General", _parallel);
             int totalDirs = CountDirectories(leftPath) + CountDirectories(rightPath);
             int processedDirs = 0;
             double progressPerDir = totalDirs > 0 ? 1.0 / totalDirs : 1.0;
@@ -147,32 +154,32 @@ namespace dCompare.Compare
             FileSystemNode? leftRoot = null;
             FileSystemNode? rightRoot = null;
 
-            if (parallel)
+            if (_parallel)
             {   // This is the parallel execution path (multi-threaded)
-                var leftTask = Task.Run(() =>
+                Task leftTask = Task.Run(() =>
                 {
-                    leftRoot = BuildTree(leftPath, 0, cancellationToken, updateProgress);
+                    leftRoot = _treeBuilder.BuildTreeRecursive(leftPath, 0, cancellationToken, updateProgress);
                 }, cancellationToken);
 
-                var rightTask = Task.Run(() =>
+                Task rightTask = Task.Run(() =>
                 {
-                    rightRoot = BuildTree(rightPath, 0, cancellationToken, updateProgress);
+                    rightRoot = _treeBuilder.BuildTreeRecursive(rightPath, 0, cancellationToken, updateProgress);
                 }, cancellationToken);
 
                 await Task.WhenAll(leftTask, rightTask);
             }
             else
             {   // This is the sequential execution path (single-threaded)
-                leftRoot = BuildTree(leftPath, 0, cancellationToken, updateProgress);
+                leftRoot = _treeBuilder.BuildTreeRecursive(leftPath, 0, cancellationToken, updateProgress);
                 cancellationToken.ThrowIfCancellationRequested();
-                rightRoot = BuildTree(rightPath, 0, cancellationToken, updateProgress);
+                rightRoot = _treeBuilder.BuildTreeRecursive(rightPath, 0, cancellationToken, updateProgress);
             }
             cancellationToken.ThrowIfCancellationRequested();
 
             List<ComparisonItem> result = new();
 
             Log.Information("Start to create ComparisonItem.");
-            ComparisonItem rootItem = new ComparisonItem
+            ComparisonItem rootItem = new()
             {
                 Status = ComparisonStatus.Identical,
                 Left = leftRoot,
@@ -181,7 +188,7 @@ namespace dCompare.Compare
             };
             result.Add(rootItem);
 
-            Log.Information("Start to compare.");
+            Log.Information("Start to compare nodes.");
             bool hasDifferences = CompareNodes(leftRoot, rightRoot, result, "", cancellationToken, algorithm);
 
             if (hasDifferences)
@@ -208,15 +215,15 @@ namespace dCompare.Compare
             cancellationToken.ThrowIfCancellationRequested();
 
             // Check if paths are files or directories
-            bool leftIsFile = File.Exists(leftSubPath);
-            bool rightIsFile = File.Exists(rightSubPath);
-            bool leftIsDir = Directory.Exists(leftSubPath);
-            bool rightIsDir = Directory.Exists(rightSubPath);
+            bool leftIsFile = _fileSystem.FileExists(leftSubPath);
+            bool rightIsFile = _fileSystem.FileExists(rightSubPath);
+            bool leftIsDir = _fileSystem.DirectoryExists(leftSubPath);
+            bool rightIsDir = _fileSystem.DirectoryExists(rightSubPath);
 
             // Build FileSystemNode trees for the paths
-            FileSystemNode? leftSubRoot = leftIsFile || leftIsDir ? BuildTree(leftSubPath, subDirDepth, cancellationToken) : null;
+            FileSystemNode? leftSubRoot = leftIsFile || leftIsDir ? _treeBuilder.BuildTreeRecursive(leftSubPath, subDirDepth, cancellationToken) : null;
             cancellationToken.ThrowIfCancellationRequested();
-            FileSystemNode? rightSubRoot = rightIsFile || rightIsDir ? BuildTree(rightSubPath, subDirDepth, cancellationToken) : null;
+            FileSystemNode? rightSubRoot = rightIsFile || rightIsDir ? _treeBuilder.BuildTreeRecursive(rightSubPath, subDirDepth, cancellationToken) : null;
             cancellationToken.ThrowIfCancellationRequested();
 
             List<ComparisonItem> result = new();
@@ -267,61 +274,6 @@ namespace dCompare.Compare
             return count;
         }
 
-        private FileSystemNode BuildTree(string path, int depth, CancellationToken cancellationToken, Action? onDirectoryProcessed = null)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            FileSystemNode root = new FileSystemNode
-            {
-                Name = depth == 0 ? Path.GetFileName(path) : Path.GetFileName(path),
-                FullPath = path,
-                IsDirectory = _fileSystem.DirectoryExists(path),
-                Depth = depth
-            };
-
-            if (root.IsDirectory && _fileSystem.DirectoryExists(path))
-            {
-                root.ModifiedTime = _fileSystem.GetLastWriteTime(path);
-                long totalSize = 0;
-
-                try
-                {
-                    foreach (string dir in _fileSystem.GetDirectories(path))
-                    {
-                        cancellationToken.ThrowIfCancellationRequested();
-                        FileSystemNode childDir = BuildTree(dir, depth + 1, cancellationToken, onDirectoryProcessed);
-                        root.Children.Add(childDir);
-                        totalSize += childDir.Size;
-                        onDirectoryProcessed?.Invoke();
-                    }
-
-                    foreach (string file in _fileSystem.GetFiles(path))
-                    {
-                        cancellationToken.ThrowIfCancellationRequested();
-                        FileSystemNode childFile = BuildTree(file, depth + 1, cancellationToken, onDirectoryProcessed);
-                        root.Children.Add(childFile);
-                        totalSize += childFile.Size;
-                    }
-
-                    root.Size = totalSize;
-                }
-                catch (UnauthorizedAccessException)
-                {
-                }
-                catch (DirectoryNotFoundException)
-                {
-                }
-            }
-            else if (_fileSystem.FileExists(path))
-            {
-                FileInfo info = _fileSystem.GetFileInfo(path);
-                root.Size = info.Length;
-                root.ModifiedTime = info.LastWriteTime;
-            }
-
-            return root;
-        }
-
         /// <summary>
         /// Compares two file system nodes and their children, and adds the differences to the result list.
         /// </summary>
@@ -343,7 +295,7 @@ namespace dCompare.Compare
             cancellationToken.ThrowIfCancellationRequested();
 
             bool hasContentDifferences = false;
-            SortedSet<string> names = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+            SortedSet<string> names = new(StringComparer.OrdinalIgnoreCase);
 
             if (left != null)
                 foreach (FileSystemNode child in left.Children)
@@ -456,11 +408,11 @@ namespace dCompare.Compare
                         case ComparisonAlgorithm.MD5:
                             try
                             {
-                                using var leftStream = _fileSystem.OpenRead(left.FullPath);
-                                using var rightStream = _fileSystem.OpenRead(right.FullPath);
+                                using Stream leftStream = _fileSystem.OpenRead(left.FullPath);
+                                using Stream rightStream = _fileSystem.OpenRead(right.FullPath);
 
-                                var leftHash = _hashProvider.ComputeMD5(leftStream, ratio);
-                                var rightHash = _hashProvider.ComputeMD5(rightStream, ratio);
+                                byte[] leftHash = _hashProvider.ComputeMD5(leftStream, ratio);
+                                byte[] rightHash = _hashProvider.ComputeMD5(rightStream, ratio);
                                 return leftHash.SequenceEqual(rightHash)
                                     ? ComparisonStatus.Identical
                                     : ComparisonStatus.Modified;
@@ -473,11 +425,11 @@ namespace dCompare.Compare
                         case ComparisonAlgorithm.xxHash64_Full:
                             try
                             {
-                                using var leftStream = _fileSystem.OpenRead(left.FullPath);
-                                using var rightStream = _fileSystem.OpenRead(right.FullPath);
+                                using Stream leftStream = _fileSystem.OpenRead(left.FullPath);
+                                using Stream rightStream = _fileSystem.OpenRead(right.FullPath);
 
-                                var leftHash = _hashProvider.ComputeXxHash64(leftStream, ratio);
-                                var rightHash = _hashProvider.ComputeXxHash64(rightStream, ratio);
+                                byte[] leftHash = _hashProvider.ComputeXxHash64(leftStream, ratio);
+                                byte[] rightHash = _hashProvider.ComputeXxHash64(rightStream, ratio);
                                 return leftHash.SequenceEqual(rightHash)
                                     ? ComparisonStatus.Identical
                                     : ComparisonStatus.Modified;

@@ -9,6 +9,7 @@
     <ApplicationIcon>Resources\app.ico</ApplicationIcon>
     <Platforms>AnyCPU;x64</Platforms>
     <SatelliteResourceLanguages>en;zh-TW;zh-CN</SatelliteResourceLanguages>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
 
   <ItemGroup>

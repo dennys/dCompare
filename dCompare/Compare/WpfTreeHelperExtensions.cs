@@ -1,6 +1,4 @@
-﻿// WpfTreeHelperExtensions.cs
-
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Media;
 
 namespace dCompare.Compare

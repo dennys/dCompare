@@ -11,7 +11,7 @@ namespace dCompare.FileOperation.Strategies
     {
         public async Task CopyFileAsync(string sourceFile, string destFile, bool overwrite, CopyProgressCallback? progressCallback, CancellationToken cancellationToken)
         {
-            FileInfo sourceInfo = new FileInfo(sourceFile);
+            FileInfo sourceInfo = new(sourceFile);
             long totalBytes = sourceInfo.Length;
             long bytesTransferred = 0;
 
