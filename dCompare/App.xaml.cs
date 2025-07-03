@@ -24,9 +24,15 @@ namespace dCompare
                 .AddJsonFile("dCompare.json", optional: false, reloadOnChange: true)
                 .Build();
 
+            // Configuration for the logger
+            var loggerConfiguration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("Serilog.json", optional: false, reloadOnChange: true)
+                .Build();
+
             // Configure the static logger
             Log.Logger = new LoggerConfiguration()
-                .ReadFrom.Configuration(configuration)
+                .ReadFrom.Configuration(loggerConfiguration)
                 .Enrich.WithThreadId()
                 .CreateLogger();
 

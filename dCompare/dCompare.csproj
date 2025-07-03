@@ -58,9 +58,4 @@
   </ItemGroup>
 
 
-  <ItemGroup>
-    <Folder Include="FileSystem\" />
-  </ItemGroup>
-
-
 </Project>
