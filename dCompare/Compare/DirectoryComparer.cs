@@ -98,8 +98,8 @@ namespace dCompare.Compare
         {
             _fileSystem = fileSystem ?? new FileSystem();
             _hashProvider = hashProvider ?? new HashProvider();
-            _treeBuilder = treeBuilder ?? new MftFileSystemTreeBuilder();
-            //_treeBuilder = treeBuilder ?? new DotnetFileSystemTreeBuilder(_fileSystem);
+            //_treeBuilder = treeBuilder ?? new MftFileSystemTreeBuilder();
+            _treeBuilder = treeBuilder ?? new DotnetFileSystemTreeBuilder(_fileSystem);
         }
 
         public class ComparisonItem
