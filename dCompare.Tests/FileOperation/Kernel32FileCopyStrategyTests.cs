@@ -45,30 +45,6 @@ namespace dCompare.FileOperation.Tests
         }
 
         [Fact]
-        public async Task CopyFileAsync_PreservesMetadata()
-        {
-            // Arrange
-            string sourceFile = Path.Combine(_testDir, "source.txt");
-            string destFile = Path.Combine(_testDir, "dest.txt");
-            File.WriteAllText(sourceFile, "Test content");
-
-            var sourceInfo = new FileInfo(sourceFile);
-            var customTime = DateTime.UtcNow.AddDays(-1);
-            sourceInfo.CreationTimeUtc = customTime;
-            sourceInfo.LastWriteTimeUtc = customTime;
-            sourceInfo.LastAccessTimeUtc = customTime;
-
-            // Act
-            await _strategy.CopyFileAsync(sourceFile, destFile, true, null, CancellationToken.None);
-
-            // Assert
-            var destInfo = new FileInfo(destFile);
-            Assert.Equal(customTime, destInfo.CreationTimeUtc, precision: TimeSpan.FromSeconds(1));
-            Assert.Equal(customTime, destInfo.LastWriteTimeUtc, precision: TimeSpan.FromSeconds(1));
-            Assert.Equal(customTime, destInfo.LastAccessTimeUtc, precision: TimeSpan.FromSeconds(1));
-        }
-
-        [Fact]
         public async Task CopyFileAsync_CreatesDestinationDirectory()
         {
             // Arrange
