@@ -1,7 +1,7 @@
 using System;
 using System.Windows.Controls;
 
-namespace dCompare
+namespace dCompare.Session
 {
     public interface ISessionManager
     {
@@ -14,6 +14,6 @@ namespace dCompare
         void ClearRecentSessions();
         bool CanClearRecentSessions();
         int TabCounter { get; set; }
-        System.Collections.Generic.Dictionary<string, string> TabIdMap { get; }
+        Dictionary<string, string> TabIdMap { get; }
     }
 }

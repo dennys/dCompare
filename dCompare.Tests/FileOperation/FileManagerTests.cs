@@ -58,7 +58,7 @@ namespace dCompare.Tests.FileOperation
         }
 
         [Fact]
-        public void FileManager_ConstructorWithStrategy_UsesProvidedStrategy()
+        public async Task FileManager_ConstructorWithStrategy_UsesProvidedStrategy()
         {
             // Arrange
             var mockStrategy = new Mock<IFileOperationStrategy>();
@@ -68,11 +68,12 @@ namespace dCompare.Tests.FileOperation
             File.WriteAllText(sourceFile, "test");
 
             // Act
-            fileManager.DeleteAsync(sourceFile).Wait();
+            await fileManager.DeleteAsync(sourceFile);
 
             // Assert
             mockStrategy.Verify(s => s.DeleteFile(sourceFile), Times.Once);
         }
+
 
         [Fact]
         public async Task CopyAsync_SingleFile_Success()

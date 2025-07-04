@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace dCompare
+namespace dCompare.Session
 {
     public class SessionFileSystem : ISessionFileSystem
     {

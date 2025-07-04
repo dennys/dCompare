@@ -2,6 +2,7 @@
 using dCompare.Configuration;
 using dCompare.FileOperation;
 using dCompare.FileOperation.Strategies;
+using dCompare.Session;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

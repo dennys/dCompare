@@ -7,7 +7,7 @@ namespace dCompare.Configuration
     {
         Task<AppConfiguration> LoadConfigurationAsync();
         Task SaveConfigurationAsync(AppConfiguration config);
-        Task UpdateSessionAsync(string tabId, string leftPath, string rightPath);
-        Task RemoveSessionAsync(string tabId);
+        //Task UpdateSessionAsync(string tabId, string leftPath, string rightPath);
+        //Task RemoveSessionAsync(string tabId);
     }
 }

@@ -2,6 +2,7 @@
 using dCompare.Configuration;
 using dCompare.Diff;
 using dCompare.Options;
+using dCompare.Session;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -156,7 +157,7 @@ namespace dCompare
 
         #region Tab Management
 
-        private async void AddNewTab()
+        private void AddNewTab()
         {
             try
             {
@@ -171,11 +172,11 @@ namespace dCompare
                 tabControl.SelectedItem = newTab;
                 _sessionManager.TabIdMap[newTab.Header.ToString()!] = tabId;
 
-                AppConfiguration config = await _configService.LoadConfigurationAsync();
-                if (!config.Sessions.ContainsKey(tabId))
-                {
-                    await _configService.UpdateSessionAsync(tabId, string.Empty, string.Empty);
-                }
+                //AppConfiguration config = await _configService.LoadConfigurationAsync();
+                //if (!config.Sessions.ContainsKey(tabId))
+                //{
+                //    await _configService.UpdateSessionAsync(tabId, string.Empty, string.Empty);
+                //}
 
                 UpdateStatus($"Added new tab: Tab {_sessionManager.TabCounter}");
                 CommandManager.InvalidateRequerySuggested();
@@ -186,7 +187,7 @@ namespace dCompare
             }
         }
 
-        private async void CloseTab(TabItem? tab)
+        private void CloseTab(TabItem? tab)
         {
             try
             {
@@ -222,7 +223,7 @@ namespace dCompare
                     if (headerString != null && _sessionManager.TabIdMap.TryGetValue(headerString, out string? tabId))
                     {
                         _sessionManager.TabIdMap.Remove(headerString);
-                        await _configService.RemoveSessionAsync(tabId);
+                        //await _configService.RemoveSessionAsync(tabId);
                     }
                 }
                 catch (Exception ex)
@@ -336,7 +337,7 @@ namespace dCompare
             }
         }
 
-        private bool CanExecuteAbout()
+        private static bool CanExecuteAbout()
         {
             return true;
         }
