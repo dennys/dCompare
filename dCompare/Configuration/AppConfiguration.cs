@@ -2,24 +2,13 @@
 
 namespace dCompare.Configuration
 {
-    public class SessionConfig
-    {
-        public string Left { get; set; } = string.Empty;
-        public string Right { get; set; } = string.Empty;
-        [JsonConverter(typeof(JsonStringEnumConverter))]
-        public ComparisonAlgorithm Algorithm { get; set; } = ComparisonAlgorithm.ModifiedDateAndSize;
-    }
-
     /// <summary>
     /// Represents the root of the application configuration.
     /// </summary>
     public class AppConfiguration
     {
-        public Dictionary<string, SessionConfig> Sessions { get; set; } = new();
         [JsonPropertyName("Options")]
         public Options Options { get; set; } = new();
-        [JsonPropertyName("Log")]
-        public LogOptions LogOptions { get; set; } = new();
     }
 
     public class Options

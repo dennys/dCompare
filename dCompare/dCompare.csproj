@@ -58,4 +58,11 @@
   </ItemGroup>
 
 
+  <ItemGroup>
+    <None Update="Serilog.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+
 </Project>

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace dCompare
+namespace dCompare.Session
 {
     public interface ISessionFileSystem
     {

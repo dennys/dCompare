@@ -61,19 +61,19 @@ namespace dCompare.Configuration
             }
         }
 
-        public async Task UpdateSessionAsync(string tabId, string leftPath, string rightPath)
-        {
-            var config = await LoadConfigurationAsync();
-            config.Sessions[tabId] = new SessionConfig { Left = leftPath, Right = rightPath };
-            await SaveConfigurationAsync(config);
-        }
+        //public async Task UpdateSessionAsync(string tabId, string leftPath, string rightPath)
+        //{
+        //    //var config = await LoadConfigurationAsync();
+        //    //config.Sessions[tabId] = new SessionConfig { Left = leftPath, Right = rightPath };
+        //    //await SaveConfigurationAsync(config);
+        //}
 
-        public async Task RemoveSessionAsync(string tabId)
-        {
-            var config = await LoadConfigurationAsync();
-            config.Sessions.Remove(tabId);
-            await SaveConfigurationAsync(config);
-        }
+        //public async Task RemoveSessionAsync(string tabId)
+        //{
+        //    //var config = await LoadConfigurationAsync();
+        //    //config.Sessions.Remove(tabId);
+        //    //await SaveConfigurationAsync(config);
+        //}
 
         /// <summary>
         /// Saves the provided configuration object to the JSON file.

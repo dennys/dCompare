@@ -413,8 +413,8 @@ namespace dCompare.Tests
 
             _fileSystemMock.Setup(fs => fs.FileExists(It.IsAny<string>())).Returns(false);
             _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>())).Returns(false);
-            _treeBuilderMock.Setup(tb => tb.BuildTreeRecursive(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>(), null))
-                .Returns((FileSystemNode?)null);
+            //_treeBuilderMock.Setup(tb => tb.BuildTreeRecursive(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>(), null))
+            //    .Returns((FileSystemNode?)null);
 
             // Act
             var result = _comparer.CompareSubtree(leftPath, rightPath, subPath, CancellationToken.None, ComparisonAlgorithm.ModifiedDateAndSize);

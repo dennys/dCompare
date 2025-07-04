@@ -10,27 +10,18 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace dCompare
+namespace dCompare.Session
 {
-    public class SessionManager: ISessionManager
+    public class SessionManager(IConfigurationService configService, IServiceProvider serviceProvider) : ISessionManager
     {
-        private readonly IConfigurationService _configService;
-        private readonly IServiceProvider _serviceProvider;
-        private readonly List<string> _recentSessions;
-        private readonly Dictionary<string, string> _tabIdMap;
+        private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        private readonly IConfigurationService _configService = configService ?? throw new ArgumentNullException(nameof(configService));
+        private readonly List<string> _recentSessions = new();
+        private readonly Dictionary<string, string> _tabIdMap = new();
         private const int MaxRecentSessions = 5;
         private MenuItem _recentSessionsMenu;
         private TabControl _tabControl;
-        private int _tabCounter;
-
-        public SessionManager(IConfigurationService configService, IServiceProvider serviceProvider)
-        {
-            _configService = configService ?? throw new ArgumentNullException(nameof(configService));
-            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            _recentSessions = new List<string>();
-            _tabIdMap = new Dictionary<string, string>();
-            _tabCounter = 1;
-        }
+        private int _tabCounter = 1;
 
         public void Initialize(TabControl tabControl, MenuItem recentSessionsMenu)
         {
@@ -133,6 +124,7 @@ namespace dCompare
                 {
                     _recentSessionsMenu.Items.Remove(item);
                 }
+                _recentSessionsMenu.Items.Clear();
 
                 for (int i = 0; i < _recentSessions.Count; i++)
                 {
@@ -140,7 +132,7 @@ namespace dCompare
                     string fileName = Path.GetFileName(filePath);
                     var menuItem = new MenuItem
                     {
-                        Header = $"{i + 1}. {fileName}",
+                        Header = $"{i + 1}. {filePath}\\{fileName}",
                         ToolTip = filePath,
                         Command = Application.Current.MainWindow?.DataContext is MainWindow mainWindow ? mainWindow.LoadSessionCommand : null,
                         CommandParameter = filePath

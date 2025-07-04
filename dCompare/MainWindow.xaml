@@ -201,8 +201,8 @@
             <MenuItem Header="{x:Static resx:Resources.FileMenu}">
                 <MenuItem Header="{x:Static resx:Resources.SaveSessionMenu}" Command="{Binding SaveSessionCommand}" InputGestureText="Ctrl+S" Icon="{StaticResource SaveSessionIcon}"/>
                 <MenuItem Header="{x:Static resx:Resources.LoadSessionMenu}" Command="{Binding LoadSessionCommand}" InputGestureText="Ctrl+O" Icon="{StaticResource LoadSessionIcon}"/>
+                <MenuItem Header="{x:Static resx:Resources.ClearRecentSessionsMenu}" Command="{Binding ClearRecentSessionsCommand}"/>
                 <MenuItem x:Name="RecentSessionsMenu" Header="{x:Static resx:Resources.RecentSessionsMenu}">
-                    <MenuItem Header="{x:Static resx:Resources.ClearRecentSessionsMenu}" Command="{Binding ClearRecentSessionsCommand}"/>
                     <Separator/>
                     <!-- Recent sessions will be dynamically populated -->
                 </MenuItem>
