@@ -3,8 +3,6 @@ using dCompare.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using Serilog;
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Windows;
@@ -112,7 +110,7 @@ namespace dCompare.Session
         {
             try
             {
-                var itemsToRemove = new List<MenuItem>();
+                List<MenuItem> itemsToRemove = new();
                 foreach (var item in _recentSessionsMenu.Items)
                 {
                     if (item is MenuItem menuItem && menuItem != _recentSessionsMenu.Items[0] && item is not Separator)
@@ -130,7 +128,7 @@ namespace dCompare.Session
                 {
                     string filePath = _recentSessions[i];
                     string fileName = Path.GetFileName(filePath);
-                    var menuItem = new MenuItem
+                    MenuItem menuItem = new()
                     {
                         Header = $"{i + 1}. {filePath}\\{fileName}",
                         ToolTip = filePath,
@@ -245,9 +243,9 @@ namespace dCompare.Session
                     foreach (var session in sessions)
                     {
                         _tabCounter++;
-                        var tabName = session.Key;
-                        var ucCompareInstance = _serviceProvider.GetRequiredService<UcCompare>();
-                        var newTab = new TabItem
+                        string tabName = session.Key;
+                        UcCompare ucCompareInstance = _serviceProvider.GetRequiredService<UcCompare>();
+                        TabItem newTab = new()
                         {
                             Header = tabName,
                             Content = ucCompareInstance

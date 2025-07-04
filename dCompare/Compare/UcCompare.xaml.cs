@@ -1,20 +1,13 @@
 ﻿using dCompare.Configuration;
 using dCompare.Diff;
 using dCompare.FileOperation;
-using dCompare.FileOperation.Strategies;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualBasic;
 using Microsoft.Win32;
 using Serilog;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
 using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -111,11 +104,11 @@ namespace dCompare.Compare
             LoadConfigurationAsync();
         }
 
-        private async void LoadConfigurationAsync()
+        private void LoadConfigurationAsync()
         {
             try
             {
-                var config = await _configService.LoadConfigurationAsync();
+                //var config = await _configService.LoadConfigurationAsync();
                 var defaultAlgorithm = ComparisonAlgorithms.AlgorithmSettings
                     .FirstOrDefault(kvp => kvp.Value.IsDefault && kvp.Value.IsEnabled)
                     .Key;
@@ -320,7 +313,7 @@ namespace dCompare.Compare
             string leftDir = LeftPathBox.Text.Trim();
             string rightDir = RightPathBox.Text.Trim();
 
-            var rootNodes = _treeNodes.Where(n => n.Depth == 0).ToList();
+            //var rootNodes = _treeNodes.Where(n => n.Depth == 0).ToList();
             _treeNodes.Clear();
 
             List<TreeNode> allNodes = _treeNodeManager.CreateFlatTreeStructure(_cachedComparisonResults, leftDir, rightDir);
@@ -383,7 +376,7 @@ namespace dCompare.Compare
             }
 
             var comparisonHandler = new FileComparisonHandler();
-            FileType fileType = comparisonHandler.DetermineFileType(leftPath ?? rightPath);
+            FileType fileType = FileComparisonHandler.DetermineFileType(leftPath ?? rightPath);
 
             try
             {

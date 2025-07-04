@@ -1,9 +1,6 @@
 ﻿using dCompare.DirTreeSystem;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
 
 namespace dCompare.Compare
 {
@@ -21,8 +18,8 @@ namespace dCompare.Compare
         public void BuildTree(List<DirectoryComparer.ComparisonItem> items, string leftRoot, string rightRoot, int maxDepth = 0)
         {
             _treeNodes.Clear();
-            var flatNodes = CreateFlatTreeStructure(items, leftRoot, rightRoot, maxDepth);
-            foreach (var node in flatNodes)
+            List<TreeNode> flatNodes = CreateFlatTreeStructure(items, leftRoot, rightRoot, maxDepth);
+            foreach (TreeNode node in flatNodes)
             {
                 node.IsExpanded = false;
                 _treeNodes.Add(node);
@@ -70,11 +67,11 @@ namespace dCompare.Compare
 
             if (childItems.Count == 0) return;
 
-            var childNodes = CreateFlatTreeStructure(childItems, leftRoot, rightRoot, parentNode.Depth + 1);
+            List<TreeNode> childNodes = CreateFlatTreeStructure(childItems, leftRoot, rightRoot, parentNode.Depth + 1);
             int insertIndex = _treeNodes.IndexOf(parentNode) + 1;
             if (insertIndex == 0) return; // Parent not found in collection
 
-            foreach (var child in childNodes.OrderBy(c => c.Name))
+            foreach (TreeNode child in childNodes.OrderBy(c => c.Name))
             {
                 _treeNodes.Insert(insertIndex++, child);
 

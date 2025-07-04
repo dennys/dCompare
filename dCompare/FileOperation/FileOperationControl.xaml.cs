@@ -373,7 +373,7 @@ namespace dCompare.FileOperation
         private void OnCancelTransfer(object parameter)
         {
             // CancelTransfer_Click logic
-            if (QueuedGrid.SelectedItem is FileTransfer transfer)
+            if (QueuedGrid.SelectedItem is FileTransfer)
             {
                 _cancellationTokenSource.Cancel();
                 _cancellationTokenSource = new CancellationTokenSource();

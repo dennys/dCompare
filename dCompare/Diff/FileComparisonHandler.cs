@@ -1,10 +1,7 @@
-// File: FileComparisonHandler.cs
 using DiffPlex;
 using DiffPlex.DiffBuilder;
 using DiffPlex.DiffBuilder.Model;
-using System;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace dCompare.Diff
 {
@@ -17,14 +14,14 @@ namespace dCompare.Diff
 
     public class FileComparisonHandler
     {
-        private readonly ISideBySideDiffBuilder _diffBuilder;
+        private readonly SideBySideDiffBuilder _diffBuilder;
 
         public FileComparisonHandler()
         {
             _diffBuilder = new SideBySideDiffBuilder(new Differ());
         }
 
-        public FileType DetermineFileType(string filePath)
+        public static FileType DetermineFileType(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
                 return FileType.Unsupported;
