@@ -1,11 +1,8 @@
 ﻿using dCompare.FileOperation.Strategies;
 using dCompare.FileOperation.Models;
 using Serilog;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
 using dCompare.Compare;
 
 namespace dCompare.FileOperation
@@ -75,7 +72,7 @@ namespace dCompare.FileOperation
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
             int successCount = 0;
-            List<string> failedItems = [];
+            List<string> failedItems = new();
             int totalCount = items.Count;
             int processedCount = 0;
             int lastReportedProgress = -1;
@@ -150,7 +147,7 @@ namespace dCompare.FileOperation
             {
                 if (totalCount == 1)
                 {
-                    long fileSize = new FileInfo(source).Length;
+                    //long fileSize = new FileInfo(source).Length;
                     CopyProgressCallback byteProgressCallback = (totalFileSize, totalBytesTransferred, _, _, _, _, _, _, _) =>
                     {
                         if (totalFileSize > 0)
@@ -175,13 +172,13 @@ namespace dCompare.FileOperation
         {
             // Create target directory
             Directory.CreateDirectory(targetDir);
-            DirectoryInfo sourceInfo = new(sourceDir);
-            DirectoryInfo targetInfo = new(targetDir)
-            {
-                CreationTimeUtc = sourceInfo.CreationTimeUtc,
-                LastAccessTimeUtc = sourceInfo.LastAccessTimeUtc,
-                LastWriteTimeUtc = sourceInfo.LastWriteTimeUtc
-            };
+            //DirectoryInfo sourceInfo = new(sourceDir);
+            //DirectoryInfo targetInfo = new(targetDir)
+            //{
+            //    CreationTimeUtc = sourceInfo.CreationTimeUtc,
+            //    LastAccessTimeUtc = sourceInfo.LastAccessTimeUtc,
+            //    LastWriteTimeUtc = sourceInfo.LastWriteTimeUtc
+            //};
 
             // Get all files and subdirectories
             string[] files = Directory.GetFiles(sourceDir);
@@ -195,7 +192,7 @@ namespace dCompare.FileOperation
                 cancellationToken.ThrowIfCancellationRequested();
                 string fileName = Path.GetFileName(file);
                 string destFile = Path.Combine(targetDir, fileName);
-                long fileSize = new FileInfo(file).Length;
+                //long fileSize = new FileInfo(file).Length;
 
                 CopyProgressCallback byteProgressCallback = (totalFileSize, totalBytesTransferred, _, _, _, _, _, _, _) =>
                 {

@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace dCompare.DirTreeSystem
+﻿namespace dCompare.DirTreeSystem
 {
 
     public class FileSystemNode
@@ -16,7 +9,7 @@ namespace dCompare.DirTreeSystem
         public DateTime ModifiedTime { get; set; }
         public bool IsDirectory { get; set; }
 
-        public int Depth { get; set; } = 0; // 用於縮排顯示階層
+        public int Depth { get; set; } = 0;
         public List<FileSystemNode> Children { get; set; } = new List<FileSystemNode>();
 
         public override string ToString()
@@ -32,18 +25,4 @@ namespace dCompare.DirTreeSystem
             return $"{size / 1024.0 / 1024.0 / 1024.0:F1} GB";
         }
     }
-    //}
-    //public class FileSystemNode
-    //{
-    //    public string Name { get; set; }
-    //    public string FullPath { get; set; }
-    //    public long Size { get; set; }
-    //    public DateTime Modified { get; set; }
-    //    public bool IsDirectory { get; set; }
-    //    public ComparisonStatus Status { get; set; }
-    //    public int Depth { get; set; }
-
-    //    public string DisplayName => new string(' ', Depth * 2) + (IsDirectory ? "📁 " : "📄 ") + Name;
-    //    public string Symbol => ComparisonSymbol.GetSymbol(Status);
-    //}
 }

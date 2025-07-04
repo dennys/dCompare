@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-
-namespace dCompare.FileOperation.Strategies;
+﻿namespace dCompare.FileOperation.Strategies;
 
 /// <summary>
 /// Defines a strategy for performing file operations.

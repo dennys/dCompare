@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 
 namespace dCompare.FileOperation.Strategies;
 
@@ -65,13 +64,13 @@ public class Kernel32FileCopyStrategy : IFileOperationStrategy
                 }
 
                 // Preserve metadata
-                FileInfo originalFile = new(sourceFile);
-                FileInfo copiedFile = new(destFile)
-                {
-                    CreationTimeUtc = originalFile.CreationTimeUtc,
-                    LastAccessTimeUtc = originalFile.LastAccessTimeUtc,
-                    LastWriteTimeUtc = originalFile.LastWriteTimeUtc
-                };
+                //FileInfo originalFile = new(sourceFile);
+                //FileInfo copiedFile = new(destFile)
+                //{
+                //    CreationTimeUtc = originalFile.CreationTimeUtc,
+                //    LastAccessTimeUtc = originalFile.LastAccessTimeUtc,
+                //    LastWriteTimeUtc = originalFile.LastWriteTimeUtc
+                //};
             }
         }, cancellationToken);
     }

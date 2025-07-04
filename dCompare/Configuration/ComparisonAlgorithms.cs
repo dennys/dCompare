@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-namespace dCompare.Configuration
+﻿namespace dCompare.Configuration
 {
     public enum ComparisonAlgorithm
     {

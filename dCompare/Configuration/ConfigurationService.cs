@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 
 namespace dCompare.Configuration
@@ -44,7 +43,7 @@ namespace dCompare.Configuration
             if (!File.Exists(_configPath))
             {
                 // If no config file, create one with default values and return it
-                var defaultConfig = new AppConfiguration();
+                AppConfiguration defaultConfig = new();
                 await SaveConfigurationAsync(defaultConfig);
                 return defaultConfig;
             }
