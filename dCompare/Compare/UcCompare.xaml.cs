@@ -245,19 +245,23 @@ namespace dCompare.Compare
 
             try
             {
+                // 1. Re-compare just the subdirectory to get the new items.
                 List<DirectoryComparer.ComparisonItem> refreshedItems = await Task.Run(() =>
                     _comparer.CompareSubtree(leftDirRoot, rightDirRoot, nodeToRefresh.RelativePath,
                         _cancellationTokenSource.Token, SelectedAlgorithm),
                     _cancellationTokenSource.Token);
 
+                // 2. Update the master cache (_cachedComparisonResults).
                 _cachedComparisonResults.RemoveAll(item =>
                     _treeNodeManager.GetRelativePath(item, leftDirRoot, rightDirRoot)
                                    .StartsWith(nodeToRefresh.RelativePath, StringComparison.OrdinalIgnoreCase));
 
                 _cachedComparisonResults.AddRange(refreshedItems);
 
+                // 3. Update the UI collection (_treeNodes), passing the expanded state information.
                 _treeNodeManager.RefreshSubtreeInView(nodeToRefresh, _cachedComparisonResults, leftDirRoot, rightDirRoot, previouslyExpandedPaths);
 
+                // 4. Re-apply any active filter to the updated view.
                 ApplyFilter();
             }
             catch (OperationCanceledException)
@@ -456,6 +460,7 @@ namespace dCompare.Compare
 
             if (obj is ListViewItem listViewItem)
             {
+                // Only add to selection if not already selected to preserve multi-selection
                 if (!ResultListView.SelectedItems.Contains(listViewItem.Content))
                 {
                     ResultListView.SelectedItems.Add(listViewItem.Content);
@@ -494,6 +499,7 @@ namespace dCompare.Compare
                     listViewItem.ContextMenu.IsOpen = true;
                 }
 
+                // Mark the event as handled to prevent default selection behavior
                 e.Handled = true;
             }
         }
@@ -574,6 +580,7 @@ namespace dCompare.Compare
                 var orderedNodesToRefresh = nodesToRefresh.Values.OrderByDescending(n => n.Depth);
                 foreach (var nodeToRefresh in orderedNodesToRefresh)
                 {
+                    // *** Pass the captured state to the refresh method. ***
                     await RefreshNodeAsync(nodeToRefresh, previouslyExpandedPaths);
                 }
             }
@@ -692,17 +699,22 @@ namespace dCompare.Compare
 
             try
             {
+                // Find parent BEFORE the operation, as the selectedItem's path will become invalid.
                 string parentRelativePath = Path.GetDirectoryName(selectedItem.RelativePath) ?? string.Empty;
                 TreeNode? parentNode = null;
+                // A non-empty parent path indicates the item is not at the root.
                 if (!string.IsNullOrEmpty(parentRelativePath))
                 {
                     parentNode = _treeNodes.FirstOrDefault(n => n.RelativePath.Equals(parentRelativePath, StringComparison.OrdinalIgnoreCase));
                 }
 
+                // Execute the rename operation using the new testable method
                 _fileOperationHandler.RenameFileOrDirectory(sourcePath, newName);
 
+                // Refresh the UI to reflect the change.
                 if (parentNode != null)
                 {
+                    // Preserve the expanded state of the tree for a better user experience.
                     var previouslyExpandedPaths = new HashSet<string>(
                         _treeNodes.Where(n => n.IsDirectory && n.IsExpanded).Select(n => n.RelativePath)
                     );
