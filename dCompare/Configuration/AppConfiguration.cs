@@ -73,7 +73,7 @@ namespace dCompare.Configuration
         public List<string> Ext { get; set; } = new();
 
         [JsonPropertyName("Viewer")]
-        public string Viewer { get; set; } = "DiffPlexQ";
+        public string Viewer { get; set; } = "DiffPlex";
     }
 
     public class ImageDiffOptions
@@ -82,7 +82,7 @@ namespace dCompare.Configuration
         public List<string> Ext { get; set; } = new();
 
         [JsonPropertyName("Viewer")]
-        public string Viewer { get; set; } = "Not implement";
+        public string Viewer { get; set; } = "Build-in";
     }
 
     public class SessionOptions

@@ -95,7 +95,7 @@ namespace dCompare.Compare
             _configService = configService;
 
             _treeNodeManager = new TreeNodeManager(_treeNodes);
-            _fileOperationHandler = new FileOperationHandler(_fileManager, _treeNodeManager);
+            _fileOperationHandler = new FileOperationHandler(_fileManager);
 
             ResultListView.ItemsSource = _treeNodes;
             ResultListView.AddHandler(GridViewColumnHeader.ClickEvent, new RoutedEventHandler(ColumnHeader_Click));
@@ -429,7 +429,7 @@ namespace dCompare.Compare
                     MessageBox.Show("Cannot find comparison result.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
-                newTab.Content = new UcFileCompare(leftPath, rightPath, comparisonResult);
+                newTab.Content = new UcTextDiffPlexViewer(leftPath, rightPath, comparisonResult);
             }
             else if (fileType == FileType.Image)
             {

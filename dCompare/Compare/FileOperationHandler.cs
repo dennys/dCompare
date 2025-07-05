@@ -9,16 +9,14 @@ namespace dCompare.Compare
     public class FileOperationHandler
     {
         private readonly IFileManager _fileManager;
-        private readonly TreeNodeManager _treeNodeManager;
         private readonly FileOperationControl _fileOperationControl;
 
         // Dictionary to track active jobs and their completion sources.
         private readonly Dictionary<string, TaskCompletionSource<bool>> _activeJobs = new();
 
-        public FileOperationHandler(IFileManager fileManager, TreeNodeManager treeNodeManager)
+        public FileOperationHandler(IFileManager fileManager)
         {
             _fileManager = fileManager;
-            _treeNodeManager = treeNodeManager;
             _fileOperationControl = FindFileOperationControl();
         }
 
