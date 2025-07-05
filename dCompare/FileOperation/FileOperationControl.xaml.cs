@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Input; // Added for ICommand
+using System.Windows.Input;
 
 namespace dCompare.FileOperation
 {
@@ -65,7 +65,6 @@ namespace dCompare.FileOperation
         public delegate void TransferStatusChangedHandler(string jobId, bool success, string message);
         public event TransferStatusChangedHandler? OnTransferStatusChanged;
 
-        // ICommand properties
         public ICommand StartCommand { get; }
         public ICommand PauseCommand { get; }
         public ICommand CancelCommand { get; }
@@ -88,7 +87,6 @@ namespace dCompare.FileOperation
             successfulView.Filter = FilterTransfers;
             failedView.Filter = FilterTransfers;
 
-            // Initialize commands
             StartCommand = new RelayCommand(OnStart, CanStart);
             PauseCommand = new RelayCommand(OnPause, CanPause);
             CancelCommand = new RelayCommand(OnCancel, CanCancel);
@@ -144,6 +142,22 @@ namespace dCompare.FileOperation
             OnTransferStatusChanged?.Invoke(transfer.JobId, success, message);
         }
 
+        private long GetItemSize(string path)
+        {
+            try
+            {
+                if (File.Exists(path))
+                {
+                    return new FileInfo(path).Length;
+                }
+                return 0; // Return 0 for directories
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
         private string Delete(string path, SourceType sourceType)
         {
             Log.Information($"Start to delete {path}");
@@ -155,7 +169,7 @@ namespace dCompare.FileOperation
                 Source = path,
                 Target = string.Empty,
                 Status = "Queued",
-                FileSize = 0,
+                FileSize = GetItemSize(path),
                 SourceType = sourceType
             };
 
@@ -170,7 +184,7 @@ namespace dCompare.FileOperation
                         Dispatcher.Invoke(() =>
                         {
                             transfer.Progress = p.Percentage / 100.0;
-                            transfer.Status = $"Deleting ({p.Percentage:P0})";
+                            transfer.Status = "Deleting";
                         });
                     });
 
@@ -240,7 +254,7 @@ namespace dCompare.FileOperation
                 Source = source,
                 Target = target,
                 Status = "Queued",
-                FileSize = Directory.Exists(source) ? 0 : new FileInfo(source).Length,
+                FileSize = GetItemSize(source),
                 SourceType = sourceType
             };
 
@@ -255,7 +269,7 @@ namespace dCompare.FileOperation
                         Dispatcher.Invoke(() =>
                         {
                             transfer.Progress = p.Percentage / 100.0;
-                            transfer.Status = $"Transferring ({p.Percentage:P0})";
+                            transfer.Status = isCopy ? "Copying" : "Moving";
                             if (p.Percentage > 0)
                             {
                                 transfer.TransferSpeed = (transfer.FileSize * (p.Percentage / 100.0) / 1024.0) / (DateTime.Now - transfer.StartTime).TotalSeconds;
@@ -268,9 +282,9 @@ namespace dCompare.FileOperation
                         await Task.Delay(100, _cancellationTokenSource.Token);
                     }
 
-                    OperationResult result;
                     transfer.StartTime = DateTime.Now;
 
+                    OperationResult result;
                     if (isCopy)
                     {
                         result = await _fileManager.CopyAsync(source, target, overwrite, progress, _cancellationTokenSource.Token);
@@ -335,19 +349,17 @@ namespace dCompare.FileOperation
 
         private bool FilterTransfers(object item)
         {
-            if (string.IsNullOrEmpty(FilterTextBox?.Text)) 
+            if (string.IsNullOrEmpty(FilterTextBox?.Text))
                 return true;
 
             var transfer = item as FileTransfer;
-            string filter = FilterTextBox.Text.ToLowerInvariant(); // Use ToLowerInvariant for culture-independent comparison
+            string filter = FilterTextBox.Text.ToLowerInvariant();
             return transfer?.Source?.Contains(filter, StringComparison.OrdinalIgnoreCase) == true ||
-                   transfer?.Target?.Contains(filter, StringComparison.OrdinalIgnoreCase) == true; // Use StringComparison.OrdinalIgnoreCase and null-safe checks
+                   transfer?.Target?.Contains(filter, StringComparison.OrdinalIgnoreCase) == true;
         }
 
-        // Command handlers
         private void OnStart(object parameter)
         {
-            // StartButton_Click logic
             _isPaused = false;
         }
 
@@ -355,7 +367,6 @@ namespace dCompare.FileOperation
 
         private void OnPause(object parameter)
         {
-            // PauseButton_Click logic
             _isPaused = true;
         }
 
@@ -363,7 +374,6 @@ namespace dCompare.FileOperation
 
         private void OnCancel(object parameter)
         {
-            // CancelButton_Click logic
             _cancellationTokenSource.Cancel();
             _cancellationTokenSource = new CancellationTokenSource();
         }
@@ -372,7 +382,6 @@ namespace dCompare.FileOperation
 
         private void OnCancelTransfer(object parameter)
         {
-            // CancelTransfer_Click logic
             if (QueuedGrid.SelectedItem is FileTransfer)
             {
                 _cancellationTokenSource.Cancel();
@@ -384,7 +393,6 @@ namespace dCompare.FileOperation
 
         private void OnRetryTransfer(object parameter)
         {
-            // RetryTransfer_Click logic
             if (FailedGrid.SelectedItem is FileTransfer transfer)
             {
                 FailedTransfers.Remove(transfer);
@@ -396,11 +404,8 @@ namespace dCompare.FileOperation
 
         private void OnFilterTextChanged(object parameter)
         {
-            // FilterTextBox_TextChanged logic
             CollectionViewSource.GetDefaultView(QueuedTransfers).Refresh();
-            CollectionViewSource.GetDefaultView(SuccessfulTransfers).Refresh
-
-();
+            CollectionViewSource.GetDefaultView(SuccessfulTransfers).Refresh();
             CollectionViewSource.GetDefaultView(FailedTransfers).Refresh();
         }
 
