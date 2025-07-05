@@ -344,7 +344,11 @@ namespace dCompare.Compare
         }
 
         private void ShowAll_Click(object sender, RoutedEventArgs e) => SetFilter(null);
-        private void ShowDifferent_Click(object sender, RoutedEventArgs e) => SetFilter(node => node.Status == ComparisonStatus.Modified || node.Status == ComparisonStatus.Conflict);
+        private void ShowDifferent_Click(object sender, RoutedEventArgs e) =>
+            SetFilter(node => node.Status == ComparisonStatus.Modified ||
+                            node.Status == ComparisonStatus.Conflict ||
+                            node.Status == ComparisonStatus.LeftOnly ||
+                            node.Status == ComparisonStatus.RightOnly);
         private void ShowIdentical_Click(object sender, RoutedEventArgs e) => SetFilter(node => node.Status == ComparisonStatus.Identical);
         private void ShowLeftUnique_Click(object sender, RoutedEventArgs e) => SetFilter(node => node.Status == ComparisonStatus.LeftOnly);
         private void ShowRightUnique_Click(object sender, RoutedEventArgs e) => SetFilter(node => node.Status == ComparisonStatus.RightOnly);
