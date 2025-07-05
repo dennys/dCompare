@@ -463,7 +463,7 @@ namespace dCompare.Options
     {
         private readonly TextDiffOptions _textModel;
         public TextDiffOptionsViewModel(TextDiffOptions model) : base(model, model.Ext, (m, l) => m.Ext = l) { _textModel = model; }
-        public List<string> AvailableViewers => new List<string> { "DiffPlexQ", "VS Code", "Beyond Compare" };
+        public static List<string> AvailableViewers => new() { "DiffPlex", "WinMerge", "XXX" };
         public string Viewer { get => _textModel.Viewer; set { _textModel.Viewer = value; OnPropertyChanged(); } }
     }
 
@@ -471,7 +471,7 @@ namespace dCompare.Options
     {
         private readonly ImageDiffOptions _imageModel;
         public ImageDiffOptionsViewModel(ImageDiffOptions model) : base(model, model.Ext, (m, l) => m.Ext = l) { _imageModel = model; }
-        public List<string> AvailableViewers => new List<string> { "Not implement", "IrfanView", "Paint.NET" };
+        public List<string> AvailableViewers => new List<string> { "Build-in", "IrfanView", "Paint.NET" };
         public string Viewer { get => _imageModel.Viewer; set { _imageModel.Viewer = value; OnPropertyChanged(); } }
     }
 

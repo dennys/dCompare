@@ -1,23 +1,25 @@
 using dCompare.Compare;
 using DiffPlex.DiffBuilder;
 using DiffPlex.DiffBuilder.Model;
-using System.Collections.ObjectModel;
+using DiffPlex.Model;
+using DiffPlex.WindowsForms.Controls;
+using DiffPlex.Wpf;
+using DiffPlex.Wpf.Controls;
+using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using System.Windows.Media;
 
 namespace dCompare.Diff
 {
-    public partial class UcFileCompare : UserControl, INotifyPropertyChanged, IRefreshable
+    public partial class UcTextDiffPlexViewer : UserControl, INotifyPropertyChanged, IRefreshable
     {
         private string _leftPath = string.Empty;
         private string _rightPath = string.Empty;
-        private ObservableCollection<DiffPiece> _leftLines;
-        private ObservableCollection<DiffPiece> _rightLines;
+        private string _leftText = string.Empty;
+        private string _rightText = string.Empty;
         private ScrollViewer? _leftScrollViewer;
         private ScrollViewer? _rightScrollViewer;
         private bool _isSyncingScroll;
@@ -42,48 +44,106 @@ namespace dCompare.Diff
             }
         }
 
-        public ObservableCollection<DiffPiece> LeftLines
+        public string LeftText
         {
-            get => _leftLines;
+            get => _leftText;
             set
             {
-                _leftLines = value;
-                OnPropertyChanged(nameof(LeftLines));
+                _leftText = value;
+                OnPropertyChanged(nameof(LeftText));
             }
         }
 
-        public ObservableCollection<DiffPiece> RightLines
+        public string RightText
         {
-            get => _rightLines;
+            get => _rightText;
             set
             {
-                _rightLines = value;
-                OnPropertyChanged(nameof(RightLines));
+                _rightText = value;
+                OnPropertyChanged(nameof(RightText));
             }
         }
 
-        public UcFileCompare(string leftPath, string rightPath, object comparisonResult)
+        public UcTextDiffPlexViewer(string leftPath, string rightPath, object comparisonResult = null)
         {
             InitializeComponent();
             DataContext = this;
             Loaded += UcFileCompare_Loaded;
 
-            SetComparisonResult(leftPath, rightPath, comparisonResult);
+            LeftPath = leftPath;
+            RightPath = rightPath;
+            DiffView.IsCommandBarVisible = true;
+            Refresh();
         }
 
         private void UcFileCompare_Loaded(object sender, RoutedEventArgs e)
         {
-            _leftScrollViewer = FindScrollViewer(LeftListBox);
+            // Find the internal TextBox controls within SideBySideDiffViewer
+            _leftScrollViewer = FindScrollViewer(DiffView, "PART_OldText");
             if (_leftScrollViewer != null)
             {
                 _leftScrollViewer.ScrollChanged += LeftScrollViewer_ScrollChanged;
             }
 
-            _rightScrollViewer = FindScrollViewer(RightListBox);
+            _rightScrollViewer = FindScrollViewer(DiffView, "PART_NewText");
             if (_rightScrollViewer != null)
             {
                 _rightScrollViewer.ScrollChanged += RightScrollViewer_ScrollChanged;
             }
+        }
+        private void DiffButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (DiffView.IsInlineViewMode)
+            {
+                DiffView.ShowSideBySide();
+                return;
+            }
+
+            DiffView.ShowInline();
+        }
+
+        private void FutherActionsButton_Click(object sender, RoutedEventArgs e)
+        {
+            DiffView.OpenViewModeContextMenu();
+        }
+
+        private void WindowButton_Click(object sender, RoutedEventArgs e)
+        {
+            var has = false;
+            foreach (var w in Application.Current.Windows)
+            {
+                if (w is DiffWindow dw)
+                {
+                    dw.Activate();
+                    has = true;
+                    break;
+                }
+            }
+
+            if (has) return;
+            var win = new DiffWindow();
+            win.OpenFileOnBoth();
+            win.Show();
+        }
+
+        private ScrollViewer? FindScrollViewer(DependencyObject depObj, string name)
+        {
+            if (depObj is FrameworkElement element && element.Name == name)
+            {
+                return FindScrollViewer(depObj);
+            }
+
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+            {
+                var child = VisualTreeHelper.GetChild(depObj, i);
+                var result = FindScrollViewer(child, name);
+                if (result != null)
+                {
+                    return result;
+                }
+            }
+
+            return null;
         }
 
         private ScrollViewer? FindScrollViewer(DependencyObject depObj)
@@ -127,98 +187,25 @@ namespace dCompare.Diff
             _leftScrollViewer.ScrollToHorizontalOffset(e.HorizontalOffset);
             _isSyncingScroll = false;
         }
-
-        private void SetComparisonResult(string leftPath, string rightPath, object comparisonResult)
-        {
-            bool EnableVerboseLogging = false;
-
-            LeftPath = leftPath;
-            RightPath = rightPath;
-
-            if (comparisonResult is SideBySideDiffModel diffModel)
-            {
-                var leftLines = new ObservableCollection<DiffPiece>();
-                var rightLines = new ObservableCollection<DiffPiece>();
-
-                foreach (var piece in diffModel.OldText.Lines)
-                {
-                    if (piece.SubPieces == null || piece.SubPieces.Count == 0)
-                    {
-                        piece.SubPieces = new List<DiffPiece> { new DiffPiece(piece.Text, piece.Type) };
-                    }
-                    leftLines.Add(piece);
-                }
-
-                foreach (var piece in diffModel.NewText.Lines)
-                {
-                    if (piece.SubPieces == null || piece.SubPieces.Count == 0)
-                    {
-                        piece.SubPieces = new List<DiffPiece> { new DiffPiece(piece.Text, piece.Type) };
-                    }
-                    rightLines.Add(piece);
-                }
-
-                LeftLines = leftLines;
-                RightLines = rightLines;
-
-                if (EnableVerboseLogging)
-                {
-                    //Debug: Log DiffPiece types and subpieces
-                    foreach (var piece in LeftLines)
-                    {
-                        Debug.WriteLine($"Left DiffPiece: Text='{piece.Text}', Type={piece.Type}, SubPieces={piece.SubPieces?.Count ?? 0}");
-                        if (piece.SubPieces != null)
-                        {
-                            foreach (var subPiece in piece.SubPieces)
-                            {
-                                Debug.WriteLine($"  SubPiece: Text='{subPiece.Text}', Type={subPiece.Type}");
-                            }
-                        }
-                    }
-                    foreach (var piece in RightLines)
-                    {
-                        Debug.WriteLine($"Right DiffPiece: Text='{piece.Text}', Type={piece.Type}, SubPieces={piece.SubPieces?.Count ?? 0}");
-                        if (piece.SubPieces != null)
-                        {
-                            foreach (var subPiece in piece.SubPieces)
-                            {
-                                Debug.WriteLine($"  SubPiece: Text='{subPiece.Text}', Type={subPiece.Type}");
-                            }
-                        }
-                    }
-                }
-            }
-            else
-            {
-                LeftLines = new ObservableCollection<DiffPiece>();
-                RightLines = new ObservableCollection<DiffPiece>();
-            }
-        }
-
+     
         public void Refresh()
         {
             if (string.IsNullOrEmpty(LeftPath) || string.IsNullOrEmpty(RightPath))
             {
-                MessageBox.Show("Both file paths must be set to refresh the comparison.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Both file paths must be set to refresh the comparison.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
             try
             {
                 // Read file contents
-                string leftText = File.ReadAllText(LeftPath);
-                string rightText = File.ReadAllText(RightPath);
-
-                // Compute diff using DiffPlex
-                var diffBuilder = new SideBySideDiffBuilder();
-                var diffModel = diffBuilder.BuildDiffModel(leftText, rightText);
-
-                // Update the comparison result
-                SetComparisonResult(LeftPath, RightPath, diffModel);
+                LeftText = File.ReadAllText(LeftPath);
+                RightText = File.ReadAllText(RightPath);
+                // SideBySideDiffViewer updates automatically via bindings
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to refresh comparison: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Failed to refresh comparison: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -228,18 +215,5 @@ namespace dCompare.Diff
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-
-        // RelayCommand implementation for keybinding
-        //private class RelayCommand : ICommand
-        //{
-        //    private readonly Action<object?> _execute;
-        //    public RelayCommand(Action<object?> execute)
-        //    {
-        //        _execute = execute;
-        //    }
-        //    public bool CanExecute(object? parameter) => true;
-        //    public void Execute(object? parameter) => _execute(parameter);
-        //    public event EventHandler? CanExecuteChanged;
-        //}
     }
 }
