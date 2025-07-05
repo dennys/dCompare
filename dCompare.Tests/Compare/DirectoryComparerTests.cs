@@ -10,7 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace dCompare.Tests
+namespace dCompare.Tests.Compare
 {
     public class DirectoryComparerTests : IDisposable
     {

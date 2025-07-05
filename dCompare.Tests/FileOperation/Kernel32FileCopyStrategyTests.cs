@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace dCompare.FileOperation.Tests
+namespace dCompare.Tests.FileOperation
 {
     public class Kernel32FileCopyStrategyTests : IDisposable
     {
