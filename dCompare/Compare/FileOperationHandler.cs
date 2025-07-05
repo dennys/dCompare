@@ -206,7 +206,7 @@ namespace dCompare.Compare
                                 Application.Current.Dispatcher.Invoke(() =>
                                 {
                                     transfer.Progress = p.Percentage / 100.0;
-                                    transfer.Status = $"Transferring ({p.Percentage:P0})";
+                                    transfer.Status = $"Transferring";
                                     if (p.Percentage > 0)
                                     {
                                         transfer.TransferSpeed = (transfer.FileSize * (p.Percentage / 100.0) / 1024.0) / (DateTime.Now - transfer.StartTime).TotalSeconds;
