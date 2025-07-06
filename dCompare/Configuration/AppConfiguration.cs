@@ -72,8 +72,8 @@ namespace dCompare.Configuration
     public class TextDiffOptions
     {
         [JsonPropertyName("Ext")]
-        public List<string> Ext { get; set; } = new();
-
+        public List<string> Ext { get; set; } = new List<string> { ".txt", ".log", ".cs", ".json", ".xml", ".html", ".css", ".js", ".py", ".md", ".sql" };
+ 
         [JsonPropertyName("Viewer")]
         public string Viewer { get; set; } = "DiffPlex";
     }
@@ -81,7 +81,7 @@ namespace dCompare.Configuration
     public class ImageDiffOptions
     {
         [JsonPropertyName("Ext")]
-        public List<string> Ext { get; set; } = new();
+        public List<string> Ext { get; set; } = new List<string> {".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tiff", ".webp" };
 
         [JsonPropertyName("Viewer")]
         public string Viewer { get; set; } = "Build-in";

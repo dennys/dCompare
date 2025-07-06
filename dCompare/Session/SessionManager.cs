@@ -160,6 +160,7 @@ namespace dCompare.Session
                         _tabIdMap[tabName] = tabId;
                         sessions[tabId] = new SessionConfig
                         {
+                            TabName = tabName, // Save the tab header
                             Left = ucCompare.LeftPathBox.Text,
                             Right = ucCompare.RightPathBox.Text,
                             Algorithm = ucCompare.SelectedAlgorithm
@@ -241,12 +242,11 @@ namespace dCompare.Session
                     }
 
                     _tabIdMap.Clear();
-                    _tabCounter = 0;
+                    _tabCounter = sessions.Count; // Set tab counter to the number of loaded tabs to avoid conflicts
 
                     foreach (var session in sessions)
                     {
-                        _tabCounter++;
-                        string tabName = $"Tab {_tabCounter}";
+                        string tabName = session.Value.TabName ?? $"Tab {++_tabCounter}"; // Use saved tab name or generate a new one
                         CompareControl ucCompareInstance = _serviceProvider.GetRequiredService<CompareControl>();
                         TabItem newTab = new()
                         {

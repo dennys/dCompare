@@ -1,3 +1,4 @@
+using dCompare.Configuration;
 using dCompare.Diff.Models;
 using DiffPlex;
 using DiffPlex.DiffBuilder;
@@ -6,28 +7,38 @@ using System.IO;
 
 namespace dCompare.Diff
 {
-
     public class FileComparisonHandler
     {
         private readonly SideBySideDiffBuilder _diffBuilder;
+        private readonly AppConfiguration _config;
 
-        public FileComparisonHandler()
+        public FileComparisonHandler(AppConfiguration config)
         {
             _diffBuilder = new SideBySideDiffBuilder(new Differ());
+            _config = config ?? throw new ArgumentNullException(nameof(config));
         }
 
-        public static FileType DetermineFileType(string filePath)
+        public FileType DetermineFileType(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
                 return FileType.Unsupported;
 
             string? extension = Path.GetExtension(filePath)?.ToLowerInvariant();
-            return extension switch
-            {
-                ".cs" or ".json" or ".log" or ".md" or ".txt" or ".xaml" or ".xml" => FileType.Text,
-                ".png" or ".jpg" or ".jpeg" or ".bmp" or ".webp" => FileType.Image,
-                _ => FileType.Unsupported
-            };
+            if (string.IsNullOrEmpty(extension))
+                return FileType.Unsupported;
+
+            // Check text file extensions from configuration
+            if (_config.Options.Diff.Text.Ext.Contains(extension))
+                return FileType.Text;
+
+            // Check image file extensions from configuration
+            if (_config.Options.Diff.Image.Ext.Contains(extension))
+                return FileType.Image;
+
+            // Future extensions: Add checks for additional file types (e.g., Zip, Rar)
+            // Example: if (_config.Options.Diff.Zip?.Ext.Contains(extension)) return FileType.Zip;
+
+            return FileType.Unsupported;
         }
 
         public async Task<SideBySideDiffModel> CompareTextFilesAsync(string leftPath, string rightPath)
@@ -55,6 +66,7 @@ namespace dCompare.Diff
             {
                 FileType.Text => await CompareTextFilesAsync(leftPath, rightPath),
                 FileType.Image => await CompareImageFilesAsync(leftPath, rightPath),
+                // Future extensions: Add cases for new file types (e.g., FileType.Zip, FileType.Rar)
                 _ => throw new NotSupportedException("Unsupported file type for comparison.")
             };
         }
