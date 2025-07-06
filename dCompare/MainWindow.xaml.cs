@@ -116,7 +116,7 @@ namespace dCompare
                     {
                         _sessionManager.LoadSession(config.Options.Session.DefaultSessionFile, config.Options.Session.AutoCompareAfterSessionLoad, UpdateStatus, ExecuteUcCompareMethod);
                     }
-                    catch (FileNotFoundException ex)
+                    catch (FileNotFoundException)
                     {
                         MessageBox.Show(
                             $"Default session file '{config.Options.Session.DefaultSessionFile}' does not exist. Please check the configuration or select a valid session file.",
