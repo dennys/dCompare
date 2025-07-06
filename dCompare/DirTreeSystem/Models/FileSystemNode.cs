@@ -1,4 +1,4 @@
-﻿namespace dCompare.DirTreeSystem
+﻿namespace dCompare.DirTreeSystem.Models
 {
 
     public class FileSystemNode

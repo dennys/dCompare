@@ -152,7 +152,7 @@ namespace dCompare.Session
 
                 foreach (TabItem tab in _tabControl.Items)
                 {
-                    if (tab.Content is UcCompare ucCompare)
+                    if (tab.Content is CompareControl ucCompare)
                     {
                         string tabName = tab.Header?.ToString() ?? "Untitled";
                         sessions[tabName] = new SessionConfig
@@ -244,7 +244,7 @@ namespace dCompare.Session
                     {
                         _tabCounter++;
                         string tabName = session.Key;
-                        UcCompare ucCompareInstance = _serviceProvider.GetRequiredService<UcCompare>();
+                        CompareControl ucCompareInstance = _serviceProvider.GetRequiredService<CompareControl>();
                         TabItem newTab = new()
                         {
                             Header = tabName,

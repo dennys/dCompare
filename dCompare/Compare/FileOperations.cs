@@ -1,4 +1,5 @@
-﻿using Serilog;
+﻿using dCompare.Compare.Models;
+using Serilog;
 using System.IO;
 using System.Text;
 using System.Windows;

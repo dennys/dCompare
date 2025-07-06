@@ -1,4 +1,5 @@
-﻿using dCompare.DirTreeSystem;
+﻿using dCompare.Compare.Models;
+using dCompare.DirTreeSystem.Models;
 using System.Collections.ObjectModel;
 using System.IO;
 

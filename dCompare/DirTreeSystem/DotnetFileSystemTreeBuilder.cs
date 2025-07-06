@@ -1,4 +1,5 @@
 using dCompare.Compare;
+using dCompare.DirTreeSystem.Models;
 using System.IO;
 
 namespace dCompare.DirTreeSystem

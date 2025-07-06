@@ -1,5 +1,7 @@
-﻿using dCompare.Configuration;
+﻿using dCompare.Compare.Models;
+using dCompare.Configuration;
 using dCompare.Diff;
+using dCompare.Diff.Models;
 using dCompare.FileOperation;
 using Microsoft.VisualBasic;
 using Microsoft.Win32;
@@ -31,7 +33,7 @@ namespace dCompare.Compare
         DeleteRight
     }
 
-    public partial class UcCompare : UserControl, INotifyPropertyChanged, IRefreshable
+    public partial class CompareControl : UserControl, INotifyPropertyChanged, IRefreshable
     {
         private ObservableCollection<TreeNode> _treeNodes = new();
         private DirectoryComparer _comparer = new DirectoryComparer();
@@ -87,7 +89,7 @@ namespace dCompare.Compare
             }
         }
 
-        public UcCompare(IConfigurationService configService, IFileManager fileManager)
+        public CompareControl(IConfigurationService configService, IFileManager fileManager)
         {
             InitializeComponent();
 
@@ -437,11 +439,11 @@ namespace dCompare.Compare
                     MessageBox.Show("Cannot find comparison result.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
-                newTab.Content = new UcTextDiffPlexViewer(leftPath, rightPath, comparisonResult);
+                newTab.Content = new TextDiffPlex(leftPath, rightPath, comparisonResult);
             }
             else if (fileType == FileType.Image)
             {
-                var imageViewer = new UcImageDiffViewer(leftPath, rightPath);
+                var imageViewer = new ImageDiff(leftPath, rightPath);
                 newTab.Content = imageViewer;
             }
             else

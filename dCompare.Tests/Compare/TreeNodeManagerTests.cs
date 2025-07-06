@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using dCompare.Compare;
+using dCompare.Compare.Models;
 using dCompare.DirTreeSystem;
 using Xunit;
 

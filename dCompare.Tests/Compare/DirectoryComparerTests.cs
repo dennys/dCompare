@@ -1,6 +1,8 @@
 ﻿using dCompare.Compare;
+using dCompare.Compare.Models;
 using dCompare.Configuration;
 using dCompare.DirTreeSystem;
+using dCompare.DirTreeSystem.Models;
 using Moq;
 using System;
 using System.Collections.Generic;

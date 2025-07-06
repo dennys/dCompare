@@ -1,5 +1,7 @@
-﻿using dCompare.Configuration;
+﻿using dCompare.Compare.Models;
+using dCompare.Configuration;
 using dCompare.DirTreeSystem;
+using dCompare.DirTreeSystem.Models;
 using Serilog;
 using System.IO;
 using System.IO.Hashing;

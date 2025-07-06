@@ -166,7 +166,7 @@ namespace dCompare
                 var newTab = new TabItem
                 {
                     Header = $"Tab {_sessionManager.TabCounter}",
-                    Content = _serviceProvider.GetRequiredService<UcCompare>()
+                    Content = _serviceProvider.GetRequiredService<CompareControl>()
                 };
                 tabControl.Items.Add(newTab);
                 tabControl.SelectedItem = newTab;
@@ -363,9 +363,9 @@ namespace dCompare
         {
             try
             {
-                if (tabControl.SelectedItem is TabItem selectedTab && selectedTab.Content is UcCompare ucCompare)
+                if (tabControl.SelectedItem is TabItem selectedTab && selectedTab.Content is CompareControl ucCompare)
                 {
-                    MethodInfo? methodInfo = typeof(UcCompare).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
+                    MethodInfo? methodInfo = typeof(CompareControl).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
                     if (methodInfo != null)
                     {
                         methodInfo.Invoke(ucCompare, new object[] { null, null });
@@ -389,7 +389,7 @@ namespace dCompare
 
         private bool CanExecuteUcCompareMethod()
         {
-            return tabControl?.SelectedItem is TabItem selectedTab && selectedTab.Content is UcCompare;
+            return tabControl?.SelectedItem is TabItem selectedTab && selectedTab.Content is CompareControl;
         }
 
         #endregion
