@@ -146,56 +146,91 @@
             <Setter Property="FontWeight" Value="Bold"/>
         </Style>
 
-        <DataTemplate DataType="{x:Type local:TextDiffOptionsViewModel}">
-            <StackPanel Margin="20">
-                <TextBlock Text="Text Diff Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
-                <TextBlock Text="Viewer:" VerticalAlignment="Center" Margin="0,5,10,5"/>
-                <ComboBox Margin="0,0,0,15"
-                          ItemsSource="{Binding AvailableViewers}"
-                          SelectedItem="{Binding Viewer}"/>
-                <Grid IsEnabled="{Binding IsWinMergePathEnabled}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="WinMerge Path:" VerticalAlignment="Center" Margin="0,5,10,5"/>
-                    <TextBox Text="{Binding WinMergePath, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" Margin="0,5"/>
-                    <Button Grid.Column="1" Content="..." VerticalAlignment="Center" Padding="10,2" Margin="5,0" Command="{Binding BrowseWinMergeCommand}"/>
-                </Grid>
-                <TextBlock Text="File Extensions:" Margin="0,5,10,5"/>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <ListBox ItemsSource="{Binding Extensions}" SelectedItem="{Binding SelectedExtension}" Height="150" Grid.Column="0"/>
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <Button Content="+" Command="{Binding AddExtensionCommand}" Style="{StaticResource ListEditButtonStyle}"/>
-                        <Button Content="-" Command="{Binding RemoveExtensionCommand}" Style="{StaticResource ListEditButtonStyle}"/>
-                    </StackPanel>
-                </Grid>
-            </StackPanel>
-        </DataTemplate>
 
-        <DataTemplate DataType="{x:Type local:ImageDiffOptionsViewModel}">
-            <StackPanel Margin="20">
-                <TextBlock Text="Image Diff Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
-                <TextBlock Text="Viewer:" VerticalAlignment="Center" Margin="0,5,10,5"/>
-                <ComboBox Margin="0,0,0,15"
-                          ItemsSource="{Binding AvailableViewers}"
-                          SelectedItem="{Binding Viewer}"/>
-                <TextBlock Text="File Extensions:" Margin="0,5,10,5"/>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <ListBox ItemsSource="{Binding Extensions}" SelectedItem="{Binding SelectedExtension}" Height="150" Grid.Column="0"/>
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <Button Content="+" Command="{Binding AddExtensionCommand}" Style="{StaticResource ListEditButtonStyle}"/>
-                        <Button Content="-" Command="{Binding RemoveExtensionCommand}" Style="{StaticResource ListEditButtonStyle}"/>
-                    </StackPanel>
-                </Grid>
+        <DataTemplate DataType="{x:Type local:DiffOptionsViewModel}">
+            <StackPanel Margin="10">
+                <TextBlock Text="Diff Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,15"/>
+                <TabControl>
+                    <TabItem Header="Text Diff">
+                        <StackPanel Margin="15">
+                            <TextBlock Text="Viewer:" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                            <ComboBox Margin="0,0,0,15"
+                                      ItemsSource="{Binding AvailableTextViewers}"
+                                      SelectedItem="{Binding SelectedTextViewer}"/>
+                            <TextBlock Text="File Extensions:" Margin="0,5,10,5"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <ListBox ItemsSource="{Binding TextExtensionEditor.Extensions}" 
+                                         SelectedItem="{Binding TextExtensionEditor.SelectedExtension}" 
+                                         Height="250" Grid.Column="0"/>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <Button Content="+" Command="{Binding TextExtensionEditor.AddExtensionCommand}" Style="{StaticResource ListEditButtonStyle}"/>
+                                    <Button Content="-" Command="{Binding TextExtensionEditor.RemoveExtensionCommand}" Style="{StaticResource ListEditButtonStyle}"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </TabItem>
+                    <TabItem Header="Image Diff">
+                        <StackPanel Margin="15">
+                            <TextBlock Text="Viewer:" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                            <ComboBox Margin="0,0,0,15"
+                                      ItemsSource="{Binding AvailableImageViewers}"
+                                      SelectedItem="{Binding SelectedImageViewer}"/>
+                            <TextBlock Text="File Extensions:" Margin="0,5,10,5"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <ListBox ItemsSource="{Binding ImageExtensionEditor.Extensions}" 
+                                         SelectedItem="{Binding ImageExtensionEditor.SelectedExtension}" 
+                                         Height="250" Grid.Column="0"/>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <Button Content="+" Command="{Binding ImageExtensionEditor.AddExtensionCommand}" Style="{StaticResource ListEditButtonStyle}"/>
+                                    <Button Content="-" Command="{Binding ImageExtensionEditor.RemoveExtensionCommand}" Style="{StaticResource ListEditButtonStyle}"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </TabItem>
+                    <TabItem Header="External Viewers">
+                        <DockPanel Margin="15">
+                            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                                <Button Content="Add New" Command="{Binding AddViewerCommand}" Width="80" />
+                                <Button Content="Remove" Command="{Binding RemoveViewerCommand}" CommandParameter="{Binding SelectedExternalViewer}" Width="80" Margin="5,0,0,0"/>
+                            </StackPanel>
+                            <DataGrid ItemsSource="{Binding ExternalViewers}"
+                                      SelectedItem="{Binding SelectedExternalViewer}"
+                                      AutoGenerateColumns="False"
+                                      CanUserAddRows="False"
+                                      HeadersVisibility="Column"
+                                      GridLinesVisibility="Horizontal">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Name" Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Width="120"/>
+                                    <DataGridTemplateColumn Header="Executable Path" Width="*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBox Grid.Column="0" Text="{Binding Path, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                                                    <Button Grid.Column="1" Content="..." 
+                                                            Command="{Binding DataContext.BrowsePathCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            Margin="5,0,0,0" Padding="5,1"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="Arguments" Binding="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}" Width="200"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </DockPanel>
+                    </TabItem>
+                </TabControl>
             </StackPanel>
         </DataTemplate>
 

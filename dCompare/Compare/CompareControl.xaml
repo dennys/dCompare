@@ -37,8 +37,8 @@
         <!-- Left Side Context Menu -->
         <ContextMenu x:Key="LeftContextMenu">
             <MenuItem Header="{x:Static resx:Resources.CompareContentsMenu}" Click="ContextMenu_CompareContents_Click" Tag="{Binding}"/>
-            <MenuItem Header="{x:Static resx:Resources.CompareWith}">
-                <MenuItem Header="{x:Static resx:Resources.WinMerge}" Click="ContextMenu_CompareWithWinMerge_Click" Tag="{Binding}"/>
+            <MenuItem x:Name="LeftCompareWithMenu" Header="{x:Static resx:Resources.CompareWith}">
+                <!-- Dynamically populated in code-behind -->
             </MenuItem>
             <Separator/>
             <MenuItem Header="{x:Static resx:Resources.CopyToRightMenu}" Click="ContextMenu_CopyToRight_Click" Tag="{Binding}" Icon="{StaticResource CopyToRightIcon}"/>
@@ -56,8 +56,8 @@
         <!-- Right Side Context Menu -->
         <ContextMenu x:Key="RightContextMenu">
             <MenuItem Header="{x:Static resx:Resources.CompareContentsMenu}" Click="ContextMenu_CompareContents_Click" Tag="{Binding}"/>
-            <MenuItem Header="{x:Static resx:Resources.CompareWith}">
-                <MenuItem Header="{x:Static resx:Resources.WinMerge}" Click="ContextMenu_CompareWithWinMerge_Click" Tag="{Binding}"/>
+            <MenuItem x:Name="RightCompareWithMenu" Header="{x:Static resx:Resources.CompareWith}">
+                <!-- Dynamically populated in code-behind -->
             </MenuItem>
             <Separator/>
             <MenuItem Header="{x:Static resx:Resources.CopyToLeftMenu}" Click="ContextMenu_CopyToLeft_Click" Tag="{Binding}" Icon="{StaticResource CopyToLeftIcon}"/>

@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace dCompare.Configuration
 {
@@ -57,6 +58,22 @@ namespace dCompare.Configuration
         public bool ParallelOptions { get; set; } = true;
     }
 
+    // New class for external viewer configuration
+    public class ExternalViewer
+    {
+        [JsonPropertyName("Name")]
+        public string Name { get; set; } = string.Empty;
+
+        [JsonPropertyName("Path")]
+        public string Path { get; set; } = string.Empty;
+
+        [JsonPropertyName("Arguments")]
+        public string Arguments { get; set; } = string.Empty;
+
+        [JsonPropertyName("SupportedFormats")]
+        public string SupportedFormats { get; set; } = string.Empty;
+    }
+
     public class DiffOptions
     {
         [JsonPropertyName("Text")]
@@ -64,6 +81,13 @@ namespace dCompare.Configuration
 
         [JsonPropertyName("Image")]
         public ImageDiffOptions Image { get; set; } = new();
+
+        // Updated to support a list of viewers
+        [JsonPropertyName("Viewer")]
+        public List<ExternalViewer> Viewer { get; set; } = new()
+        {
+            new ExternalViewer { Name = "WinMerge", Path = "", Arguments = "/e /u \"{left}\" \"{right}\"" }
+        };
     }
 
     public class TextDiffOptions
@@ -73,9 +97,6 @@ namespace dCompare.Configuration
 
         [JsonPropertyName("Viewer")]
         public string Viewer { get; set; } = "DiffPlex";
-
-        [JsonPropertyName("WinMergePath")]
-        public string WinMergePath { get; set; } = "";
     }
 
     public class ImageDiffOptions
