@@ -71,6 +71,9 @@ namespace dCompare.FileOperation
         public ICommand CancelTransferCommand { get; }
         public ICommand RetryTransferCommand { get; }
         public ICommand FilterTextChangedCommand { get; }
+        public ICommand ClearQueuedCommand { get; }
+        public ICommand ClearSuccessfulCommand { get; }
+        public ICommand ClearFailedCommand { get; }
 
         public FileOperationControl()
         {
@@ -93,6 +96,24 @@ namespace dCompare.FileOperation
             CancelTransferCommand = new RelayCommand(OnCancelTransfer, CanCancelTransfer);
             RetryTransferCommand = new RelayCommand(OnRetryTransfer, CanRetryTransfer);
             FilterTextChangedCommand = new RelayCommand(OnFilterTextChanged, CanFilterTextChanged);
+            ClearQueuedCommand = new RelayCommand(OnClearQueued, CanClearQueued);
+            ClearSuccessfulCommand = new RelayCommand(OnClearSuccessful, CanClearSuccessful);
+            ClearFailedCommand = new RelayCommand(OnClearFailed, CanClearFailed);
+        }
+
+        public void ClearQueuedTransfers()
+        {
+            Dispatcher.Invoke(() => QueuedTransfers.Clear());
+        }
+
+        public void ClearSuccessfulTransfers()
+        {
+            Dispatcher.Invoke(() => SuccessfulTransfers.Clear());
+        }
+
+        public void ClearFailedTransfers()
+        {
+            Dispatcher.Invoke(() => FailedTransfers.Clear());
         }
 
         public List<string> CopyMultiple(List<(string Source, string TargetPath, SourceType Type)> items, bool overwrite = false)
@@ -410,6 +431,27 @@ namespace dCompare.FileOperation
         }
 
         private bool CanFilterTextChanged(object parameter) => true;
+
+        private void OnClearQueued(object parameter)
+        {
+            ClearQueuedTransfers();
+        }
+
+        private bool CanClearQueued(object parameter) => QueuedTransfers.Any();
+
+        private void OnClearSuccessful(object parameter)
+        {
+            ClearSuccessfulTransfers();
+        }
+
+        private bool CanClearSuccessful(object parameter) => SuccessfulTransfers.Any();
+
+        private void OnClearFailed(object parameter)
+        {
+            ClearFailedTransfers();
+        }
+
+        private bool CanClearFailed(object parameter) => FailedTransfers.Any();
     }
 
     public class FileTransfer : INotifyPropertyChanged
