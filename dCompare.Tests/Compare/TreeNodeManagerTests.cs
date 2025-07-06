@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using dCompare.Compare;
 using dCompare.Compare.Models;
-using dCompare.DirTreeSystem;
+using dCompare.DirTreeSystem.Models;
 using Xunit;
 
 namespace dCompare.Tests.Compare
