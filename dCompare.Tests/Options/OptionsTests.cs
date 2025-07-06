@@ -1,6 +1,10 @@
 using dCompare.Configuration;
 using dCompare.Options;
+using Microsoft.Win32; // For OpenFileDialog mocking
+using Moq; // For mocking OpenFileDialog
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using Xunit;
 
 namespace dCompare.Tests.Options
@@ -8,47 +12,47 @@ namespace dCompare.Tests.Options
     public class ViewModelTests
     {
         [Fact]
-        public void TextDiffOptionsViewModel_ExtensionList_IsEditable()
+        public void DiffOptionsViewModel_TextExtensionList_IsEditable()
         {
             // Arrange
-            var model = new TextDiffOptions { Ext = new List<string> { ".cs" } };
-            var viewModel = new TextDiffOptionsViewModel(model);
-            string testExtension = ".test"; // Define a test-specific extension
+            var model = new DiffOptions
+            {
+                Text = new TextDiffOptions { Ext = new List<string> { ".cs" } }
+            };
+            var viewModel = new DiffOptionsViewModel(model);
+            string testExtension = ".test";
 
             // Assert initial state
-            Assert.Single(viewModel.Extensions);
-            Assert.Contains(".cs", viewModel.Extensions);
+            Assert.Single(viewModel.TextExtensionEditor.Extensions);
+            Assert.Contains(".cs", viewModel.TextExtensionEditor.Extensions);
 
             // Act: Add an extension programmatically
-            // Assume AddExtensionCommand can accept a parameter for testing, or modify ViewModel to support this
-            viewModel.Extensions.Add(testExtension); // Direct addition for testing (bypasses UI dialog)
-            //viewModel.UpdateModel(); // Ensure model is updated (simulate save)
+            viewModel.TextExtensionEditor.Extensions.Add(testExtension);
 
             // Assert: List is updated in both ViewModel and underlying Model
-            Assert.Equal(2, viewModel.Extensions.Count);
-            Assert.Contains(testExtension, viewModel.Extensions);
-            Assert.Contains(testExtension, model.Ext); // Verify model is updated
+            Assert.Equal(2, viewModel.TextExtensionEditor.Extensions.Count);
+            Assert.Contains(testExtension, viewModel.TextExtensionEditor.Extensions);
+            Assert.Contains(testExtension, model.Text.Ext);
 
             // Act: Remove an extension
-            viewModel.SelectedExtension = ".cs";
-            Assert.True(viewModel.RemoveExtensionCommand.CanExecute(null));
-            viewModel.RemoveExtensionCommand.Execute(null);
+            viewModel.TextExtensionEditor.SelectedExtension = ".cs";
+            Assert.True(viewModel.TextExtensionEditor.RemoveExtensionCommand.CanExecute(null));
+            viewModel.TextExtensionEditor.RemoveExtensionCommand.Execute(null);
 
             // Assert: List is updated
-            Assert.Single(viewModel.Extensions);
-            Assert.DoesNotContain(".cs", viewModel.Extensions);
-            Assert.DoesNotContain(".cs", model.Ext); // Verify model is updated
-            Assert.Contains(testExtension, viewModel.Extensions); // Ensure test extension remains
+            Assert.Single(viewModel.TextExtensionEditor.Extensions);
+            Assert.DoesNotContain(".cs", viewModel.TextExtensionEditor.Extensions);
+            Assert.DoesNotContain(".cs", model.Text.Ext);
+            Assert.Contains(testExtension, viewModel.TextExtensionEditor.Extensions);
         }
 
-        // Other tests remain unchanged
         [Fact]
         public void UIOptionsViewModel_Properties_ReflectModel()
         {
-            var model = new UIOptions { Theme = "Dark", Language = "en-US" };
+            var model = new UIOptions { Theme = "Dark", Language = "en" };
             var viewModel = new UIOptionsViewModel(model);
             Assert.Equal("Dark", viewModel.Theme);
-            Assert.Equal("en-US", viewModel.Language);
+            Assert.Equal("en", viewModel.Language);
         }
 
         [Fact]
@@ -75,14 +79,163 @@ namespace dCompare.Tests.Options
         }
 
         //[Fact]
-        //public void CompareOptionsViewModel_AlgorithmMapping_IsCorrect()
+        //public void DiffOptionsViewModel_ExternalViewer_CanAddAndRemove()
         //{
-        //    var model = new CompareOptions { Algorithm = "Binary" };
-        //    var viewModel = new CompareOptionsViewModel(model);
-        //    viewModel.Algorithm = "Rules";
-        //    Assert.Equal("Rules", model.Algorithm);
-        //    Assert.Contains(viewModel.AvailableAlgorithms, kvp => kvp.Value == "Modified Date and Size");
-        //    Assert.Contains(viewModel.AvailableAlgorithms, kvp => kvp.Key == "Thorough (Binary Content)");
+        //    // Arrange
+        //    var model = new DiffOptions
+        //    {
+        //        Viewer = new List<ExternalViewer>
+        //        {
+        //            new ExternalViewer { Name = "WinMerge", Arguments = "/e /u \"{left}\" \"{right}\"" }
+        //        }
+        //    };
+        //    var viewModel = new DiffOptionsViewModel(model);
+
+        //    // Assert initial state
+        //    Assert.Single(viewModel.ExternalViewers);
+        //    Assert.Equal("WinMerge", viewModel.ExternalViewers[0].Name);
+
+        //    // Act: Add a new viewer
+        //    viewModel.AddViewerCommand.Execute(null);
+        //    Assert.Equal(2, viewModel.ExternalViewers.Count);
+        //    Assert.Contains(viewModel.ExternalViewers, v => v.Name == "New Tool");
+
+        //    // Act: Remove a viewer
+        //    viewModel.SelectedExternalViewer = viewModel.ExternalViewers.FirstOrDefault(v => v.Name == "New Tool");
+        //    Assert.True(viewModel.RemoveViewerCommand.CanExecute(null));
+        //    viewModel.RemoveViewerCommand.Execute(null);
+
+        //    // Assert: Viewer removed
+        //    Assert.Single(viewModel.ExternalViewers);
+        //    Assert.Equal("WinMerge", viewModel.ExternalViewers[0].Name);
+        //    Assert.Single(model.Viewer);
+        //    Assert.Equal("WinMerge", model.Viewer[0].Name);
+        //}
+
+        //[Fact]
+        //public void DiffOptionsViewModel_ExternalViewer_WinMergeCannotBeRemoved()
+        //{
+        //    // Arrange
+        //    var model = new DiffOptions
+        //    {
+        //        Viewer = new List<ExternalViewer>
+        //        {
+        //            new ExternalViewer { Name = "WinMerge", Arguments = "/e /u \"{left}\" \"{right}\"" }
+        //        }
+        //    };
+        //    var viewModel = new DiffOptionsViewModel(model);
+
+        //    // Act: Try to remove WinMerge
+        //    viewModel.SelectedExternalViewer = viewModel.ExternalViewers.FirstOrDefault(v => v.Name == "WinMerge");
+        //    Assert.False(viewModel.RemoveViewerCommand.CanExecute(null));
+
+        //    // Assert: WinMerge not removed
+        //    Assert.Single(viewModel.ExternalViewers);
+        //    Assert.Equal("WinMerge", viewModel.ExternalViewers[0].Name);
+        //}
+
+        //[Fact]
+        //public void DiffOptionsViewModel_BrowsePath_UpdatesViewerPath()
+        //{
+        //    // Arrange
+        //    var model = new DiffOptions
+        //    {
+        //        Viewer = new List<ExternalViewer>
+        //        {
+        //            new ExternalViewer { Name = "NewTool", Arguments = "" }
+        //        }
+        //    };
+        //    var viewModel = new DiffOptionsViewModel(model);
+
+        //    // Mock OpenFileDialog
+        //    var mockDialog = new Mock<OpenFileDialog>();
+        //    mockDialog.Setup(d => d.ShowDialog()).Returns(true);
+        //    mockDialog.Setup(d => d.FileName).Returns("C:\\Tools\\NewTool.exe");
+
+        //    // Replace OpenFileDialog creation in BrowsePath with mock (requires dependency injection or similar, so we simulate)
+        //    viewModel.SelectedExternalViewer = viewModel.ExternalViewers.FirstOrDefault(v => v.Name == "NewTool");
+        //    viewModel.SelectedExternalViewer.Path = "C:\\Tools\\NewTool.exe"; // Simulate dialog result
+
+        //    // Assert
+        //    Assert.Equal("C:\\Tools\\NewTool.exe", viewModel.SelectedExternalViewer.Path);
+        //    Assert.Equal("C:\\Tools\\NewTool.exe", model.Viewer[0].Path);
+        //}
+
+        [Fact]
+        public void DiffOptionsViewModel_UpdateAvailableViewers_ReflectsExternalViewers()
+        {
+            // Arrange
+            var model = new DiffOptions
+            {
+                Viewer = new List<ExternalViewer>
+                {
+                    new ExternalViewer { Name = "WinMerge", Arguments = "/e /u \"{left}\" \"{right}\"" },
+                    new ExternalViewer { Name = "CustomTool", Arguments = "" }
+                }
+            };
+            var viewModel = new DiffOptionsViewModel(model);
+
+            // Assert: Available viewers include built-in and external viewers
+            Assert.Contains("DiffPlex", viewModel.AvailableTextViewers);
+            Assert.Contains("WinMerge", viewModel.AvailableTextViewers);
+            Assert.Contains("CustomTool", viewModel.AvailableTextViewers);
+            Assert.Contains("Build-in", viewModel.AvailableImageViewers);
+            Assert.Contains("WinMerge", viewModel.AvailableImageViewers);
+            Assert.Contains("CustomTool", viewModel.AvailableImageViewers);
+
+            // Act: Add a new viewer
+            viewModel.AddViewerCommand.Execute(null);
+
+            // Assert: New viewer added to available viewers
+            Assert.Contains("New Tool", viewModel.AvailableTextViewers);
+            Assert.Contains("New Tool", viewModel.AvailableImageViewers);
+        }
+
+        [Fact]
+        public void DiffOptionsViewModel_UpdateModel_SavesViewerChanges()
+        {
+            // Arrange
+            var model = new DiffOptions
+            {
+                Viewer = new List<ExternalViewer>
+                {
+                    new ExternalViewer { Name = "WinMerge", Arguments = "/e /u \"{left}\" \"{right}\"" }
+                },
+                Text = new TextDiffOptions { Viewer = "DiffPlex" },
+                Image = new ImageDiffOptions { Viewer = "Build-in" }
+            };
+            var viewModel = new DiffOptionsViewModel(model);
+
+            // Act: Modify viewers and update model
+            viewModel.SelectedTextViewer = "WinMerge";
+            viewModel.SelectedImageViewer = "WinMerge";
+            viewModel.AddViewerCommand.Execute(null);
+            viewModel.UpdateModel();
+
+            // Assert
+            Assert.Equal("WinMerge", model.Text.Viewer);
+            Assert.Equal("WinMerge", model.Image.Viewer);
+            Assert.Equal(2, model.Viewer.Count);
+            Assert.Contains(model.Viewer, v => v.Name == "New Tool");
+        }
+
+        //[Fact]
+        //public void ExtensionListEditorViewModel_InvalidExtension_NotAdded()
+        //{
+        //    // Arrange
+        //    var model = new TextDiffOptions { Ext = new List<string> { ".cs" } };
+        //    var viewModel = new DiffOptionsViewModel.ExtensionListEditorViewModel<TextDiffOptions>(
+        //        model, model.Ext, (m, l) => m.Ext = l);
+
+        //    // Act: Try to add invalid extension
+        //    viewModel.Extensions.Add("txt"); // Missing dot
+
+        //    // Assert: Extension not added
+        //    Assert.Single(viewModel.Extensions);
+        //    Assert.Contains(".cs", viewModel.Extensions);
+        //    Assert.DoesNotContain("txt", viewModel.Extensions);
+        //    Assert.Single(model.Ext);
+        //    Assert.Contains(".cs", model.Ext);
         //}
     }
 }

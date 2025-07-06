@@ -6,11 +6,12 @@ using dCompare.FileOperation;
 using Microsoft.VisualBasic;
 using Microsoft.Win32;
 using Serilog;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -40,7 +41,7 @@ namespace dCompare.Compare
         private DirectoryComparer _comparer = new DirectoryComparer();
         private ListSortDirection _lastSortDirection;
         private GridViewColumnHeader _lastHeaderClicked;
-        private Predicate<object>? _currentFilter = null;   // null for non-filter, means all data
+        private Predicate<object>? _currentFilter = null;
         private List<DirectoryComparer.ComparisonItem> _cachedComparisonResults;
         private CancellationTokenSource _cancellationTokenSource;
         private bool _isComparing;
@@ -104,14 +105,68 @@ namespace dCompare.Compare
             ResultListView.AddHandler(GridViewColumnHeader.ClickEvent, new RoutedEventHandler(ColumnHeader_Click));
             DataContext = this;
 
+            Loaded += CompareControl_Loaded;
             LoadConfigurationAsync();
+        }
+
+        private async void CompareControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            await PopulateCompareWithMenusAsync();
+        }
+
+        private async Task PopulateCompareWithMenusAsync()
+        {
+            try
+            {
+                var config = await _configService.LoadConfigurationAsync();
+                var viewers = config.Options?.Diff?.Viewer ?? new List<ExternalViewer>();
+
+                var leftContextMenu = FindResource("LeftContextMenu") as ContextMenu;
+                var rightContextMenu = FindResource("RightContextMenu") as ContextMenu;
+
+                var leftCompareWithMenu = leftContextMenu?.Items
+                    .OfType<MenuItem>()
+                    .FirstOrDefault(mi => mi.Name == "LeftCompareWithMenu");
+
+                var rightCompareWithMenu = rightContextMenu?.Items
+                    .OfType<MenuItem>()
+                    .FirstOrDefault(mi => mi.Name == "RightCompareWithMenu");
+
+                leftCompareWithMenu.Items.Clear();
+                rightCompareWithMenu.Items.Clear();
+
+                foreach (var viewer in viewers)
+                {
+                    var leftMenuItem = new MenuItem
+                    {
+                        Header = viewer.Name,
+                        Tag = viewer,
+                        InputGestureText = viewer.Name
+                    };
+                    leftMenuItem.Click += ContextMenu_CompareWithViewer_Click;
+                    leftCompareWithMenu.Items.Add(leftMenuItem);
+
+                    var rightMenuItem = new MenuItem
+                    {
+                        Header = viewer.Name,
+                        Tag = viewer,
+                        InputGestureText = viewer.Name
+                    };
+                    rightMenuItem.Click += ContextMenu_CompareWithViewer_Click;
+                    rightCompareWithMenu.Items.Add(rightMenuItem);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Failed to populate Compare With menus: {Message}", ex.Message);
+                MessageBox.Show($"Error loading viewers: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void LoadConfigurationAsync()
         {
             try
             {
-                //var config = await _configService.LoadConfigurationAsync();
                 var defaultAlgorithm = ComparisonAlgorithms.AlgorithmSettings
                     .FirstOrDefault(kvp => kvp.Value.IsDefault && kvp.Value.IsEnabled)
                     .Key;
@@ -320,7 +375,6 @@ namespace dCompare.Compare
             string leftDir = LeftPathBox.Text.Trim();
             string rightDir = RightPathBox.Text.Trim();
 
-            //var rootNodes = _treeNodes.Where(n => n.Depth == 0).ToList();
             _treeNodes.Clear();
 
             List<TreeNode> allNodes = _treeNodeManager.CreateFlatTreeStructure(_cachedComparisonResults, leftDir, rightDir);
@@ -388,7 +442,6 @@ namespace dCompare.Compare
 
             try
             {
-                // Reload configuration to get the latest viewer setting
                 var config = await _configService.LoadConfigurationAsync();
                 var comparisonHandler = new FileComparisonHandler(config);
                 FileType fileType = comparisonHandler.DetermineFileType(leftPath ?? rightPath);
@@ -396,26 +449,29 @@ namespace dCompare.Compare
                 leftPath = leftPath ?? CreateTemporaryEmptyFile();
                 rightPath = rightPath ?? CreateTemporaryEmptyFile();
 
-                if (fileType == FileType.Text && config.Options.Diff.Text.Viewer.Equals("WinMerge", StringComparison.OrdinalIgnoreCase))
+                if (fileType == FileType.Text && config?.Options?.Diff?.Text?.Viewer?.Equals("WinMerge", StringComparison.OrdinalIgnoreCase) == true)
                 {
-                    string winMergePath = config.Options.Diff.Text.WinMergePath;
-                    if (string.IsNullOrEmpty(winMergePath) || !File.Exists(winMergePath))
+                    var winMergeViewer = config?.Options?.Diff?.Viewer?.FirstOrDefault(v => v.Name.Equals("WinMerge", StringComparison.OrdinalIgnoreCase));
+                    if (winMergeViewer == null)
                     {
-                        MessageBox.Show("WinMerge path is not configured or invalid. Please set a valid path in the configuration.",
-                            Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show("WinMerge configuration not found.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                         return;
                     }
 
-                    ProcessStartInfo startInfo = new ProcessStartInfo
+                    string arguments = winMergeViewer.Arguments
+                        .Replace("{left}", leftPath)
+                        .Replace("{right}", rightPath);
+
+                    ProcessStartInfo startInfo = new()
                     {
-                        FileName = winMergePath,
-                        Arguments = $"\"{leftPath}\" \"{rightPath}\"",
+                        FileName = winMergeViewer.Path,
+                        Arguments = arguments,
                         UseShellExecute = true
                     };
 
                     Process.Start(startInfo);
                 }
-                else if (fileType == FileType.Text)
+                else if (fileType == FileType.Text && config?.Options?.Diff?.Text?.Viewer?.Equals("DiffPlex", StringComparison.OrdinalIgnoreCase) == true)
                 {
                     var comparisonResult = await comparisonHandler.CompareFilesAsync(leftPath, rightPath, fileType);
                     OpenFileComparisonTab(leftPath, rightPath, fileType, comparisonResult);
@@ -435,8 +491,14 @@ namespace dCompare.Compare
             }
         }
 
-        private async void ContextMenu_CompareWithWinMerge_Click(object sender, RoutedEventArgs e)
+        private async void ContextMenu_CompareWithViewer_Click(object sender, RoutedEventArgs e)
         {
+            if (sender is not MenuItem menuItem || menuItem.Tag is not ExternalViewer viewerConfig)
+            {
+                MessageBox.Show("Invalid viewer configuration.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
             if (ResultListView.SelectedItem is not TreeNode selectedItem)
             {
                 MessageBox.Show("Please select an item.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -445,7 +507,7 @@ namespace dCompare.Compare
 
             if (selectedItem.IsDirectory)
             {
-                MessageBox.Show("Cannot compare directories with WinMerge.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Cannot compare directories with {viewerConfig.Name}.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -460,23 +522,17 @@ namespace dCompare.Compare
 
             try
             {
-                var config = await _configService.LoadConfigurationAsync();
-                string winMergePath = config.Options.Diff.Text.WinMergePath;
-
-                if (string.IsNullOrEmpty(winMergePath) || !File.Exists(winMergePath))
-                {
-                    MessageBox.Show("WinMerge path is not configured or invalid. Please set a valid path in the configuration.",
-                        Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
                 leftPath = leftPath ?? CreateTemporaryEmptyFile();
                 rightPath = rightPath ?? CreateTemporaryEmptyFile();
 
+                string arguments = viewerConfig.Arguments
+                    .Replace("{left}", leftPath)
+                    .Replace("{right}", rightPath);
+
                 ProcessStartInfo startInfo = new ProcessStartInfo
                 {
-                    FileName = winMergePath,
-                    Arguments = $"\"{leftPath}\" \"{rightPath}\"",
+                    FileName = viewerConfig.Path,
+                    Arguments = arguments,
                     UseShellExecute = true
                 };
 
@@ -484,7 +540,7 @@ namespace dCompare.Compare
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error launching WinMerge: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error launching {viewerConfig.Name}: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -541,7 +597,6 @@ namespace dCompare.Compare
 
             if (obj is ListViewItem listViewItem)
             {
-                // Only add to selection if not already selected to preserve multi-selection
                 if (!ResultListView.SelectedItems.Contains(listViewItem.Content))
                 {
                     ResultListView.SelectedItems.Add(listViewItem.Content);
@@ -580,7 +635,6 @@ namespace dCompare.Compare
                     listViewItem.ContextMenu.IsOpen = true;
                 }
 
-                // Mark the event as handled to prevent default selection behavior
                 e.Handled = true;
             }
         }
@@ -661,7 +715,6 @@ namespace dCompare.Compare
                 var orderedNodesToRefresh = nodesToRefresh.Values.OrderByDescending(n => n.Depth);
                 foreach (var nodeToRefresh in orderedNodesToRefresh)
                 {
-                    // *** Pass the captured state to the refresh method. ***
                     await RefreshNodeAsync(nodeToRefresh, previouslyExpandedPaths);
                 }
             }
@@ -775,27 +828,22 @@ namespace dCompare.Compare
 
             if (string.IsNullOrWhiteSpace(newName) || newName == currentName)
             {
-                return; // User cancelled or entered the same name
+                return;
             }
 
             try
             {
-                // Find parent BEFORE the operation, as the selectedItem's path will become invalid.
                 string parentRelativePath = Path.GetDirectoryName(selectedItem.RelativePath) ?? string.Empty;
                 TreeNode? parentNode = null;
-                // A non-empty parent path indicates the item is not at the root.
                 if (!string.IsNullOrEmpty(parentRelativePath))
                 {
                     parentNode = _treeNodes.FirstOrDefault(n => n.RelativePath.Equals(parentRelativePath, StringComparison.OrdinalIgnoreCase));
                 }
 
-                // Execute the rename operation using the new testable method
                 _fileOperationHandler.RenameFileOrDirectory(sourcePath, newName);
 
-                // Refresh the UI to reflect the change.
                 if (parentNode != null)
                 {
-                    // Preserve the expanded state of the tree for a better user experience.
                     var previouslyExpandedPaths = new HashSet<string>(
                         _treeNodes.Where(n => n.IsDirectory && n.IsExpanded).Select(n => n.RelativePath)
                     );
