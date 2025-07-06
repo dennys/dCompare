@@ -315,8 +315,8 @@
         <!-- Main Content -->
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*" MinHeight="100"/>
+                <RowDefinition Height="Auto" MinHeight="0" MaxHeight="300"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
@@ -327,17 +327,23 @@
                         ItemContainerStyle="{StaticResource ChromeTabStyle}"
                         PreviewMouseMove="TabControl_PreviewMouseMove">
                 <TabItem Header="Welcome">
-                    <!-- <compare:UcCompare/> -->
+                    <!-- <compare:U 인증서ontrol/> -->
                 </TabItem>
             </TabControl>
 
             <!-- File Operation Control -->
-            <Expander x:Name="FileOperationExpander" Grid.Row="1" Header="File Operations" IsExpanded="False">
+            <Expander x:Name="FileOperationExpander" 
+                      Grid.Row="1" 
+                      Header="File Operations" 
+                      IsExpanded="False" FontSize="10">
                 <fileop:FileOperationControl x:Name="fileOperationControl"/>
             </Expander>
 
             <!-- Status Bar -->
-            <StatusBar Grid.Row="2" Background="#F8F8F8" BorderBrush="#C0C0C0" BorderThickness="0,1,0,0">
+            <StatusBar Grid.Row="2" 
+                       Background="#F8F8F8" 
+                       BorderBrush="#C0C0C0" 
+                       BorderThickness="0,1,0,0">
                 <StatusBarItem>
                     <TextBlock x:Name="StatusText" Text="Ready" Foreground="#333333"/>
                 </StatusBarItem>

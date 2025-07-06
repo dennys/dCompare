@@ -6,7 +6,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" 
-             MinHeight="20">
+             MinHeight="200">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -22,15 +22,18 @@
         </StackPanel>
 
         <!-- TabControl with ScrollViewer -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-            <TabControl MaxHeight="200">
+        <ScrollViewer Grid.Row="1" 
+                      VerticalScrollBarVisibility="Auto" 
+                      HorizontalScrollBarVisibility="Disabled"
+                      CanContentScroll="True">
+            <TabControl  MaxHeight="250">
                 <TabItem Header="Queued">
                     <DataGrid x:Name="QueuedGrid" 
                               AutoGenerateColumns="False" 
                               IsReadOnly="True" 
                               ItemsSource="{Binding QueuedTransfers}"
                               VerticalScrollBarVisibility="Auto"
-                              MaxHeight="160" 
+                              HorizontalScrollBarVisibility="Disabled"
                               VirtualizingStackPanel.IsVirtualizing="True"
                               VirtualizingStackPanel.VirtualizationMode="Recycling">
                         <DataGrid.Columns>
@@ -45,6 +48,7 @@
                         <DataGrid.ContextMenu>
                             <ContextMenu>
                                 <MenuItem Header="Cancel" Command="{Binding CancelTransferCommand}"/>
+                                <MenuItem Header="Clear Queued" Command="{Binding ClearQueuedCommand}"/>
                             </ContextMenu>
                         </DataGrid.ContextMenu>
                     </DataGrid>
@@ -55,7 +59,7 @@
                               IsReadOnly="True" 
                               ItemsSource="{Binding SuccessfulTransfers}"
                               VerticalScrollBarVisibility="Auto"
-                              MaxHeight="160"
+                              HorizontalScrollBarVisibility="Disabled"
                               VirtualizingStackPanel.IsVirtualizing="True"
                               VirtualizingStackPanel.VirtualizationMode="Recycling">
                         <DataGrid.Columns>
@@ -65,6 +69,11 @@
                             <DataGridTextColumn Header="Size" Binding="{Binding FileSize, StringFormat={}{0:N0} bytes}" Width="100"/>
                             <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="120"/>
                         </DataGrid.Columns>
+                        <DataGrid.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Clear Successful" Command="{Binding ClearSuccessfulCommand}"/>
+                            </ContextMenu>
+                        </DataGrid.ContextMenu>
                     </DataGrid>
                 </TabItem>
                 <TabItem Header="Failed">
@@ -73,7 +82,7 @@
                               IsReadOnly="True" 
                               ItemsSource="{Binding FailedTransfers}"
                               VerticalScrollBarVisibility="Auto"
-                              MaxHeight="160"
+                              HorizontalScrollBarVisibility="Disabled"
                               VirtualizingStackPanel.IsVirtualizing="True"
                               VirtualizingStackPanel.VirtualizationMode="Recycling">
                         <DataGrid.Columns>
@@ -86,6 +95,7 @@
                         <DataGrid.ContextMenu>
                             <ContextMenu>
                                 <MenuItem Header="Retry" Command="{Binding RetryTransferCommand}"/>
+                                <MenuItem Header="Clear Failed" Command="{Binding ClearFailedCommand}"/>
                             </ContextMenu>
                         </DataGrid.ContextMenu>
                     </DataGrid>
