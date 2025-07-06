@@ -42,21 +42,23 @@ namespace dCompare.Configuration
         {
             if (!File.Exists(_configPath))
             {
-                // Rely on class initializers for defaults
+                // This part is correct. It creates a new config with all the default
+                // values (including the extension lists) and saves it.
                 AppConfiguration defaultConfig = new();
                 await SaveConfigurationAsync(defaultConfig);
                 return defaultConfig;
             }
             try
             {
-                // Force reload to ensure the latest configuration is read
-                _configuration.Reload();
-                var config = _configuration.Get<AppConfiguration>();
+                // By reading the file and deserializing directly, we avoid the merging behavior.
+                // JsonSerializer will replace the default list with the one from the JSON file.
+                var jsonString = await File.ReadAllTextAsync(_configPath);
+                var config = JsonSerializer.Deserialize<AppConfiguration>(jsonString, _serializerOptions);
                 return config ?? new AppConfiguration(); // Return new config with defaults if deserialization fails
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error reading configuration file: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error reading or deserializing configuration file: {ex.Message}");
                 return new AppConfiguration(); // Return default config on error
             }
         }
