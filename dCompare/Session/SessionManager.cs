@@ -275,7 +275,7 @@ namespace dCompare.Session
                     updateStatus?.Invoke($"Session loaded from {sessionFileName}");
                 }
             }
-            catch (FileNotFoundException ex)
+            catch (FileNotFoundException)
             {
                 throw; // Re-throw to let MainWindow handle it
             }
