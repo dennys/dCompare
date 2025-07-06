@@ -8,7 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using Serilog;
-using Serilog.Events;
 using Serilog.Extensions.Logging;
 using System;
 using System.ComponentModel;
@@ -85,7 +84,6 @@ namespace dCompare
             ClearRecentSessionsCommand = new RelayCommand(_ => _sessionManager.ClearRecentSessions(), _ => _sessionManager.CanClearRecentSessions());
 
             OptionsCommand = new RelayCommand(_ => ExecuteOptions(), _ => CanExecuteOptions());
-            //CompareCommand = new RelayCommand(_ => ExecuteUcCompareMethod("Compare_Click"), _ => CanExecuteUcCompareMethod());
             CompareCommand = new RelayCommand(_ => ExecuteRefresh(), _ => CanExecuteRefresh());
             CopyToLeftCommand = new RelayCommand(_ => ExecuteUcCompareMethod("CopyToLeft_Click"), _ => CanExecuteUcCompareMethod());
             CopyToRightCommand = new RelayCommand(_ => ExecuteUcCompareMethod("CopyToRight_Click"), _ => CanExecuteUcCompareMethod());
@@ -114,7 +112,19 @@ namespace dCompare
                 AppConfiguration config = await _configService.LoadConfigurationAsync();
                 if (config.Options?.Session.AutoLoadDefaultSession == true && !string.IsNullOrEmpty(config.Options.Session.DefaultSessionFile))
                 {
-                    _sessionManager.LoadSession(config.Options.Session.DefaultSessionFile, config.Options.Session.AutoCompareAfterSessionLoad, UpdateStatus, ExecuteUcCompareMethod);
+                    try
+                    {
+                        _sessionManager.LoadSession(config.Options.Session.DefaultSessionFile, config.Options.Session.AutoCompareAfterSessionLoad, UpdateStatus, ExecuteUcCompareMethod);
+                    }
+                    catch (FileNotFoundException ex)
+                    {
+                        MessageBox.Show(
+                            $"Default session file '{config.Options.Session.DefaultSessionFile}' does not exist. Please check the configuration or select a valid session file.",
+                            Properties.Resources.ErrorTitle,
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning);
+                        UpdateStatus(Properties.Resources.StatusAppReady);
+                    }
                 }
                 else
                 {
@@ -172,12 +182,6 @@ namespace dCompare
                 tabControl.SelectedItem = newTab;
                 _sessionManager.TabIdMap[newTab.Header.ToString()!] = tabId;
 
-                //AppConfiguration config = await _configService.LoadConfigurationAsync();
-                //if (!config.Sessions.ContainsKey(tabId))
-                //{
-                //    await _configService.UpdateSessionAsync(tabId, string.Empty, string.Empty);
-                //}
-
                 UpdateStatus($"Added new tab: Tab {_sessionManager.TabCounter}");
                 CommandManager.InvalidateRequerySuggested();
             }
@@ -223,7 +227,6 @@ namespace dCompare
                     if (headerString != null && _sessionManager.TabIdMap.TryGetValue(headerString, out string? tabId))
                     {
                         _sessionManager.TabIdMap.Remove(headerString);
-                        //await _configService.RemoveSessionAsync(tabId);
                     }
                 }
                 catch (Exception ex)

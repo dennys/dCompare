@@ -8,7 +8,7 @@ namespace dCompare.Configuration
     /// <summary>
     /// Service to manage loading and saving application configuration.
     /// </summary>
-    public class ConfigurationService: IConfigurationService
+    public class ConfigurationService : IConfigurationService
     {
         private const string jsonFileName = "dCompare.json";
         private readonly string _configPath;
@@ -23,7 +23,7 @@ namespace dCompare.Configuration
         /// <summary>
         /// Initializes a new instance of the ConfigurationService.
         /// </summary>
-        /// <param name="configFileName">The name of the configuration file, e.g., "appsettings.json".</param>
+        /// <param name="configFileName">The name of the configuration file, e.g., "dCompare.json".</param>
         public ConfigurationService(string configFileName = jsonFileName)
         {
             _configPath = Path.Combine(Directory.GetCurrentDirectory(), configFileName);
@@ -35,15 +35,62 @@ namespace dCompare.Configuration
 
         /// <summary>
         /// Loads the application configuration from the JSON file.
-        /// If the file does not exist, it returns a new default configuration.
+        /// If the file does not exist, it creates and saves a default configuration.
         /// </summary>
         /// <returns>An AppConfiguration object.</returns>
         public async Task<AppConfiguration> LoadConfigurationAsync()
         {
             if (!File.Exists(_configPath))
             {
-                // If no config file, create one with default values and return it
-                AppConfiguration defaultConfig = new();
+                // Create default configuration with all necessary properties
+                AppConfiguration defaultConfig = new()
+                {
+                    Options = new Options
+                    {
+                        UI = new UIOptions
+                        {
+                            Theme = "Light",
+                            Language = "zh-TW"
+                        },
+                        Compare = new CompareOptions
+                        {
+                            ScanMethod = new ScanMethodOptions
+                            {
+                                MethodOptions = "General",
+                                ParallelOptions = true
+                            },
+                            DoubleClick = "view"
+                            // Algorithms are initialized in the class constructor
+                        },
+                        Diff = new DiffOptions
+                        {
+                            Text = new TextDiffOptions
+                            {
+                                Viewer = "DiffPlex",
+                                Ext = new List<string>()
+                            },
+                            Image = new ImageDiffOptions
+                            {
+                                Viewer = "Build-in",
+                                Ext = new List<string>()
+                            }
+                        },
+                        Session = new SessionOptions
+                        {
+                            DefaultSessionFile = "",
+                            AutoLoadDefaultSession = false,
+                            AutoCompareAfterSessionLoad = false
+                        },
+                        HotKeys = new HotKeysOptions
+                        {
+                            AddTab = "Ctrl+N",
+                            CloseTab = "Ctrl+W",
+                            Compare = "Ctrl+R",
+                            SaveSession = "Ctrl+S",
+                            LoadSession = "Ctrl+O"
+                        }
+                    }
+                };
                 await SaveConfigurationAsync(defaultConfig);
                 return defaultConfig;
             }
@@ -62,16 +109,16 @@ namespace dCompare.Configuration
 
         //public async Task UpdateSessionAsync(string tabId, string leftPath, string rightPath)
         //{
-        //    //var config = await LoadConfigurationAsync();
-        //    //config.Sessions[tabId] = new SessionConfig { Left = leftPath, Right = rightPath };
-        //    //await SaveConfigurationAsync(config);
+        //    var config = await LoadConfigurationAsync();
+        //    config.Sessions[tabId] = new SessionConfig { Left = leftPath, Right = rightPath };
+        //    await SaveConfigurationAsync(config);
         //}
 
         //public async Task RemoveSessionAsync(string tabId)
         //{
-        //    //var config = await LoadConfigurationAsync();
-        //    //config.Sessions.Remove(tabId);
-        //    //await SaveConfigurationAsync(config);
+        //    var config = await LoadConfigurationAsync();
+        //    config.Sessions.Remove(tabId);
+        //    await SaveConfigurationAsync(config);
         //}
 
         /// <summary>
