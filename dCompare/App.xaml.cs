@@ -18,24 +18,23 @@ namespace dCompare
 
         public App()
         {
-            // --- Serilog Static Logger Setup ---
-            // Build a config object to read the json file
+            // --- Configuration Setup ---
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("dCompare.json", optional: false, reloadOnChange: true)
+                .AddJsonFile("dCompare.json", optional: true, reloadOnChange: true)
                 .Build();
 
             // Configuration for the logger
-            var loggerConfiguration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
+                var loggerConfiguration = new ConfigurationBuilder()
+                    .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("Serilog.json", optional: false, reloadOnChange: true)
-                .Build();
+                    .Build();
 
-            // Configure the static logger
-            Log.Logger = new LoggerConfiguration()
-                .ReadFrom.Configuration(loggerConfiguration)
-                .Enrich.WithThreadId()
-                .CreateLogger();
+                // Configure the static logger
+                Log.Logger = new LoggerConfiguration()
+                    .ReadFrom.Configuration(loggerConfiguration)
+                    .Enrich.WithThreadId()
+                    .CreateLogger();
 
             // --- Host Setup ---
             AppHost = Host.CreateDefaultBuilder()
@@ -68,7 +67,10 @@ namespace dCompare
         {
             try
             {
-                Log.Information("Application starting up.");
+                if (Log.Logger != null)
+                {
+                    Log.Information("Application starting up.");
+                }
                 await AppHost!.StartAsync();
                 var startupForm = AppHost.Services.GetRequiredService<MainWindow>();
                 startupForm.Show();
@@ -76,15 +78,25 @@ namespace dCompare
             }
             catch (Exception ex)
             {
-                Log.Fatal(ex, "Application failed to start.");
+                if (Log.Logger != null)
+                {
+                    Log.Fatal(ex, "Application failed to start.");
+                }
+                else
+                {
+                    MessageBox.Show($"Application failed to start: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 
         protected override async void OnExit(ExitEventArgs e)
         {
             await AppHost.StopAsync();
-            Log.Information("Application shutting down.");
-            Log.CloseAndFlush(); // IMPORTANT: Ensures all logs are written before the app closes
+            if (Log.Logger != null)
+            {
+                Log.Information("Application shutting down.");
+                Log.CloseAndFlush(); // IMPORTANT: Ensures all logs are written before the app closes
+            }
             base.OnExit(e);
         }
     }

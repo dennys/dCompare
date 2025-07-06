@@ -42,6 +42,7 @@ namespace dCompare.Configuration
     {
         [JsonPropertyName("ScanMethod")]
         public ScanMethodOptions ScanMethod { get; set; } = new();
+
         [JsonPropertyName("Algorithms")]
         public Dictionary<ComparisonAlgorithm, ComparisonAlgorithmInfo> Algorithms { get; set; } =
             new Dictionary<ComparisonAlgorithm, ComparisonAlgorithmInfo>(ComparisonAlgorithms.AlgorithmSettings);
@@ -56,8 +57,9 @@ namespace dCompare.Configuration
         public string MethodOptions { get; set; } = "General";
 
         [JsonPropertyName("Parallel")]
-        public bool ParallelOptions  { get; set; } = true;
+        public bool ParallelOptions { get; set; } = true;
     }
+
     public class DiffOptions
     {
         [JsonPropertyName("Text")]

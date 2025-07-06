@@ -3,6 +3,7 @@ using dCompare.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using Serilog;
+using System;
 using System.IO;
 using System.Text.Json;
 using System.Windows;
@@ -155,7 +156,9 @@ namespace dCompare.Session
                     if (tab.Content is CompareControl ucCompare)
                     {
                         string tabName = tab.Header?.ToString() ?? "Untitled";
-                        sessions[tabName] = new SessionConfig
+                        string tabId = _tabIdMap.TryGetValue(tabName, out string? id) ? id : Guid.NewGuid().ToString();
+                        _tabIdMap[tabName] = tabId;
+                        sessions[tabId] = new SessionConfig
                         {
                             Left = ucCompare.LeftPathBox.Text,
                             Right = ucCompare.RightPathBox.Text,
@@ -174,7 +177,7 @@ namespace dCompare.Session
                 if (saveFileDialog.ShowDialog() == true)
                 {
                     var options = new JsonSerializerOptions { WriteIndented = true };
-                    var json = JsonSerializer.Serialize(sessions, options);
+                    string json = JsonSerializer.Serialize(sessions, options);
                     File.WriteAllText(saveFileDialog.FileName, json);
                     AddRecentSession(saveFileDialog.FileName);
                     updateStatus($"Session saved to {saveFileDialog.FileName}");
@@ -218,7 +221,7 @@ namespace dCompare.Session
                     if (!File.Exists(filePath))
                     {
                         updateStatus?.Invoke($"Session file not found: {filePath}");
-                        return;
+                        throw new FileNotFoundException($"Session file not found: {filePath}");
                     }
                     json = File.ReadAllText(filePath);
                     sessionFileName = filePath;
@@ -243,7 +246,7 @@ namespace dCompare.Session
                     foreach (var session in sessions)
                     {
                         _tabCounter++;
-                        string tabName = session.Key;
+                        string tabName = $"Tab {_tabCounter}";
                         CompareControl ucCompareInstance = _serviceProvider.GetRequiredService<CompareControl>();
                         TabItem newTab = new()
                         {
@@ -254,7 +257,7 @@ namespace dCompare.Session
                         ucCompareInstance.RightPathBox.Text = session.Value.Right;
                         ucCompareInstance.SelectedAlgorithm = session.Value.Algorithm;
                         _tabControl.Items.Add(newTab);
-                        _tabIdMap[tabName] = Guid.NewGuid().ToString();
+                        _tabIdMap[tabName] = session.Key;
 
                         if (executeCompare && executeCompareMethod != null)
                         {
@@ -271,6 +274,10 @@ namespace dCompare.Session
                     AddRecentSession(sessionFileName);
                     updateStatus?.Invoke($"Session loaded from {sessionFileName}");
                 }
+            }
+            catch (FileNotFoundException ex)
+            {
+                throw; // Re-throw to let MainWindow handle it
             }
             catch (Exception ex)
             {
