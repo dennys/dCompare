@@ -296,8 +296,12 @@
         </Border>
 
         <Border Grid.Column="1" Grid.Row="0" Background="#FDFDFD">
-            <ContentControl Content="{Binding SelectedViewModel}" Margin="5"
-                            d:Content="{d:DesignInstance local:UIOptionsViewModel}"/>
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled" 
+                  Margin="5">
+                <ContentControl Content="{Binding SelectedViewModel}"
+                        d:Content="{d:DesignInstance local:UIOptionsViewModel}"/>
+            </ScrollViewer>
         </Border>
 
         <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" BorderBrush="LightGray" BorderThickness="0,1,0,0" Background="#F0F0F0">
