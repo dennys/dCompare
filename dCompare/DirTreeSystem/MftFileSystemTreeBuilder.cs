@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
+using dCompare.DirTreeSystem.Models;
 using Microsoft.Win32.SafeHandles;
 using Serilog;
 

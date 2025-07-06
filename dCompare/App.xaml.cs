@@ -48,7 +48,7 @@ namespace dCompare
                 {
                     // Register Window and UserControls
                     services.AddSingleton<MainWindow>();
-                    services.AddTransient<UcCompare>(); // Crucial: Transient so each tab gets a new instance
+                    services.AddTransient<CompareControl>(); // Crucial: Transient so each tab gets a new instance
 
                     // Register Services as Singletons
                     services.AddSingleton<IConfigurationService, ConfigurationService>();

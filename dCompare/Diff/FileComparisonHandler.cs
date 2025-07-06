@@ -1,3 +1,4 @@
+using dCompare.Diff.Models;
 using DiffPlex;
 using DiffPlex.DiffBuilder;
 using DiffPlex.DiffBuilder.Model;
@@ -5,12 +6,6 @@ using System.IO;
 
 namespace dCompare.Diff
 {
-    public enum FileType
-    {
-        Text,
-        Image,
-        Unsupported
-    }
 
     public class FileComparisonHandler
     {

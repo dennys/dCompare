@@ -1,7 +1,7 @@
-﻿using dCompare.DirTreeSystem;
+﻿using dCompare.DirTreeSystem.Models;
 using System.ComponentModel;
 
-namespace dCompare.Compare
+namespace dCompare.Compare.Models
 {
     public class TreeNode : INotifyPropertyChanged
     {

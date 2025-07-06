@@ -6,7 +6,7 @@ using System.Windows.Media.Imaging;
 
 namespace dCompare.Diff
 {
-    public partial class UcImageDiffViewer : UserControl, INotifyPropertyChanged, IRefreshable
+    public partial class ImageDiff : UserControl, INotifyPropertyChanged, IRefreshable
     {
         private string _leftPath = string.Empty;
         private string _rightPath = string.Empty;
@@ -55,7 +55,7 @@ namespace dCompare.Diff
             }
         }
 
-        public UcImageDiffViewer(string leftPath, string rightPath)
+        public ImageDiff(string leftPath, string rightPath)
         {
             InitializeComponent();
             DataContext = this;

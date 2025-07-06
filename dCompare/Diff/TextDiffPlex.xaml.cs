@@ -14,7 +14,7 @@ using System.Windows.Media;
 
 namespace dCompare.Diff
 {
-    public partial class UcTextDiffPlexViewer : UserControl, INotifyPropertyChanged, IRefreshable
+    public partial class TextDiffPlex : UserControl, INotifyPropertyChanged, IRefreshable
     {
         private string _leftPath = string.Empty;
         private string _rightPath = string.Empty;
@@ -64,7 +64,7 @@ namespace dCompare.Diff
             }
         }
 
-        public UcTextDiffPlexViewer(string leftPath, string rightPath, object comparisonResult = null)
+        public TextDiffPlex(string leftPath, string rightPath, object comparisonResult = null)
         {
             InitializeComponent();
             DataContext = this;

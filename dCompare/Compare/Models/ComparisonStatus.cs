@@ -1,4 +1,4 @@
-﻿namespace dCompare.Compare
+﻿namespace dCompare.Compare.Models
 {
     public enum ComparisonStatus
     {

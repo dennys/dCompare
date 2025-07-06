@@ -1,4 +1,5 @@
-﻿using dCompare.FileOperation;
+﻿using dCompare.Compare.Models;
+using dCompare.FileOperation;
 using dCompare.FileOperation.Models;
 using Serilog;
 using System.IO;
