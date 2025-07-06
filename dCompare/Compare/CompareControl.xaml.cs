@@ -449,7 +449,29 @@ namespace dCompare.Compare
                 leftPath = leftPath ?? CreateTemporaryEmptyFile();
                 rightPath = rightPath ?? CreateTemporaryEmptyFile();
 
-                if (fileType == FileType.Text && config?.Options?.Diff?.Text?.Viewer?.Equals("DiffPlex", StringComparison.OrdinalIgnoreCase) == true)
+                if (fileType == FileType.Text && config?.Options?.Diff?.Text?.Viewer?.Equals("WinMerge", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    var winMergeViewer = config?.Options?.Diff?.Viewer?.FirstOrDefault(v => v.Name.Equals("WinMerge", StringComparison.OrdinalIgnoreCase));
+                    if (winMergeViewer == null)
+                    {
+                        MessageBox.Show("WinMerge configuration not found.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+
+                    string arguments = winMergeViewer.Arguments
+                        .Replace("{left}", leftPath)
+                        .Replace("{right}", rightPath);
+
+                    ProcessStartInfo startInfo = new()
+                    {
+                        FileName = winMergeViewer.Path,
+                        Arguments = arguments,
+                        UseShellExecute = true
+                    };
+
+                    Process.Start(startInfo);
+                }
+                else if (fileType == FileType.Text && config?.Options?.Diff?.Text?.Viewer?.Equals("DiffPlex", StringComparison.OrdinalIgnoreCase) == true)
                 {
                     var comparisonResult = await comparisonHandler.CompareFilesAsync(leftPath, rightPath, fileType);
                     OpenFileComparisonTab(leftPath, rightPath, fileType, comparisonResult);
