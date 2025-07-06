@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:dCompare.Options"
         mc:Ignorable="d"
         xmlns:resx="clr-namespace:dCompare.Properties"
-        Title="Settings" Height="600" Width="800"
+        Title="Settings" Height="680" Width="800"
         d:DataContext="{d:DesignInstance Type=local:SettingsViewModel, IsDesignTimeCreatable=True}">
     <Window.Resources>
         <local:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
@@ -20,7 +20,6 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
-        <!-- DataTemplate for UI Settings -->
         <DataTemplate DataType="{x:Type local:UIOptionsViewModel}">
             <StackPanel Margin="20">
                 <TextBlock Text="{x:Static resx:Resources.UISettings}" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
@@ -53,43 +52,44 @@
             </StackPanel>
         </DataTemplate>
 
-        <!-- DataTemplate for Compare Settings -->
         <DataTemplate DataType="{x:Type local:CompareOptionsViewModel}">
-            <StackPanel Margin="20">
-                <TextBlock Text="Compare Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
+            <StackPanel Margin="20" Background="#FFF" >
+                <TextBlock Text="Compare Settings" FontSize="24" FontWeight="SemiBold" Margin="0,0,0,20"/>
+                <GroupBox Header="Scan Options" Margin="0,0,0,15">
+                    <StackPanel Margin="10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Scan Method:" VerticalAlignment="Center" Margin="0,5,10,5"/>
-                    <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,5"
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Scan Method:" VerticalAlignment="Center" Margin="0,5"/>
+                            <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,5"
                               ItemsSource="{Binding AvailableScanMethods}"
                               SelectedItem="{Binding ScanMethod}"/>
-                    <TextBlock Grid.Row="1" Grid.Column="1" Text="Choose 'General' for standard file system scanning or 'MFT' for faster scanning using the Master File Table (Windows NTFS only)."
-                               FontStyle="Italic" Margin="0,0,0,10" TextWrapping="Wrap"/>
 
-                    <CheckBox Grid.Row="2" Grid.Column="1" IsChecked="{Binding Parallel}" Content="Enable Parallel Scanning" Margin="0,5"/>
-                    <TextBlock Grid.Row="3" Grid.Column="1" Text="Enable to perform file comparisons in parallel for faster processing (recommended for multi-core systems)."
-                               FontStyle="Italic" Margin="0,0,0,10" TextWrapping="Wrap"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="Choose 'General' for standard file system scanning or 'MFT' for faster scanning using the Master File Table (Windows NTFS only)."
+                               FontStyle="Italic" Foreground="Gray" Margin="0,0,0,5" TextWrapping="Wrap"/>
+                        </Grid>
 
-                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Algorithms:" VerticalAlignment="Top" Margin="0,5,10,5"/>
-                    <StackPanel Grid.Row="4" Grid.Column="1">
+                        <CheckBox IsChecked="{Binding Parallel}" Content="Enable Parallel Scanning" Margin="0,10,0,0"/>
+                        <TextBlock Text="Enable to perform file comparisons in parallel for faster processing (recommended for multi-core systems)."
+                           FontStyle="Italic" Foreground="Gray" Margin="20,0,0,10" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Header="Comparison Algorithms" Margin="0,0,0,15">
+                    <StackPanel Margin="10">
                         <Grid Margin="0,0,0,5">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="55"/>
-                                <ColumnDefinition Width="55"/>
+                                <ColumnDefinition Width="60"/>
+                                <ColumnDefinition Width="60"/>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="75"/>
+                                <ColumnDefinition Width="80"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="Enable" FontWeight="Bold" HorizontalAlignment="Center"/>
                             <TextBlock Grid.Column="1" Text="Default" FontWeight="Bold" HorizontalAlignment="Center"/>
@@ -101,32 +101,44 @@
                         <ItemsControl ItemsSource="{Binding AlgorithmItems}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid Margin="0,4">
+                                    <Grid Margin="0,5">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="60"/>
+                                            <ColumnDefinition Width="60"/>
                                             <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="80"/>
                                         </Grid.ColumnDefinitions>
-                                        <CheckBox IsChecked="{Binding IsEnabled}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                        <RadioButton Grid.Column="1" IsChecked="{Binding IsDefault}" Content="{Binding Description}" VerticalAlignment="Center" IsEnabled="{Binding IsEnabled}"/>
-                                        <TextBox Grid.Column="2" Width="50" Margin="10,0,0,0"
-                                            IsEnabled="{Binding IsPercentageSettingEnabled}"
-                                            Text="{Binding ComparisonPercentage, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
+
+                                        <CheckBox Grid.Column="0" IsChecked="{Binding IsEnabled}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <RadioButton Grid.Column="1" IsChecked="{Binding IsDefault}" IsEnabled="{Binding IsEnabled}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding Description}" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Column="3" Width="60" 
+                                         IsEnabled="{Binding IsPercentageSettingEnabled}"
+                                         Text="{Binding ComparisonPercentage, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
+                                         HorizontalAlignment="Center"/>
                                     </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </StackPanel>
+                </GroupBox>
 
-                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Double Click Action:" VerticalAlignment="Center" Margin="0,5,10,5"/>
-                    <ComboBox Grid.Row="5" Grid.Column="1" Margin="0,5"
-                              ItemsSource="{Binding AvailableDoubleClickActions}"
-                              SelectedItem="{Binding DoubleClickAction}"/>
-                </Grid>
+                <GroupBox Header="User Interaction">
+                    <Grid Margin="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" Text="Double Click Action:" VerticalAlignment="Center"/>
+                        <ComboBox Grid.Column="1"
+                          ItemsSource="{Binding AvailableDoubleClickActions}"
+                          SelectedItem="{Binding DoubleClickAction}"/>
+                    </Grid>
+                </GroupBox>
             </StackPanel>
         </DataTemplate>
 
-        <!-- Helper for list editing in Diff views -->
         <Style x:Key="ListEditButtonStyle" TargetType="Button">
             <Setter Property="Width" Value="25"/>
             <Setter Property="Height" Value="25"/>
@@ -134,7 +146,6 @@
             <Setter Property="FontWeight" Value="Bold"/>
         </Style>
 
-        <!-- DataTemplate for Text Diff Settings -->
         <DataTemplate DataType="{x:Type local:TextDiffOptionsViewModel}">
             <StackPanel Margin="20">
                 <TextBlock Text="Text Diff Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
@@ -142,6 +153,15 @@
                 <ComboBox Margin="0,0,0,15"
                           ItemsSource="{Binding AvailableViewers}"
                           SelectedItem="{Binding Viewer}"/>
+                <Grid IsEnabled="{Binding IsWinMergePathEnabled}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="WinMerge Path:" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                    <TextBox Text="{Binding WinMergePath, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" Margin="0,5"/>
+                    <Button Grid.Column="1" Content="..." VerticalAlignment="Center" Padding="10,2" Margin="5,0" Command="{Binding BrowseWinMergeCommand}"/>
+                </Grid>
                 <TextBlock Text="File Extensions:" Margin="0,5,10,5"/>
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -157,7 +177,6 @@
             </StackPanel>
         </DataTemplate>
 
-        <!-- DataTemplate for Image Diff Settings -->
         <DataTemplate DataType="{x:Type local:ImageDiffOptionsViewModel}">
             <StackPanel Margin="20">
                 <TextBlock Text="Image Diff Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
@@ -180,7 +199,6 @@
             </StackPanel>
         </DataTemplate>
 
-        <!-- DataTemplate for Session Settings -->
         <DataTemplate DataType="{x:Type local:SessionOptionsViewModel}">
             <StackPanel Margin="20">
                 <TextBlock Text="Session Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
@@ -200,7 +218,6 @@
             </StackPanel>
         </DataTemplate>
 
-        <!-- DataTemplate for Hotkey Settings -->
         <DataTemplate DataType="{x:Type local:HotKeysOptionsViewModel}">
             <StackPanel Margin="20">
                 <TextBlock Text="Hotkey Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
@@ -221,7 +238,6 @@
             </StackPanel>
         </DataTemplate>
 
-        <!-- DataTemplate for Log Settings -->
         <DataTemplate DataType="{x:Type local:LogOptionsViewModel}">
             <StackPanel Margin="20">
                 <TextBlock Text="Log Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
@@ -257,7 +273,6 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Left Panel: Filter and TreeView -->
         <Border Grid.Column="0" Grid.Row="0" BorderBrush="LightGray" BorderThickness="0,0,1,0" Padding="5">
             <DockPanel>
                 <TextBox DockPanel.Dock="Top" Margin="5" Name="FilterTextBox"
@@ -280,13 +295,11 @@
             </DockPanel>
         </Border>
 
-        <!-- Right Panel: Content Display -->
         <Border Grid.Column="1" Grid.Row="0" Background="#FDFDFD">
             <ContentControl Content="{Binding SelectedViewModel}" Margin="5"
                             d:Content="{d:DesignInstance local:UIOptionsViewModel}"/>
         </Border>
 
-        <!-- Bottom Panel: Action Buttons -->
         <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" BorderBrush="LightGray" BorderThickness="0,1,0,0" Background="#F0F0F0">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="10">
                 <Button Content="Save" Width="80" Margin="5" Command="{Binding SaveCommand}"/>

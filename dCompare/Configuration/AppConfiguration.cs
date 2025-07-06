@@ -2,9 +2,6 @@
 
 namespace dCompare.Configuration
 {
-    /// <summary>
-    /// Represents the root of the application configuration.
-    /// </summary>
     public class AppConfiguration
     {
         [JsonPropertyName("Options")]
@@ -72,16 +69,21 @@ namespace dCompare.Configuration
     public class TextDiffOptions
     {
         [JsonPropertyName("Ext")]
-        public List<string> Ext { get; set; } = new List<string> { ".txt", ".log", ".cs", ".json", ".xml", ".html", ".css", ".js", ".py", ".md", ".sql" };
- 
+        public List<string> Ext { get; set; } = new List<string>();
+        //public List<string> Ext { get; set; } = new List<string> { ".txt", ".log", ".cs", ".json", ".xml", ".html", ".css", ".js", ".py", ".md", ".sql" };
+
         [JsonPropertyName("Viewer")]
         public string Viewer { get; set; } = "DiffPlex";
+
+        [JsonPropertyName("WinMergePath")]
+        public string WinMergePath { get; set; } = "";
     }
 
     public class ImageDiffOptions
     {
         [JsonPropertyName("Ext")]
-        public List<string> Ext { get; set; } = new List<string> {".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tiff", ".webp" };
+        public List<string> Ext { get; set; } = new List<string>();
+        //public List<string> Ext { get; set; } = new List<string> { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tiff", ".webp" };
 
         [JsonPropertyName("Viewer")]
         public string Viewer { get; set; } = "Build-in";
@@ -116,6 +118,7 @@ namespace dCompare.Configuration
         [JsonPropertyName("LoadSession")]
         public string LoadSession { get; set; } = "Ctrl+O";
     }
+
     public class LogOptions
     {
         [JsonPropertyName("Enabled")]
@@ -155,5 +158,4 @@ namespace dCompare.Configuration
         public string OutputTemplate { get; set; } =
             "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff} {Level:u3}] [T{ThreadId:D2}] {Message:lj}{NewLine}{Exception}";
     }
-
 }

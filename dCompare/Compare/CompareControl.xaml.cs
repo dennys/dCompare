@@ -9,6 +9,7 @@ using Serilog;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -387,6 +388,7 @@ namespace dCompare.Compare
 
             try
             {
+                // Reload configuration to get the latest viewer setting
                 var config = await _configService.LoadConfigurationAsync();
                 var comparisonHandler = new FileComparisonHandler(config);
                 FileType fileType = comparisonHandler.DetermineFileType(leftPath ?? rightPath);
@@ -394,7 +396,26 @@ namespace dCompare.Compare
                 leftPath = leftPath ?? CreateTemporaryEmptyFile();
                 rightPath = rightPath ?? CreateTemporaryEmptyFile();
 
-                if (fileType == FileType.Text)
+                if (fileType == FileType.Text && config.Options.Diff.Text.Viewer.Equals("WinMerge", StringComparison.OrdinalIgnoreCase))
+                {
+                    string winMergePath = config.Options.Diff.Text.WinMergePath;
+                    if (string.IsNullOrEmpty(winMergePath) || !File.Exists(winMergePath))
+                    {
+                        MessageBox.Show("WinMerge path is not configured or invalid. Please set a valid path in the configuration.",
+                            Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+
+                    ProcessStartInfo startInfo = new ProcessStartInfo
+                    {
+                        FileName = winMergePath,
+                        Arguments = $"\"{leftPath}\" \"{rightPath}\"",
+                        UseShellExecute = true
+                    };
+
+                    Process.Start(startInfo);
+                }
+                else if (fileType == FileType.Text)
                 {
                     var comparisonResult = await comparisonHandler.CompareFilesAsync(leftPath, rightPath, fileType);
                     OpenFileComparisonTab(leftPath, rightPath, fileType, comparisonResult);
@@ -411,6 +432,59 @@ namespace dCompare.Compare
             catch (Exception ex)
             {
                 MessageBox.Show($"Error comparing files: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async void ContextMenu_CompareWithWinMerge_Click(object sender, RoutedEventArgs e)
+        {
+            if (ResultListView.SelectedItem is not TreeNode selectedItem)
+            {
+                MessageBox.Show("Please select an item.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (selectedItem.IsDirectory)
+            {
+                MessageBox.Show("Cannot compare directories with WinMerge.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            string? leftPath = selectedItem.LeftNode?.FullPath;
+            string? rightPath = selectedItem.RightNode?.FullPath;
+
+            if (string.IsNullOrEmpty(leftPath) && string.IsNullOrEmpty(rightPath))
+            {
+                MessageBox.Show("No valid file paths to compare.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            try
+            {
+                var config = await _configService.LoadConfigurationAsync();
+                string winMergePath = config.Options.Diff.Text.WinMergePath;
+
+                if (string.IsNullOrEmpty(winMergePath) || !File.Exists(winMergePath))
+                {
+                    MessageBox.Show("WinMerge path is not configured or invalid. Please set a valid path in the configuration.",
+                        Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                leftPath = leftPath ?? CreateTemporaryEmptyFile();
+                rightPath = rightPath ?? CreateTemporaryEmptyFile();
+
+                ProcessStartInfo startInfo = new ProcessStartInfo
+                {
+                    FileName = winMergePath,
+                    Arguments = $"\"{leftPath}\" \"{rightPath}\"",
+                    UseShellExecute = true
+                };
+
+                Process.Start(startInfo);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error launching WinMerge: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

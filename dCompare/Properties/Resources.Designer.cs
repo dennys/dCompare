@@ -205,6 +205,15 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Compare with 的當地語系化字串。
+        /// </summary>
+        public static string CompareWith {
+            get {
+                return ResourceManager.GetString("CompareWith", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Are you sure you want to close &apos;{0}&apos;? 的當地語系化字串。
         /// </summary>
         public static string ConfirmCloseTab {
@@ -687,6 +696,15 @@ namespace dCompare.Properties {
         public static string ViewMenu {
             get {
                 return ResourceManager.GetString("ViewMenu", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 WinMerge 的當地語系化字串。
+        /// </summary>
+        public static string WinMerge {
+            get {
+                return ResourceManager.GetString("WinMerge", resourceCulture);
             }
         }
     }
