@@ -327,4 +327,10 @@
   <data name="UISettings" xml:space="preserve">
     <value>使用者介面設定</value>
   </data>
+  <data name="CompareWith" xml:space="preserve">
+    <value>比較檔案內容(其他工具)</value>
+  </data>
+  <data name="WinMerge" xml:space="preserve">
+    <value>WinMerge</value>
+  </data>
 </root>

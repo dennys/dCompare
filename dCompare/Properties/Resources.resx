@@ -327,4 +327,10 @@
   <data name="UISettings" xml:space="preserve">
     <value>UI Settings</value>
   </data>
+  <data name="CompareWith" xml:space="preserve">
+    <value>Compare with</value>
+  </data>
+  <data name="WinMerge" xml:space="preserve">
+    <value>WinMerge</value>
+  </data>
 </root>

@@ -37,6 +37,9 @@
         <!-- Left Side Context Menu -->
         <ContextMenu x:Key="LeftContextMenu">
             <MenuItem Header="{x:Static resx:Resources.CompareContentsMenu}" Click="ContextMenu_CompareContents_Click" Tag="{Binding}"/>
+            <MenuItem Header="{x:Static resx:Resources.CompareWith}">
+                <MenuItem Header="{x:Static resx:Resources.WinMerge}" Click="ContextMenu_CompareWithWinMerge_Click" Tag="{Binding}"/>
+            </MenuItem>
             <Separator/>
             <MenuItem Header="{x:Static resx:Resources.CopyToRightMenu}" Click="ContextMenu_CopyToRight_Click" Tag="{Binding}" Icon="{StaticResource CopyToRightIcon}"/>
             <MenuItem Header="{x:Static resx:Resources.MoveToRightMenu}" Click="ContextMenu_MoveToRight_Click" Tag="{Binding}"/>
@@ -53,6 +56,9 @@
         <!-- Right Side Context Menu -->
         <ContextMenu x:Key="RightContextMenu">
             <MenuItem Header="{x:Static resx:Resources.CompareContentsMenu}" Click="ContextMenu_CompareContents_Click" Tag="{Binding}"/>
+            <MenuItem Header="{x:Static resx:Resources.CompareWith}">
+                <MenuItem Header="{x:Static resx:Resources.WinMerge}" Click="ContextMenu_CompareWithWinMerge_Click" Tag="{Binding}"/>
+            </MenuItem>
             <Separator/>
             <MenuItem Header="{x:Static resx:Resources.CopyToLeftMenu}" Click="ContextMenu_CopyToLeft_Click" Tag="{Binding}" Icon="{StaticResource CopyToLeftIcon}"/>
             <MenuItem Header="{x:Static resx:Resources.MoveToLeftMenu}" Click="ContextMenu_MoveToLeft_Click" Tag="{Binding}"/>

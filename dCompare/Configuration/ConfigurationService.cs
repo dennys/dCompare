@@ -12,7 +12,7 @@ namespace dCompare.Configuration
     {
         private const string jsonFileName = "dCompare.json";
         private readonly string _configPath;
-        private readonly IConfiguration _configuration;
+        private readonly IConfigurationRoot _configuration;
         private static readonly JsonSerializerOptions _serializerOptions = new()
         {
             WriteIndented = true,
@@ -29,7 +29,7 @@ namespace dCompare.Configuration
             _configPath = Path.Combine(Directory.GetCurrentDirectory(), configFileName);
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile(configFileName, optional: true, reloadOnChange: false);
+                .AddJsonFile(configFileName, optional: true, reloadOnChange: true);
             _configuration = builder.Build();
         }
 
@@ -49,6 +49,8 @@ namespace dCompare.Configuration
             }
             try
             {
+                // Force reload to ensure the latest configuration is read
+                _configuration.Reload();
                 var config = _configuration.Get<AppConfiguration>();
                 return config ?? new AppConfiguration(); // Return new config with defaults if deserialization fails
             }
@@ -59,20 +61,6 @@ namespace dCompare.Configuration
             }
         }
 
-        //public async Task UpdateSessionAsync(string tabId, string leftPath, string rightPath)
-        //{
-        //    var config = await LoadConfigurationAsync();
-        //    config.Sessions[tabId] = new SessionConfig { Left = leftPath, Right = rightPath };
-        //    await SaveConfigurationAsync(config);
-        //}
-
-        //public async Task RemoveSessionAsync(string tabId)
-        //{
-        //    var config = await LoadConfigurationAsync();
-        //    config.Sessions.Remove(tabId);
-        //    await SaveConfigurationAsync(config);
-        //}
-
         /// <summary>
         /// Saves the provided configuration object to the JSON file.
         /// </summary>
@@ -81,6 +69,8 @@ namespace dCompare.Configuration
         {
             var jsonString = JsonSerializer.Serialize(config, _serializerOptions);
             await File.WriteAllTextAsync(_configPath, jsonString);
+            // Trigger reload to ensure configuration is updated
+            _configuration.Reload();
         }
     }
 }
