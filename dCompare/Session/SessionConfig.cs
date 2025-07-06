@@ -5,6 +5,8 @@ namespace dCompare.Session
 {
     public class SessionConfig
     {
+        public string? TabName { get; set; } // Added to store tab header
+
         public string Left { get; set; } = string.Empty;
         public string Right { get; set; } = string.Empty;
         [JsonConverter(typeof(JsonStringEnumConverter))]

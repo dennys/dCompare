@@ -42,66 +42,18 @@ namespace dCompare.Configuration
         {
             if (!File.Exists(_configPath))
             {
-                // Create default configuration with all necessary properties
-                AppConfiguration defaultConfig = new()
-                {
-                    Options = new Options
-                    {
-                        UI = new UIOptions
-                        {
-                            Theme = "Light",
-                            Language = "zh-TW"
-                        },
-                        Compare = new CompareOptions
-                        {
-                            ScanMethod = new ScanMethodOptions
-                            {
-                                MethodOptions = "General",
-                                ParallelOptions = true
-                            },
-                            DoubleClick = "view"
-                            // Algorithms are initialized in the class constructor
-                        },
-                        Diff = new DiffOptions
-                        {
-                            Text = new TextDiffOptions
-                            {
-                                Viewer = "DiffPlex",
-                                Ext = new List<string>()
-                            },
-                            Image = new ImageDiffOptions
-                            {
-                                Viewer = "Build-in",
-                                Ext = new List<string>()
-                            }
-                        },
-                        Session = new SessionOptions
-                        {
-                            DefaultSessionFile = "",
-                            AutoLoadDefaultSession = false,
-                            AutoCompareAfterSessionLoad = false
-                        },
-                        HotKeys = new HotKeysOptions
-                        {
-                            AddTab = "Ctrl+N",
-                            CloseTab = "Ctrl+W",
-                            Compare = "Ctrl+R",
-                            SaveSession = "Ctrl+S",
-                            LoadSession = "Ctrl+O"
-                        }
-                    }
-                };
+                // Rely on class initializers for defaults
+                AppConfiguration defaultConfig = new();
                 await SaveConfigurationAsync(defaultConfig);
                 return defaultConfig;
             }
             try
             {
                 var config = _configuration.Get<AppConfiguration>();
-                return config ?? new AppConfiguration(); // Return new config if file is empty or deserialization fails
+                return config ?? new AppConfiguration(); // Return new config with defaults if deserialization fails
             }
             catch (Exception ex)
             {
-                // Handle configuration errors
                 System.Diagnostics.Debug.WriteLine($"Error reading configuration file: {ex.Message}");
                 return new AppConfiguration(); // Return default config on error
             }

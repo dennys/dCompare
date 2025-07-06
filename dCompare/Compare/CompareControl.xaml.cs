@@ -385,11 +385,12 @@ namespace dCompare.Compare
                 return;
             }
 
-            var comparisonHandler = new FileComparisonHandler();
-            FileType fileType = FileComparisonHandler.DetermineFileType(leftPath ?? rightPath);
-
             try
             {
+                var config = await _configService.LoadConfigurationAsync();
+                var comparisonHandler = new FileComparisonHandler(config);
+                FileType fileType = comparisonHandler.DetermineFileType(leftPath ?? rightPath);
+
                 leftPath = leftPath ?? CreateTemporaryEmptyFile();
                 rightPath = rightPath ?? CreateTemporaryEmptyFile();
 
