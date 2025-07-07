@@ -411,7 +411,41 @@ namespace dCompare
                 }
             }
         }
+        private void TabItem_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is TextBlock textBlock)
+            {
+                var tabItem = FindAncestor<TabItem>(textBlock);
+                if (tabItem != null && tabControl != null)
+                {
+                    tabControl.SelectedItem = tabItem;
+                    UpdateStatus($"Selected tab: {tabItem.Header}");
+                }
+            }
+        }
+        private void TabItem_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is TextBlock textBlock)
+            {
+                TabItem? tabItem = FindAncestor<TabItem>(textBlock);
+                if (tabItem != null && tabControl != null)
+                {
+                    // Set the clicked tab as the active tab
+                    tabControl.SelectedItem = tabItem;
+                    UpdateStatus($"Selected tab: {tabItem.Header}");
 
+                    // Open the context menu
+                    if (textBlock.ContextMenu != null)
+                    {
+                        textBlock.ContextMenu.PlacementTarget = textBlock;
+                        textBlock.ContextMenu.IsOpen = true;
+                    }
+
+                    // Mark the event as handled to prevent further propagation
+                    e.Handled = true;
+                }
+            }
+        }
         // Helper method to find the parent TabItem
         private static T? FindAncestor<T>(DependencyObject current) where T : DependencyObject
         {
