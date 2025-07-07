@@ -9,6 +9,7 @@ using Serilog;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -41,7 +42,7 @@ namespace dCompare.Compare
         private DirectoryComparer _comparer = new DirectoryComparer();
         private ListSortDirection _lastSortDirection;
         private GridViewColumnHeader _lastHeaderClicked;
-        private Predicate<object>? _currentFilter = null;
+        private Predicate<object>? _currentFilter = null;   // null for non-filter, means all data
         private List<DirectoryComparer.ComparisonItem> _cachedComparisonResults;
         private CancellationTokenSource _cancellationTokenSource;
         private bool _isComparing;
@@ -59,7 +60,11 @@ namespace dCompare.Compare
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-
+        public string FullPathsTooltip { get; private set; }
+        private void PathBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            UpdateTabHeader();
+        }
         public bool IsComparing
         {
             get => _isComparing;
@@ -162,11 +167,11 @@ namespace dCompare.Compare
                 MessageBox.Show($"Error loading viewers: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
         private void LoadConfigurationAsync()
         {
             try
             {
+                //var config = await _configService.LoadConfigurationAsync();
                 var defaultAlgorithm = ComparisonAlgorithms.AlgorithmSettings
                     .FirstOrDefault(kvp => kvp.Value.IsDefault && kvp.Value.IsEnabled)
                     .Key;
@@ -182,7 +187,26 @@ namespace dCompare.Compare
 
         private void UpdateTabHeader()
         {
-            string baseHeader = LeftPathBox.Text.Trim() + " - " + RightPathBox.Text.Trim();
+            string leftPath = LeftPathBox.Text.Trim();
+            string rightPath = RightPathBox.Text.Trim();
+
+            // This part remains the same, updating the tooltip with the full path
+            FullPathsTooltip = $"Left: {leftPath}\nRight: {rightPath}";
+            OnPropertyChanged(nameof(FullPathsTooltip));
+
+            // --- MODIFICATION START ---
+            // Get just the file or directory name from the full path.
+            string leftName = !string.IsNullOrEmpty(leftPath) ? Path.GetFileName(leftPath) : string.Empty;
+            string rightName = !string.IsNullOrEmpty(rightPath) ? Path.GetFileName(rightPath) : string.Empty;
+
+            // If the path is a root drive (e.g., "C:\"), GetFileName returns empty. Fall back to the full path.
+            if (string.IsNullOrEmpty(leftName)) leftName = leftPath;
+            if (string.IsNullOrEmpty(rightName)) rightName = rightPath;
+
+            // Combine the shortened names for the header.
+            string baseHeader = $"{leftName} - {rightName}";
+            // --- MODIFICATION END ---
+
             if (WpfTreeHelperExtensions.FindParent<TabItem>(this) is TabItem tabItem)
             {
                 tabItem.Header = IsComparing ? $"(Comparing...) {baseHeader}" : baseHeader;
@@ -375,6 +399,7 @@ namespace dCompare.Compare
             string leftDir = LeftPathBox.Text.Trim();
             string rightDir = RightPathBox.Text.Trim();
 
+            //var rootNodes = _treeNodes.Where(n => n.Depth == 0).ToList();
             _treeNodes.Clear();
 
             List<TreeNode> allNodes = _treeNodeManager.CreateFlatTreeStructure(_cachedComparisonResults, leftDir, rightDir);
@@ -597,6 +622,7 @@ namespace dCompare.Compare
 
             if (obj is ListViewItem listViewItem)
             {
+                // Only add to selection if not already selected to preserve multi-selection
                 if (!ResultListView.SelectedItems.Contains(listViewItem.Content))
                 {
                     ResultListView.SelectedItems.Add(listViewItem.Content);
@@ -635,6 +661,7 @@ namespace dCompare.Compare
                     listViewItem.ContextMenu.IsOpen = true;
                 }
 
+                // Mark the event as handled to prevent default selection behavior
                 e.Handled = true;
             }
         }
@@ -715,6 +742,7 @@ namespace dCompare.Compare
                 var orderedNodesToRefresh = nodesToRefresh.Values.OrderByDescending(n => n.Depth);
                 foreach (var nodeToRefresh in orderedNodesToRefresh)
                 {
+                    // *** Pass the captured state to the refresh method. ***
                     await RefreshNodeAsync(nodeToRefresh, previouslyExpandedPaths);
                 }
             }
@@ -828,22 +856,27 @@ namespace dCompare.Compare
 
             if (string.IsNullOrWhiteSpace(newName) || newName == currentName)
             {
-                return;
+                return; // User cancelled or entered the same name
             }
 
             try
             {
+                // Find parent BEFORE the operation, as the selectedItem's path will become invalid.
                 string parentRelativePath = Path.GetDirectoryName(selectedItem.RelativePath) ?? string.Empty;
                 TreeNode? parentNode = null;
+                // A non-empty parent path indicates the item is not at the root.
                 if (!string.IsNullOrEmpty(parentRelativePath))
                 {
                     parentNode = _treeNodes.FirstOrDefault(n => n.RelativePath.Equals(parentRelativePath, StringComparison.OrdinalIgnoreCase));
                 }
 
+                // Execute the rename operation using the new testable method
                 _fileOperationHandler.RenameFileOrDirectory(sourcePath, newName);
 
+                // Refresh the UI to reflect the change.
                 if (parentNode != null)
                 {
+                    // Preserve the expanded state of the tree for a better user experience.
                     var previouslyExpandedPaths = new HashSet<string>(
                         _treeNodes.Where(n => n.IsDirectory && n.IsExpanded).Select(n => n.RelativePath)
                     );
@@ -935,13 +968,6 @@ namespace dCompare.Compare
             {
                 MessageBox.Show("No valid files selected.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
-        }
-
-        private void FileOperation_OnTransferStatusChanged(string jobId, bool success, string message)
-        {
-            string a = $"Job {jobId}: {message}";
-            Log.Information($"UcCompare: complete copy or move or delete: {a}");
-            MessageBox.Show(a);
         }
     }
 }

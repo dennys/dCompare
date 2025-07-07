@@ -37,17 +37,28 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <!-- Tab Title -->
+                                    <!-- Tab Title with Context Menu and Tooltip -->
                                     <TextBlock x:Name="TabTitle" 
                                                Grid.Column="0"
                                                Text="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Header}"
+                                               ToolTip="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Content.FullPathsTooltip}"
+                                               ToolTipService.InitialShowDelay="100"
                                                VerticalAlignment="Center" 
                                                HorizontalAlignment="Left"
                                                Margin="12,0,8,0"
                                                FontSize="12"
                                                Foreground="#333333"
                                                PreviewMouseLeftButtonDown="TabItem_PreviewMouseLeftButtonDown"
-                                               TextTrimming="CharacterEllipsis"/>
+                                               PreviewMouseRightButtonUp="TabItem_PreviewMouseRightButtonUp"
+                                               TextTrimming="CharacterEllipsis">
+                                        <TextBlock.ContextMenu>
+                                            <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                                                <MenuItem Header="{x:Static resx:Resources.AddTab}" Command="{Binding AddTabCommand}" Icon="{StaticResource AddTabIcon}"/>
+                                                <MenuItem Header="{x:Static resx:Resources.CloseTab}" Command="{Binding CloseTabCommand}" Icon="{StaticResource CloseTabIcon}"/>
+                                                <MenuItem Header="{x:Static resx:Resources.RenameTab}" Command="{Binding RenameTabCommand}" Icon="{StaticResource RenameTabIcon}"/>
+                                            </ContextMenu>
+                                        </TextBlock.ContextMenu>
+                                    </TextBlock>
 
                                     <!-- Close Button -->
                                     <Button x:Name="CloseButton"
@@ -125,33 +136,43 @@
                             </Grid.RowDefinitions>
 
                             <!-- Tab Headers with Add Button -->
-                            <Border Grid.Row="0" 
-                                    Background="#F8F8F8" 
-                                    BorderBrush="#C0C0C0" 
-                                    BorderThickness="0,0,0,1">
-                                <StackPanel Orientation="Horizontal" Height="28">
-                                    <TabPanel x:Name="HeaderPanel" IsItemsHost="True" Margin="8,0,0,0"/>
+                            <Border Grid.Row="0"
+                                Background="#F8F8F8"
+                                BorderBrush="#C0C0C0"
+                                BorderThickness="0,0,0,1">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
 
-                                    <!-- Add Tab Button -->
+                                    <ScrollViewer Grid.Column="0"
+                                          HorizontalScrollBarVisibility="Auto"
+                                          VerticalScrollBarVisibility="Disabled"
+                                          CanContentScroll="True">
+                                        <TabPanel x:Name="HeaderPanel" IsItemsHost="True" Margin="8,0,0,0"/>
+                                    </ScrollViewer>
+
                                     <Button x:Name="AddTabButton"
-                                            Width="24" Height="24"
-                                            Margin="4,4,8,4"
-                                            Background="Transparent"
-                                            BorderThickness="0"
-                                            Command="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext.AddTabCommand}"
-                                            Cursor="Hand"
-                                            ToolTip="Add new tab (Ctrl+N)">
+                                        Grid.Column="1"
+                                        Width="24" Height="24"
+                                        Margin="4,2,8,2"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Command="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext.AddTabCommand}"
+                                        Cursor="Hand"
+                                        ToolTip="Add new tab (Ctrl+N)">
                                         <Button.Template>
                                             <ControlTemplate TargetType="Button">
                                                 <Border x:Name="AddBorder" 
-                                                        Background="Transparent" 
-                                                        CornerRadius="2">
+                                                    Background="Transparent" 
+                                                    CornerRadius="2">
                                                     <Path x:Name="AddPath"
-                                                          Data="M 0 6 L 12 6 M 6 0 L 6 12"
-                                                          Stroke="#666666"
-                                                          StrokeThickness="2"
-                                                          HorizontalAlignment="Center"
-                                                          VerticalAlignment="Center"/>
+                                                  Data="M 0 6 L 12 6 M 6 0 L 6 12"
+                                                  Stroke="#666666"
+                                                  StrokeThickness="2"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"/>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsMouseOver" Value="True">
@@ -165,7 +186,7 @@
                                             </ControlTemplate>
                                         </Button.Template>
                                     </Button>
-                                </StackPanel>
+                                </Grid>
                             </Border>
 
                             <!-- Content Area -->
@@ -209,11 +230,7 @@
                 <Separator/>
                 <MenuItem Header="{x:Static resx:Resources.AddTab}" Command="{Binding AddTabCommand}" InputGestureText="Ctrl+N" Icon="{StaticResource AddTabIcon}"/>
                 <MenuItem Header="{x:Static resx:Resources.CloseTab}" Command="{Binding CloseTabCommand}" InputGestureText="Ctrl+W" Icon="{StaticResource CloseTabIcon}"/>
-                <MenuItem Header="{x:Static resx:Resources.RenameTab}" Command="{Binding RenameTabCommand}">
-                    <MenuItem.Icon>
-                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
-                    </MenuItem.Icon>
-                </MenuItem>
+                <MenuItem Header="{x:Static resx:Resources.RenameTab}" Command="{Binding RenameTabCommand}" Icon="{StaticResource RenameTabIcon}"/>
                 <MenuItem Header="{x:Static resx:Resources.OptionsMenu}" Command="{Binding OptionsCommand}">
                     <MenuItem.Icon>
                         <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
@@ -327,7 +344,7 @@
                         ItemContainerStyle="{StaticResource ChromeTabStyle}"
                         PreviewMouseMove="TabControl_PreviewMouseMove">
                 <TabItem Header="Welcome">
-                    <!-- <compare:U 인증서ontrol/> -->
+                    <!-- <compare:UcCompareControl/> -->
                 </TabItem>
             </TabControl>
 
