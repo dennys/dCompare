@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Globalization;
 using System.Reflection;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
@@ -33,15 +34,15 @@ namespace dCompare
         }
 
         [ObservableProperty]
-        private string addTabHotkey;
+        private string addTabHotkey = string.Empty;
         [ObservableProperty]
-        private string closeTabHotkey;
+        private string closeTabHotkey = string.Empty;
         [ObservableProperty]
-        private string refreshHotkey;
+        private string refreshHotkey = string.Empty;
         [ObservableProperty]
-        private string saveSessionHotkey;
+        private string saveSessionHotkey = string.Empty;
         [ObservableProperty]
-        private string loadSessionHotkey;
+        private string loadSessionHotkey = string.Empty;
 
         [ObservableProperty]
         private string addTabTooltip = string.Empty;
@@ -405,7 +406,7 @@ namespace dCompare
                     MethodInfo? methodInfo = typeof(CompareControl).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
                     if (methodInfo != null)
                     {
-                        methodInfo.Invoke(ucCompare, new object[] { null, null });
+                        methodInfo.Invoke(ucCompare, new object[] { ucCompare, new RoutedEventArgs() });
                         StatusMessage = $"{methodName.Replace("_Click", "")} executed";
                     }
                     else
