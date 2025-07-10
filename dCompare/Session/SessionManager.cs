@@ -111,6 +111,7 @@ namespace dCompare.Session
         {
             try
             {
+                // Clear existing menu items (excluding the first item and separator)
                 List<MenuItem> itemsToRemove = new();
                 foreach (var item in _recentSessionsMenu.Items)
                 {
@@ -123,8 +124,8 @@ namespace dCompare.Session
                 {
                     _recentSessionsMenu.Items.Remove(item);
                 }
-                _recentSessionsMenu.Items.Clear();
 
+                // Rebuild menu items for recent sessions
                 for (int i = 0; i < _recentSessions.Count; i++)
                 {
                     string filePath = _recentSessions[i];
@@ -133,8 +134,9 @@ namespace dCompare.Session
                     {
                         Header = $"{i + 1}. {filePath}\\{fileName}",
                         ToolTip = filePath,
-                        Command = Application.Current.MainWindow?.DataContext is MainWindow mainWindow ? mainWindow.LoadSessionCommand : null,
-                        CommandParameter = filePath
+                        //Command = Application.Current.MainWindow?.DataContext is MainWindowViewModel viewModel ? viewModel.LoadSessionCommand("QQ") : null,
+                        Command = Application.Current.MainWindow?.DataContext is MainWindowViewModel viewModel ? viewModel.LoadSessionFileCommand : null,
+                        CommandParameter = (filePath, true)
                     };
                     _recentSessionsMenu.Items.Insert(i, menuItem);
                 }

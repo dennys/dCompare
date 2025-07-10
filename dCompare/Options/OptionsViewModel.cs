@@ -90,11 +90,13 @@ namespace dCompare.Options
             var diffNode = new SettingsMenuItem("Diff", new DiffOptionsViewModel(_appConfig.Options.Diff), this);
 
             var sessionNode = new SettingsMenuItem("Session", new SessionOptionsViewModel(_appConfig.Options.Session), this);
+            var confirmationNode = new SettingsMenuItem("Confirmation", new ConfirmationOptionsViewModel(_appConfig.Options.Confirmation), this);
             var hotkeysNode = new SettingsMenuItem("HotKeys", new HotKeysOptionsViewModel(_appConfig.Options.HotKeys), this);
 
             optionsNode.Children.Add(uiNode);
             optionsNode.Children.Add(compareNode);
-            optionsNode.Children.Add(diffNode); // Add the single diff node
+            optionsNode.Children.Add(diffNode);
+            optionsNode.Children.Add(confirmationNode);
             optionsNode.Children.Add(sessionNode);
             optionsNode.Children.Add(hotkeysNode);
 
@@ -660,11 +662,20 @@ namespace dCompare.Options
     {
         private string _combination;
         public string Name { get; }
-        public string Combination { get => _combination; set => SetProperty(ref _combination, value); }
+        public string Combination
+        {
+            get => _combination;
+            set => SetProperty(ref _combination, value);
+        }
+
+        public ICommand ClearCommand { get; }
+
         public HotKeyItemViewModel(string name, string combination)
         {
             Name = name;
             _combination = combination;
+            // This command simply clears the Combination string.
+            ClearCommand = new RelayCommand(_ => Combination = string.Empty);
         }
     }
 
@@ -690,6 +701,63 @@ namespace dCompare.Options
             _model.Compare = HotKeyItems.FirstOrDefault(i => i.Name == "Compare")?.Combination ?? _model.Compare;
             _model.SaveSession = HotKeyItems.FirstOrDefault(i => i.Name == "Save Session")?.Combination ?? _model.SaveSession;
             _model.LoadSession = HotKeyItems.FirstOrDefault(i => i.Name == "Load Session")?.Combination ?? _model.LoadSession;
+        }
+    }
+
+    public class ConfirmationOptionsViewModel : ViewModelBase, IConfigurationUpdater
+    {
+        private readonly ConfirmationOptions _model;
+
+        public ConfirmationOptionsViewModel(ConfirmationOptions model)
+        {
+            _model = model;
+        }
+
+        public bool CloseApplication
+        {
+            get => _model.CloseApplication;
+            set { _model.CloseApplication = value; OnPropertyChanged(); }
+        }
+
+        public bool CloseTab
+        {
+            get => _model.CloseTab;
+            set { _model.CloseTab = value; OnPropertyChanged(); }
+        }
+
+        public bool Copy
+        {
+            get => _model.Copy;
+            set { _model.Copy = value; OnPropertyChanged(); }
+        }
+
+        public bool Move
+        {
+            get => _model.Move;
+            set { _model.Move = value; OnPropertyChanged(); }
+        }
+
+        public bool CopyOverwrite
+        {
+            get => _model.CopyOverwrite;
+            set { _model.CopyOverwrite = value; OnPropertyChanged(); }
+        }
+
+        public bool MoveOverwrite
+        {
+            get => _model.MoveOverwrite;
+            set { _model.MoveOverwrite = value; OnPropertyChanged(); }
+        }
+
+        public bool DeleteFile
+        {
+            get => _model.DeleteFile;
+            set { _model.DeleteFile = value; OnPropertyChanged(); }
+        }
+
+        public void UpdateModel()
+        {
+            // Model is updated directly via property setters
         }
     }
 

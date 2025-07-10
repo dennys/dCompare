@@ -3,9 +3,9 @@ using dCompare.Configuration;
 using dCompare.Diff;
 using dCompare.Diff.Models;
 using dCompare.FileOperation;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
 using Microsoft.Win32;
-using Serilog;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -54,6 +54,7 @@ namespace dCompare.Compare
 
         private readonly IFileManager _fileManager;
         private readonly IConfigurationService _configService;
+        private readonly ILogger<CompareControl> _logger;
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName)
@@ -96,13 +97,13 @@ namespace dCompare.Compare
             }
         }
 
-        public CompareControl(IConfigurationService configService, IFileManager fileManager)
+        public CompareControl(IConfigurationService configService, IFileManager fileManager, ILogger<CompareControl> logger)
         {
             InitializeComponent();
 
             _fileManager = fileManager;
             _configService = configService;
-
+            _logger = logger;
             _treeNodeManager = new TreeNodeManager(_treeNodes);
             _fileOperationHandler = new FileOperationHandler(_fileManager);
 
@@ -124,49 +125,47 @@ namespace dCompare.Compare
             try
             {
                 var config = await _configService.LoadConfigurationAsync();
-                var viewers = config.Options?.Diff?.Viewer ?? new List<ExternalViewer>();
+                List<ExternalViewer> viewers = config.Options?.Diff?.Viewer ?? new();
 
-                var leftContextMenu = FindResource("LeftContextMenu") as ContextMenu;
-                var rightContextMenu = FindResource("RightContextMenu") as ContextMenu;
+                if (FindResource("LeftContextMenu") is not ContextMenu leftContextMenu ||
+                    FindResource("RightContextMenu") is not ContextMenu rightContextMenu)
+                    return;
 
-                var leftCompareWithMenu = leftContextMenu?.Items
-                    .OfType<MenuItem>()
-                    .FirstOrDefault(mi => mi.Name == "LeftCompareWithMenu");
+                var leftCompareWithMenu = FindMenuByName(leftContextMenu, "LeftCompareWithMenu");
+                var rightCompareWithMenu = FindMenuByName(rightContextMenu, "RightCompareWithMenu");
 
-                var rightCompareWithMenu = rightContextMenu?.Items
-                    .OfType<MenuItem>()
-                    .FirstOrDefault(mi => mi.Name == "RightCompareWithMenu");
+                if (leftCompareWithMenu == null || rightCompareWithMenu == null) return;
 
-                leftCompareWithMenu.Items.Clear();
-                rightCompareWithMenu.Items.Clear();
-
-                foreach (var viewer in viewers)
-                {
-                    var leftMenuItem = new MenuItem
-                    {
-                        Header = viewer.Name,
-                        Tag = viewer,
-                        InputGestureText = viewer.Name
-                    };
-                    leftMenuItem.Click += ContextMenu_CompareWithViewer_Click;
-                    leftCompareWithMenu.Items.Add(leftMenuItem);
-
-                    var rightMenuItem = new MenuItem
-                    {
-                        Header = viewer.Name,
-                        Tag = viewer,
-                        InputGestureText = viewer.Name
-                    };
-                    rightMenuItem.Click += ContextMenu_CompareWithViewer_Click;
-                    rightCompareWithMenu.Items.Add(rightMenuItem);
-                }
+                PopulateViewerMenu(leftCompareWithMenu, viewers);
+                PopulateViewerMenu(rightCompareWithMenu, viewers);
             }
             catch (Exception ex)
             {
-                Log.Error("Failed to populate Compare With menus: {Message}", ex.Message);
-                MessageBox.Show($"Error loading viewers: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                _logger.LogError("Failed to populate Compare With menus: {Message}", ex.Message);
+                MessageBox.Show($"Error loading viewers: {ex.Message}", Properties.Resources.ErrorTitle,
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        private MenuItem? FindMenuByName(ContextMenu menu, string name) =>
+            menu.Items.OfType<MenuItem>().FirstOrDefault(mi => mi.Name == name);
+
+        private void PopulateViewerMenu(MenuItem parentMenu, List<ExternalViewer> viewers)
+        {
+            parentMenu.Items.Clear();
+            foreach (var viewer in viewers)
+            {
+                var item = new MenuItem
+                {
+                    Header = viewer.Name,
+                    Tag = viewer,
+                    InputGestureText = viewer.Name
+                };
+                item.Click += ContextMenu_CompareWithViewer_Click;
+                parentMenu.Items.Add(item);
+            }
+        }
+
         private void LoadConfigurationAsync()
         {
             try
@@ -179,7 +178,7 @@ namespace dCompare.Compare
             }
             catch (Exception ex)
             {
-                Log.Error("Failed to load configuration: {Message}", ex.Message);
+                _logger.LogError("Failed to load configuration: {Message}", ex.Message);
                 MessageBox.Show($"Error loading configuration: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 SelectedAlgorithm = ComparisonAlgorithm.ModifiedDateAndSize;
             }
@@ -215,7 +214,7 @@ namespace dCompare.Compare
 
         public void ChangeTabHeader(string newHeader)
         {
-            TabItem tabItem = WpfTreeHelperExtensions.FindParent<TabItem>(this);
+            TabItem? tabItem = WpfTreeHelperExtensions.FindParent<TabItem>(this);
             if (tabItem != null && !IsComparing)
             {
                 tabItem.Header = newHeader;
@@ -459,7 +458,7 @@ namespace dCompare.Compare
             string? leftPath = selectedItem.LeftNode?.FullPath;
             string? rightPath = selectedItem.RightNode?.FullPath;
 
-            if (string.IsNullOrEmpty(leftPath) && string.IsNullOrEmpty(rightPath))
+            if (string.IsNullOrEmpty(leftPath) || string.IsNullOrEmpty(rightPath))
             {
                 MessageBox.Show("No valid file paths to compare.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
@@ -516,7 +515,7 @@ namespace dCompare.Compare
             }
         }
 
-        private async void ContextMenu_CompareWithViewer_Click(object sender, RoutedEventArgs e)
+        private void ContextMenu_CompareWithViewer_Click(object sender, RoutedEventArgs e)
         {
             if (sender is not MenuItem menuItem || menuItem.Tag is not ExternalViewer viewerConfig)
             {
@@ -680,7 +679,6 @@ namespace dCompare.Compare
 
         private async Task ProcessFileOperationsAsync(
             List<TreeNode> selectedNodes,
-            FileOperationType operationType,
             string leftDir,
             string rightDir,
             string? confirmationMessage,
@@ -757,7 +755,6 @@ namespace dCompare.Compare
             var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
             await ProcessFileOperationsAsync(
                 selectedNodes,
-                FileOperationType.CopyToLeft,
                 LeftPathBox.Text.Trim(),
                 RightPathBox.Text.Trim(),
                 null,
@@ -769,7 +766,6 @@ namespace dCompare.Compare
             var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
             await ProcessFileOperationsAsync(
                 selectedNodes,
-                FileOperationType.CopyToRight,
                 LeftPathBox.Text.Trim(),
                 RightPathBox.Text.Trim(),
                 null,
@@ -781,7 +777,6 @@ namespace dCompare.Compare
             var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
             await ProcessFileOperationsAsync(
                 selectedNodes,
-                FileOperationType.MoveToLeft,
                 LeftPathBox.Text.Trim(),
                 RightPathBox.Text.Trim(),
                 null,
@@ -793,7 +788,6 @@ namespace dCompare.Compare
             var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
             await ProcessFileOperationsAsync(
                 selectedNodes,
-                FileOperationType.MoveToRight,
                 LeftPathBox.Text.Trim(),
                 RightPathBox.Text.Trim(),
                 null,
@@ -805,7 +799,6 @@ namespace dCompare.Compare
             var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
             await ProcessFileOperationsAsync(
                 selectedNodes,
-                FileOperationType.DeleteLeft,
                 LeftPathBox.Text.Trim(),
                 RightPathBox.Text.Trim(),
                 "Are you sure you want to delete the selected items from the left directory?",
@@ -821,7 +814,6 @@ namespace dCompare.Compare
             var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
             await ProcessFileOperationsAsync(
                 selectedNodes,
-                FileOperationType.DeleteRight,
                 LeftPathBox.Text.Trim(),
                 RightPathBox.Text.Trim(),
                 "Are you sure you want to delete the selected items from the right directory?",

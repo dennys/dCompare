@@ -9,15 +9,6 @@
         xmlns:resx="clr-namespace:dCompare.Properties"
         Title="dCompare" Height="600" Width="1000"
         Background="#F0F0F0">
-
-    <Window.InputBindings>
-        <KeyBinding Key="N" Modifiers="Ctrl" Command="{Binding AddTabCommand}"/>
-        <KeyBinding Key="W" Modifiers="Ctrl" Command="{Binding CloseTabCommand}"/>
-        <KeyBinding Key="R" Modifiers="Ctrl" Command="{Binding CompareCommand}"/>
-        <KeyBinding Key="S" Modifiers="Ctrl" Command="{Binding SaveSessionCommand}"/>
-        <KeyBinding Key="O" Modifiers="Ctrl" Command="{Binding LoadSessionCommand}"/>
-    </Window.InputBindings>
-
     <Window.Resources>
         <!-- Chrome-style Tab Item Template -->
         <Style x:Key="ChromeTabStyle" TargetType="TabItem">
@@ -53,8 +44,8 @@
                                                TextTrimming="CharacterEllipsis">
                                         <TextBlock.ContextMenu>
                                             <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
-                                                <MenuItem Header="{x:Static resx:Resources.AddTab}" Command="{Binding AddTabCommand}" Icon="{StaticResource AddTabIcon}"/>
-                                                <MenuItem Header="{x:Static resx:Resources.CloseTab}" Command="{Binding CloseTabCommand}" Icon="{StaticResource CloseTabIcon}"/>
+                                                <MenuItem Header="{x:Static resx:Resources.AddTab}" Command="{Binding AddTabCommand}" InputGestureText="{Binding AddTabHotkey}" Icon="{StaticResource AddTabIcon}"/>
+                                                <MenuItem Header="{x:Static resx:Resources.CloseTab}" Command="{Binding CloseTabCommand}" InputGestureText="{Binding CloseTabHotkey}" Icon="{StaticResource CloseTabIcon}"/>
                                                 <MenuItem Header="{x:Static resx:Resources.RenameTab}" Command="{Binding RenameTabCommand}" Icon="{StaticResource RenameTabIcon}"/>
                                             </ContextMenu>
                                         </TextBlock.ContextMenu>
@@ -70,7 +61,7 @@
                                             Command="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext.CloseTabCommand}"
                                             CommandParameter="{Binding RelativeSource={RelativeSource TemplatedParent}}"
                                             Cursor="Hand"
-                                            ToolTip="Close tab">
+                                            ToolTip="{Binding CloseTabTooltip}">
                                         <Button.Template>
                                             <ControlTemplate TargetType="Button">
                                                 <Border x:Name="CloseBorder" 
@@ -161,18 +152,18 @@
                                         BorderThickness="0"
                                         Command="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext.AddTabCommand}"
                                         Cursor="Hand"
-                                        ToolTip="Add new tab (Ctrl+N)">
+                                        ToolTip="{Binding AddTabTooltip}">
                                         <Button.Template>
                                             <ControlTemplate TargetType="Button">
                                                 <Border x:Name="AddBorder" 
                                                     Background="Transparent" 
                                                     CornerRadius="2">
                                                     <Path x:Name="AddPath"
-                                                  Data="M 0 6 L 12 6 M 6 0 L 6 12"
-                                                  Stroke="#666666"
-                                                  StrokeThickness="2"
-                                                  HorizontalAlignment="Center"
-                                                  VerticalAlignment="Center"/>
+                                                          Data="M 0 6 L 12 6 M 6 0 L 6 12"
+                                                          Stroke="#666666"
+                                                          StrokeThickness="2"
+                                                          HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center"/>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsMouseOver" Value="True">
@@ -220,16 +211,16 @@
         <!-- Menu Bar -->
         <Menu DockPanel.Dock="Top" Style="{StaticResource UnifiedMenuStyle}">
             <MenuItem Header="{x:Static resx:Resources.FileMenu}">
-                <MenuItem Header="{x:Static resx:Resources.SaveSessionMenu}" Command="{Binding SaveSessionCommand}" InputGestureText="Ctrl+S" Icon="{StaticResource SaveSessionIcon}"/>
-                <MenuItem Header="{x:Static resx:Resources.LoadSessionMenu}" Command="{Binding LoadSessionCommand}" InputGestureText="Ctrl+O" Icon="{StaticResource LoadSessionIcon}"/>
-                <MenuItem Header="{x:Static resx:Resources.ClearRecentSessionsMenu}" Command="{Binding ClearRecentSessionsCommand}"/>
+                <MenuItem Header="{x:Static resx:Resources.SaveSessionMenu}" Command="{Binding SaveSessionCommand}" InputGestureText="{Binding SaveSessionHotkey}" Icon="{StaticResource SaveSessionIcon}"/>
+                <MenuItem Header="{x:Static resx:Resources.LoadSessionMenu}" Command="{Binding LoadSessionCommand}" InputGestureText="{Binding LoadSessionHotkey}" Icon="{StaticResource LoadSessionIcon}"/>
+                <MenuItem Header="{x:Static resx:Resources.ClearRecentSessionsMenu}" Command="{Binding ClearRecentSessionsCommand}" Icon="{StaticResource ClearSessionIcon}"/>
                 <MenuItem x:Name="RecentSessionsMenu" Header="{x:Static resx:Resources.RecentSessionsMenu}">
                     <Separator/>
                     <!-- Recent sessions will be dynamically populated -->
                 </MenuItem>
                 <Separator/>
-                <MenuItem Header="{x:Static resx:Resources.AddTab}" Command="{Binding AddTabCommand}" InputGestureText="Ctrl+N" Icon="{StaticResource AddTabIcon}"/>
-                <MenuItem Header="{x:Static resx:Resources.CloseTab}" Command="{Binding CloseTabCommand}" InputGestureText="Ctrl+W" Icon="{StaticResource CloseTabIcon}"/>
+                <MenuItem Header="{x:Static resx:Resources.AddTab}" Command="{Binding AddTabCommand}" InputGestureText="{Binding AddTabHotkey}" Icon="{StaticResource AddTabIcon}"/>
+                <MenuItem Header="{x:Static resx:Resources.CloseTab}" Command="{Binding CloseTabCommand}" InputGestureText="{Binding CloseTabHotkey}" Icon="{StaticResource CloseTabIcon}"/>
                 <MenuItem Header="{x:Static resx:Resources.RenameTab}" Command="{Binding RenameTabCommand}" Icon="{StaticResource RenameTabIcon}"/>
                 <MenuItem Header="{x:Static resx:Resources.OptionsMenu}" Command="{Binding OptionsCommand}">
                     <MenuItem.Icon>
@@ -244,7 +235,7 @@
                 </MenuItem>
             </MenuItem>
             <MenuItem Header="{x:Static resx:Resources.ActionMenu}">
-                <MenuItem Header="{x:Static resx:Resources.CompareDirectoryMenu}" Command="{Binding CompareCommand}" InputGestureText="Ctrl+R" Icon="{StaticResource CompareIcon}"/>
+                <MenuItem Header="{x:Static resx:Resources.CompareDirectoryMenu}" Command="{Binding CompareCommand}" InputGestureText="F5" Icon="{StaticResource CompareIcon}"/>
                 <Separator/>
                 <MenuItem Header="{x:Static resx:Resources.CopyToLeftMenu}" Command="{Binding CopyToLeftCommand}" Icon="{StaticResource ShowLeftIcon}"/>
                 <MenuItem Header="{x:Static resx:Resources.CopyToRightMenu}" Command="{Binding CopyToRightCommand}" Icon="{StaticResource CopyToRightIcon}"/>
@@ -270,11 +261,11 @@
         <!-- ToolBar -->
         <ToolBar DockPanel.Dock="Top" Style="{StaticResource UnifiedToolBarStyle}">
             <!-- New Tab Button -->
-            <Button Command="{Binding AddTabCommand}" ToolTip="{x:Static resx:Resources.AddTabTooltip}" Content="{StaticResource AddTabIcon}" />
-
+            <Button Command="{Binding AddTabCommand}" ToolTip="{Binding AddTabTooltip}" Content="{StaticResource AddTabIcon}" />
             <!-- Close Tab Button -->
-            <Button Command="{Binding CloseTabCommand}" ToolTip="{x:Static resx:Resources.CloseTabTooltip}" Content="{StaticResource CloseTabIcon}" />
-
+            <Button Command="{Binding CloseTabCommand}" ToolTip="{Binding CloseTabTooltip}" Content="{StaticResource CloseTabIcon}" />
+            <!-- Rename Tab Button -->
+            <Button Command="{Binding RenameTabCommand}" ToolTip="{x:Static resx:Resources.RenameTabTooltip}" Content="{StaticResource RenameTabIcon}" />
             <!-- Options Button -->
             <Button Command="{Binding OptionsCommand}" ToolTip="{x:Static resx:Resources.OptionsMenu}">
                 <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="16"/>
@@ -283,15 +274,15 @@
             <Separator/>
 
             <!-- Save Session Button -->
-            <Button Command="{Binding SaveSessionCommand}" ToolTip="{x:Static resx:Resources.SaveSessionMenu}" Content="{StaticResource SaveSessionIcon}" />
+            <Button Command="{Binding SaveSessionCommand}" ToolTip="{Binding SaveSessionTooltip}" Content="{StaticResource SaveSessionIcon}" />
 
             <!-- Load Session Button -->
-            <Button Command="{Binding LoadSessionCommand}" ToolTip="{x:Static resx:Resources.LoadSessionMenu}" Content="{StaticResource LoadSessionIcon}" />
+            <Button Command="{Binding LoadSessionCommand}" ToolTip="{Binding LoadSessionTooltip}" Content="{StaticResource LoadSessionIcon}" />
 
             <Separator/>
 
             <!-- Compare Button -->
-            <Button Command="{Binding CompareCommand}" ToolTip="{x:Static resx:Resources.CompareDirectoryMenu}" Content="{StaticResource CompareIcon}" />
+            <Button Command="{Binding CompareCommand}" ToolTip="{Binding RefreshTooltip}" Content="{StaticResource CompareIcon}" />
 
             <!-- Copy to Left Button -->
             <Button Command="{Binding CopyToLeftCommand}" ToolTip="{x:Static resx:Resources.CopyToLeftMenu}" Content="{StaticResource CopyToLeftIcon}" />
@@ -362,7 +353,7 @@
                        BorderBrush="#C0C0C0" 
                        BorderThickness="0,1,0,0">
                 <StatusBarItem>
-                    <TextBlock x:Name="StatusText" Text="Ready" Foreground="#333333"/>
+                    <TextBlock x:Name="StatusText" Text="{Binding StatusMessage}" Foreground="#333333"/>
                 </StatusBarItem>
                 <StatusBarItem HorizontalAlignment="Right">
                     <TextBlock x:Name="TabCountText" Text="{Binding ElementName=tabControl, Path=Items.Count, StringFormat='Tabs: {0}'}" Foreground="#666666"/>

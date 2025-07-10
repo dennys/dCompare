@@ -20,6 +20,9 @@ namespace dCompare.Configuration
         [JsonPropertyName("Diff")]
         public DiffOptions Diff { get; set; } = new();
 
+        [JsonPropertyName("Confirmation")]
+        public ConfirmationOptions Confirmation { get; set; } = new();
+
         [JsonPropertyName("Session")]
         public SessionOptions Session { get; set; } = new();
 
@@ -108,6 +111,23 @@ namespace dCompare.Configuration
         public string Viewer { get; set; } = "Build-in";
     }
 
+    public class ConfirmationOptions
+    {
+        [JsonPropertyName("CloseApplication")]
+        public bool CloseApplication { get; set; } = false;
+        [JsonPropertyName("CloseTab")]
+        public bool CloseTab { get; set; } = false;
+        [JsonPropertyName("Copy")]
+        public bool Copy { get; set; } = false;
+        [JsonPropertyName("Move")]
+        public bool Move { get; set; } = false;
+        [JsonPropertyName("CopyOverwrite")]
+        public bool CopyOverwrite { get; set; } = true;
+        [JsonPropertyName("MoveOverwrite")]
+        public bool MoveOverwrite { get; set; } = true;
+        [JsonPropertyName("DeleteFile")]
+        public bool DeleteFile { get; set; } = true;
+    }
     public class SessionOptions
     {
         [JsonPropertyName("DefaultSessionFile")]
