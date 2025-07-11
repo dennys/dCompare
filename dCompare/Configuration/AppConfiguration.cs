@@ -156,6 +156,9 @@ namespace dCompare.Configuration
 
         [JsonPropertyName("LoadSession")]
         public string LoadSession { get; set; } = "Ctrl+O";
+
+        [JsonPropertyName("OpenOptions")]
+        public string OpenOptions { get; set; } = "Ctrl+Shift+O";
     }
 
     public class LogOptions

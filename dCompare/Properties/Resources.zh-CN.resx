@@ -276,6 +276,9 @@
   <data name="OptionsMenu" xml:space="preserve">
     <value>选项</value>
   </data>
+  <data name="OptionsMenuTooltip" xml:space="preserve">
+    <value>打开选项窗口 ({0})</value>
+  </data>
   <data name="CopyToLeftMenu" xml:space="preserve">
     <value>复制到左侧目录</value>
   </data>

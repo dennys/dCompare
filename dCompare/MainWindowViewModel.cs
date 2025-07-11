@@ -54,12 +54,17 @@ namespace dCompare
         private string saveSessionTooltip = string.Empty;
         [ObservableProperty]
         private string loadSessionTooltip = string.Empty;
+        [ObservableProperty]
+        private string openOptionsHotkey = string.Empty;
+        [ObservableProperty]
+        private string openOptionsTooltip = string.Empty;
 
         partial void OnAddTabHotkeyChanged(string value) => UpdateTooltip();
         partial void OnCloseTabHotkeyChanged(string value) => UpdateTooltip();
         partial void OnRefreshHotkeyChanged(string value) => UpdateTooltip();
         partial void OnSaveSessionHotkeyChanged(string value) => UpdateTooltip();
         partial void OnLoadSessionHotkeyChanged(string value) => UpdateTooltip();
+        partial void OnOpenOptionsHotkeyChanged(string value) => UpdateTooltip();
 
         private void UpdateTooltip()
         {
@@ -68,6 +73,7 @@ namespace dCompare
             RefreshTooltip = string.Format(CultureInfo.CurrentCulture, Properties.Resources.CompareDirectoryMenu, RefreshHotkey);
             SaveSessionTooltip = string.Format(CultureInfo.CurrentCulture, Properties.Resources.SaveSessionMenu, SaveSessionHotkey);
             LoadSessionTooltip = string.Format(CultureInfo.CurrentCulture, Properties.Resources.LoadSessionMenu, LoadSessionHotkey);
+            OpenOptionsTooltip = string.Format(CultureInfo.CurrentCulture, Properties.Resources.OptionsMenuTooltip, OpenOptionsHotkey);
         }
 
         public MainWindowViewModel(
@@ -95,6 +101,7 @@ namespace dCompare
                 RefreshHotkey = config.Options.HotKeys.Compare;
                 SaveSessionHotkey = config.Options.HotKeys.SaveSession;
                 LoadSessionHotkey = config.Options.HotKeys.LoadSession;
+                OpenOptionsHotkey = config.Options.HotKeys.OpenOptions;
 
                 if (config.Options?.Session.AutoLoadDefaultSession == true && !string.IsNullOrEmpty(config.Options.Session.DefaultSessionFile))
                 {

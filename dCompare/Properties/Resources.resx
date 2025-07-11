@@ -276,6 +276,9 @@
   <data name="OptionsMenu" xml:space="preserve">
     <value>Options</value>
   </data>
+  <data name="OptionsMenuTooltip" xml:space="preserve">
+    <value>Open options window ({0})</value>
+  </data>
   <data name="CopyToLeftMenu" xml:space="preserve">
     <value>Copy To Left Directory...</value>
   </data>

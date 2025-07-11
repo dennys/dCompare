@@ -692,6 +692,7 @@ namespace dCompare.Options
             HotKeyItems.Add(new HotKeyItemViewModel("Compare", _model.Compare));
             HotKeyItems.Add(new HotKeyItemViewModel("Save Session", _model.SaveSession));
             HotKeyItems.Add(new HotKeyItemViewModel("Load Session", _model.LoadSession));
+            HotKeyItems.Add(new HotKeyItemViewModel("Open Options", _model.OpenOptions));
         }
 
         public void UpdateModel()
@@ -701,6 +702,7 @@ namespace dCompare.Options
             _model.Compare = HotKeyItems.FirstOrDefault(i => i.Name == "Compare")?.Combination ?? _model.Compare;
             _model.SaveSession = HotKeyItems.FirstOrDefault(i => i.Name == "Save Session")?.Combination ?? _model.SaveSession;
             _model.LoadSession = HotKeyItems.FirstOrDefault(i => i.Name == "Load Session")?.Combination ?? _model.LoadSession;
+            _model.OpenOptions = HotKeyItems.FirstOrDefault(i => i.Name == "Open Options")?.Combination ?? _model.OpenOptions;
         }
     }
 
