@@ -222,7 +222,7 @@
                 <MenuItem Header="{x:Static resx:Resources.AddTab}" Command="{Binding AddTabCommand}" InputGestureText="{Binding AddTabHotkey}" Icon="{StaticResource AddTabIcon}"/>
                 <MenuItem Header="{x:Static resx:Resources.CloseTab}" Command="{Binding CloseTabCommand}" InputGestureText="{Binding CloseTabHotkey}" Icon="{StaticResource CloseTabIcon}"/>
                 <MenuItem Header="{x:Static resx:Resources.RenameTab}" Command="{Binding RenameTabCommand}" Icon="{StaticResource RenameTabIcon}"/>
-                <MenuItem Header="{x:Static resx:Resources.OptionsMenu}" Command="{Binding OptionsCommand}">
+                <MenuItem Header="{x:Static resx:Resources.OptionsMenu}" Command="{Binding OptionsCommand}" InputGestureText="{Binding OpenOptionsHotkey}" ToolTip="{Binding OpenOptionsTooltip}">
                     <MenuItem.Icon>
                         <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14"/>
                     </MenuItem.Icon>

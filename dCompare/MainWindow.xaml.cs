@@ -92,6 +92,7 @@ namespace dCompare
                 AddKeyBinding(hotKeys.Compare, _viewModel.CompareCommand);
                 AddKeyBinding(hotKeys.SaveSession, _viewModel.SaveSessionCommand);
                 AddKeyBinding(hotKeys.LoadSession, _viewModel.LoadSessionCommand);
+                AddKeyBinding(hotKeys.OpenOptions, _viewModel.OptionsCommand);
             }
             catch (Exception ex)
             {
