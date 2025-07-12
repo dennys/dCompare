@@ -44,7 +44,6 @@ namespace dCompare.Compare
         private ListSortDirection _lastSortDirection;
         private GridViewColumnHeader _lastHeaderClicked;
         private Predicate<object>? _currentFilter = null;   // null for non-filter, means all data
-        private string _searchFilterText = string.Empty;
         private List<DirectoryComparer.ComparisonItem> _cachedComparisonResults;
         private CancellationTokenSource _cancellationTokenSource;
         private bool _isComparing;
@@ -522,26 +521,29 @@ namespace dCompare.Compare
                 bool matchesFilter = filter == null || filter(node);
                 if (!matchesFilter) return false;
 
-                if (string.IsNullOrEmpty(SearchText) || SearchText == "Search...")
+                if (string.IsNullOrEmpty(LeftPathViewModel.SearchText) || LeftPathViewModel.SearchText == "Search...")
                 {
                     return true;
                 }
 
-                return (node.LeftName?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                       (node.RightName?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                       (node.LeftSize?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                       (node.RightSize?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                       (node.Status.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase));
+                return (node.LeftName?.Contains(LeftPathViewModel.SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                       (node.RightName?.Contains(LeftPathViewModel.SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                       (node.LeftSize?.Contains(LeftPathViewModel.SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                       (node.RightSize?.Contains(LeftPathViewModel.SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                       (node.Status.ToString().Contains(LeftPathViewModel.SearchText, StringComparison.OrdinalIgnoreCase));
             };
 
-            _treeNodeManager.SetCurrentFilter(filter, SearchText);
+            _treeNodeManager.SetCurrentFilter(filter, LeftPathViewModel.SearchText);
             ApplyFilter();
         }
 
         private void ApplyFilter()
         {
-            ICollectionView? view = CollectionViewSource.GetDefaultView(_treeNodes);
-            view.Filter = _currentFilter;
+            ICollectionView? view = CollectionViewSource.GetDefaultView(ResultListView.ItemsSource);
+            if (view != null)
+            {
+                view.Filter = _currentFilter;
+            }
         }
 
         private async void CompareFileContents(TreeNode selectedItem)
