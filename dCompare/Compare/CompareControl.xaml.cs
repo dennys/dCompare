@@ -44,6 +44,7 @@ namespace dCompare.Compare
         private ListSortDirection _lastSortDirection;
         private GridViewColumnHeader _lastHeaderClicked;
         private Predicate<object>? _currentFilter = null;   // null for non-filter, means all data
+        private string _searchFilterText = string.Empty;
         private List<DirectoryComparer.ComparisonItem> _cachedComparisonResults;
         private CancellationTokenSource _cancellationTokenSource;
         private bool _isComparing;
@@ -65,8 +66,8 @@ namespace dCompare.Compare
         public string FullPathsTooltip { get; private set; }
 
         // ViewModel instances for the path inputs
-        public PathInputViewModel LeftPathViewModel { get; }
-        public PathInputViewModel RightPathViewModel { get; }
+        public CompareControlViewModel LeftPathViewModel { get; }
+        public CompareControlViewModel RightPathViewModel { get; }
 
         /// <summary>
         /// Gets or sets the left path, primarily for session management.
@@ -93,6 +94,16 @@ namespace dCompare.Compare
             {
                 RightPathViewModel.SuppressSuggestionsOnce();
                 RightPathViewModel.Path = value;
+            }
+        }
+
+        public string SearchText
+        {
+            get => LeftPathViewModel.SearchText;
+            set
+            {
+                LeftPathViewModel.SearchText = value;
+                ApplyFilter();
             }
         }
 
@@ -138,16 +149,17 @@ namespace dCompare.Compare
             _fileOperationHandler = new FileOperationHandler(_fileManager);
 
             // Initialize ViewModels
-            LeftPathViewModel = new PathInputViewModel();
-            RightPathViewModel = new PathInputViewModel();
+            LeftPathViewModel = new CompareControlViewModel();
+            RightPathViewModel = new CompareControlViewModel();
 
             // Set DataContext for the input areas
             LeftPathInputArea.DataContext = LeftPathViewModel;
             RightPathInputArea.DataContext = RightPathViewModel;
+            SearchTextBox.DataContext = LeftPathViewModel;
 
             // Subscribe to ViewModel Path changes to update tab header
-            LeftPathViewModel.PropertyChanged += PathViewModel_PropertyChanged;
-            RightPathViewModel.PropertyChanged += PathViewModel_PropertyChanged;
+            LeftPathViewModel.PropertyChanged += ViewModel_PropertyChanged;
+            RightPathViewModel.PropertyChanged += ViewModel_PropertyChanged;
 
             ResultListView.ItemsSource = _treeNodes;
             ResultListView.AddHandler(GridViewColumnHeader.ClickEvent, new RoutedEventHandler(ColumnHeader_Click));
@@ -157,11 +169,15 @@ namespace dCompare.Compare
             LoadConfigurationAsync();
         }
 
-        private void PathViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(PathInputViewModel.Path))
+            if (e.PropertyName == nameof(CompareControlViewModel.Path))
             {
                 UpdateTabHeader();
+            }
+            else if (e.PropertyName == nameof(CompareControlViewModel.SearchText))
+            {
+                ApplyFilter();
             }
         }
 
@@ -508,8 +524,26 @@ namespace dCompare.Compare
 
         private void SetFilter(Predicate<TreeNode>? filter)
         {
-            _currentFilter = obj => obj is TreeNode node && (filter == null || filter(node));
-            _treeNodeManager.SetCurrentFilter(filter);
+            _currentFilter = obj =>
+            {
+                if (obj is not TreeNode node) return false;
+
+                bool matchesFilter = filter == null || filter(node);
+                if (!matchesFilter) return false;
+
+                if (string.IsNullOrEmpty(_searchFilterText) || _searchFilterText == "Search...")
+                {
+                    return true;
+                }
+
+                return (node.LeftName?.Contains(_searchFilterText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                       (node.RightName?.Contains(_searchFilterText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                       (node.LeftSize?.Contains(_searchFilterText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                       (node.RightSize?.Contains(_searchFilterText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                       (node.Status.ToString().Contains(_searchFilterText, StringComparison.OrdinalIgnoreCase) ?? false);
+            };
+
+            _treeNodeManager.SetCurrentFilter(filter, _searchFilterText);
             ApplyFilter();
         }
 

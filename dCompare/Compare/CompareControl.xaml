@@ -5,10 +5,12 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:dCompare.Compare"
              xmlns:config="clr-namespace:dCompare.Configuration"
+             xmlns:infra="clr-namespace:dCompare.Infrastructure"
              mc:Ignorable="d" 
              xmlns:resx="clr-namespace:dCompare.Properties"
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
+        <infra:TextToForegroundConverter x:Key="TextToForegroundConverter"/>
         <local:DepthToMarginConverter x:Key="DepthToMarginConverter"/>
         <Style x:Key="SortableColumnHeaderStyle" TargetType="GridViewColumnHeader">
             <Setter Property="Background" Value="Transparent"/>
@@ -162,10 +164,15 @@
             </Grid>
         </StackPanel>
 
+        <!-- Search Bar -->
+        <TextBox Grid.Row="1" Name="SearchTextBox" Margin="10,0,10,5"
+                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                 Foreground="{Binding (Text), ElementName=SearchTextBox, Converter={StaticResource TextToForegroundConverter}}"/>
+
         <!-- Results Display Area -->
-        <ListView Grid.Row="1" Name="ResultListView" Margin="10" SelectionMode="Extended" 
+        <ListView Grid.Row="1" Name="ResultListView" Margin="10,30,10,10" SelectionMode="Extended"
                   MouseDoubleClick="ResultListView_MouseDoubleClick"
-                  VirtualizingStackPanel.IsVirtualizing="True" 
+                  VirtualizingStackPanel.IsVirtualizing="True"
                   VirtualizingStackPanel.VirtualizationMode="Recycling">
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
