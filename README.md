@@ -34,17 +34,36 @@ Use these algorithm to compare calculate a 2.6GB file.
 | MD5       | 20s   |
 | xxHash64  | 5s    |
 
-- xxHash64: Use Microsoft's implementation: https://learn.microsoft.com/zh-tw/dotnet/api/system.io.hashing.xxhash64.hash
+- xxHash64: Use Microsoft's implementation: <https://learn.microsoft.com/zh-tw/dotnet/api/system.io.hashing.xxhash64.hash>
 
 ## Planned Features
 
+Partial implemented
+
 - **External File Comparison**: Integrate with external tools like WinMerge for advanced file content comparison.
+- **Custom Diff Viewer Selection**: Enable selection of diff viewers based on file extensions (partially implemented in settings).
+- **External Editor Support**: Configure a default external editor (e.g., Notepad by default at `%windir%\NOTEPAD.EXE`) for viewing or editing files.
+
+Not implemented
+
+- **Hotkey Conflicts Check**
+- **Search and Filter in Comparison Results**:
+  - Feature: Add a search bar above the ResultListView in CompareControl.xamlx to filter files/folders by name, size, or status.
+  - Implementation: Bind a TextBox to a filter command that updates the ItemsSource of the ListView using a CollectionViewSource with a filter predicate.
+- **Backup**
+  - Automatically backup file instead of overwrite when copying or moveing files
+- **File Preview**:
+  - Feature: Add a preview pane for text and image files when selected in the CompareControl ListView. This could show a quick view of text file contents or image thumbnails.
+  - Implementation: Add a DockPanel or ContentControl in CompareControl.xamlx that displays content based on the selected file’s extension, using the TextDiffOptions or ImageDiffOptions from AppConfiguration.cs.
+- **Cloud Storage Support**:
+  - Feature: Allow comparisons and operations with cloud storage services (e.g., Google Drive, Dropbox, OneDrive).
+- **Customizable Double-Click Behavior**: Allow users to choose whether double-clicking a file opens a comparison view or displays file content (currently configurable in settings).
 - **Archive File Support**: Add support for comparing archive files (e.g., .zip) using libraries like [SharpZipLib](https://github.com/icsharpcode/SharpZipLib).
 - **JSON-Specific Comparison**: Implement specialized comparison for JSON files to highlight structural differences.
 - **File Explorer Integration**: Associate dCompare with Windows File Explorer for quick access to comparisons.
-- **Customizable Double-Click Behavior**: Allow users to choose whether double-clicking a file opens a comparison view or displays file content (currently configurable in settings).
-- **Custom Diff Viewer Selection**: Enable selection of diff viewers based on file extensions (partially implemented in settings).
-- **External Editor Support**: Configure a default external editor (e.g., Notepad by default at `%windir%\NOTEPAD.EXE`) for viewing or editing files.
+
+- **Scheduled Comparisons**:
+  - Feature: Allow users to schedule recurring directory comparisons (e.g., nightly backups).
 
 ## Known Issues
 
@@ -56,8 +75,9 @@ Use these algorithm to compare calculate a 2.6GB file.
 ### Requirements
 
 - **.NET 8**: Required for features like `OpenFolderDialog` used for folder selection. See [Microsoft Documentation](https://learn.microsoft.com/en-us/dotnet/api/microsoft.win32.openfolderdialog?view=windowsdesktop-8.0).
-- **DiffPlex**: Used for text file comparison. See [DiffPlex on GitHub](https://github.com/mmanela/diffplex).
-- **Serilog**: Used for logging application events and debugging.
+- **[CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet)**:  See <https://learn.microsoft.com/zh-tw/dotnet/communitytoolkit/mvvm/>
+- **[Serilog](https://github.com/serilog/serilog)**: Used for logging application events and debugging.
+- **[DiffPlex on GitHub](https://github.com/mmanela/diffplex)**: Used for text file comparison.
 
 # File Copy Method Comparison (by ChatGPT)
 

@@ -439,6 +439,15 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Open options window ({0}) 的當地語系化字串。
+        /// </summary>
+        public static string OptionsMenuTooltip {
+            get {
+                return ResourceManager.GetString("OptionsMenuTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Properties 的當地語系化字串。
         /// </summary>
         public static string PropertiesMenu {

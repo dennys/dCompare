@@ -15,6 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -255,7 +256,8 @@ namespace dCompare.Compare
             string baseHeader = $"{leftName} - {rightName}";
             if (string.IsNullOrWhiteSpace(leftName) && string.IsNullOrWhiteSpace(rightName))
             {
-                baseHeader = Properties.Resources.NewTabTitle;
+                //baseHeader = Properties.Resources.NewTabTitle;
+                baseHeader = "QQ";
             }
             else if (string.IsNullOrWhiteSpace(leftName))
             {
