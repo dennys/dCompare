@@ -160,10 +160,10 @@
     <value>標籤數: {0}</value>
   </data>
   <data name="AddTabTooltip" xml:space="preserve">
-    <value>新增標籤 (Ctrl+N)</value>
+    <value>新增標籤 ({0})</value>
   </data>
   <data name="CloseTabTooltip" xml:space="preserve">
-    <value>關閉目前標籤 (Ctrl+W)</value>
+    <value>關閉目前標籤 ({0})</value>
   </data>
   <data name="RenameTabTooltip" xml:space="preserve">
     <value>重新命名目前標籤</value>
@@ -244,10 +244,10 @@
     <value>檢視(_V)</value>
   </data>
   <data name="SaveSessionMenu" xml:space="preserve">
-    <value>儲存工作階段</value>
+    <value>儲存工作階段 ({0})</value>
   </data>
   <data name="LoadSessionMenu" xml:space="preserve">
-    <value>載入工作階段 </value>
+    <value>載入工作階段 ({0})</value>
   </data>
   <data name="ClearRecentSessionsMenu" xml:space="preserve">
     <value>清除最近的工作階段</value>
@@ -276,6 +276,9 @@
   <data name="OptionsMenu" xml:space="preserve">
     <value>選項</value>
   </data>
+  <data name="OptionsMenuTooltip" xml:space="preserve">
+    <value>開啟選項視窗 ({0})</value>
+  </data>
   <data name="CopyToLeftMenu" xml:space="preserve">
     <value>複製到左側目錄</value>
   </data>
@@ -283,7 +286,7 @@
     <value>複製到右側目錄</value>
   </data>
   <data name="CompareDirectoryMenu" xml:space="preserve">
-    <value>比較目錄</value>
+    <value>比較目錄 ({0})</value>
   </data>
   <data name="CompareContentsMenu" xml:space="preserve">
     <value>比較檔案內容...</value>

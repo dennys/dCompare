@@ -95,8 +95,30 @@
                 </Grid.ColumnDefinitions>
 
                 <Label Grid.Column="0" Content="{x:Static resx:Resources.LeftPath}" VerticalAlignment="Center"/>
-                <TextBox Grid.Column="1" Name="LeftPathBox" Margin="5,0" VerticalAlignment="Center" 
-                         IsReadOnly="False" IsEnabled="True" TextWrapping="NoWrap" TextChanged="PathBox_TextChanged" />
+                <!-- Left Path Input Area -->
+                <Grid Grid.Column="1" Name="LeftPathInputArea">
+                    <TextBox Name="LeftPathBox"
+                             Text="{Binding Path, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Margin="5,0" VerticalAlignment="Center" IsReadOnly="False" IsEnabled="True" TextWrapping="NoWrap"
+                             PreviewKeyDown="PathBox_PreviewKeyDown" LostFocus="PathBox_LostFocus" />
+                    <Popup Name="LeftSuggestionsPopup"
+                           IsOpen="{Binding IsSuggestionsOpen}"
+                           PlacementTarget="{Binding ElementName=LeftPathBox}"
+                           Placement="Bottom"
+                           StaysOpen="False">
+                        <ListBox Name="LeftSuggestionsListBox"
+                                 ItemsSource="{Binding Suggestions}"
+                                 SelectedItem="{Binding SelectedSuggestion, Mode=TwoWay}"
+                                 MaxHeight="200" Width="{Binding ActualWidth, ElementName=LeftPathBox}"
+                                 PreviewKeyDown="SuggestionsListBox_PreviewKeyDown">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Padding" Value="2"/>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                        </ListBox>
+                    </Popup>
+                </Grid>
                 <Button Grid.Column="2" Name="BrowseLeftButton" Click="Browse_Click" Margin="2,0" 
                         Width="24" Height="18" Padding="0">
                     <Path Data="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"
@@ -108,8 +130,30 @@
                           DisplayMemberPath="Key" SelectedValuePath="Value" SelectedValue="{Binding SelectedAlgorithm}"/>
 
                 <Label Grid.Column="5" Content="{x:Static resx:Resources.RightPath}" VerticalAlignment="Center"/>
-                <TextBox Grid.Column="6" Name="RightPathBox" Margin="5,0" VerticalAlignment="Center" 
-                         IsReadOnly="False" IsEnabled="True" TextWrapping="NoWrap" TextChanged="PathBox_TextChanged" />
+                <!-- Right Path Input Area -->
+                <Grid Grid.Column="6" Name="RightPathInputArea">
+                    <TextBox Name="RightPathBox"
+                             Text="{Binding Path, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Margin="5,0" VerticalAlignment="Center" IsReadOnly="False" IsEnabled="True" TextWrapping="NoWrap"
+                             PreviewKeyDown="PathBox_PreviewKeyDown" LostFocus="PathBox_LostFocus" />
+                    <Popup Name="RightSuggestionsPopup"
+                           IsOpen="{Binding IsSuggestionsOpen}"
+                           PlacementTarget="{Binding ElementName=RightPathBox}"
+                           Placement="Bottom"
+                           StaysOpen="False">
+                        <ListBox Name="RightSuggestionsListBox"
+                                 ItemsSource="{Binding Suggestions}"
+                                 SelectedItem="{Binding SelectedSuggestion, Mode=TwoWay}"
+                                 MaxHeight="200" Width="{Binding ActualWidth, ElementName=RightPathBox}"
+                                 PreviewKeyDown="SuggestionsListBox_PreviewKeyDown">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Padding" Value="2"/>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                        </ListBox>
+                    </Popup>
+                </Grid>
                 <Button Grid.Column="7" Name="BrowseRightButton" Click="Browse_Click" Margin="2,0" 
                         Width="24" Height="18" Padding="0">
                     <Path Data="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"

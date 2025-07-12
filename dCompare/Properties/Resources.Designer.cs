@@ -115,7 +115,7 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
-        ///   查詢類似 Add new tab (Ctrl+N) 的當地語系化字串。
+        ///   查詢類似 Add new tab ({0}) 的當地語系化字串。
         /// </summary>
         public static string AddTabTooltip {
             get {
@@ -169,7 +169,7 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
-        ///   查詢類似 Close current tab (Ctrl+W) 的當地語系化字串。
+        ///   查詢類似 Close current tab ({0}) 的當地語系化字串。
         /// </summary>
         public static string CloseTabTooltip {
             get {
@@ -196,7 +196,7 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
-        ///   查詢類似 _Compare Directories 的當地語系化字串。
+        ///   查詢類似 _Compare Directories ({0}) 的當地語系化字串。
         /// </summary>
         public static string CompareDirectoryMenu {
             get {
@@ -394,7 +394,7 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
-        ///   查詢類似 _Load Session 的當地語系化字串。
+        ///   查詢類似 _Load Session ({0}) 的當地語系化字串。
         /// </summary>
         public static string LoadSessionMenu {
             get {
@@ -435,6 +435,15 @@ namespace dCompare.Properties {
         public static string OptionsMenu {
             get {
                 return ResourceManager.GetString("OptionsMenu", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Open options window ({0}) 的當地語系化字串。
+        /// </summary>
+        public static string OptionsMenuTooltip {
+            get {
+                return ResourceManager.GetString("OptionsMenuTooltip", resourceCulture);
             }
         }
         
@@ -520,7 +529,7 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
-        ///   查詢類似 _Save Session 的當地語系化字串。
+        ///   查詢類似 _Save Session ({0}) 的當地語系化字串。
         /// </summary>
         public static string SaveSessionMenu {
             get {

@@ -62,6 +62,20 @@ namespace dCompare.Options
 
         private async Task SaveConfiguration()
         {
+            var hotkeysVm = MenuItems.SelectMany(m => m.Children)
+                                     .FirstOrDefault(c => c.ViewModel is HotKeysOptionsViewModel)?
+                                     .ViewModel as HotKeysOptionsViewModel;
+
+            if (hotkeysVm != null)
+            {
+                hotkeysVm.ValidateHotKeys();
+                if (hotkeysVm.HasDuplicateHotKeys())
+                {
+                    MessageBox.Show("There are duplicate hotkeys. Please resolve the conflicts before saving.", "Duplicate Hotkeys", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+
             foreach (var menuItem in MenuItems.SelectMany(m => m.Children).Where(c => c.ViewModel != null))
             {
                 if (menuItem.ViewModel is IConfigurationUpdater updater)
@@ -90,11 +104,13 @@ namespace dCompare.Options
             var diffNode = new SettingsMenuItem("Diff", new DiffOptionsViewModel(_appConfig.Options.Diff), this);
 
             var sessionNode = new SettingsMenuItem("Session", new SessionOptionsViewModel(_appConfig.Options.Session), this);
+            var confirmationNode = new SettingsMenuItem("Confirmation", new ConfirmationOptionsViewModel(_appConfig.Options.Confirmation), this);
             var hotkeysNode = new SettingsMenuItem("HotKeys", new HotKeysOptionsViewModel(_appConfig.Options.HotKeys), this);
 
             optionsNode.Children.Add(uiNode);
             optionsNode.Children.Add(compareNode);
-            optionsNode.Children.Add(diffNode); // Add the single diff node
+            optionsNode.Children.Add(diffNode);
+            optionsNode.Children.Add(confirmationNode);
             optionsNode.Children.Add(sessionNode);
             optionsNode.Children.Add(hotkeysNode);
 
@@ -659,12 +675,36 @@ namespace dCompare.Options
     public class HotKeyItemViewModel : ViewModelBase
     {
         private string _combination;
+        private bool _isDuplicate;
+        private readonly HotKeysOptionsViewModel _parent;
+
         public string Name { get; }
-        public string Combination { get => _combination; set => SetProperty(ref _combination, value); }
-        public HotKeyItemViewModel(string name, string combination)
+        public string Combination
+        {
+            get => _combination;
+            set
+            {
+                if (SetProperty(ref _combination, value))
+                {
+                    _parent.ValidateHotKeys();
+                }
+            }
+        }
+
+        public bool IsDuplicate
+        {
+            get => _isDuplicate;
+            set => SetProperty(ref _isDuplicate, value);
+        }
+
+        public ICommand ClearCommand { get; }
+
+        public HotKeyItemViewModel(string name, string combination, HotKeysOptionsViewModel parent)
         {
             Name = name;
             _combination = combination;
+            _parent = parent;
+            ClearCommand = new RelayCommand(_ => Combination = string.Empty);
         }
     }
 
@@ -676,11 +716,12 @@ namespace dCompare.Options
         public HotKeysOptionsViewModel(HotKeysOptions model)
         {
             _model = model;
-            HotKeyItems.Add(new HotKeyItemViewModel("Add Tab", _model.AddTab));
-            HotKeyItems.Add(new HotKeyItemViewModel("Close Tab", _model.CloseTab));
-            HotKeyItems.Add(new HotKeyItemViewModel("Compare", _model.Compare));
-            HotKeyItems.Add(new HotKeyItemViewModel("Save Session", _model.SaveSession));
-            HotKeyItems.Add(new HotKeyItemViewModel("Load Session", _model.LoadSession));
+            HotKeyItems.Add(new HotKeyItemViewModel("Add Tab", _model.AddTab, this));
+            HotKeyItems.Add(new HotKeyItemViewModel("Close Tab", _model.CloseTab, this));
+            HotKeyItems.Add(new HotKeyItemViewModel("Compare", _model.Compare, this));
+            HotKeyItems.Add(new HotKeyItemViewModel("Save Session", _model.SaveSession, this));
+            HotKeyItems.Add(new HotKeyItemViewModel("Load Session", _model.LoadSession, this));
+            HotKeyItems.Add(new HotKeyItemViewModel("Open Options", _model.OpenOptions, this));
         }
 
         public void UpdateModel()
@@ -690,6 +731,84 @@ namespace dCompare.Options
             _model.Compare = HotKeyItems.FirstOrDefault(i => i.Name == "Compare")?.Combination ?? _model.Compare;
             _model.SaveSession = HotKeyItems.FirstOrDefault(i => i.Name == "Save Session")?.Combination ?? _model.SaveSession;
             _model.LoadSession = HotKeyItems.FirstOrDefault(i => i.Name == "Load Session")?.Combination ?? _model.LoadSession;
+            _model.OpenOptions = HotKeyItems.FirstOrDefault(i => i.Name == "Open Options")?.Combination ?? _model.OpenOptions;
+        }
+
+        public void ValidateHotKeys()
+        {
+            var duplicateHotKeys = HotKeyItems
+                .Where(h => !string.IsNullOrWhiteSpace(h.Combination))
+                .GroupBy(h => h.Combination)
+                .Where(g => g.Count() > 1)
+                .SelectMany(g => g)
+                .ToList();
+
+            foreach (var item in HotKeyItems)
+            {
+                item.IsDuplicate = duplicateHotKeys.Contains(item);
+            }
+        }
+
+        public bool HasDuplicateHotKeys()
+        {
+            return HotKeyItems.Any(h => h.IsDuplicate);
+        }
+    }
+
+    public class ConfirmationOptionsViewModel : ViewModelBase, IConfigurationUpdater
+    {
+        private readonly ConfirmationOptions _model;
+
+        public ConfirmationOptionsViewModel(ConfirmationOptions model)
+        {
+            _model = model;
+        }
+
+        public bool CloseApplication
+        {
+            get => _model.CloseApplication;
+            set { _model.CloseApplication = value; OnPropertyChanged(); }
+        }
+
+        public bool CloseTab
+        {
+            get => _model.CloseTab;
+            set { _model.CloseTab = value; OnPropertyChanged(); }
+        }
+
+        public bool Copy
+        {
+            get => _model.Copy;
+            set { _model.Copy = value; OnPropertyChanged(); }
+        }
+
+        public bool Move
+        {
+            get => _model.Move;
+            set { _model.Move = value; OnPropertyChanged(); }
+        }
+
+        public bool CopyOverwrite
+        {
+            get => _model.CopyOverwrite;
+            set { _model.CopyOverwrite = value; OnPropertyChanged(); }
+        }
+
+        public bool MoveOverwrite
+        {
+            get => _model.MoveOverwrite;
+            set { _model.MoveOverwrite = value; OnPropertyChanged(); }
+        }
+
+        public bool DeleteFile
+        {
+            get => _model.DeleteFile;
+            set { _model.DeleteFile = value; OnPropertyChanged(); }
+        }
+
+        public void UpdateModel()
+        {
+            // Model is updated directly via property setters
         }
     }
 
