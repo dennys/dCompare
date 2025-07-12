@@ -19,6 +19,13 @@ namespace dCompare.Compare
         private bool _isSuggestionsOpen;
 
         private string? _selectedSuggestion;
+        private bool _suppressSuggestionsForNextPathChange = false;
+
+        public void SuppressSuggestionsOnce()
+        {
+            _suppressSuggestionsForNextPathChange = true;
+        }
+
         public string? SelectedSuggestion
         {
             get => _selectedSuggestion;
@@ -42,19 +49,23 @@ namespace dCompare.Compare
             }
 
             // Avoid re-searching if the path was set by selecting a suggestion
-            if (newValue == _selectedSuggestion && oldValue !=newValue) // if newvalue is from selectedSuggestion, then selectedSuggestion is already set
+            if (newValue == _selectedSuggestion && oldValue !=newValue)
             {
-                 //if we set selectedSuggestion, it will trigger path change, then isSuggestionOpen will be false.
-                 //if path is changed by selection, we don't want to re-open it.
                 if (!IsSuggestionsOpen) return;
             }
 
+            bool suppressThisTime = _suppressSuggestionsForNextPathChange;
+            _suppressSuggestionsForNextPathChange = false; // Reset immediately
 
             await UpdateSuggestionsAsync(newValue);
+
+            if (suppressThisTime)
+            {
+                IsSuggestionsOpen = false;
+            }
         }
 
-
-        private async Task UpdateSuggestionsAsync(string currentPath)
+        private async Task UpdateSuggestionsAsync(string currentPath) // string? currentPath if newValue can be null
         {
             if (string.IsNullOrEmpty(currentPath))
             {

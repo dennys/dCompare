@@ -74,7 +74,11 @@ namespace dCompare.Compare
         public string LoadedLeftPath
         {
             get => LeftPathViewModel.Path ?? string.Empty;
-            set => LeftPathViewModel.Path = value;
+            set
+            {
+                LeftPathViewModel.SuppressSuggestionsOnce();
+                LeftPathViewModel.Path = value;
+            }
         }
 
         /// <summary>
@@ -84,7 +88,11 @@ namespace dCompare.Compare
         public string LoadedRightPath
         {
             get => RightPathViewModel.Path ?? string.Empty;
-            set => RightPathViewModel.Path = value;
+            set
+            {
+                RightPathViewModel.SuppressSuggestionsOnce();
+                RightPathViewModel.Path = value;
+            }
         }
 
         public bool IsComparing

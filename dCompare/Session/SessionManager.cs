@@ -260,9 +260,9 @@ namespace dCompare.Session
                         ucCompareInstance.LoadedRightPath = session.Value.Right;
                         ucCompareInstance.SelectedAlgorithm = session.Value.Algorithm;
 
-                        // Explicitly close suggestion popups after paths are set
-                        ucCompareInstance.LeftPathViewModel.IsSuggestionsOpen = false;
-                        ucCompareInstance.RightPathViewModel.IsSuggestionsOpen = false;
+                        // The logic to keep suggestions closed is now handled within PathInputViewModel
+                        // and CompareControl's LoadedLeftPath/LoadedRightPath setters via SuppressSuggestionsOnce().
+                        // Thus, the explicit setting of IsSuggestionsOpen to false here is no longer needed and is removed.
 
                         _tabControl.Items.Add(newTab);
                         _tabIdMap[tabName] = session.Key;
