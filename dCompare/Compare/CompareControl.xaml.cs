@@ -531,19 +531,19 @@ namespace dCompare.Compare
                 bool matchesFilter = filter == null || filter(node);
                 if (!matchesFilter) return false;
 
-                if (string.IsNullOrEmpty(_searchFilterText) || _searchFilterText == "Search...")
+                if (string.IsNullOrEmpty(SearchText) || SearchText == "Search...")
                 {
                     return true;
                 }
 
-                return (node.LeftName?.Contains(_searchFilterText, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                       (node.RightName?.Contains(_searchFilterText, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                       (node.LeftSize?.Contains(_searchFilterText, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                       (node.RightSize?.Contains(_searchFilterText, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                       (node.Status.ToString().Contains(_searchFilterText, StringComparison.OrdinalIgnoreCase) ?? false);
+                return (node.LeftName?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                       (node.RightName?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                       (node.LeftSize?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                       (node.RightSize?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                       (node.Status.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase));
             };
 
-            _treeNodeManager.SetCurrentFilter(filter, _searchFilterText);
+            _treeNodeManager.SetCurrentFilter(filter, SearchText);
             ApplyFilter();
         }
 
@@ -1073,7 +1073,7 @@ namespace dCompare.Compare
         private void PathBox_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             var textBox = sender as TextBox;
-            PathInputViewModel? vm = null;
+            CompareControlViewModel? vm = null;
             ListBox? suggestionsListBox = null;
 
             if (textBox == LeftPathBox)
@@ -1128,7 +1128,7 @@ namespace dCompare.Compare
         private void SuggestionsListBox_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             var listBox = sender as ListBox;
-            PathInputViewModel? vm = null;
+            CompareControlViewModel? vm = null;
             TextBox? targetTextBox = null;
 
             if (listBox == LeftSuggestionsListBox)
@@ -1165,7 +1165,7 @@ namespace dCompare.Compare
         private void PathBox_LostFocus(object sender, RoutedEventArgs e)
         {
             var textBox = sender as TextBox;
-            PathInputViewModel? vm = null;
+            CompareControlViewModel? vm = null;
             Popup? popup = null;
 
             if (textBox == LeftPathBox)

@@ -111,7 +111,7 @@ namespace dCompare.Compare
                    (node.RightName?.Contains(_searchFilterText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                    (node.LeftSize?.Contains(_searchFilterText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                    (node.RightSize?.Contains(_searchFilterText, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                   (node.Status.ToString().Contains(_searchFilterText, StringComparison.OrdinalIgnoreCase) ?? false);
+                   (node.Status.ToString().Contains(_searchFilterText, StringComparison.OrdinalIgnoreCase));
         }
 
         public void RemoveChildren(TreeNode parentNode)
