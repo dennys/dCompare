@@ -526,11 +526,12 @@ namespace dCompare.Compare
                     return true;
                 }
 
-                return (node.LeftName?.Contains(LeftPathViewModel.SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                       (node.RightName?.Contains(LeftPathViewModel.SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                       (node.LeftSize?.Contains(LeftPathViewModel.SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                       (node.RightSize?.Contains(LeftPathViewModel.SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                       (node.Status.ToString().Contains(LeftPathViewModel.SearchText, StringComparison.OrdinalIgnoreCase));
+                var searchText = LeftPathViewModel.SearchText;
+                return (node.LeftNode != null && node.LeftNode.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase)) ||
+                       (node.RightNode != null && node.RightNode.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase)) ||
+                       (node.LeftSize?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                       (node.RightSize?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                       (node.Status.ToString().Contains(searchText, StringComparison.OrdinalIgnoreCase));
             };
 
             _treeNodeManager.SetCurrentFilter(filter, LeftPathViewModel.SearchText);

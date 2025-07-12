@@ -91,6 +91,7 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="5"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
@@ -132,11 +133,12 @@
                           ItemsSource="{x:Static config:ComparisonAlgorithms.EnabledAlgorithms}"
                           DisplayMemberPath="Key" SelectedValuePath="Value" SelectedValue="{Binding SelectedAlgorithm}"/>
 
-                <TextBox Grid.Column="4" Name="SearchTextBox" Margin="5,0" VerticalAlignment="Center" Width="200"
+                <Label Grid.Column="4" Content="{x:Static resx:Resources.Filter}" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="5" Name="SearchTextBox" Margin="5,0" VerticalAlignment="Center"
                          Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, FallbackValue='Search...'}"
                          Foreground="{Binding (Text), ElementName=SearchTextBox, Converter={StaticResource TextToForegroundConverter}}"/>
 
-                <Label Grid.Column="6" Content="{x:Static resx:Resources.RightPath}" VerticalAlignment="Center"/>
+                <Label Grid.Column="7" Content="{x:Static resx:Resources.RightPath}" VerticalAlignment="Center"/>
                 <!-- Right Path Input Area -->
                 <Grid Grid.Column="7" Name="RightPathInputArea">
                     <TextBox Name="RightPathBox"
