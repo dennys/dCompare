@@ -13,9 +13,10 @@
 		<Image x:Key="CopyToRightIcon" 		Width="16" Height="16" Source="pack://application:,,,/Resources/Icons/copy_to_right.ico"/>
 		<Image x:Key="DeleteIcon" 			Width="16" Height="16" Source="pack://application:,,,/Resources/Icons/delete.ico"/>
 		<Image x:Key="ExpandAllIcon" 		Width="16" Height="16" Source="pack://application:,,,/Resources/Icons/expand_all.ico"/>
-		<Image x:Key="LoadSessionIcon" 		Width="16" Height="16" Source="pack://application:,,,/Resources/Icons/load_session.ico"/>
-		<Image x:Key="RemoveTabIcon" 		Width="16" Height="16" Source="pack://application:,,,/Resources/Icons/remove_tab.ico"/>
-        <Image x:Key="RenameTabIcon" 		Width="16" Height="16" Source="pack://application:,,,/Resources/Icons/rename.ico"/>
+        <Image x:Key="LoadSessionIcon" 		Width="16" Height="16" Source="pack://application:,,,/Resources/Icons/load_session.ico"/>
+        <Image x:Key="ClearSessionIcon" 	Width="16" Height="16" Source="pack://application:,,,/Resources/Icons/clear_session.ico"/>
+        <Image x:Key="RemoveTabIcon" 		Width="16" Height="16" Source="pack://application:,,,/Resources/Icons/remove_tab.ico"/>
+        <Image x:Key="RenameTabIcon" 		Width="16" Height="16" Source="pack://application:,,,/Resources/Icons/rename_tab.ico"/>
         <Image x:Key="SaveSessionIcon" 		Width="16" Height="16" Source="pack://application:,,,/Resources/Icons/save_session.ico"/>
 		<Image x:Key="ShowAllIcon" 			Width="16" Height="16" Source="pack://application:,,,/Resources/Icons/show_all.ico"/>
 		<Image x:Key="ShowDifferentIcon"	Width="16" Height="16" Source="pack://application:,,,/Resources/Icons/show_different.ico"/>

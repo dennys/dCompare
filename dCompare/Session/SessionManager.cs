@@ -111,6 +111,7 @@ namespace dCompare.Session
         {
             try
             {
+                // Clear existing menu items (excluding the first item and separator)
                 List<MenuItem> itemsToRemove = new();
                 foreach (var item in _recentSessionsMenu.Items)
                 {
@@ -123,8 +124,8 @@ namespace dCompare.Session
                 {
                     _recentSessionsMenu.Items.Remove(item);
                 }
-                _recentSessionsMenu.Items.Clear();
 
+                // Rebuild menu items for recent sessions
                 for (int i = 0; i < _recentSessions.Count; i++)
                 {
                     string filePath = _recentSessions[i];
@@ -133,8 +134,9 @@ namespace dCompare.Session
                     {
                         Header = $"{i + 1}. {filePath}\\{fileName}",
                         ToolTip = filePath,
-                        Command = Application.Current.MainWindow?.DataContext is MainWindow mainWindow ? mainWindow.LoadSessionCommand : null,
-                        CommandParameter = filePath
+                        //Command = Application.Current.MainWindow?.DataContext is MainWindowViewModel viewModel ? viewModel.LoadSessionCommand("QQ") : null,
+                        Command = Application.Current.MainWindow?.DataContext is MainWindowViewModel viewModel ? viewModel.LoadSessionFileCommand : null,
+                        CommandParameter = (filePath, true)
                     };
                     _recentSessionsMenu.Items.Insert(i, menuItem);
                 }
@@ -161,8 +163,8 @@ namespace dCompare.Session
                         sessions[tabId] = new SessionConfig
                         {
                             TabName = tabName, // Save the tab header
-                            Left = ucCompare.LeftPathBox.Text,
-                            Right = ucCompare.RightPathBox.Text,
+                            Left = ucCompare.LoadedLeftPath,  // Use new property
+                            Right = ucCompare.LoadedRightPath, // Use new property
                             Algorithm = ucCompare.SelectedAlgorithm
                         };
                     }
@@ -253,9 +255,15 @@ namespace dCompare.Session
                             Header = tabName,
                             Content = ucCompareInstance
                         };
-                        ucCompareInstance.LeftPathBox.Text = session.Value.Left;
-                        ucCompareInstance.RightPathBox.Text = session.Value.Right;
+                        // Use the new properties to set paths, which will update the ViewModels
+                        ucCompareInstance.LoadedLeftPath = session.Value.Left;
+                        ucCompareInstance.LoadedRightPath = session.Value.Right;
                         ucCompareInstance.SelectedAlgorithm = session.Value.Algorithm;
+
+                        // The logic to keep suggestions closed is now handled within PathInputViewModel
+                        // and CompareControl's LoadedLeftPath/LoadedRightPath setters via SuppressSuggestionsOnce().
+                        // Thus, the explicit setting of IsSuggestionsOpen to false here is no longer needed and is removed.
+
                         _tabControl.Items.Add(newTab);
                         _tabIdMap[tabName] = session.Key;
 

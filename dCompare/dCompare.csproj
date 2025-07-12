@@ -19,6 +19,7 @@
 
 
   <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="DiffPlex" Version="1.8.0" />
     <PackageReference Include="DiffPlex.Wpf" Version="1.4.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.6" />
@@ -40,7 +41,6 @@
   <ItemGroup>
     <Resource Include="Resources\Icons\*.ico" />
   </ItemGroup>
-
 
   <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">

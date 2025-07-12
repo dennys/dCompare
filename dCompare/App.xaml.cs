@@ -1,4 +1,5 @@
-﻿using dCompare.Compare;
+﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using dCompare.Compare;
 using dCompare.Configuration;
 using dCompare.FileOperation;
 using dCompare.FileOperation.Strategies;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using System;
 using System.IO;
 using System.Windows;
 
@@ -25,16 +27,16 @@ namespace dCompare
                 .Build();
 
             // Configuration for the logger
-                var loggerConfiguration = new ConfigurationBuilder()
-                    .SetBasePath(Directory.GetCurrentDirectory())
+            var loggerConfiguration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("Serilog.json", optional: false, reloadOnChange: true)
-                    .Build();
+                .Build();
 
-                // Configure the static logger
-                Log.Logger = new LoggerConfiguration()
-                    .ReadFrom.Configuration(loggerConfiguration)
-                    .Enrich.WithThreadId()
-                    .CreateLogger();
+            // Configure the static logger
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(loggerConfiguration)
+                .Enrich.WithThreadId()
+                .CreateLogger();
 
             // --- Host Setup ---
             AppHost = Host.CreateDefaultBuilder()
@@ -47,6 +49,7 @@ namespace dCompare
                 {
                     // Register Window and UserControls
                     services.AddSingleton<MainWindow>();
+                    services.AddSingleton<MainWindowViewModel>();
                     services.AddTransient<CompareControl>(); // Crucial: Transient so each tab gets a new instance
 
                     // Register Services as Singletons
@@ -57,20 +60,23 @@ namespace dCompare
                     // Register other dependencies
                     services.AddSingleton<IFileOperationStrategy, Kernel32FileCopyStrategy>();
                     services.AddSingleton<IFileSystem, FileSystem>();
+
+                    // Register UserInteractionService for ViewModel
+                    services.AddSingleton<IUserInteractionService, UserInteractionService>();
                 })
                 // --- Integrate Serilog with the Host ---
                 .UseSerilog() // This replaces the default logger with Serilog
                 .Build();
+
+            // Configure CommunityToolkit.Mvvm IoC with the Host's service provider
+            Ioc.Default.ConfigureServices(AppHost.Services);
         }
 
         protected override async void OnStartup(StartupEventArgs e)
         {
             try
             {
-                if (Log.Logger != null)
-                {
-                    Log.Information("Application starting up.");
-                }
+                Log.Information("Application starting up.");
                 await AppHost!.StartAsync();
                 var startupForm = AppHost.Services.GetRequiredService<MainWindow>();
                 startupForm.Show();
@@ -78,25 +84,17 @@ namespace dCompare
             }
             catch (Exception ex)
             {
-                if (Log.Logger != null)
-                {
-                    Log.Fatal(ex, "Application failed to start.");
-                }
-                else
-                {
-                    MessageBox.Show($"Application failed to start: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                Log.Fatal(ex, "Application failed to start.");
+                MessageBox.Show($"Application failed to start: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         protected override async void OnExit(ExitEventArgs e)
         {
             await AppHost.StopAsync();
-            if (Log.Logger != null)
-            {
-                Log.Information("Application shutting down.");
-                Log.CloseAndFlush(); // IMPORTANT: Ensures all logs are written before the app closes
-            }
+            AppHost.Dispose();
+            Log.Information("Application shutting down.");
+            Log.CloseAndFlush(); // Ensures all logs are written before the app closes
             base.OnExit(e);
         }
     }
