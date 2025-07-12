@@ -163,8 +163,8 @@ namespace dCompare.Session
                         sessions[tabId] = new SessionConfig
                         {
                             TabName = tabName, // Save the tab header
-                            Left = ucCompare.LeftPathBox.Text,
-                            Right = ucCompare.RightPathBox.Text,
+                            Left = ucCompare.LoadedLeftPath,  // Use new property
+                            Right = ucCompare.LoadedRightPath, // Use new property
                             Algorithm = ucCompare.SelectedAlgorithm
                         };
                     }
@@ -255,9 +255,15 @@ namespace dCompare.Session
                             Header = tabName,
                             Content = ucCompareInstance
                         };
-                        ucCompareInstance.LeftPathBox.Text = session.Value.Left;
-                        ucCompareInstance.RightPathBox.Text = session.Value.Right;
+                        // Use the new properties to set paths, which will update the ViewModels
+                        ucCompareInstance.LoadedLeftPath = session.Value.Left;
+                        ucCompareInstance.LoadedRightPath = session.Value.Right;
                         ucCompareInstance.SelectedAlgorithm = session.Value.Algorithm;
+
+                        // The logic to keep suggestions closed is now handled within PathInputViewModel
+                        // and CompareControl's LoadedLeftPath/LoadedRightPath setters via SuppressSuggestionsOnce().
+                        // Thus, the explicit setting of IsSuggestionsOpen to false here is no longer needed and is removed.
+
                         _tabControl.Items.Add(newTab);
                         _tabIdMap[tabName] = session.Key;
 
