@@ -62,6 +62,20 @@ namespace dCompare.Options
 
         private async Task SaveConfiguration()
         {
+            var hotkeysVm = MenuItems.SelectMany(m => m.Children)
+                                     .FirstOrDefault(c => c.ViewModel is HotKeysOptionsViewModel)?
+                                     .ViewModel as HotKeysOptionsViewModel;
+
+            if (hotkeysVm != null)
+            {
+                hotkeysVm.ValidateHotKeys();
+                if (hotkeysVm.HasDuplicateHotKeys())
+                {
+                    MessageBox.Show("There are duplicate hotkeys. Please resolve the conflicts before saving.", "Duplicate Hotkeys", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+
             foreach (var menuItem in MenuItems.SelectMany(m => m.Children).Where(c => c.ViewModel != null))
             {
                 if (menuItem.ViewModel is IConfigurationUpdater updater)
@@ -661,20 +675,35 @@ namespace dCompare.Options
     public class HotKeyItemViewModel : ViewModelBase
     {
         private string _combination;
+        private bool _isDuplicate;
+        private readonly HotKeysOptionsViewModel _parent;
+
         public string Name { get; }
         public string Combination
         {
             get => _combination;
-            set => SetProperty(ref _combination, value);
+            set
+            {
+                if (SetProperty(ref _combination, value))
+                {
+                    _parent.ValidateHotKeys();
+                }
+            }
+        }
+
+        public bool IsDuplicate
+        {
+            get => _isDuplicate;
+            set => SetProperty(ref _isDuplicate, value);
         }
 
         public ICommand ClearCommand { get; }
 
-        public HotKeyItemViewModel(string name, string combination)
+        public HotKeyItemViewModel(string name, string combination, HotKeysOptionsViewModel parent)
         {
             Name = name;
             _combination = combination;
-            // This command simply clears the Combination string.
+            _parent = parent;
             ClearCommand = new RelayCommand(_ => Combination = string.Empty);
         }
     }
@@ -687,12 +716,12 @@ namespace dCompare.Options
         public HotKeysOptionsViewModel(HotKeysOptions model)
         {
             _model = model;
-            HotKeyItems.Add(new HotKeyItemViewModel("Add Tab", _model.AddTab));
-            HotKeyItems.Add(new HotKeyItemViewModel("Close Tab", _model.CloseTab));
-            HotKeyItems.Add(new HotKeyItemViewModel("Compare", _model.Compare));
-            HotKeyItems.Add(new HotKeyItemViewModel("Save Session", _model.SaveSession));
-            HotKeyItems.Add(new HotKeyItemViewModel("Load Session", _model.LoadSession));
-            HotKeyItems.Add(new HotKeyItemViewModel("Open Options", _model.OpenOptions));
+            HotKeyItems.Add(new HotKeyItemViewModel("Add Tab", _model.AddTab, this));
+            HotKeyItems.Add(new HotKeyItemViewModel("Close Tab", _model.CloseTab, this));
+            HotKeyItems.Add(new HotKeyItemViewModel("Compare", _model.Compare, this));
+            HotKeyItems.Add(new HotKeyItemViewModel("Save Session", _model.SaveSession, this));
+            HotKeyItems.Add(new HotKeyItemViewModel("Load Session", _model.LoadSession, this));
+            HotKeyItems.Add(new HotKeyItemViewModel("Open Options", _model.OpenOptions, this));
         }
 
         public void UpdateModel()
@@ -703,6 +732,26 @@ namespace dCompare.Options
             _model.SaveSession = HotKeyItems.FirstOrDefault(i => i.Name == "Save Session")?.Combination ?? _model.SaveSession;
             _model.LoadSession = HotKeyItems.FirstOrDefault(i => i.Name == "Load Session")?.Combination ?? _model.LoadSession;
             _model.OpenOptions = HotKeyItems.FirstOrDefault(i => i.Name == "Open Options")?.Combination ?? _model.OpenOptions;
+        }
+
+        public void ValidateHotKeys()
+        {
+            var duplicateHotKeys = HotKeyItems
+                .Where(h => !string.IsNullOrWhiteSpace(h.Combination))
+                .GroupBy(h => h.Combination)
+                .Where(g => g.Count() > 1)
+                .SelectMany(g => g)
+                .ToList();
+
+            foreach (var item in HotKeyItems)
+            {
+                item.IsDuplicate = duplicateHotKeys.Contains(item);
+            }
+        }
+
+        public bool HasDuplicateHotKeys()
+        {
+            return HotKeyItems.Any(h => h.IsDuplicate);
         }
     }
 
