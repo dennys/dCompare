@@ -67,6 +67,26 @@ namespace dCompare.Compare
         public PathInputViewModel LeftPathViewModel { get; }
         public PathInputViewModel RightPathViewModel { get; }
 
+        /// <summary>
+        /// Gets or sets the left path, primarily for session management.
+        /// Setting this property updates the underlying LeftPathViewModel.Path.
+        /// </summary>
+        public string LoadedLeftPath
+        {
+            get => LeftPathViewModel.Path ?? string.Empty;
+            set => LeftPathViewModel.Path = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the right path, primarily for session management.
+        /// Setting this property updates the underlying RightPathViewModel.Path.
+        /// </summary>
+        public string LoadedRightPath
+        {
+            get => RightPathViewModel.Path ?? string.Empty;
+            set => RightPathViewModel.Path = value;
+        }
+
         public bool IsComparing
         {
             get => _isComparing;
@@ -206,9 +226,9 @@ namespace dCompare.Compare
 
         private void UpdateTabHeader()
         {
-            // Use Path from ViewModels
-            string leftPath = LeftPathViewModel.Path?.Trim() ?? string.Empty;
-            string rightPath = RightPathViewModel.Path?.Trim() ?? string.Empty;
+            // Use Path from ViewModels (which are the source of truth)
+            string leftPath = LoadedLeftPath.Trim();
+            string rightPath = LoadedRightPath.Trim();
 
             FullPathsTooltip = $"Left: {leftPath}\nRight: {rightPath}";
             OnPropertyChanged(nameof(FullPathsTooltip));
@@ -216,14 +236,14 @@ namespace dCompare.Compare
             string leftName = !string.IsNullOrEmpty(leftPath) ? System.IO.Path.GetFileName(leftPath) : string.Empty;
             string rightName = !string.IsNullOrEmpty(rightPath) ? System.IO.Path.GetFileName(rightPath) : string.Empty;
 
-            if (string.IsNullOrEmpty(leftName) && !string.IsNullOrEmpty(leftPath)) leftName = leftPath; // Handle root drive like "C:\"
+            if (string.IsNullOrEmpty(leftName) && !string.IsNullOrEmpty(leftPath)) leftName = leftPath;
             if (string.IsNullOrEmpty(rightName) && !string.IsNullOrEmpty(rightPath)) rightName = rightPath;
 
 
             string baseHeader = $"{leftName} - {rightName}";
             if (string.IsNullOrWhiteSpace(leftName) && string.IsNullOrWhiteSpace(rightName))
             {
-                baseHeader = Properties.Resources.NewTabTitle; // Or some default
+                baseHeader = Properties.Resources.NewTabTitle;
             }
             else if (string.IsNullOrWhiteSpace(leftName))
             {
@@ -241,7 +261,7 @@ namespace dCompare.Compare
             }
         }
 
-        public void ChangeTabHeader(string newHeader) // This might need adjustment if it was purely based on TextBox text before
+        public void ChangeTabHeader(string newHeader)
         {
             TabItem? tabItem = WpfTreeHelperExtensions.FindParent<TabItem>(this);
             if (tabItem != null && !IsComparing)
