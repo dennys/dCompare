@@ -67,82 +67,124 @@ namespace dCompare.Compare
             {
                 await Task.Run(() => // To avoid blocking UI thread for longer searches
                 {
-                    var directoryName = System.IO.Path.GetDirectoryName(currentPath);
-                    string searchPattern = System.IO.Path.GetFileName(currentPath);
+                    string localCurrentPath = currentPath; // Make a local copy for lambda
+                    List<string> newSuggestions = new List<string>();
 
-                    if (string.IsNullOrEmpty(directoryName) || !Directory.Exists(directoryName))
+                    try
                     {
-                        // If the base directory is invalid or doesn't exist, try to see if currentPath itself is a drive letter or start of one
-                        if (currentPath.EndsWith(":\\") && Directory.Exists(currentPath))
+                        string? effectiveDirectoryName = null;
+                        string searchPattern = "";
+
+                        // Case 1: Input is a drive letter like "D:\" or "D:"
+                        if (IsDriveRoot(localCurrentPath))
                         {
-                            directoryName = currentPath;
-                            searchPattern = "*"; // Show all subdirectories in the drive root
-                        }
-                        else if (IsDriveOrPartialDrive(currentPath))
-                        {
-                            // It's something like "D:" or "d:\a" where "d:\a" doesn't exist yet,
-                            // so we search from the drive root "D:\" for "a*"
-                            directoryName = System.IO.Path.GetPathRoot(currentPath);
-                            if (string.IsNullOrEmpty(directoryName) || !Directory.Exists(directoryName))
+                            effectiveDirectoryName = System.IO.Path.GetPathRoot(localCurrentPath); // Ensures "D:\"
+                            if (effectiveDirectoryName != null && Directory.Exists(effectiveDirectoryName))
                             {
-                                App.Current.Dispatcher.Invoke(() =>
-                                {
-                                    Suggestions.Clear();
-                                    IsSuggestionsOpen = false;
-                                });
+                                searchPattern = "*"; // Get all items in root
+                            }
+                            else
+                            {
+                                // Invalid drive or drive not ready
+                                App.Current.Dispatcher.Invoke(() => Suggestions.Clear());
                                 return;
                             }
-                            searchPattern = currentPath.Substring(directoryName.Length) + "*";
                         }
-                        else
+                        else // Case 2: Input is a partial path like "D:\folder" or "D:\fol"
                         {
-                             App.Current.Dispatcher.Invoke(() =>
-                             {
-                                Suggestions.Clear();
-                                IsSuggestionsOpen = false;
-                            });
+                            effectiveDirectoryName = System.IO.Path.GetDirectoryName(localCurrentPath);
+                            searchPattern = System.IO.Path.GetFileName(localCurrentPath);
+
+                            if (string.IsNullOrEmpty(effectiveDirectoryName) && IsDriveOrPartialDrive(localCurrentPath))
+                            {
+                                // e.g. user typed "D", GetDirectoryName is null.
+                                // We interpret this as wanting to list drives, or if "D:", list contents of D:\
+                                // This case is tricky, for now, let's assume if it's like "D:", IsDriveRoot handles it.
+                                // If it's just "D", we might not have enough to search.
+                                // However, our IsDriveOrPartialDrive includes "D:", which is covered by IsDriveRoot.
+                                // So this block might be for "D" which is not a valid directory.
+                                App.Current.Dispatcher.Invoke(() => Suggestions.Clear());
+                                return;
+                            }
+
+                            if (string.IsNullOrEmpty(effectiveDirectoryName) || !Directory.Exists(effectiveDirectoryName))
+                            {
+                                // Base directory doesn't exist. Try to search from root.
+                                // e.g., currentPath = "D:\nonexistent\partial"
+                                // We search on "D:\" for "nonexistent*"
+                                string? root = System.IO.Path.GetPathRoot(localCurrentPath);
+                                if (!string.IsNullOrEmpty(root) && Directory.Exists(root))
+                                {
+                                    searchPattern = localCurrentPath.Substring(root.Length) + "*";
+                                    effectiveDirectoryName = root;
+                                }
+                                else
+                                {
+                                    App.Current.Dispatcher.Invoke(() => Suggestions.Clear());
+                                    return; // Cannot determine a valid search base
+                                }
+                            }
+                            else
+                            {
+                                // Base directory exists, search within it
+                                searchPattern += "*";
+                            }
+                        }
+
+                        if (effectiveDirectoryName == null || !Directory.Exists(effectiveDirectoryName))
+                        {
+                            App.Current.Dispatcher.Invoke(() => { Suggestions.Clear(); IsSuggestionsOpen = false; });
                             return;
                         }
-                    }
-                    else
-                    {
-                        searchPattern += "*"; // Append wildcard for starts-with search
-                    }
 
-                    if (!Directory.Exists(directoryName))
+                        // Perform the top-directory search
+                        try
+                        {
+                            newSuggestions.AddRange(Directory.GetDirectories(effectiveDirectoryName, searchPattern, SearchOption.TopDirectoryOnly));
+                        }
+                        catch (UnauthorizedAccessException) { /* Log or ignore for this part */ }
+                        catch (IOException) { /* Log or ignore */ }
+
+
+                        // Recursive search for deeper matches if the current path is an existing directory
+                        if (Directory.Exists(localCurrentPath))
+                        {
+                            try
+                            {
+                                var deeperSuggestions = Directory.EnumerateDirectories(localCurrentPath, "*", SearchOption.AllDirectories)
+                                                                 .Take(20); // Limit recursive results
+                                newSuggestions.AddRange(deeperSuggestions);
+                            }
+                            catch (UnauthorizedAccessException) { /* Fine-grained catch for recursion */ }
+                            catch (IOException) { /* Fine-grained catch for recursion */ }
+                        }
+
+                        newSuggestions = newSuggestions.Distinct().OrderBy(s => s.Length).ThenBy(s => s).ToList();
+
+                        // Ensure the current path itself is in suggestions if it's a valid directory
+                        if (Directory.Exists(localCurrentPath) && !newSuggestions.Contains(localCurrentPath))
+                        {
+                            newSuggestions.Insert(0, localCurrentPath);
+                        }
+                    }
+                    catch (UnauthorizedAccessException uae)
                     {
+                        System.Diagnostics.Debug.WriteLine($"Outer UnauthorizedAccessException: {uae.Message}");
                         App.Current.Dispatcher.Invoke(() =>
                         {
                             Suggestions.Clear();
-                            IsSuggestionsOpen = false;
+                            Suggestions.Add($"Access Denied: {uae.Message}");
+                            IsSuggestionsOpen = true;
                         });
-                        return;
+                        return; // Exit after handling top-level access denial
                     }
-
-                    var newSuggestions = Directory.GetDirectories(directoryName, searchPattern, SearchOption.TopDirectoryOnly)
-                                                  .ToList();
-
-                    // Recursive search for deeper matches if initial top-level matches are few or an exact match exists
-                    if (Directory.Exists(currentPath))
+                    catch (Exception ex) // Catch other potential IO errors
                     {
-                        var deeperSuggestions = Directory.GetDirectories(currentPath, "*", SearchOption.AllDirectories)
-                                                         .Take(20); // Limit recursive results for performance
-                        newSuggestions.AddRange(deeperSuggestions);
-                        newSuggestions = newSuggestions.Distinct().OrderBy(s => s.Length).ThenBy(s => s).ToList();
+                        System.Diagnostics.Debug.WriteLine($"Outer error updating suggestions: {ex.Message}");
+                        App.Current.Dispatcher.Invoke(() => { Suggestions.Clear(); IsSuggestionsOpen = false; });
+                        return; // Exit on other errors
                     }
 
-
-                    // Ensure the current path itself is in suggestions if it's a valid directory
-                    if (Directory.Exists(currentPath) && !newSuggestions.Contains(currentPath))
-                    {
-                        newSuggestions.Insert(0, currentPath);
-                    }
-
-                    // If the input path is exactly "D:\", list its immediate children.
-                    // The previous logic might make searchPattern "*" and directoryName "D:\", which is good.
-                    // If input is "D:\a", searchPattern becomes "a*", directoryName "D:\"
-                    // If input is "D:\a1", searchPattern becomes "a1*", directoryName "D:\"
-                    // If input is "D:\a12\b", searchPattern becomes "b*", directoryName "D:\a12\"
 
                     App.Current.Dispatcher.Invoke(() =>
                     {
@@ -155,33 +197,35 @@ namespace dCompare.Compare
                     });
                 });
             }
-            catch (UnauthorizedAccessException)
+            catch (Exception ex) // This outer catch for await Task.Run should ideally not be hit if inner catches are good.
             {
-                // Handle cases where access to a directory is denied
+                // This might catch exceptions from Task.Run itself or if rethrown weirdly.
+                System.Diagnostics.Debug.WriteLine($"Critical error in suggestion task: {ex.Message}");
                 App.Current.Dispatcher.Invoke(() =>
                 {
                     Suggestions.Clear();
-                    Suggestions.Add("Access Denied"); // Or handle more gracefully
-                    IsSuggestionsOpen = true;
-                });
-            }
-            catch (Exception ex) // Catch other potential IO errors
-            {
-                System.Diagnostics.Debug.WriteLine($"Error updating suggestions: {ex.Message}");
-                App.Current.Dispatcher.Invoke(() =>
-                {
-                    Suggestions.Clear();
-                    // Optionally add error message to suggestions
-                    // Suggestions.Add("Error loading suggestions");
                     IsSuggestionsOpen = false;
                 });
             }
+        }
+
+        private bool IsDriveRoot(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return false;
+            // Matches "C:\", "D:\", etc. or "C:", "D:"
+            // Path.GetPathRoot will return "C:\" for "C:\anything" or "C:"
+            // We want to ensure it's *just* the root.
+            string? pathRoot = System.IO.Path.GetPathRoot(path);
+            return !string.IsNullOrEmpty(pathRoot) && path.Equals(pathRoot, StringComparison.OrdinalIgnoreCase) ||
+                   path.Equals(pathRoot.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase);
+
         }
 
         private bool IsDriveOrPartialDrive(string path)
         {
             if (string.IsNullOrEmpty(path)) return false;
             // Matches "C:", "C:\", "C:\folder"
+            // Ensures it starts with a drive letter pattern.
             return System.Text.RegularExpressions.Regex.IsMatch(path, @"^[a-zA-Z]:(\\.*)?$");
         }
     }
