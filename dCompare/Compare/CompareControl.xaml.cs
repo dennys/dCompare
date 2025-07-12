@@ -97,15 +97,6 @@ namespace dCompare.Compare
             }
         }
 
-        public string SearchText
-        {
-            get => LeftPathViewModel.SearchText;
-            set
-            {
-                LeftPathViewModel.SearchText = value;
-                ApplyFilter();
-            }
-        }
 
         public bool IsComparing
         {

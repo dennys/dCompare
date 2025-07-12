@@ -164,13 +164,45 @@
             </Grid>
         </StackPanel>
 
-        <!-- Search Bar -->
-        <TextBox Grid.Row="1" Name="SearchTextBox" Margin="10,0,10,5"
-                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                 Foreground="{Binding (Text), ElementName=SearchTextBox, Converter={StaticResource TextToForegroundConverter}}"/>
+                <TextBox Grid.Column="4" Name="SearchTextBox" Margin="5,0" VerticalAlignment="Center" Width="200"
+                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         Foreground="{Binding (Text), ElementName=SearchTextBox, Converter={StaticResource TextToForegroundConverter}}"/>
+
+                <Label Grid.Column="5" Content="{x:Static resx:Resources.RightPath}" VerticalAlignment="Center"/>
+                <!-- Right Path Input Area -->
+                <Grid Grid.Column="6" Name="RightPathInputArea">
+                    <TextBox Name="RightPathBox"
+                             Text="{Binding Path, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Margin="5,0" VerticalAlignment="Center" IsReadOnly="False" IsEnabled="True" TextWrapping="NoWrap"
+                             PreviewKeyDown="PathBox_PreviewKeyDown" LostFocus="PathBox_LostFocus" />
+                    <Popup Name="RightSuggestionsPopup"
+                           IsOpen="{Binding IsSuggestionsOpen}"
+                           PlacementTarget="{Binding ElementName=RightPathBox}"
+                           Placement="Bottom"
+                           StaysOpen="False">
+                        <ListBox Name="RightSuggestionsListBox"
+                                 ItemsSource="{Binding Suggestions}"
+                                 SelectedItem="{Binding SelectedSuggestion, Mode=TwoWay}"
+                                 MaxHeight="200" Width="{Binding ActualWidth, ElementName=RightPathBox}"
+                                 PreviewKeyDown="SuggestionsListBox_PreviewKeyDown">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Padding" Value="2"/>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                        </ListBox>
+                    </Popup>
+                </Grid>
+                <Button Grid.Column="7" Name="BrowseRightButton" Click="Browse_Click" Margin="2,0"
+                        Width="24" Height="18" Padding="0">
+                    <Path Data="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"
+                          Fill="#666666" Stretch="Uniform" Width="16" Height="16"/>
+                </Button>
+            </Grid>
+        </StackPanel>
 
         <!-- Results Display Area -->
-        <ListView Grid.Row="1" Name="ResultListView" Margin="10,30,10,10" SelectionMode="Extended"
+        <ListView Grid.Row="1" Name="ResultListView" Margin="10" SelectionMode="Extended"
                   MouseDoubleClick="ResultListView_MouseDoubleClick"
                   VirtualizingStackPanel.IsVirtualizing="True"
                   VirtualizingStackPanel.VirtualizationMode="Recycling">
