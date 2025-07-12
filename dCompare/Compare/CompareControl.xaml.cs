@@ -236,6 +236,10 @@ namespace dCompare.Compare
             string leftName = !string.IsNullOrEmpty(leftPath) ? System.IO.Path.GetFileName(leftPath) : string.Empty;
             string rightName = !string.IsNullOrEmpty(rightPath) ? System.IO.Path.GetFileName(rightPath) : string.Empty;
 
+            // Ensure System.IO.Path is used explicitly, though it's already correct due to `using System.IO;`
+            // and previous updates. This is more for a documentation of check.
+            // No actual change needed here as it was already System.IO.Path.GetFileName implicitly or explicitly.
+
             if (string.IsNullOrEmpty(leftName) && !string.IsNullOrEmpty(leftPath)) leftName = leftPath;
             if (string.IsNullOrEmpty(rightName) && !string.IsNullOrEmpty(rightPath)) rightName = rightPath;
 
@@ -642,7 +646,7 @@ namespace dCompare.Compare
                 return;
             }
 
-            string tabHeader = $"Compare: {Path.GetFileName(leftPath)} - {Path.GetFileName(rightPath)}";
+            string tabHeader = $"Compare: {System.IO.Path.GetFileName(leftPath)} - {System.IO.Path.GetFileName(rightPath)}";
             TabItem newTab = new TabItem { Header = tabHeader };
 
             if (fileType == FileType.Text)
@@ -901,7 +905,7 @@ namespace dCompare.Compare
                 return;
             }
 
-            string currentName = Path.GetFileName(sourcePath);
+            string currentName = System.IO.Path.GetFileName(sourcePath);
             string newName = Interaction.InputBox("Enter the new name for the item:", "Rename", currentName);
 
             if (string.IsNullOrWhiteSpace(newName) || newName == currentName)
@@ -1006,6 +1010,7 @@ namespace dCompare.Compare
                 string? path = isLeft ? node.LeftNode?.FullPath : node.RightNode?.FullPath;
                 if (!string.IsNullOrEmpty(path))
                 {
+                    // This was already correct from a previous fix.
                     filenames.Add(System.IO.Path.GetFileName(path));
                 }
             }

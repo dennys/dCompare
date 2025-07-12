@@ -259,6 +259,11 @@ namespace dCompare.Session
                         ucCompareInstance.LoadedLeftPath = session.Value.Left;
                         ucCompareInstance.LoadedRightPath = session.Value.Right;
                         ucCompareInstance.SelectedAlgorithm = session.Value.Algorithm;
+
+                        // Explicitly close suggestion popups after paths are set
+                        ucCompareInstance.LeftPathViewModel.IsSuggestionsOpen = false;
+                        ucCompareInstance.RightPathViewModel.IsSuggestionsOpen = false;
+
                         _tabControl.Items.Add(newTab);
                         _tabIdMap[tabName] = session.Key;
 
