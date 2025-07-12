@@ -38,6 +38,13 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsDuplicate}" Value="True">
+                    <Setter Property="BorderBrush" Value="Red"/>
+                    <Setter Property="BorderThickness" Value="1.5"/>
+                    <Setter Property="ToolTip" Value="This hotkey is already in use."/>
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
 
         <Style x:Key="ClearButtonStyle" TargetType="Button">
