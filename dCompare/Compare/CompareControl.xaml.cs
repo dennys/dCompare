@@ -1064,7 +1064,8 @@ namespace dCompare.Compare
         // Event Handlers for Path TextBoxes and Suggestion ListBoxes
         private void PathBox_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            var textBox = sender as TextBox;
+            if (sender is not TextBox textBox) return;
+
             CompareControlViewModel? vm = null;
             ListBox? suggestionsListBox = null;
 
@@ -1101,7 +1102,7 @@ namespace dCompare.Compare
                 case Key.Enter:
                     if (vm.IsSuggestionsOpen && suggestionsListBox.SelectedItem != null)
                     {
-                        vm.SelectedSuggestion = suggestionsListBox.SelectedItem as string;
+                        vm.SelectedSuggestion = (string)suggestionsListBox.SelectedItem;
                         // Path and IsSuggestionsOpen are updated by SelectedSuggestion setter
                         e.Handled = true;
                         textBox.Focus(); // Move focus back to textbox
@@ -1119,7 +1120,8 @@ namespace dCompare.Compare
 
         private void SuggestionsListBox_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            var listBox = sender as ListBox;
+            if (sender is not ListBox listBox) return;
+
             CompareControlViewModel? vm = null;
             TextBox? targetTextBox = null;
 
@@ -1140,7 +1142,7 @@ namespace dCompare.Compare
             {
                 if (listBox.SelectedItem != null)
                 {
-                    vm.SelectedSuggestion = listBox.SelectedItem as string;
+                    vm.SelectedSuggestion = (string)listBox.SelectedItem;
                     // Path and IsSuggestionsOpen are updated by SelectedSuggestion setter in VM
                 }
                 targetTextBox.Focus();
