@@ -441,7 +441,7 @@ namespace dCompare.Compare
             }
         }
 
-        private void ResultListView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        private async void ResultListView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             DependencyObject obj = (DependencyObject)e.OriginalSource;
             while (obj != null && obj is not ListViewItem)
@@ -466,7 +466,15 @@ namespace dCompare.Compare
                 }
                 else
                 {
-                    OpenFile(clickedItem);
+                    var config = await _configService.LoadConfigurationAsync();
+                    if (config.Options.Compare.DoubleClick == "view")
+                    {
+                        OpenFile(clickedItem);
+                    }
+                    else
+                    {
+                        CompareFileContents(clickedItem);
+                    }
                 }
             }
         }
@@ -587,9 +595,72 @@ namespace dCompare.Compare
             }
         }
 
-        private void CompareFileContents(TreeNode selectedItem)
+        private async void CompareFileContents(TreeNode selectedItem)
         {
-            OpenFile(selectedItem);
+            if (selectedItem.IsDirectory)
+            {
+                MessageBox.Show("Cannot compare contents of directories.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            string? leftPath = selectedItem.LeftNode?.FullPath;
+            string? rightPath = selectedItem.RightNode?.FullPath;
+
+            if (string.IsNullOrEmpty(leftPath) || string.IsNullOrEmpty(rightPath))
+            {
+                MessageBox.Show("No valid file paths to compare.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            try
+            {
+                var config = await _configService.LoadConfigurationAsync();
+                var comparisonHandler = new FileComparisonHandler(config);
+                FileType fileType = comparisonHandler.DetermineFileType(leftPath ?? rightPath);
+
+                leftPath = leftPath ?? CreateTemporaryEmptyFile();
+                rightPath = rightPath ?? CreateTemporaryEmptyFile();
+
+                if (fileType == FileType.Text && config?.Options?.Diff?.Text?.Viewer?.Equals("WinMerge", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    var winMergeViewer = config?.Options?.Diff?.Viewer?.FirstOrDefault(v => v.Name.Equals("WinMerge", StringComparison.OrdinalIgnoreCase));
+                    if (winMergeViewer == null)
+                    {
+                        MessageBox.Show("WinMerge configuration not found.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+
+                    string arguments = winMergeViewer.Arguments
+                        .Replace("{left}", leftPath)
+                        .Replace("{right}", rightPath);
+
+                    ProcessStartInfo startInfo = new()
+                    {
+                        FileName = winMergeViewer.Path,
+                        Arguments = arguments,
+                        UseShellExecute = true
+                    };
+
+                    Process.Start(startInfo);
+                }
+                else if (fileType == FileType.Text && config?.Options?.Diff?.Text?.Viewer?.Equals("DiffPlex", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    var comparisonResult = await comparisonHandler.CompareFilesAsync(leftPath, rightPath, fileType);
+                    OpenFileComparisonTab(leftPath, rightPath, fileType, comparisonResult);
+                }
+                else if (fileType == FileType.Image)
+                {
+                    OpenFileComparisonTab(leftPath, rightPath, fileType, null);
+                }
+                else
+                {
+                    MessageBox.Show("Unsupported file type for comparison.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error comparing files: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void ContextMenu_CompareWithViewer_Click(object sender, RoutedEventArgs e)
@@ -752,6 +823,18 @@ namespace dCompare.Compare
             }
 
             CompareFileContents(selectedItem);
+        }
+
+        private void ContextMenu_ViewFile_Click(object sender, RoutedEventArgs e)
+        {
+            var selectedItem = ResultListView.SelectedItem as TreeNode;
+            if (selectedItem == null)
+            {
+                MessageBox.Show("Please select an item.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            OpenFile(selectedItem);
         }
 
         private async Task ProcessFileOperationsAsync(
