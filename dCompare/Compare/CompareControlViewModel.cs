@@ -11,12 +11,12 @@ namespace dCompare.Compare
 {
     public class CompareControlViewModel : INotifyPropertyChanged
     {
-        private string _path;
+        private string _path = string.Empty;
         private bool _isSuggestionsOpen;
-        private List<string> _suggestions;
-        private string _selectedSuggestion;
+        private List<string> _suggestions = new List<string>();
+        private string _selectedSuggestion = string.Empty;
         private bool _suppressSuggestions;
-        private string _searchText;
+        private string _searchText = string.Empty;
 
         public string Path
         {
@@ -108,7 +108,7 @@ namespace dCompare.Compare
 
             try
             {
-                string directory = System.IO.Path.GetDirectoryName(Path);
+                string? directory = System.IO.Path.GetDirectoryName(Path);
                 string prefix = System.IO.Path.GetFileName(Path);
 
                 if (string.IsNullOrEmpty(directory) || !Directory.Exists(directory))
@@ -131,9 +131,9 @@ namespace dCompare.Compare
             }
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
