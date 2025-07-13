@@ -336,4 +336,7 @@
   <data name="WinMerge" xml:space="preserve">
     <value>WinMerge</value>
   </data>
+  <data name="Filter" xml:space="preserve">
+    <value>Filter</value>
+  </data>
 </root>
