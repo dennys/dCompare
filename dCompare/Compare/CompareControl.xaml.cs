@@ -3,6 +3,7 @@ using dCompare.Configuration;
 using dCompare.Diff;
 using dCompare.Diff.Models;
 using dCompare.FileOperation;
+using dCompare.Viewer;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
 using Microsoft.Win32;
@@ -465,8 +466,49 @@ namespace dCompare.Compare
                 }
                 else
                 {
-                    CompareFileContents(clickedItem);
+                    OpenFile(clickedItem);
                 }
+            }
+        }
+
+        private void OpenFile(TreeNode selectedItem)
+        {
+            if (selectedItem.IsDirectory)
+            {
+                MessageBox.Show("Cannot open a directory.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            string? path = selectedItem.LeftNode?.FullPath ?? selectedItem.RightNode?.FullPath;
+
+            if (string.IsNullOrEmpty(path))
+            {
+                MessageBox.Show("No valid file path to open.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            try
+            {
+                var viewer = ViewerFactory.CreateViewer(path);
+                viewer.LoadFile(path);
+
+                if (WpfTreeHelperExtensions.FindParent<TabItem>(this) is not TabItem parentTab ||
+                    WpfTreeHelperExtensions.FindParent<TabControl>(parentTab) is not TabControl tabControl)
+                {
+                    MessageBox.Show("Cannot locate parent TabControl or TabItem.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                string tabHeader = $"View: {System.IO.Path.GetFileName(path)}";
+                TabItem newTab = new TabItem { Header = tabHeader };
+                newTab.Content = viewer.GetControl();
+
+                tabControl.Items.Add(newTab);
+                tabControl.SelectedItem = newTab;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error opening file: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -545,72 +587,9 @@ namespace dCompare.Compare
             }
         }
 
-        private async void CompareFileContents(TreeNode selectedItem)
+        private void CompareFileContents(TreeNode selectedItem)
         {
-            if (selectedItem.IsDirectory)
-            {
-                MessageBox.Show("Cannot compare contents of directories.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            string? leftPath = selectedItem.LeftNode?.FullPath;
-            string? rightPath = selectedItem.RightNode?.FullPath;
-
-            if (string.IsNullOrEmpty(leftPath) || string.IsNullOrEmpty(rightPath))
-            {
-                MessageBox.Show("No valid file paths to compare.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            try
-            {
-                var config = await _configService.LoadConfigurationAsync();
-                var comparisonHandler = new FileComparisonHandler(config);
-                FileType fileType = comparisonHandler.DetermineFileType(leftPath ?? rightPath);
-
-                leftPath = leftPath ?? CreateTemporaryEmptyFile();
-                rightPath = rightPath ?? CreateTemporaryEmptyFile();
-
-                if (fileType == FileType.Text && config?.Options?.Diff?.Text?.Viewer?.Equals("WinMerge", StringComparison.OrdinalIgnoreCase) == true)
-                {
-                    var winMergeViewer = config?.Options?.Diff?.Viewer?.FirstOrDefault(v => v.Name.Equals("WinMerge", StringComparison.OrdinalIgnoreCase));
-                    if (winMergeViewer == null)
-                    {
-                        MessageBox.Show("WinMerge configuration not found.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                        return;
-                    }
-
-                    string arguments = winMergeViewer.Arguments
-                        .Replace("{left}", leftPath)
-                        .Replace("{right}", rightPath);
-
-                    ProcessStartInfo startInfo = new()
-                    {
-                        FileName = winMergeViewer.Path,
-                        Arguments = arguments,
-                        UseShellExecute = true
-                    };
-
-                    Process.Start(startInfo);
-                }
-                else if (fileType == FileType.Text && config?.Options?.Diff?.Text?.Viewer?.Equals("DiffPlex", StringComparison.OrdinalIgnoreCase) == true)
-                {
-                    var comparisonResult = await comparisonHandler.CompareFilesAsync(leftPath, rightPath, fileType);
-                    OpenFileComparisonTab(leftPath, rightPath, fileType, comparisonResult);
-                }
-                else if (fileType == FileType.Image)
-                {
-                    OpenFileComparisonTab(leftPath, rightPath, fileType, null);
-                }
-                else
-                {
-                    MessageBox.Show("Unsupported file type for comparison.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error comparing files: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            OpenFile(selectedItem);
         }
 
         private void ContextMenu_CompareWithViewer_Click(object sender, RoutedEventArgs e)
