@@ -367,6 +367,15 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Filter 的當地語系化字串。
+        /// </summary>
+        public static string Filter {
+            get {
+                return ResourceManager.GetString("Filter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 _Help 的當地語系化字串。
         /// </summary>
         public static string HelpMenu {

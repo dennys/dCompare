@@ -9,11 +9,13 @@ namespace dCompare.Compare
     {
         private readonly ObservableCollection<TreeNode> _treeNodes = treeNodes;
         private Predicate<TreeNode>? _currentFilter;
+        private string _searchFilterText = string.Empty;
 
         // Method to set the current filter
-        public void SetCurrentFilter(Predicate<TreeNode>? filter)
+        public void SetCurrentFilter(Predicate<TreeNode>? filter, string searchFilterText)
 		{
 			_currentFilter = filter;
+            _searchFilterText = searchFilterText;
 		}
 
         public void BuildTree(List<DirectoryComparer.ComparisonItem> items, string leftRoot, string rightRoot, int maxDepth = 0)
@@ -22,8 +24,11 @@ namespace dCompare.Compare
             List<TreeNode> flatNodes = CreateFlatTreeStructure(items, leftRoot, rightRoot, maxDepth);
             foreach (TreeNode node in flatNodes)
             {
-                node.IsExpanded = false;
-                _treeNodes.Add(node);
+                if (MatchesSearch(node))
+                {
+                    node.IsExpanded = false;
+                    _treeNodes.Add(node);
+                }
             }
         }
 
@@ -74,22 +79,39 @@ namespace dCompare.Compare
 
             foreach (TreeNode child in childNodes.OrderBy(c => c.Name))
             {
-                _treeNodes.Insert(insertIndex++, child);
+                if (MatchesSearch(child))
+                {
+                    _treeNodes.Insert(insertIndex++, child);
 
-                // *** If the child path was previously expanded, expand it and load its children recursively. ***
-                if (child.IsDirectory && previouslyExpandedPaths != null && previouslyExpandedPaths.Contains(child.RelativePath))
-                {
-                    child.IsExpanded = true;
-                    // The recursive call will now insert this child's children at the correct, updated index.
-                    LoadChildren(child, cachedResults, leftRoot, rightRoot, previouslyExpandedPaths);
-                    // We need to update the insertIndex to account for the grandchildren that were just added.
-                    insertIndex = _treeNodes.IndexOf(child) + 1 + childNodes.Count(n => n.RelativePath.StartsWith(child.RelativePath + Path.DirectorySeparatorChar));
-                }
-                else
-                {
-                    child.IsExpanded = false;
+                    // *** If the child path was previously expanded, expand it and load its children recursively. ***
+                    if (child.IsDirectory && previouslyExpandedPaths != null && previouslyExpandedPaths.Contains(child.RelativePath))
+                    {
+                        child.IsExpanded = true;
+                        // The recursive call will now insert this child's children at the correct, updated index.
+                        LoadChildren(child, cachedResults, leftRoot, rightRoot, previouslyExpandedPaths);
+                        // We need to update the insertIndex to account for the grandchildren that were just added.
+                        insertIndex = _treeNodes.IndexOf(child) + 1 + childNodes.Count(n => n.RelativePath.StartsWith(child.RelativePath + Path.DirectorySeparatorChar));
+                    }
+                    else
+                    {
+                        child.IsExpanded = false;
+                    }
                 }
             }
+        }
+
+        private bool MatchesSearch(TreeNode node)
+        {
+            if (string.IsNullOrEmpty(_searchFilterText) || _searchFilterText == "Search...")
+            {
+                return true;
+            }
+
+            return (node.LeftName?.Contains(_searchFilterText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (node.RightName?.Contains(_searchFilterText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (node.LeftSize?.Contains(_searchFilterText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (node.RightSize?.Contains(_searchFilterText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (node.Status.ToString().Contains(_searchFilterText, StringComparison.OrdinalIgnoreCase));
         }
 
         public void RemoveChildren(TreeNode parentNode)
