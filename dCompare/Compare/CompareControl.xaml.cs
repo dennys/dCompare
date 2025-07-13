@@ -544,6 +544,7 @@ namespace dCompare.Compare
             if (view != null)
             {
                 view.Filter = _currentFilter;
+                view.Refresh();
             }
         }
 
@@ -698,6 +699,7 @@ namespace dCompare.Compare
             }
             else if (fileType == FileType.Image)
             {
+.
                 var imageViewer = new ImageDiff(leftPath, rightPath);
                 newTab.Content = imageViewer;
             }
