@@ -157,6 +157,7 @@ namespace dCompare.Compare
 
             Loaded += CompareControl_Loaded;
             LoadConfigurationAsync();
+            SetFilter(null);
         }
 
         private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -544,7 +545,6 @@ namespace dCompare.Compare
             if (view != null)
             {
                 view.Filter = _currentFilter;
-                view.Refresh();
             }
         }
 
@@ -699,7 +699,6 @@ namespace dCompare.Compare
             }
             else if (fileType == FileType.Image)
             {
-.
                 var imageViewer = new ImageDiff(leftPath, rightPath);
                 newTab.Content = imageViewer;
             }
