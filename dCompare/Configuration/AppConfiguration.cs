@@ -49,7 +49,7 @@ namespace dCompare.Configuration
             new Dictionary<ComparisonAlgorithm, ComparisonAlgorithmInfo>(ComparisonAlgorithms.AlgorithmSettings);
 
         [JsonPropertyName("DoubleClick")]
-        public string DoubleClick { get; set; } = "view";
+        public string DoubleClick { get; set; } = "compare";
     }
 
     public class ScanMethodOptions

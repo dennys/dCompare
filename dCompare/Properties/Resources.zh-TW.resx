@@ -339,4 +339,7 @@
   <data name="Filter" xml:space="preserve">
     <value>篩選</value>
   </data>
+  <data name="ViewFileMenu" xml:space="preserve">
+    <value>查看檔案</value>
+  </data>
 </root>
