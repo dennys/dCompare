@@ -191,11 +191,19 @@ namespace dCompare.Compare
 
                 var leftCompareWithMenu = FindMenuByName(leftContextMenu, "LeftCompareWithMenu");
                 var rightCompareWithMenu = FindMenuByName(rightContextMenu, "RightCompareWithMenu");
+                var leftViewWithMenu = FindMenuByName(leftContextMenu, "LeftViewWithMenu");
+                var rightViewWithMenu = FindMenuByName(rightContextMenu, "RightViewWithMenu");
 
-                if (leftCompareWithMenu == null || rightCompareWithMenu == null) return;
+                if (leftCompareWithMenu == null || rightCompareWithMenu == null || leftViewWithMenu == null || rightViewWithMenu == null) return;
 
                 PopulateViewerMenu(leftCompareWithMenu, viewers);
                 PopulateViewerMenu(rightCompareWithMenu, viewers);
+
+                var avalonEditViewer = new ExternalViewer { Name = "AvalonEdit" };
+                var viewerViewers = new List<ExternalViewer> { avalonEditViewer };
+
+                PopulateViewerMenu(leftViewWithMenu, viewerViewers, ContextMenu_ViewWithViewer_Click);
+                PopulateViewerMenu(rightViewWithMenu, viewerViewers, ContextMenu_ViewWithViewer_Click);
             }
             catch (Exception ex)
             {
@@ -208,7 +216,7 @@ namespace dCompare.Compare
         private MenuItem? FindMenuByName(ContextMenu menu, string name) =>
             menu.Items.OfType<MenuItem>().FirstOrDefault(mi => mi.Name == name);
 
-        private void PopulateViewerMenu(MenuItem parentMenu, List<ExternalViewer> viewers)
+        private void PopulateViewerMenu(MenuItem parentMenu, List<ExternalViewer> viewers, RoutedEventHandler clickHandler = null)
         {
             parentMenu.Items.Clear();
             foreach (var viewer in viewers)
@@ -219,9 +227,33 @@ namespace dCompare.Compare
                     Tag = viewer,
                     InputGestureText = viewer.Name
                 };
-                item.Click += ContextMenu_CompareWithViewer_Click;
+                if (clickHandler != null)
+                {
+                    item.Click += clickHandler;
+                }
+                else
+                {
+                    item.Click += ContextMenu_CompareWithViewer_Click;
+                }
                 parentMenu.Items.Add(item);
             }
+        }
+
+        private void ContextMenu_ViewWithViewer_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not MenuItem menuItem || menuItem.Tag is not ExternalViewer viewerConfig)
+            {
+                MessageBox.Show("Invalid viewer configuration.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            if (ResultListView.SelectedItem is not TreeNode selectedItem)
+            {
+                MessageBox.Show("Please select an item.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            OpenFile(selectedItem);
         }
 
         private void LoadConfigurationAsync()
@@ -467,7 +499,7 @@ namespace dCompare.Compare
                 else
                 {
                     var config = await _configService.LoadConfigurationAsync();
-                    if (config.Options.Compare.DoubleClick == "view")
+                    if (config.Options.Compare.DoubleClick == "View")
                     {
                         OpenFile(clickedItem);
                     }
