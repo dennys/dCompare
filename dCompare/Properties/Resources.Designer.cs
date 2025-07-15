@@ -709,11 +709,29 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 View File 的當地語系化字串。
+        /// </summary>
+        public static string ViewFileMenu {
+            get {
+                return ResourceManager.GetString("ViewFileMenu", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 _View 的當地語系化字串。
         /// </summary>
         public static string ViewMenu {
             get {
                 return ResourceManager.GetString("ViewMenu", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 View with 的當地語系化字串。
+        /// </summary>
+        public static string ViewWith {
+            get {
+                return ResourceManager.GetString("ViewWith", resourceCulture);
             }
         }
         
