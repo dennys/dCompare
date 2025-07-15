@@ -65,6 +65,9 @@ namespace dCompare.Configuration
 
         [JsonPropertyName("VerticalScrollBarVisibility")]
         public string VerticalScrollBarVisibility { get; set; } = "Auto";
+
+        [JsonPropertyName("ShowStatusBar")]
+        public bool ShowStatusBar { get; set; } = true;
     }
 
     public class UIOptions

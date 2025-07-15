@@ -404,6 +404,7 @@
                 <CheckBox IsChecked="{Binding LineNumber}" Content="Show Line Numbers" Margin="0,5"/>
                 <CheckBox IsChecked="{Binding SyntaxHighlight}" Content="Enable Syntax Highlighting" Margin="0,5"/>
                 <CheckBox IsChecked="{Binding WordWrap}" Content="Enable Word Wrap" Margin="0,5"/>
+                <CheckBox IsChecked="{Binding ShowStatusBar}" Content="Show Status Bar" Margin="0,5"/>
 
                 <Grid Margin="0,10">
                     <Grid.ColumnDefinitions>

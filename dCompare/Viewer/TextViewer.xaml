@@ -18,7 +18,7 @@
             <TextBox x:Name="LineInputBox" Width="60" Margin="2"/>
             <Button Content="🔽 Go to Line" Click="GoToLine_Click" Margin="2"/>
         </ToolBar>
-        <StatusBar DockPanel.Dock="Bottom">
+        <StatusBar x:Name="statusBar" DockPanel.Dock="Bottom">
             <Label x:Name="WordCountLabel" Content="Words: 0, Chars: 0"/>
         </StatusBar>
         <avalonedit:TextEditor x:Name="textEditor"

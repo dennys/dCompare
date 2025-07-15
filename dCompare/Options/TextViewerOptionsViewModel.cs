@@ -69,6 +69,12 @@ namespace dCompare.Options
             set => _model.WordWrap = value;
         }
 
+        public bool ShowStatusBar
+        {
+            get => _model.ShowStatusBar;
+            set => _model.ShowStatusBar = value;
+        }
+
         public List<string> ScrollBarVisibilities { get; } = new List<string> { "Auto", "Visible", "Hidden" };
 
         public string HorizontalScrollBarVisibility
@@ -111,6 +117,7 @@ namespace dCompare.Options
             WordWrap = defaultOptions.WordWrap;
             HorizontalScrollBarVisibility = defaultOptions.HorizontalScrollBarVisibility;
             VerticalScrollBarVisibility = defaultOptions.VerticalScrollBarVisibility;
+            ShowStatusBar = defaultOptions.ShowStatusBar;
         }
     }
 }

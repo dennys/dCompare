@@ -58,6 +58,8 @@ namespace dCompare.Viewer
                 textEditor.VerticalScrollBarVisibility = verticalVisibility;
             }
 
+            statusBar.Visibility = settings.ShowStatusBar ? Visibility.Visible : Visibility.Collapsed;
+
             UpdateReadOnlyButton();
         }
 
