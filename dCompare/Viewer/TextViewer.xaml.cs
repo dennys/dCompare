@@ -5,6 +5,7 @@ using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Search;
 using Microsoft.Win32;
 using System;
+using dCompare.Configuration;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -17,16 +18,41 @@ namespace dCompare.Viewer
         private string? currentFilePath;
         private SearchPanel? searchPanel;
         private Window? replaceDialog;
+        private readonly IConfigurationService _configurationService;
 
-        public TextViewer()
+        public TextViewer(IConfigurationService configurationService)
         {
             InitializeComponent();
+            _configurationService = configurationService;
             textEditor.TextArea.DefaultInputHandler.NestedInputHandlers.Add(new TextAreaInputHandler(textEditor.TextArea));
             textEditor.PreviewKeyDown += TextEditor_PreviewKeyDown;
             textEditor.TextChanged += TextEditor_TextChanged;
             searchPanel = SearchPanel.Install(textEditor);
             LoadSyntaxHighlightingComboBox(syntaxHighlightComboBox);
+            ApplySettings();
             UpdateReadOnlyButton();
+        }
+
+        private async void ApplySettings()
+        {
+            var config = await _configurationService.LoadConfigurationAsync();
+            var settings = config.Options.TextViewer;
+
+            textEditor.IsReadOnly = settings.ReadOnly;
+            textEditor.ShowLineNumbers = settings.LineNumber;
+            textEditor.WordWrap = settings.WordWrap;
+            textEditor.FontFamily = new System.Windows.Media.FontFamily(settings.Font.FontFamily);
+            textEditor.FontSize = settings.Font.FontSize;
+
+            if (Enum.TryParse<ScrollBarVisibility>(settings.HorizontalScrollBarVisibility, out var horizontalVisibility))
+            {
+                textEditor.HorizontalScrollBarVisibility = horizontalVisibility;
+            }
+
+            if (Enum.TryParse<ScrollBarVisibility>(settings.VerticalScrollBarVisibility, out var verticalVisibility))
+            {
+                textEditor.VerticalScrollBarVisibility = verticalVisibility;
+            }
         }
 
         // ✅ Public API

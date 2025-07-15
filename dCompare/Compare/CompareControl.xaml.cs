@@ -513,15 +513,22 @@ namespace dCompare.Compare
 
             try
             {
-                var viewer = ViewerFactory.CreateViewer(path);
-                viewer.LoadFile(path);
-
                 if (WpfTreeHelperExtensions.FindParent<TabItem>(this) is not TabItem parentTab ||
                     WpfTreeHelperExtensions.FindParent<TabControl>(parentTab) is not TabControl tabControl)
                 {
                     MessageBox.Show("Cannot locate parent TabControl or TabItem.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
+
+                var mainWindowViewModel = tabControl.DataContext as MainWindowViewModel;
+                if (mainWindowViewModel?.ViewerFactory == null)
+                {
+                    MessageBox.Show("ViewerFactory is not available.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                var viewer = mainWindowViewModel.ViewerFactory.CreateViewer(path);
+                viewer.LoadFile(path);
 
                 string tabHeader = $"View: {System.IO.Path.GetFileName(path)}";
                 TabItem newTab = new TabItem { Header = tabHeader };

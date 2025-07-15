@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using dCompare.Viewer;
 
 namespace dCompare
 {
@@ -16,6 +17,7 @@ namespace dCompare
         private Point _dragStartPoint;
         private readonly MainWindowViewModel _viewModel;
         private readonly IConfigurationService _configService;
+        private readonly ViewerFactory _viewerFactory;
 
         public MainWindow(IConfigurationService configService)
         {
@@ -23,7 +25,9 @@ namespace dCompare
 
             // Resolve ViewModel using DI
             _configService = configService ?? throw new ArgumentNullException(nameof(configService));
+            _viewerFactory = new ViewerFactory(_configService);
             _viewModel = Ioc.Default.GetRequiredService<MainWindowViewModel>();
+            _viewModel.ViewerFactory = _viewerFactory;
             DataContext = _viewModel;
 
             Loaded += MainWindow_Loaded;

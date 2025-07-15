@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using dCompare.Viewer;
 
 namespace dCompare
 {
@@ -58,6 +59,8 @@ namespace dCompare
         private string openOptionsHotkey = string.Empty;
         [ObservableProperty]
         private string openOptionsTooltip = string.Empty;
+
+        public ViewerFactory? ViewerFactory { get; set; }
 
         partial void OnAddTabHotkeyChanged(string value) => UpdateTooltip();
         partial void OnCloseTabHotkeyChanged(string value) => UpdateTooltip();
