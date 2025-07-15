@@ -378,7 +378,7 @@ namespace dCompare.Options
             }
         }
 
-        public List<string> AvailableDoubleClickActions => new List<string> { "view", "edit", "open" };
+        public List<string> AvailableDoubleClickActions => new List<string> { "View", "Compare" };
 
         public string DoubleClickAction
         {

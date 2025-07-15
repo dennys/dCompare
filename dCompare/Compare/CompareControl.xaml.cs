@@ -236,7 +236,7 @@ namespace dCompare.Compare
         {
             ProcessViewerAction(sender, (selectedItem, viewerConfig) =>
             {
-                OpenFile(selectedItem);
+                ViewFile(selectedItem);
             });
         }
 
@@ -485,17 +485,17 @@ namespace dCompare.Compare
                     var config = await _configService.LoadConfigurationAsync();
                     if (config.Options.Compare.DoubleClick == "View")
                     {
-                        OpenFile(clickedItem);
+                        ViewFile(clickedItem);
                     }
                     else
                     {
-                        CompareFileContents(clickedItem);
+                        CompareFile(clickedItem);
                     }
                 }
             }
         }
 
-        private void OpenFile(TreeNode selectedItem)
+        private void ViewFile(TreeNode selectedItem)
         {
             if (selectedItem.IsDirectory)
             {
@@ -611,7 +611,7 @@ namespace dCompare.Compare
             }
         }
 
-        private async void CompareFileContents(TreeNode selectedItem)
+        private async void CompareFile(TreeNode selectedItem)
         {
             if (selectedItem.IsDirectory)
             {
@@ -757,7 +757,7 @@ namespace dCompare.Compare
             }
 
             string tabHeader = $"Compare: {System.IO.Path.GetFileName(leftPath)} - {System.IO.Path.GetFileName(rightPath)}";
-            TabItem newTab = new TabItem { Header = tabHeader };
+            TabItem newTab = new() { Header = tabHeader };
 
             if (fileType == FileType.Text)
             {
@@ -846,7 +846,7 @@ namespace dCompare.Compare
                 return;
             }
 
-            CompareFileContents(selectedItem);
+            CompareFile(selectedItem);
         }
 
         private void ContextMenu_ViewFile_Click(object sender, RoutedEventArgs e)
@@ -858,7 +858,7 @@ namespace dCompare.Compare
                 return;
             }
 
-            OpenFile(selectedItem);
+            ViewFile(selectedItem);
         }
 
         private async Task ProcessFileOperationsAsync(
