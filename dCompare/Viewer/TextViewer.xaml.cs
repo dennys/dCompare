@@ -37,7 +37,7 @@ namespace dCompare.Viewer
             var config = await _configurationService.LoadConfigurationAsync();
             var settings = config.Options.TextViewer;
 
-            textEditor.IsReadOnly = settings.ReadOnly;
+            IsReadOnly = settings.ReadOnly;
             textEditor.ShowLineNumbers = settings.LineNumber;
             textEditor.WordWrap = settings.WordWrap;
             textEditor.FontFamily = new System.Windows.Media.FontFamily(settings.Font.FontFamily);
@@ -57,6 +57,8 @@ namespace dCompare.Viewer
             {
                 textEditor.VerticalScrollBarVisibility = verticalVisibility;
             }
+
+            UpdateReadOnlyButton();
         }
 
         // ✅ Public API
@@ -72,15 +74,18 @@ namespace dCompare.Viewer
             set
             {
                 textEditor.IsReadOnly = value;
-                UpdateReadOnlyButton();
             }
         }
 
-        public void LoadFile(string filePath)
+        public async void LoadFile(string filePath)
         {
             textEditor.Load(filePath);
             currentFilePath = filePath;
-            textEditor.SyntaxHighlighting = HighlightingManager.Instance.GetDefinitionByExtension(Path.GetExtension(filePath));
+            var config = await _configurationService.LoadConfigurationAsync();
+            if (config.Options.TextViewer.SyntaxHighlight)
+            {
+                textEditor.SyntaxHighlighting = HighlightingManager.Instance.GetDefinitionByExtension(Path.GetExtension(filePath));
+            }
             UpdateWordCount();
         }
 

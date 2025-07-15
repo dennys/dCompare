@@ -50,12 +50,12 @@ namespace dCompare.Options
             }
         }
 
-        public double FontSize
+        public int FontSize
         {
             get => _model.Font.FontSize;
             set
             {
-                _model.Font.FontSize = Math.Round(value, 1);
+                _model.Font.FontSize = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(FontDisplay));
             }

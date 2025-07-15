@@ -39,7 +39,7 @@ namespace dCompare.Configuration
         public string FontFamily { get; set; } = "Consolas";
 
         [JsonPropertyName("FontSize")]
-        public double FontSize { get; set; } = 12;
+        public int FontSize { get; set; } = 12;
 
     }
 
