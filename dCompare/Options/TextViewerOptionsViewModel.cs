@@ -19,45 +19,67 @@ namespace dCompare.Options
             _model = model;
             SelectFontCommand = new RelayCommand(SelectFont);
             ResetToDefaultCommand = new RelayCommand(ResetToDefault);
+
+            _readOnly = _model.ReadOnly;
+            _lineNumber = _model.LineNumber;
+            _syntaxHighlight = _model.SyntaxHighlight;
+            _fontFamily = _model.Font.FontFamily;
+            _fontSize = _model.Font.FontSize;
+            _wordWrap = _model.WordWrap;
+            _showStatusBar = _model.ShowStatusBar;
+            _horizontalScrollBarVisibility = _model.HorizontalScrollBarVisibility;
+            _verticalScrollBarVisibility = _model.VerticalScrollBarVisibility;
         }
+
+        private bool _readOnly;
+        private bool _lineNumber;
+        private bool _syntaxHighlight;
+        private string _fontFamily;
+        private int _fontSize;
+        private bool _wordWrap;
+        private bool _showStatusBar;
+        private string _horizontalScrollBarVisibility;
+        private string _verticalScrollBarVisibility;
 
         public bool ReadOnly
         {
-            get => _model.ReadOnly;
-            set => _model.ReadOnly = value;
+            get => _readOnly;
+            set => SetProperty(ref _readOnly, value);
         }
 
         public bool LineNumber
         {
-            get => _model.LineNumber;
-            set => _model.LineNumber = value;
+            get => _lineNumber;
+            set => SetProperty(ref _lineNumber, value);
         }
 
         public bool SyntaxHighlight
         {
-            get => _model.SyntaxHighlight;
-            set => _model.SyntaxHighlight = value;
+            get => _syntaxHighlight;
+            set => SetProperty(ref _syntaxHighlight, value);
         }
 
         public string FontFamily
         {
-            get => _model.Font.FontFamily;
+            get => _fontFamily;
             set
             {
-                _model.Font.FontFamily = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(FontDisplay));
+                if (SetProperty(ref _fontFamily, value))
+                {
+                    OnPropertyChanged(nameof(FontDisplay));
+                }
             }
         }
 
         public int FontSize
         {
-            get => _model.Font.FontSize;
+            get => _fontSize;
             set
             {
-                _model.Font.FontSize = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(FontDisplay));
+                if (SetProperty(ref _fontSize, value))
+                {
+                    OnPropertyChanged(nameof(FontDisplay));
+                }
             }
         }
 
@@ -65,28 +87,28 @@ namespace dCompare.Options
 
         public bool WordWrap
         {
-            get => _model.WordWrap;
-            set => _model.WordWrap = value;
+            get => _wordWrap;
+            set => SetProperty(ref _wordWrap, value);
         }
 
         public bool ShowStatusBar
         {
-            get => _model.ShowStatusBar;
-            set => _model.ShowStatusBar = value;
+            get => _showStatusBar;
+            set => SetProperty(ref _showStatusBar, value);
         }
 
         public List<string> ScrollBarVisibilities { get; } = new List<string> { "Auto", "Visible", "Hidden" };
 
         public string HorizontalScrollBarVisibility
         {
-            get => _model.HorizontalScrollBarVisibility;
-            set => _model.HorizontalScrollBarVisibility = value;
+            get => _horizontalScrollBarVisibility;
+            set => SetProperty(ref _horizontalScrollBarVisibility, value);
         }
 
         public string VerticalScrollBarVisibility
         {
-            get => _model.VerticalScrollBarVisibility;
-            set => _model.VerticalScrollBarVisibility = value;
+            get => _verticalScrollBarVisibility;
+            set => SetProperty(ref _verticalScrollBarVisibility, value);
         }
 
         private void SelectFont(object obj)
@@ -103,31 +125,29 @@ namespace dCompare.Options
 
         public void UpdateModel()
         {
-            // Model is updated directly via property setters
+            _model.ReadOnly = ReadOnly;
+            _model.LineNumber = LineNumber;
+            _model.SyntaxHighlight = SyntaxHighlight;
+            _model.Font.FontFamily = FontFamily;
+            _model.Font.FontSize = FontSize;
+            _model.WordWrap = WordWrap;
+            _model.ShowStatusBar = ShowStatusBar;
+            _model.HorizontalScrollBarVisibility = HorizontalScrollBarVisibility;
+            _model.VerticalScrollBarVisibility = VerticalScrollBarVisibility;
         }
 
         private void ResetToDefault(object obj)
         {
             var defaultOptions = new TextViewerOptions();
-            _model.ReadOnly = defaultOptions.ReadOnly;
-            _model.LineNumber = defaultOptions.LineNumber;
-            _model.SyntaxHighlight = defaultOptions.SyntaxHighlight;
-            _model.Font = defaultOptions.Font;
-            _model.WordWrap = defaultOptions.WordWrap;
-            _model.HorizontalScrollBarVisibility = defaultOptions.HorizontalScrollBarVisibility;
-            _model.VerticalScrollBarVisibility = defaultOptions.VerticalScrollBarVisibility;
-            _model.ShowStatusBar = defaultOptions.ShowStatusBar;
-
-            OnPropertyChanged(nameof(ReadOnly));
-            OnPropertyChanged(nameof(LineNumber));
-            OnPropertyChanged(nameof(SyntaxHighlight));
-            OnPropertyChanged(nameof(FontFamily));
-            OnPropertyChanged(nameof(FontSize));
-            OnPropertyChanged(nameof(WordWrap));
-            OnPropertyChanged(nameof(HorizontalScrollBarVisibility));
-            OnPropertyChanged(nameof(VerticalScrollBarVisibility));
-            OnPropertyChanged(nameof(ShowStatusBar));
-            OnPropertyChanged(nameof(FontDisplay));
+            ReadOnly = defaultOptions.ReadOnly;
+            LineNumber = defaultOptions.LineNumber;
+            SyntaxHighlight = defaultOptions.SyntaxHighlight;
+            FontFamily = defaultOptions.Font.FontFamily;
+            FontSize = defaultOptions.Font.FontSize;
+            WordWrap = defaultOptions.WordWrap;
+            ShowStatusBar = defaultOptions.ShowStatusBar;
+            HorizontalScrollBarVisibility = defaultOptions.HorizontalScrollBarVisibility;
+            VerticalScrollBarVisibility = defaultOptions.VerticalScrollBarVisibility;
         }
     }
 }
