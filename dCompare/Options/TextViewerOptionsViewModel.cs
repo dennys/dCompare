@@ -109,15 +109,25 @@ namespace dCompare.Options
         private void ResetToDefault(object obj)
         {
             var defaultOptions = new TextViewerOptions();
-            ReadOnly = defaultOptions.ReadOnly;
-            LineNumber = defaultOptions.LineNumber;
-            SyntaxHighlight = defaultOptions.SyntaxHighlight;
-            FontFamily = defaultOptions.Font.FontFamily;
-            FontSize = defaultOptions.Font.FontSize;
-            WordWrap = defaultOptions.WordWrap;
-            HorizontalScrollBarVisibility = defaultOptions.HorizontalScrollBarVisibility;
-            VerticalScrollBarVisibility = defaultOptions.VerticalScrollBarVisibility;
-            ShowStatusBar = defaultOptions.ShowStatusBar;
+            _model.ReadOnly = defaultOptions.ReadOnly;
+            _model.LineNumber = defaultOptions.LineNumber;
+            _model.SyntaxHighlight = defaultOptions.SyntaxHighlight;
+            _model.Font = defaultOptions.Font;
+            _model.WordWrap = defaultOptions.WordWrap;
+            _model.HorizontalScrollBarVisibility = defaultOptions.HorizontalScrollBarVisibility;
+            _model.VerticalScrollBarVisibility = defaultOptions.VerticalScrollBarVisibility;
+            _model.ShowStatusBar = defaultOptions.ShowStatusBar;
+
+            OnPropertyChanged(nameof(ReadOnly));
+            OnPropertyChanged(nameof(LineNumber));
+            OnPropertyChanged(nameof(SyntaxHighlight));
+            OnPropertyChanged(nameof(FontFamily));
+            OnPropertyChanged(nameof(FontSize));
+            OnPropertyChanged(nameof(WordWrap));
+            OnPropertyChanged(nameof(HorizontalScrollBarVisibility));
+            OnPropertyChanged(nameof(VerticalScrollBarVisibility));
+            OnPropertyChanged(nameof(ShowStatusBar));
+            OnPropertyChanged(nameof(FontDisplay));
         }
     }
 }
