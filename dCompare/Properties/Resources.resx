@@ -342,4 +342,7 @@
   <data name="ViewFileMenu" xml:space="preserve">
     <value>View File</value>
   </data>
+  <data name="ViewWith" xml:space="preserve">
+    <value>View with</value>
+  </data>
 </root>

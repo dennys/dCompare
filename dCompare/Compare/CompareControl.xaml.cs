@@ -196,8 +196,8 @@ namespace dCompare.Compare
 
                 if (leftCompareWithMenu == null || rightCompareWithMenu == null || leftViewWithMenu == null || rightViewWithMenu == null) return;
 
-                PopulateViewerMenu(leftCompareWithMenu, viewers);
-                PopulateViewerMenu(rightCompareWithMenu, viewers);
+                PopulateViewerMenu(leftCompareWithMenu, viewers, ContextMenu_CompareWithViewer_Click);
+                PopulateViewerMenu(rightCompareWithMenu, viewers, ContextMenu_CompareWithViewer_Click);
 
                 var avalonEditViewer = new ExternalViewer { Name = "AvalonEdit" };
                 var viewerViewers = new List<ExternalViewer> { avalonEditViewer };
@@ -241,19 +241,10 @@ namespace dCompare.Compare
 
         private void ContextMenu_ViewWithViewer_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is not MenuItem menuItem || menuItem.Tag is not ExternalViewer viewerConfig)
+            ProcessViewerAction(sender, (selectedItem, viewerConfig) =>
             {
-                MessageBox.Show("Invalid viewer configuration.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            if (ResultListView.SelectedItem is not TreeNode selectedItem)
-            {
-                MessageBox.Show("Please select an item.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            OpenFile(selectedItem);
+                OpenFile(selectedItem);
+            });
         }
 
         private void LoadConfigurationAsync()
@@ -697,6 +688,50 @@ namespace dCompare.Compare
 
         private void ContextMenu_CompareWithViewer_Click(object sender, RoutedEventArgs e)
         {
+            ProcessViewerAction(sender, (selectedItem, viewerConfig) =>
+            {
+                if (selectedItem.IsDirectory)
+                {
+                    MessageBox.Show($"Cannot compare directories with {viewerConfig.Name}.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                string? leftPath = selectedItem.LeftNode?.FullPath;
+                string? rightPath = selectedItem.RightNode?.FullPath;
+
+                if (string.IsNullOrEmpty(leftPath) && string.IsNullOrEmpty(rightPath))
+                {
+                    MessageBox.Show("No valid file paths to compare.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                try
+                {
+                    leftPath = leftPath ?? CreateTemporaryEmptyFile();
+                    rightPath = rightPath ?? CreateTemporaryEmptyFile();
+
+                    string arguments = viewerConfig.Arguments
+                        .Replace("{left}", leftPath)
+                        .Replace("{right}", rightPath);
+
+                    ProcessStartInfo startInfo = new ProcessStartInfo
+                    {
+                        FileName = viewerConfig.Path,
+                        Arguments = arguments,
+                        UseShellExecute = true
+                    };
+
+                    Process.Start(startInfo);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error launching {viewerConfig.Name}: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            });
+        }
+
+        private void ProcessViewerAction(object sender, Action<TreeNode, ExternalViewer> action)
+        {
             if (sender is not MenuItem menuItem || menuItem.Tag is not ExternalViewer viewerConfig)
             {
                 MessageBox.Show("Invalid viewer configuration.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
@@ -709,43 +744,7 @@ namespace dCompare.Compare
                 return;
             }
 
-            if (selectedItem.IsDirectory)
-            {
-                MessageBox.Show($"Cannot compare directories with {viewerConfig.Name}.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            string? leftPath = selectedItem.LeftNode?.FullPath;
-            string? rightPath = selectedItem.RightNode?.FullPath;
-
-            if (string.IsNullOrEmpty(leftPath) && string.IsNullOrEmpty(rightPath))
-            {
-                MessageBox.Show("No valid file paths to compare.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            try
-            {
-                leftPath = leftPath ?? CreateTemporaryEmptyFile();
-                rightPath = rightPath ?? CreateTemporaryEmptyFile();
-
-                string arguments = viewerConfig.Arguments
-                    .Replace("{left}", leftPath)
-                    .Replace("{right}", rightPath);
-
-                ProcessStartInfo startInfo = new ProcessStartInfo
-                {
-                    FileName = viewerConfig.Path,
-                    Arguments = arguments,
-                    UseShellExecute = true
-                };
-
-                Process.Start(startInfo);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error launching {viewerConfig.Name}: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            action(selectedItem, viewerConfig);
         }
 
         private string CreateTemporaryEmptyFile()
