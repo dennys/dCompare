@@ -12,11 +12,13 @@ namespace dCompare.Options
         private readonly TextViewerOptions _model;
 
         public ICommand SelectFontCommand { get; }
+        public ICommand ResetToDefaultCommand { get; }
 
         public TextViewerOptionsViewModel(TextViewerOptions model)
         {
             _model = model;
             SelectFontCommand = new RelayCommand(SelectFont);
+            ResetToDefaultCommand = new RelayCommand(ResetToDefault);
         }
 
         public bool ReadOnly
@@ -53,7 +55,7 @@ namespace dCompare.Options
             get => _model.Font.FontSize;
             set
             {
-                _model.Font.FontSize = value;
+                _model.Font.FontSize = Math.Round(value, 1);
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(FontDisplay));
             }
@@ -96,6 +98,19 @@ namespace dCompare.Options
         public void UpdateModel()
         {
             // Model is updated directly via property setters
+        }
+
+        private void ResetToDefault(object obj)
+        {
+            var defaultOptions = new TextViewerOptions();
+            ReadOnly = defaultOptions.ReadOnly;
+            LineNumber = defaultOptions.LineNumber;
+            SyntaxHighlight = defaultOptions.SyntaxHighlight;
+            FontFamily = defaultOptions.Font.FontFamily;
+            FontSize = defaultOptions.Font.FontSize;
+            WordWrap = defaultOptions.WordWrap;
+            HorizontalScrollBarVisibility = defaultOptions.HorizontalScrollBarVisibility;
+            VerticalScrollBarVisibility = defaultOptions.VerticalScrollBarVisibility;
         }
     }
 }

@@ -30,7 +30,6 @@ namespace dCompare.Viewer
             searchPanel = SearchPanel.Install(textEditor);
             LoadSyntaxHighlightingComboBox(syntaxHighlightComboBox);
             ApplySettings();
-            UpdateReadOnlyButton();
         }
 
         private async void ApplySettings()
@@ -43,6 +42,11 @@ namespace dCompare.Viewer
             textEditor.WordWrap = settings.WordWrap;
             textEditor.FontFamily = new System.Windows.Media.FontFamily(settings.Font.FontFamily);
             textEditor.FontSize = settings.Font.FontSize;
+
+            if (settings.SyntaxHighlight)
+            {
+                LoadSyntaxHighlightingComboBox(syntaxHighlightComboBox);
+            }
 
             if (Enum.TryParse<ScrollBarVisibility>(settings.HorizontalScrollBarVisibility, out var horizontalVisibility))
             {

@@ -434,6 +434,8 @@
                               ItemsSource="{Binding ScrollBarVisibilities}"
                               SelectedItem="{Binding VerticalScrollBarVisibility}"/>
                 </Grid>
+
+                <Button Content="Reset to Default" Command="{Binding ResetToDefaultCommand}" HorizontalAlignment="Right" Margin="0,10,0,0"/>
             </StackPanel>
         </DataTemplate>
     </Window.Resources>
