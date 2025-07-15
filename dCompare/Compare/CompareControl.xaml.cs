@@ -216,7 +216,7 @@ namespace dCompare.Compare
         private MenuItem? FindMenuByName(ContextMenu menu, string name) =>
             menu.Items.OfType<MenuItem>().FirstOrDefault(mi => mi.Name == name);
 
-        private void PopulateViewerMenu(MenuItem parentMenu, List<ExternalViewer> viewers, RoutedEventHandler clickHandler = null)
+        private void PopulateViewerMenu(MenuItem parentMenu, List<ExternalViewer> viewers, RoutedEventHandler clickHandler)
         {
             parentMenu.Items.Clear();
             foreach (var viewer in viewers)
@@ -227,14 +227,7 @@ namespace dCompare.Compare
                     Tag = viewer,
                     InputGestureText = viewer.Name
                 };
-                if (clickHandler != null)
-                {
-                    item.Click += clickHandler;
-                }
-                else
-                {
-                    item.Click += ContextMenu_CompareWithViewer_Click;
-                }
+                item.Click += clickHandler;
                 parentMenu.Items.Add(item);
             }
         }
