@@ -145,6 +145,7 @@ namespace dCompare.Viewer
         private void ToggleReadOnly_Click(object sender, RoutedEventArgs e)
         {
             IsReadOnly = !IsReadOnly;
+            UpdateReadOnlyButton();
         }
 
         private void UpdateReadOnlyButton()
