@@ -106,10 +106,12 @@ namespace dCompare.Options
             var sessionNode = new SettingsMenuItem("Session", new SessionOptionsViewModel(_appConfig.Options.Session), this);
             var confirmationNode = new SettingsMenuItem("Confirmation", new ConfirmationOptionsViewModel(_appConfig.Options.Confirmation), this);
             var hotkeysNode = new SettingsMenuItem("HotKeys", new HotKeysOptionsViewModel(_appConfig.Options.HotKeys), this);
+            var textViewerNode = new SettingsMenuItem("TextViewer", new TextViewerOptionsViewModel(_appConfig.Options.TextViewer), this);
 
             optionsNode.Children.Add(uiNode);
             optionsNode.Children.Add(compareNode);
             optionsNode.Children.Add(diffNode);
+            optionsNode.Children.Add(textViewerNode);
             optionsNode.Children.Add(confirmationNode);
             optionsNode.Children.Add(sessionNode);
             optionsNode.Children.Add(hotkeysNode);
@@ -378,7 +380,7 @@ namespace dCompare.Options
             }
         }
 
-        public List<string> AvailableDoubleClickActions => new List<string> { "view", "edit", "open" };
+        public List<string> AvailableDoubleClickActions => new List<string> { "View", "Compare" };
 
         public string DoubleClickAction
         {
