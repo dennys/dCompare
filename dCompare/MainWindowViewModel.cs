@@ -13,6 +13,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using dCompare.Viewer;
+using dCompare.FileOperation;
 
 namespace dCompare
 {

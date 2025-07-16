@@ -535,7 +535,7 @@ namespace dCompare.Compare
                     var config = await _configService.LoadConfigurationAsync();
                     if (config.Options.Compare.DoubleClick == "View")
                     {
-                        ViewFile(clickedItem);
+                        ViewFileAsync(clickedItem);
                     }
                     else
                     {
@@ -545,7 +545,7 @@ namespace dCompare.Compare
             }
         }
 
-        private void ViewFile(TreeNode selectedItem)
+        private async Task ViewFileAsync(TreeNode selectedItem)
         {
             if (selectedItem.IsDirectory)
             {
@@ -905,7 +905,7 @@ namespace dCompare.Compare
                 return;
             }
 
-            ViewFile(selectedItem);
+            ViewFileAsync(selectedItem);
         }
 
         private async Task ProcessFileOperationsAsync(
