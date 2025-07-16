@@ -7,12 +7,6 @@ namespace dCompare.Configuration
     {
         [JsonPropertyName("Options")]
         public Options Options { get; set; } = new();
-
-        [JsonPropertyName("Tools")]
-        public Dictionary<string, ToolConfiguration> Tools { get; set; } = new();
-
-        [JsonPropertyName("FileTypeMapping")]
-        public Dictionary<string, FileTypeMappingConfiguration> FileTypeMapping { get; set; } = new();
     }
 
     public class Options
@@ -37,6 +31,11 @@ namespace dCompare.Configuration
 
         [JsonPropertyName("TextViewer")]
         public TextViewerOptions TextViewer { get; set; } = new();
+        [JsonPropertyName("Tools")]
+        public Dictionary<string, ToolConfiguration> Tools { get; set; } = new();
+
+        [JsonPropertyName("FileTypeMapping")]
+        public Dictionary<string, FileTypeMappingConfiguration> FileTypeMapping { get; set; } = new();
     }
 
     public class FontOptions
