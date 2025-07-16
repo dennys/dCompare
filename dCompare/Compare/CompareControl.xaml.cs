@@ -57,6 +57,7 @@ namespace dCompare.Compare
         private readonly IFileManager _fileManager;
         private readonly IConfigurationService _configService;
         private readonly ILogger<CompareControl> _logger;
+        private readonly ViewerFactory _viewerFactory;
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName)
@@ -136,6 +137,7 @@ namespace dCompare.Compare
             _fileManager = fileManager;
             _configService = configService;
             _logger = logger;
+            _viewerFactory = new ViewerFactory(_configService);
             _treeNodeManager = new TreeNodeManager(_treeNodes);
             _fileOperationHandler = new FileOperationHandler(_fileManager);
 
@@ -520,14 +522,7 @@ namespace dCompare.Compare
                     return;
                 }
 
-                var mainWindowViewModel = tabControl.DataContext as MainWindowViewModel;
-                if (mainWindowViewModel?.ViewerFactory == null)
-                {
-                    MessageBox.Show("ViewerFactory is not available.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                var viewer = mainWindowViewModel.ViewerFactory.CreateViewer(path);
+                var viewer = _viewerFactory.CreateViewer(path);
                 viewer.LoadFile(path);
 
                 string tabHeader = $"View: {System.IO.Path.GetFileName(path)}";
@@ -638,8 +633,7 @@ namespace dCompare.Compare
             try
             {
                 var config = await _configService.LoadConfigurationAsync();
-                var comparisonHandler = new FileComparisonHandler(config);
-                FileType fileType = comparisonHandler.DetermineFileType(leftPath ?? rightPath);
+                FileType fileType = DetermineFileType(leftPath ?? rightPath);
 
                 leftPath = leftPath ?? CreateTemporaryEmptyFile();
                 rightPath = rightPath ?? CreateTemporaryEmptyFile();
@@ -668,12 +662,15 @@ namespace dCompare.Compare
                 }
                 else if (fileType == FileType.Text && config?.Options?.Diff?.Text?.Viewer?.Equals("DiffPlex", StringComparison.OrdinalIgnoreCase) == true)
                 {
-                    var comparisonResult = await comparisonHandler.CompareFilesAsync(leftPath, rightPath, fileType);
-                    OpenFileComparisonTab(leftPath, rightPath, fileType, comparisonResult);
+                    var viewer = _viewerFactory.CreateViewer(leftPath, rightPath);
+                    viewer.LoadFile(leftPath);
+                    OpenFileComparisonTab(leftPath, rightPath, fileType, viewer);
                 }
                 else if (fileType == FileType.Image)
                 {
-                    OpenFileComparisonTab(leftPath, rightPath, fileType, null);
+                    var viewer = _viewerFactory.CreateViewer(leftPath, rightPath);
+                    viewer.LoadFile(leftPath);
+                    OpenFileComparisonTab(leftPath, rightPath, fileType, viewer);
                 }
                 else
                 {
@@ -754,7 +751,7 @@ namespace dCompare.Compare
             return tempPath;
         }
 
-        private void OpenFileComparisonTab(string leftPath, string rightPath, FileType fileType, object? comparisonResult)
+        private void OpenFileComparisonTab(string leftPath, string rightPath, FileType fileType, IViewer viewer)
         {
             if (WpfTreeHelperExtensions.FindParent<TabItem>(this) is not TabItem parentTab ||
                 WpfTreeHelperExtensions.FindParent<TabControl>(parentTab) is not TabControl tabControl)
@@ -766,25 +763,7 @@ namespace dCompare.Compare
             string tabHeader = $"Compare: {System.IO.Path.GetFileName(leftPath)} - {System.IO.Path.GetFileName(rightPath)}";
             TabItem newTab = new() { Header = tabHeader };
 
-            if (fileType == FileType.Text)
-            {
-                if (comparisonResult is null)
-                {
-                    MessageBox.Show("Cannot find comparison result.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-                newTab.Content = new TextDiffPlex(leftPath, rightPath, comparisonResult);
-            }
-            else if (fileType == FileType.Image)
-            {
-                var imageViewer = new ImageDiff(leftPath, rightPath);
-                newTab.Content = imageViewer;
-            }
-            else
-            {
-                MessageBox.Show("Unsupported file type for comparison.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
+            newTab.Content = viewer.GetControl();
 
             tabControl.Items.Add(newTab);
             tabControl.SelectedItem = newTab;
@@ -1281,6 +1260,25 @@ namespace dCompare.Compare
                     }
                 }), System.Windows.Threading.DispatcherPriority.Input);
             }
+        }
+
+        private FileType DetermineFileType(string filePath)
+        {
+            string extension = Path.GetExtension(filePath).ToLowerInvariant();
+            var textExtensions = new List<string> { ".txt", ".log", ".cs", ".json", ".xml", ".html", ".css", ".js", ".py", ".md", ".sql" };
+            var imageExtensions = new List<string> { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tiff", ".webp" };
+
+            if (textExtensions.Contains(extension))
+            {
+                return FileType.Text;
+            }
+
+            if (imageExtensions.Contains(extension))
+            {
+                return FileType.Image;
+            }
+
+            return FileType.Binary;
         }
     }
 }

@@ -60,8 +60,6 @@ namespace dCompare
         [ObservableProperty]
         private string openOptionsTooltip = string.Empty;
 
-        public ViewerFactory? ViewerFactory { get; set; }
-
         partial void OnAddTabHotkeyChanged(string value) => UpdateTooltip();
         partial void OnCloseTabHotkeyChanged(string value) => UpdateTooltip();
         partial void OnRefreshHotkeyChanged(string value) => UpdateTooltip();
