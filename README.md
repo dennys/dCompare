@@ -46,10 +46,6 @@ Partial implemented
 
 Not implemented
 
-- **Hotkey Conflicts Check**
-- **Search and Filter in Comparison Results**:
-  - Feature: Add a search bar above the ResultListView in CompareControl.xamlx to filter files/folders by name, size, or status.
-  - Implementation: Bind a TextBox to a filter command that updates the ItemsSource of the ListView using a CollectionViewSource with a filter predicate.
 - **Backup**
   - Automatically backup file instead of overwrite when copying or moveing files
 - **File Preview**:
@@ -76,8 +72,9 @@ Not implemented
 
 - **.NET 8**: Required for features like `OpenFolderDialog` used for folder selection. See [Microsoft Documentation](https://learn.microsoft.com/en-us/dotnet/api/microsoft.win32.openfolderdialog?view=windowsdesktop-8.0).
 - **[CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet)**:  See <https://learn.microsoft.com/zh-tw/dotnet/communitytoolkit/mvvm/>
-- **[Serilog](https://github.com/serilog/serilog)**: Used for logging application events and debugging.
+- **[AvalonEdit ](https://github.com/icsharpcode/AvalonEdit)**: Used for text file viewer/editor.
 - **[DiffPlex on GitHub](https://github.com/mmanela/diffplex)**: Used for text file comparison.
+- **[Serilog](https://github.com/serilog/serilog)**: Used for logging application events and debugging.
 
 # File Copy Method Comparison (by ChatGPT)
 

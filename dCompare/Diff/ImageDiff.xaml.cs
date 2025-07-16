@@ -1,12 +1,13 @@
 ﻿using dCompare.Compare;
 using System.ComponentModel;
 using System.Windows;
+using dCompare.Viewer;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
 namespace dCompare.Diff
 {
-    public partial class ImageDiff : UserControl, INotifyPropertyChanged, IRefreshable
+    public partial class ImageDiff : UserControl, INotifyPropertyChanged, IRefreshable, IViewer
     {
         private string _leftPath = string.Empty;
         private string _rightPath = string.Empty;
@@ -138,6 +139,24 @@ namespace dCompare.Diff
         protected virtual void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public void LoadFile(string filePath)
+        {
+            // In a comparison view, we load both files, so this method can be a no-op
+            // or load the left file path.
+            LeftPath = filePath;
+            Refresh();
+        }
+
+        public void SaveFile(string? path = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public UserControl GetControl()
+        {
+            return this;
         }
     }
 }

@@ -339,4 +339,10 @@
   <data name="Filter" xml:space="preserve">
     <value>Filter</value>
   </data>
+  <data name="ViewFileMenu" xml:space="preserve">
+    <value>View File</value>
+  </data>
+  <data name="ViewWith" xml:space="preserve">
+    <value>View with</value>
+  </data>
 </root>

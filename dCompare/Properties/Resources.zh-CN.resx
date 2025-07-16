@@ -339,4 +339,10 @@
   <data name="Filter" xml:space="preserve">
     <value>过滤</value>
   </data>
+  <data name="ViewFileMenu" xml:space="preserve">
+    <value>查看文件</value>
+  </data>
+  <data name="ViewWith" xml:space="preserve">
+    <value>查看方式</value>
+  </data>
 </root>

@@ -28,6 +28,46 @@ namespace dCompare.Configuration
 
         [JsonPropertyName("HotKeys")]
         public HotKeysOptions HotKeys { get; set; } = new();
+
+        [JsonPropertyName("TextViewer")]
+        public TextViewerOptions TextViewer { get; set; } = new();
+    }
+
+    public class FontOptions
+    {
+        [JsonPropertyName("FontFamily")]
+        public string FontFamily { get; set; } = "Consolas";
+
+        [JsonPropertyName("FontSize")]
+        public int FontSize { get; set; } = 12;
+
+    }
+
+    public class TextViewerOptions
+    {
+        [JsonPropertyName("ReadOnly")]
+        public bool ReadOnly { get; set; } = false;
+
+        [JsonPropertyName("LineNumber")]
+        public bool LineNumber { get; set; } = true;
+
+        [JsonPropertyName("SyntaxHighlight")]
+        public bool SyntaxHighlight { get; set; } = true;
+
+        [JsonPropertyName("Font")]
+        public FontOptions Font { get; set; } = new();
+
+        [JsonPropertyName("WordWrap")]
+        public bool WordWrap { get; set; } = false;
+
+        [JsonPropertyName("HorizontalScrollBarVisibility")]
+        public string HorizontalScrollBarVisibility { get; set; } = "Auto";
+
+        [JsonPropertyName("VerticalScrollBarVisibility")]
+        public string VerticalScrollBarVisibility { get; set; } = "Auto";
+
+        [JsonPropertyName("ShowStatusBar")]
+        public bool ShowStatusBar { get; set; } = true;
     }
 
     public class UIOptions
@@ -49,7 +89,7 @@ namespace dCompare.Configuration
             new Dictionary<ComparisonAlgorithm, ComparisonAlgorithmInfo>(ComparisonAlgorithms.AlgorithmSettings);
 
         [JsonPropertyName("DoubleClick")]
-        public string DoubleClick { get; set; } = "view";
+        public string DoubleClick { get; set; } = "compare";
     }
 
     public class ScanMethodOptions
