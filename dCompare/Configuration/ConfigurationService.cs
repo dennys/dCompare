@@ -80,12 +80,12 @@ namespace dCompare.Configuration
         /// <param name="operation">The operation to check (e.g., "view" or "diff").</param>
         /// <param name="extension">The file extension to check (e.g., ".txt" or ".png").</param>
         /// <returns>An enumerable of supported ToolConfiguration objects.</returns>
-        public IEnumerable<ToolConfiguration> GetSupportedTools(string operation, string extension)
+        public IEnumerable<ToolOptions> GetSupportedTools(string operation, string extension)
         {
-            return _configuration.GetSection("Tools").Get<Dictionary<string, ToolConfiguration>>()?.Values
+            return _configuration.GetSection("Tools").Get<Dictionary<string, ToolOptions>>()?.Values
                 .Where(tool => tool.Enabled &&
                               tool.SupportsOperation(operation) &&
-                              tool.SupportsExtension(extension)) ?? Enumerable.Empty<ToolConfiguration>();
+                              tool.SupportsExtension(extension)) ?? Enumerable.Empty<ToolOptions>();
         }
 
         /// <summary>
@@ -93,9 +93,9 @@ namespace dCompare.Configuration
         /// </summary>
         /// <param name="extension">The file extension to check (e.g., ".txt" or ".png").</param>
         /// <returns>The FileTypeMappingConfiguration for the extension, or null if not found.</returns>
-        public FileTypeMappingConfiguration? GetFileTypeMapping(string extension)
+        public FileTypeMappingOptions? GetFileTypeMapping(string extension)
         {
-            return _configuration.GetSection("FileTypeMapping").Get<Dictionary<string, FileTypeMappingConfiguration>>()?.Values
+            return _configuration.GetSection("FileTypeMapping").Get<Dictionary<string, FileTypeMappingOptions>>()?.Values
                 .FirstOrDefault(mapping => mapping.Extensions.Contains(extension, StringComparer.OrdinalIgnoreCase));
         }
 
@@ -105,7 +105,7 @@ namespace dCompare.Configuration
         /// <param name="operation">The operation to check (e.g., "view" or "diff").</param>
         /// <param name="extension">The file extension to check (e.g., ".txt" or ".png").</param>
         /// <returns>The default ToolConfiguration, or null if not found.</returns>
-        public ToolConfiguration? GetDefaultTool(string operation, string extension)
+        public ToolOptions? GetDefaultTool(string operation, string extension)
         {
             var fileMapping = GetFileTypeMapping(extension);
             if (fileMapping == null) return null;
@@ -117,7 +117,7 @@ namespace dCompare.Configuration
                 _ => null
             };
 
-            var tools = _configuration.GetSection("Tools").Get<Dictionary<string, ToolConfiguration>>();
+            var tools = _configuration.GetSection("Tools").Get<Dictionary<string, ToolOptions>>();
             return toolName != null && tools != null && tools.TryGetValue(toolName, out var tool) ? tool : null;
         }
 
@@ -127,7 +127,7 @@ namespace dCompare.Configuration
         /// <param name="operation">The operation to check (e.g., "view" or "diff").</param>
         /// <param name="extension">The file extension to check (e.g., ".txt" or ".png").</param>
         /// <returns>An enumerable of preferred ToolConfiguration objects in priority order.</returns>
-        public IEnumerable<ToolConfiguration> GetPreferredTools(string operation, string extension)
+        public IEnumerable<ToolOptions> GetPreferredTools(string operation, string extension)
         {
             var fileMapping = GetFileTypeMapping(extension);
             if (fileMapping == null) yield break;
@@ -146,7 +146,7 @@ namespace dCompare.Configuration
                 preferredToolNames = Array.Empty<string>().ToList();
             }
 
-            var tools = _configuration.GetSection("Tools").Get<Dictionary<string, ToolConfiguration>>();
+            var tools = _configuration.GetSection("Tools").Get<Dictionary<string, ToolOptions>>();
             if (tools == null) yield break;
 
             foreach (var toolName in preferredToolNames)
@@ -160,16 +160,16 @@ namespace dCompare.Configuration
                 }
             }
         }
-        public IEnumerable<ToolConfiguration> GetAllToolsForOperation(string operation)
+        public IEnumerable<ToolOptions> GetAllToolsForOperation(string operation)
         {
-            var tools = _configuration.GetSection("Tools").Get<Dictionary<string, ToolConfiguration>>();
+            var tools = _configuration.GetSection("Tools").Get<Dictionary<string, ToolOptions>>();
             return tools?.Values
                 .Where(tool => tool.Enabled && tool.SupportsOperation(operation))
-                ?? Enumerable.Empty<ToolConfiguration>();
+                ?? Enumerable.Empty<ToolOptions>();
         }
         public IEnumerable<string> GetSupportedExtensions(string? toolName = null, string? operation = null)
         {
-            var tools = _configuration.GetSection("Tools").Get<Dictionary<string, ToolConfiguration>>();
+            var tools = _configuration.GetSection("Tools").Get<Dictionary<string, ToolOptions>>();
             if (tools == null) yield break;
 
             foreach (var tool in tools.Values)

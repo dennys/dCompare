@@ -32,10 +32,10 @@ namespace dCompare.Configuration
         [JsonPropertyName("TextViewer")]
         public TextViewerOptions TextViewer { get; set; } = new();
         [JsonPropertyName("Tools")]
-        public Dictionary<string, ToolConfiguration> Tools { get; set; } = new();
+        public Dictionary<string, ToolOptions> Tools { get; set; } = new();
 
         [JsonPropertyName("FileTypeMapping")]
-        public Dictionary<string, FileTypeMappingConfiguration> FileTypeMapping { get; set; } = new();
+        public Dictionary<string, FileTypeMappingOptions> FileTypeMapping { get; set; } = new();
     }
 
     public class FontOptions
@@ -105,7 +105,7 @@ namespace dCompare.Configuration
         public bool ParallelOptions { get; set; } = true;
     }
 
-    public class ToolConfiguration
+    public class ToolOptions
     {
         [JsonPropertyName("Name")]
         public string Name { get; set; } = string.Empty;
@@ -144,7 +144,7 @@ namespace dCompare.Configuration
             SupportedExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase);
     }
 
-    public class FileTypeMappingConfiguration
+    public class FileTypeMappingOptions
     {
         [JsonPropertyName("Extensions")]
         public List<string> Extensions { get; set; } = new();
