@@ -23,6 +23,8 @@ namespace dCompare.Configuration
             Converters = { new JsonStringEnumConverter() }
         };
 
+        private AppConfiguration _appConfig;
+
         /// <summary>
         /// Initializes a new instance of the ConfigurationService.
         /// </summary>
@@ -34,6 +36,9 @@ namespace dCompare.Configuration
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile(configFileName, optional: true, reloadOnChange: true);
             _configuration = builder.Build();
+
+            // Load the configuration into the private field
+            _appConfig = LoadConfigurationAsync().Result;
         }
 
         /// <summary>
@@ -82,10 +87,10 @@ namespace dCompare.Configuration
         /// <returns>An enumerable of supported ToolConfiguration objects.</returns>
         public IEnumerable<ToolOptions> GetSupportedTools(string operation, string extension)
         {
-            return _configuration.GetSection("Tools").Get<Dictionary<string, ToolOptions>>()?.Values
+            return _appConfig.Options.Tools.Values
                 .Where(tool => tool.Enabled &&
-                              tool.SupportsOperation(operation) &&
-                              tool.SupportsExtension(extension)) ?? Enumerable.Empty<ToolOptions>();
+                               tool.SupportsOperation(operation) &&
+                               tool.SupportsExtension(extension));
         }
 
         /// <summary>
@@ -95,7 +100,7 @@ namespace dCompare.Configuration
         /// <returns>The FileTypeMappingConfiguration for the extension, or null if not found.</returns>
         public FileTypeMappingOptions? GetFileTypeMapping(string extension)
         {
-            return _configuration.GetSection("FileTypeMapping").Get<Dictionary<string, FileTypeMappingOptions>>()?.Values
+            return _appConfig.Options.FileTypeMapping.Values
                 .FirstOrDefault(mapping => mapping.Extensions.Contains(extension, StringComparer.OrdinalIgnoreCase));
         }
 
@@ -117,8 +122,7 @@ namespace dCompare.Configuration
                 _ => null
             };
 
-            var tools = _configuration.GetSection("Tools").Get<Dictionary<string, ToolOptions>>();
-            return toolName != null && tools != null && tools.TryGetValue(toolName, out var tool) ? tool : null;
+            return toolName != null && _appConfig.Options.Tools.TryGetValue(toolName, out var tool) ? tool : null;
         }
 
         /// <summary>
@@ -146,12 +150,9 @@ namespace dCompare.Configuration
                 preferredToolNames = Array.Empty<string>().ToList();
             }
 
-            var tools = _configuration.GetSection("Tools").Get<Dictionary<string, ToolOptions>>();
-            if (tools == null) yield break;
-
             foreach (var toolName in preferredToolNames)
             {
-                if (tools.TryGetValue(toolName, out var tool) &&
+                if (_appConfig.Options.Tools.TryGetValue(toolName, out var tool) &&
                     tool.Enabled &&
                     tool.SupportsOperation(operation) &&
                     tool.SupportsExtension(extension))
@@ -162,17 +163,12 @@ namespace dCompare.Configuration
         }
         public IEnumerable<ToolOptions> GetAllToolsForOperation(string operation)
         {
-            var tools = _configuration.GetSection("Tools").Get<Dictionary<string, ToolOptions>>();
-            return tools?.Values
-                .Where(tool => tool.Enabled && tool.SupportsOperation(operation))
-                ?? Enumerable.Empty<ToolOptions>();
+            return _appConfig.Options.Tools.Values
+                .Where(tool => tool.Enabled && tool.SupportsOperation(operation));
         }
         public IEnumerable<string> GetSupportedExtensions(string? toolName = null, string? operation = null)
         {
-            var tools = _configuration.GetSection("Tools").Get<Dictionary<string, ToolOptions>>();
-            if (tools == null) yield break;
-
-            foreach (var tool in tools.Values)
+            foreach (var tool in _appConfig.Options.Tools.Values)
             {
                 if (toolName != null && tool.Name != toolName) continue;
                 if (operation != null && !tool.SupportsOperation(operation)) continue;
