@@ -54,6 +54,7 @@ namespace dCompare
 
                     // Register Services as Singletons
                     services.AddSingleton<IConfigurationService, ConfigurationService>();
+                    services.AddSingleton<IToolService, ToolService>();
                     services.AddSingleton<ISessionManager, SessionManager>();
                     services.AddSingleton<IFileManager, FileManager>();
 

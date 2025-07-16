@@ -56,6 +56,7 @@ namespace dCompare.Compare
 
         private readonly IFileManager _fileManager;
         private readonly IConfigurationService _configService;
+        private readonly IToolService _toolService;
         private readonly ILogger<CompareControl> _logger;
         private readonly ViewerFactory _viewerFactory;
 
@@ -130,14 +131,15 @@ namespace dCompare.Compare
             }
         }
 
-        public CompareControl(IConfigurationService configService, IFileManager fileManager, ILogger<CompareControl> logger)
+        public CompareControl(IConfigurationService configService, IToolService toolService, IFileManager fileManager, ILogger<CompareControl> logger)
         {
             InitializeComponent();
 
             _fileManager = fileManager;
             _configService = configService;
+            _toolService = toolService;
             _logger = logger;
-            _viewerFactory = new ViewerFactory(_configService);
+            _viewerFactory = new ViewerFactory(configService);
             _treeNodeManager = new TreeNodeManager(_treeNodes);
             _fileOperationHandler = new FileOperationHandler(_fileManager);
 
@@ -195,11 +197,12 @@ namespace dCompare.Compare
 
                 if (leftCompareWithMenu == null || rightCompareWithMenu == null || leftViewWithMenu == null || rightViewWithMenu == null) return;
 
-                var diffTools = _configService.GetAllToolsForOperation(Operations.Diff);
+                var config = await _configService.LoadConfigurationAsync();
+                var diffTools = _toolService.GetAllToolsForOperation(config, Operations.Diff);
                 PopulateToolMenu(leftCompareWithMenu, diffTools, ContextMenu_CompareWithViewer_Click);
                 PopulateToolMenu(rightCompareWithMenu, diffTools, ContextMenu_CompareWithViewer_Click);
 
-                var viewTools = _configService.GetAllToolsForOperation(Operations.View);
+                var viewTools = _toolService.GetAllToolsForOperation(config, Operations.View);
                 PopulateToolMenu(leftViewWithMenu, viewTools, ContextMenu_ViewWithViewer_Click);
                 PopulateToolMenu(rightViewWithMenu, viewTools, ContextMenu_ViewWithViewer_Click);
             }
@@ -560,8 +563,9 @@ namespace dCompare.Compare
 
             try
             {
+                var config = await _configService.LoadConfigurationAsync();
                 string extension = Path.GetExtension(path);
-                var defaultTool = _configService.GetDefaultTool(Operations.View, extension);
+                var defaultTool = _toolService.GetDefaultTool(config, Operations.View, extension);
 
                 if (defaultTool == null)
                 {
@@ -700,8 +704,9 @@ namespace dCompare.Compare
 
             try
             {
+                var config = await _configService.LoadConfigurationAsync();
                 string extension = Path.GetExtension(leftPath ?? rightPath);
-                var defaultTool = _configService.GetDefaultTool(Operations.Diff, extension);
+                var defaultTool = _toolService.GetDefaultTool(config, Operations.Diff, extension);
 
                 if (defaultTool == null)
                 {
