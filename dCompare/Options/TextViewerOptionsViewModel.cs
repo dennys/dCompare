@@ -119,7 +119,7 @@ namespace dCompare.Options
             if (fontDialog.ShowDialog() == DialogResult.OK)
             {
                 FontFamily = fontDialog.Font.FontFamily.Name;
-                FontSize = fontDialog.Font.Size;
+                FontSize = (int)fontDialog.Font.Size;
             }
         }
 

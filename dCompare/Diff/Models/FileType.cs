@@ -4,6 +4,7 @@ namespace dCompare.Diff.Models
     {
         Text,
         Image,
-        Unsupported
+        Unsupported,
+        Binary
     }
 }
