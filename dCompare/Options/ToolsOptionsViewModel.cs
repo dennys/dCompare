@@ -62,15 +62,30 @@ namespace dCompare.Options
         }
     }
 
-    public class ToolOptionsViewModel : ViewModelBase
+    public class ToolOptionsViewModel : ViewModelBase, IDataErrorInfo
     {
         private readonly ToolOptions _tool;
         public string Key { get; }
+
+        public List<string> AvailableTypes => new List<string> { ToolTypes.BuiltIn, ToolTypes.External };
+        public List<string> AvailableOperations => new List<string> { Operations.View, Operations.Diff };
+
+        public ICommand BrowseCommand { get; }
 
         public ToolOptionsViewModel(string key, ToolOptions tool)
         {
             Key = key;
             _tool = tool;
+            BrowseCommand = new RelayCommand(_ => BrowseForPath());
+        }
+
+        private void BrowseForPath()
+        {
+            var openFileDialog = new Microsoft.Win32.OpenFileDialog();
+            if (openFileDialog.ShowDialog() == true)
+            {
+                Path = openFileDialog.FileName;
+            }
         }
 
         public string Name
@@ -82,8 +97,15 @@ namespace dCompare.Options
         public string Type
         {
             get => _tool.Type;
-            set { _tool.Type = value; OnPropertyChanged(); }
+            set
+            {
+                _tool.Type = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsExternal));
+            }
         }
+
+        public bool IsExternal => Type == ToolTypes.External;
 
         public string Handler
         {
@@ -131,6 +153,31 @@ namespace dCompare.Options
         {
             get => _tool.Enabled;
             set { _tool.Enabled = value; OnPropertyChanged(); }
+        }
+
+        public string Error => null;
+
+        public string this[string columnName]
+        {
+            get
+            {
+                string result = null;
+                if (columnName == nameof(Name))
+                {
+                    if (string.IsNullOrWhiteSpace(Name))
+                    {
+                        result = "Name cannot be empty.";
+                    }
+                }
+                if (columnName == nameof(SupportedExtensions))
+                {
+                    if (string.IsNullOrWhiteSpace(SupportedExtensions))
+                    {
+                        result = "Supported Extensions cannot be empty.";
+                    }
+                }
+                return result;
+            }
         }
     }
 }

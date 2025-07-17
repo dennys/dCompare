@@ -472,28 +472,51 @@
                     </Grid.RowDefinitions>
 
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" Margin="5"/>
-                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+                    <TextBox Grid.Row="0" Grid.Column="1" Margin="5">
+                        <TextBox.Text>
+                            <Binding Path="Name" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <DataErrorValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </TextBox.Text>
+                    </TextBox>
 
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Type:" Margin="5"/>
-                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Type, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+                    <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding AvailableTypes}" SelectedItem="{Binding Type}" Margin="5"/>
 
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="Handler:" Margin="5"/>
                     <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Handler, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
 
                     <TextBlock Grid.Row="3" Grid.Column="0" Text="Path:" Margin="5"/>
-                    <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding Path, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+                    <Grid Grid.Row="3" Grid.Column="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" Text="{Binding Path, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsExternal}" Margin="5,5,0,5"/>
+                        <Button Grid.Column="1" Content="..." Command="{Binding BrowseCommand}" IsEnabled="{Binding IsExternal}" Margin="0,5,5,5" Padding="5,1"/>
+                    </Grid>
 
                     <TextBlock Grid.Row="4" Grid.Column="0" Text="Diff Arguments:" Margin="5"/>
-                    <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding DiffArguments, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+                    <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding DiffArguments, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsExternal}" Margin="5"/>
 
                     <TextBlock Grid.Row="5" Grid.Column="0" Text="View Arguments:" Margin="5"/>
-                    <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding ViewArguments, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+                    <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding ViewArguments, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsExternal}" Margin="5"/>
 
                     <TextBlock Grid.Row="6" Grid.Column="0" Text="Supported Operations:" Margin="5"/>
-                    <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding SupportedOperations, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+                    <ComboBox Grid.Row="6" Grid.Column="1" ItemsSource="{Binding AvailableOperations}" SelectedItem="{Binding SupportedOperations}" Margin="5"/>
 
                     <TextBlock Grid.Row="7" Grid.Column="0" Text="Supported Extensions:" Margin="5"/>
-                    <TextBox Grid.Row="7" Grid.Column="1" Text="{Binding SupportedExtensions, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+                    <TextBox Grid.Row="7" Grid.Column="1" Margin="5">
+                        <TextBox.Text>
+                            <Binding Path="SupportedExtensions" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <DataErrorValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </TextBox.Text>
+                    </TextBox>
 
                     <TextBlock Grid.Row="8" Grid.Column="0" Text="Features:" Margin="5"/>
                     <TextBox Grid.Row="8" Grid.Column="1" Text="{Binding Features, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
@@ -533,16 +556,16 @@
                     <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Extensions, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
 
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Default Diff Tool:" Margin="5"/>
-                    <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding AvailableTools}" SelectedItem="{Binding DefaultDiffTool}" Margin="5"/>
+                    <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding DataContext.Tools, RelativeSource={RelativeSource AncestorType=ListBox}}" DisplayMemberPath="Name" SelectedValuePath="Name" SelectedValue="{Binding DefaultDiffTool}" Margin="5"/>
 
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="Default View Tool:" Margin="5"/>
-                    <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding AvailableTools}" SelectedItem="{Binding DefaultViewTool}" Margin="5"/>
+                    <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding DataContext.Tools, RelativeSource={RelativeSource AncestorType=ListBox}}" DisplayMemberPath="Name" SelectedValuePath="Name" SelectedValue="{Binding DefaultViewTool}" Margin="5"/>
 
                     <TextBlock Grid.Row="3" Grid.Column="0" Text="Preferred Diff Tools:" Margin="5"/>
-                    <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding PreferredDiffTools, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+                    <ListBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding DataContext.Tools, RelativeSource={RelativeSource AncestorType=ListBox}}" SelectedValue="{Binding PreferredDiffTools}" SelectionMode="Multiple" Margin="5"/>
 
                     <TextBlock Grid.Row="4" Grid.Column="0" Text="Preferred View Tools:" Margin="5"/>
-                    <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding PreferredViewTools, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+                    <ListBox Grid.Row="4" Grid.Column="1" ItemsSource="{Binding DataContext.Tools, RelativeSource={RelativeSource AncestorType=ListBox}}" SelectedValue="{Binding PreferredViewTools}" SelectionMode="Multiple" Margin="5"/>
                 </Grid>
             </DockPanel>
         </DataTemplate>

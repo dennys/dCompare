@@ -94,16 +94,16 @@ namespace dCompare.Options
             set { _mapping.DefaultViewTool = value; OnPropertyChanged(); }
         }
 
-        public string PreferredDiffTools
+        public List<string> PreferredDiffTools
         {
-            get => string.Join(",", _mapping.PreferredTools.Diff);
-            set { _mapping.PreferredTools.Diff = value.Split(',').ToList(); OnPropertyChanged(); }
+            get => _mapping.PreferredTools.Diff;
+            set { _mapping.PreferredTools.Diff = value; OnPropertyChanged(); }
         }
 
-        public string PreferredViewTools
+        public List<string> PreferredViewTools
         {
-            get => string.Join(",", _mapping.PreferredTools.View);
-            set { _mapping.PreferredTools.View = value.Split(',').ToList(); OnPropertyChanged(); }
+            get => _mapping.PreferredTools.View;
+            set { _mapping.PreferredTools.View = value; OnPropertyChanged(); }
         }
     }
 }
