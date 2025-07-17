@@ -439,6 +439,113 @@
                 <Button Content="Reset to Default" Command="{Binding ResetToDefaultCommand}" HorizontalAlignment="Right" Margin="0,10,0,0"/>
             </StackPanel>
         </DataTemplate>
+
+        <DataTemplate DataType="{x:Type local:ToolsOptionsViewModel}">
+            <DockPanel Margin="10">
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="5">
+                    <Button Content="Add" Command="{Binding AddToolCommand}" Width="80" Margin="5"/>
+                    <Button Content="Remove" Command="{Binding RemoveToolCommand}" Width="80" Margin="5"/>
+                </StackPanel>
+                <ListBox ItemsSource="{Binding Tools}" SelectedItem="{Binding SelectedTool}" Margin="5">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <Grid DataContext="{Binding SelectedTool}" Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" Margin="5"/>
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Type:" Margin="5"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Type, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Handler:" Margin="5"/>
+                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Handler, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Path:" Margin="5"/>
+                    <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding Path, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Diff Arguments:" Margin="5"/>
+                    <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding DiffArguments, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+
+                    <TextBlock Grid.Row="5" Grid.Column="0" Text="View Arguments:" Margin="5"/>
+                    <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding ViewArguments, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+
+                    <TextBlock Grid.Row="6" Grid.Column="0" Text="Supported Operations:" Margin="5"/>
+                    <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding SupportedOperations, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+
+                    <TextBlock Grid.Row="7" Grid.Column="0" Text="Supported Extensions:" Margin="5"/>
+                    <TextBox Grid.Row="7" Grid.Column="1" Text="{Binding SupportedExtensions, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+
+                    <TextBlock Grid.Row="8" Grid.Column="0" Text="Features:" Margin="5"/>
+                    <TextBox Grid.Row="8" Grid.Column="1" Text="{Binding Features, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+
+                    <CheckBox Grid.Row="9" Grid.Column="1" IsChecked="{Binding Enabled}" Content="Enabled" Margin="5"/>
+                </Grid>
+            </DockPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type local:FileTypeMappingOptionsViewModel}">
+            <DockPanel Margin="10">
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="5">
+                    <Button Content="Add" Command="{Binding AddMappingCommand}" Width="80" Margin="5"/>
+                    <Button Content="Remove" Command="{Binding RemoveMappingCommand}" Width="80" Margin="5"/>
+                </StackPanel>
+                <ListBox ItemsSource="{Binding Mappings}" SelectedItem="{Binding SelectedMapping}" Margin="5">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Key}"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <Grid DataContext="{Binding SelectedMapping}" Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Extensions:" Margin="5"/>
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Extensions, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Default Diff Tool:" Margin="5"/>
+                    <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding AvailableTools}" SelectedItem="{Binding DefaultDiffTool}" Margin="5"/>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Default View Tool:" Margin="5"/>
+                    <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding AvailableTools}" SelectedItem="{Binding DefaultViewTool}" Margin="5"/>
+
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Preferred Diff Tools:" Margin="5"/>
+                    <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding PreferredDiffTools, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Preferred View Tools:" Margin="5"/>
+                    <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding PreferredViewTools, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+                </Grid>
+            </DockPanel>
+        </DataTemplate>
     </Window.Resources>
 
     <Grid>

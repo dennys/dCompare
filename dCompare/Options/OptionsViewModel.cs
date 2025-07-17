@@ -107,11 +107,15 @@ namespace dCompare.Options
             var confirmationNode = new SettingsMenuItem("Confirmation", new ConfirmationOptionsViewModel(_appConfig.Options.Confirmation), this);
             var hotkeysNode = new SettingsMenuItem("HotKeys", new HotKeysOptionsViewModel(_appConfig.Options.HotKeys), this);
             var textViewerNode = new SettingsMenuItem("TextViewer", new TextViewerOptionsViewModel(_appConfig.Options.TextViewer), this);
+            var toolsNode = new SettingsMenuItem("Tools", new ToolsOptionsViewModel(_appConfig), this);
+            var fileTypeMappingNode = new SettingsMenuItem("FileTypeMapping", new FileTypeMappingOptionsViewModel(_appConfig), this);
 
             optionsNode.Children.Add(uiNode);
             optionsNode.Children.Add(compareNode);
             optionsNode.Children.Add(diffNode);
             optionsNode.Children.Add(textViewerNode);
+            optionsNode.Children.Add(toolsNode);
+            optionsNode.Children.Add(fileTypeMappingNode);
             optionsNode.Children.Add(confirmationNode);
             optionsNode.Children.Add(sessionNode);
             optionsNode.Children.Add(hotkeysNode);
