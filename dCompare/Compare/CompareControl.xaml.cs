@@ -1,9 +1,9 @@
 ﻿using dCompare.Compare.Models;
 using dCompare.Configuration;
-using dCompare.Diff;
-using dCompare.Diff.Models;
+using dCompare.Tools.Diff;
+using dCompare.Tools.Models;
 using dCompare.FileOperation;
-using dCompare.Viewer;
+using dCompare.Tools.Viewer;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
 using Microsoft.Win32;
@@ -20,6 +20,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using dCompare.Tools;
 
 namespace dCompare.Compare
 {
@@ -58,7 +59,7 @@ namespace dCompare.Compare
         private readonly IConfigurationService _configService;
         private readonly IToolService _toolService;
         private readonly ILogger<CompareControl> _logger;
-        private readonly ViewerFactory _viewerFactory;
+        private readonly ToolFactory _toolFactory;
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName)
@@ -139,7 +140,7 @@ namespace dCompare.Compare
             _configService = configService;
             _toolService = toolService;
             _logger = logger;
-            _viewerFactory = new ViewerFactory(configService);
+            _toolFactory = new ToolFactory(configService);
             _treeNodeManager = new TreeNodeManager(_treeNodes);
             _fileOperationHandler = new FileOperationHandler(_fileManager);
 
@@ -261,7 +262,7 @@ namespace dCompare.Compare
                             return;
                         }
 
-                        var viewer = _viewerFactory.CreateViewer(path);
+                        var viewer = _toolFactory.CreateViewer(path);
                         viewer.LoadFile(path);
 
                         string tabHeader = $"View: {Path.GetFileName(path)}";
@@ -582,7 +583,7 @@ namespace dCompare.Compare
                         return;
                     }
 
-                    var viewer = _viewerFactory.CreateViewer(path);
+                    var viewer = _toolFactory.CreateViewer(path);
                     viewer.LoadFile(path);
 
                     string tabHeader = $"View: {Path.GetFileName(path)}";
@@ -719,7 +720,7 @@ namespace dCompare.Compare
 
                 if (defaultTool.Type == "BuiltIn")
                 {
-                    var viewer = _viewerFactory.CreateViewer(leftPath, rightPath);
+                    var viewer = _toolFactory.CreateViewer(leftPath, rightPath);
                     viewer.LoadFile(leftPath);
                     OpenFileComparisonTab(leftPath, rightPath, viewer);
                 }
