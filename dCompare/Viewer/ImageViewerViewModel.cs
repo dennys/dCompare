@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using System.IO;
 using System.Windows.Media;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace dCompare.Viewer
@@ -97,5 +98,11 @@ namespace dCompare.Viewer
             ImageStretch = Stretch.None;
         }
 
+        public void FitToWindow()
+        {
+            _zoomFactor = 1.0;
+            ImageScaleTransform = new ScaleTransform(1.0, 1.0);
+            ImageStretch = Stretch.Uniform;
+        }
     }
 }
