@@ -495,7 +495,7 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <TextBox Grid.Column="0" Text="{Binding Path, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsExternal}" Margin="5,5,0,5"/>
-                        <Button Grid.Column="1" Content="..." Command="{Binding BrowseCommand}" IsEnabled="{Binding IsExternal}" Margin="5,5,5,5" Padding="5,1"/>
+                        <Button Grid.Column="1" Content="..." Command="{Binding BrowseCommand}" IsEnabled="{Binding IsExternal}" Margin="10,5,5,5" Padding="5,1"/>
                     </Grid>
 
                     <TextBlock Grid.Row="4" Grid.Column="0" Text="Diff Arguments:" Margin="5"/>
@@ -505,7 +505,11 @@
                     <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding ViewArguments, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsExternal}" Margin="5"/>
 
                     <TextBlock Grid.Row="6" Grid.Column="0" Text="Supported Operations:" Margin="5"/>
-                    <ListBox Grid.Row="6" Grid.Column="1" ItemsSource="{Binding AvailableOperations}" SelectedValue="{Binding SupportedOperations}" SelectionMode="Multiple" Margin="5"/>
+                    <ListBox Grid.Row="6" Grid.Column="1" ItemsSource="{Binding AvailableOperations}" SelectionMode="Multiple" Margin="5">
+                        <ListBox.SelectedValue>
+                            <Binding Path="SupportedOperations"/>
+                        </ListBox.SelectedValue>
+                    </ListBox>
 
                     <TextBlock Grid.Row="7" Grid.Column="0" Text="Supported Extensions:" Margin="5"/>
                     <TextBox Grid.Row="7" Grid.Column="1" Margin="5">
@@ -562,10 +566,10 @@
                     <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding AvailableTools}" SelectedItem="{Binding DefaultViewTool}" Margin="5"/>
 
                     <TextBlock Grid.Row="3" Grid.Column="0" Text="Preferred Diff Tools:" Margin="5"/>
-                    <ListBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding AvailableTools}" SelectedValue="{Binding PreferredDiffTools}" SelectionMode="Multiple" Margin="5"/>
+                    <local:PreferredToolsSelector Grid.Row="3" Grid.Column="1" AvailableTools="{Binding AvailableTools}" SelectedTools="{Binding PreferredDiffTools}" Margin="5"/>
 
                     <TextBlock Grid.Row="4" Grid.Column="0" Text="Preferred View Tools:" Margin="5"/>
-                    <ListBox Grid.Row="4" Grid.Column="1" ItemsSource="{Binding AvailableTools}" SelectedValue="{Binding PreferredViewTools}" SelectionMode="Multiple" Margin="5"/>
+                    <local:PreferredToolsSelector Grid.Row="4" Grid.Column="1" AvailableTools="{Binding AvailableTools}" SelectedTools="{Binding PreferredViewTools}" Margin="5"/>
                 </Grid>
             </DockPanel>
         </DataTemplate>
