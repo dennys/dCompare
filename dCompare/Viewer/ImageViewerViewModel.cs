@@ -15,8 +15,9 @@ namespace dCompare.Viewer
         [ObservableProperty]
         private Stretch _imageStretch = Stretch.Uniform;
 
-        private double _zoomFactor = 1.0;
         private string _currentFilePath;
+        private readonly List<double> _zoomLevels = new List<double> { 0.1, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 4.0, 8.0 };
+        private int _currentZoomLevelIndex = 4;
 
         public IRelayCommand OpenImageCommand { get; }
         public IRelayCommand SaveImageCommand { get; }
@@ -78,23 +79,30 @@ namespace dCompare.Viewer
             }
         }
 
-        private void ZoomIn()
+        internal void ZoomIn()
         {
-            _zoomFactor *= 1.2;
-            ApplyZoom();
+            if (_currentZoomLevelIndex < _zoomLevels.Count - 1)
+            {
+                _currentZoomLevelIndex++;
+                ApplyZoom();
+            }
         }
 
-        private void ZoomOut()
+        internal void ZoomOut()
         {
-            _zoomFactor /= 1.2;
-            ApplyZoom();
+            if (_currentZoomLevelIndex > 0)
+            {
+                _currentZoomLevelIndex--;
+                ApplyZoom();
+            }
         }
 
         private void ApplyZoom()
         {
-            if (ImageSource is BitmapSource bitmapSource)
+            if (ImageSource is BitmapSource)
             {
-                var transformedBitmap = new TransformedBitmap(bitmapSource, new ScaleTransform(_zoomFactor, _zoomFactor));
+                var zoom = _zoomLevels[_currentZoomLevelIndex];
+                var transformedBitmap = new TransformedBitmap(new BitmapImage(new System.Uri(_currentFilePath)), new ScaleTransform(zoom, zoom));
                 ImageSource = transformedBitmap;
                 ImageStretch = Stretch.None;
             }
@@ -102,7 +110,7 @@ namespace dCompare.Viewer
 
         private void FitToWindow()
         {
-            _zoomFactor = 1.0;
+            _currentZoomLevelIndex = 4; // 1.0
             ImageStretch = Stretch.Uniform;
             LoadFile(_currentFilePath);
         }
