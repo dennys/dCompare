@@ -27,8 +27,8 @@ namespace dCompare.Options
             Mappings = new ObservableCollection<FileTypeMappingViewModel>(
                 _config.Options.FileTypeMapping.Select(kvp => new FileTypeMappingViewModel(kvp.Key, kvp.Value, _config.Options.Tools.Values.ToList())));
 
-            AddMappingCommand = new RelayCommand(AddMapping);
-            RemoveMappingCommand = new RelayCommand(RemoveMapping, CanRemoveMapping);
+            AddMappingCommand = new RelayCommand(_ => AddMapping());
+            RemoveMappingCommand = new RelayCommand(_ => RemoveMapping(), _ => CanRemoveMapping());
         }
 
         private void AddMapping()

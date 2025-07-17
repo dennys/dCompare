@@ -27,8 +27,8 @@ namespace dCompare.Options
             Tools = new ObservableCollection<ToolOptionsViewModel>(
                 _config.Options.Tools.Select(kvp => new ToolOptionsViewModel(kvp.Key, kvp.Value)));
 
-            AddToolCommand = new RelayCommand(AddTool);
-            RemoveToolCommand = new RelayCommand(RemoveTool, CanRemoveTool);
+            AddToolCommand = new RelayCommand(_ => AddTool());
+            RemoveToolCommand = new RelayCommand(_ => RemoveTool(), _ => CanRemoveTool());
         }
 
         private void AddTool()
