@@ -19,7 +19,7 @@
             <Button Content="📏 Fit to Window" Click="FitToWindow_Click" Margin="2"/>
         </ToolBar>
         <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-            <Image x:Name="ImageViewerImage" Source="{Binding ImageSource}" Stretch="{Binding ImageStretch}" />
+            <Image x:Name="ImageViewerImage" Source="{Binding ImageSource}" Stretch="{Binding ImageStretch}" RenderTransform="{Binding ImageScaleTransform}" />
         </ScrollViewer>
     </Grid>
 </UserControl>

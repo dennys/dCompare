@@ -15,9 +15,11 @@ namespace dCompare.Viewer
         [ObservableProperty]
         private Stretch _imageStretch = Stretch.Uniform;
 
+        [ObservableProperty]
+        private ScaleTransform _imageScaleTransform = new ScaleTransform();
+
+        private double _zoomFactor = 1.0;
         private string _currentFilePath;
-        private readonly List<double> _zoomLevels = new List<double> { 0.1, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 4.0, 8.0 };
-        private int _currentZoomLevelIndex = 4;
 
         public IRelayCommand OpenImageCommand { get; }
         public IRelayCommand SaveImageCommand { get; }
@@ -79,31 +81,20 @@ namespace dCompare.Viewer
 
         internal void ZoomIn()
         {
-            if (_currentZoomLevelIndex < _zoomLevels.Count - 1)
-            {
-                _currentZoomLevelIndex++;
-                ApplyZoom();
-            }
+            _zoomFactor *= 1.2;
+            ApplyZoom();
         }
 
         internal void ZoomOut()
         {
-            if (_currentZoomLevelIndex > 0)
-            {
-                _currentZoomLevelIndex--;
-                ApplyZoom();
-            }
+            _zoomFactor /= 1.2;
+            ApplyZoom();
         }
 
         private void ApplyZoom()
         {
-            if (ImageSource is BitmapSource)
-            {
-                var zoom = _zoomLevels[_currentZoomLevelIndex];
-                var transformedBitmap = new TransformedBitmap(new BitmapImage(new System.Uri(_currentFilePath)), new ScaleTransform(zoom, zoom));
-                ImageSource = transformedBitmap;
-                ImageStretch = Stretch.None;
-            }
+            ImageScaleTransform = new ScaleTransform(_zoomFactor, _zoomFactor);
+            ImageStretch = Stretch.None;
         }
 
     }
