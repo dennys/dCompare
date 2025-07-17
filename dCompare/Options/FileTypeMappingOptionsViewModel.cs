@@ -62,7 +62,7 @@ namespace dCompare.Options
         }
     }
 
-    public class FileTypeMappingViewModel : ViewModelBase
+    public class FileTypeMappingViewModel : ViewModelBase, IDataErrorInfo
     {
         private readonly FileTypeMappingOptions _mapping;
         public string Key { get; }
@@ -104,6 +104,36 @@ namespace dCompare.Options
         {
             get => _mapping.PreferredTools.View;
             set { _mapping.PreferredTools.View = value; OnPropertyChanged(); }
+        }
+
+        public string Error => null;
+
+        public string this[string columnName]
+        {
+            get
+            {
+                string result = null;
+                if (columnName == nameof(Extensions))
+                {
+                    if (string.IsNullOrWhiteSpace(Extensions))
+                    {
+                        result = "Extensions cannot be empty.";
+                    }
+                    else
+                    {
+                        var extensions = Extensions.Split(',');
+                        foreach (var ext in extensions)
+                        {
+                            if (!ext.StartsWith("."))
+                            {
+                                result = "All extensions must start with a dot.";
+                                break;
+                            }
+                        }
+                    }
+                }
+                return result;
+            }
         }
     }
 }

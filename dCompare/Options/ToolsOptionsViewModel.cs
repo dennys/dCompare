@@ -175,6 +175,18 @@ namespace dCompare.Options
                     {
                         result = "Supported Extensions cannot be empty.";
                     }
+                    else
+                    {
+                        var extensions = SupportedExtensions.Split(',');
+                        foreach (var ext in extensions)
+                        {
+                            if (!ext.StartsWith("."))
+                            {
+                                result = "All extensions must start with a dot.";
+                                break;
+                            }
+                        }
+                    }
                 }
                 return result;
             }

@@ -451,14 +451,24 @@ namespace dCompare.Options
         private void AddExtension(object obj)
         {
             string newExt = Interaction.InputBox("Enter new file extension (e.g., .txt):", "Add Extension", "");
-            if (!string.IsNullOrWhiteSpace(newExt) && newExt.StartsWith(".") && !Extensions.Contains(newExt, StringComparer.OrdinalIgnoreCase))
+            if (string.IsNullOrWhiteSpace(newExt))
             {
-                Extensions.Add(newExt);
+                return;
             }
-            else if (!string.IsNullOrWhiteSpace(newExt) && !newExt.StartsWith("."))
+
+            if (!newExt.StartsWith("."))
             {
                 MessageBox.Show("Extension must start with a dot (e.g., .txt).", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
             }
+
+            if (Extensions.Contains(newExt, StringComparer.OrdinalIgnoreCase))
+            {
+                MessageBox.Show("Extension already exists.", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            Extensions.Add(newExt);
         }
 
         private void RemoveExtension(object obj)
