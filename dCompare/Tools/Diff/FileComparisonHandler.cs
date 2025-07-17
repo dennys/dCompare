@@ -1,11 +1,11 @@
 using dCompare.Configuration;
-using dCompare.Diff.Models;
+using dCompare.Tools.Models;
 using DiffPlex;
 using DiffPlex.DiffBuilder;
 using DiffPlex.DiffBuilder.Model;
 using System.IO;
 
-namespace dCompare.Diff
+namespace dCompare.Tools.Diff
 {
     public class FileComparisonHandler
     {

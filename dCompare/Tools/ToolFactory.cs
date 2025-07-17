@@ -1,14 +1,15 @@
 using dCompare.Configuration;
+using dCompare.Tools.Viewer;
 using System;
 using System.IO;
 
-namespace dCompare.Viewer
+namespace dCompare.Tools
 {
-    public class ViewerFactory
+    public class ToolFactory
     {
         private readonly IConfigurationService _configurationService;
 
-        public ViewerFactory(IConfigurationService configurationService)
+        public ToolFactory(IConfigurationService configurationService)
         {
             _configurationService = configurationService;
         }
@@ -17,26 +18,26 @@ namespace dCompare.Viewer
         {
             var fileType = DetermineFileType(filePath);
 
-            if (fileType == dCompare.Diff.Models.FileType.Image)
+            if (fileType == dCompare.Tools.Models.FileType.Image)
             {
-                return new ImageViewer(filePath);
+                return new Tools.Viewer.ImageViewer(filePath);
             }
 
             // Fallback to text viewer for text and binary files
-            return new TextViewer(_configurationService);
+            return new Tools.Viewer.TextViewer(_configurationService);
         }
 
-        public IViewer CreateViewer(string leftFilePath, string rightFilePath)
+        public Tools.Viewer.IViewer CreateViewer(string leftFilePath, string rightFilePath)
         {
             var fileType = DetermineFileType(leftFilePath ?? rightFilePath);
 
-            if (fileType == dCompare.Diff.Models.FileType.Text)
+            if (fileType == dCompare.Tools.Models.FileType.Text)
             {
-                return new dCompare.Diff.TextDiffPlex(leftFilePath, rightFilePath, null);
+                return new dCompare.Tools.Diff.TextDiffPlex(leftFilePath, rightFilePath, null);
             }
-            else if (fileType == dCompare.Diff.Models.FileType.Image)
+            else if (fileType == dCompare.Tools.Models.FileType.Image)
             {
-                return new dCompare.Diff.ImageDiff(leftFilePath, rightFilePath);
+                return new dCompare.Tools.Diff.ImageDiff(leftFilePath, rightFilePath);
             }
             else
             {
@@ -44,7 +45,7 @@ namespace dCompare.Viewer
             }
         }
 
-        private dCompare.Diff.Models.FileType DetermineFileType(string filePath)
+        private dCompare.Tools.Models.FileType DetermineFileType(string filePath)
         {
             string extension = Path.GetExtension(filePath).ToLowerInvariant();
             var textExtensions = new System.Collections.Generic.List<string> { ".txt", ".log", ".cs", ".json", ".xml", ".html", ".css", ".js", ".py", ".md", ".sql" };
@@ -52,15 +53,15 @@ namespace dCompare.Viewer
 
             if (textExtensions.Contains(extension))
             {
-                return dCompare.Diff.Models.FileType.Text;
+                return dCompare.Tools.Models.FileType.Text;
             }
 
             if (imageExtensions.Contains(extension))
             {
-                return dCompare.Diff.Models.FileType.Image;
+                return dCompare.Tools.Models.FileType.Image;
             }
 
-            return dCompare.Diff.Models.FileType.Binary;
+            return dCompare.Tools.Models.FileType.Binary;
         }
     }
 }

@@ -6,7 +6,7 @@ using System.Windows.Media;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace dCompare.Viewer
+namespace dCompare.Tools.Viewer
 {
     public partial class ImageViewerViewModel : ObservableObject
     {

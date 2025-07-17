@@ -12,7 +12,7 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using dCompare.Viewer;
+using dCompare.Tools.Viewer;
 using dCompare.FileOperation;
 
 namespace dCompare

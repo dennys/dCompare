@@ -1,4 +1,4 @@
-namespace dCompare.Diff.Models
+namespace dCompare.Tools.Models
 {
     public enum FileType
     {

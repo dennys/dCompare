@@ -1,6 +1,6 @@
 using System.Windows.Controls;
 
-namespace dCompare.Viewer
+namespace dCompare.Tools.Viewer
 {
     public interface IViewer
     {
