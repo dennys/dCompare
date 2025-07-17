@@ -23,7 +23,6 @@ namespace dCompare.Viewer
         public IRelayCommand SaveImageCommand { get; }
         public IRelayCommand ZoomInCommand { get; }
         public IRelayCommand ZoomOutCommand { get; }
-        public IRelayCommand FitToWindowCommand { get; }
 
         public ImageViewerViewModel()
         {
@@ -31,7 +30,6 @@ namespace dCompare.Viewer
             SaveImageCommand = new RelayCommand(SaveImage, CanSaveImage);
             ZoomInCommand = new RelayCommand(ZoomIn);
             ZoomOutCommand = new RelayCommand(ZoomOut);
-            FitToWindowCommand = new RelayCommand(FitToWindow);
         }
 
         public void LoadFile(string filePath)
@@ -108,11 +106,5 @@ namespace dCompare.Viewer
             }
         }
 
-        private void FitToWindow()
-        {
-            _currentZoomLevelIndex = 4; // 1.0
-            ImageStretch = Stretch.Uniform;
-            LoadFile(_currentFilePath);
-        }
     }
 }

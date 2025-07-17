@@ -34,6 +34,11 @@ namespace dCompare.Viewer
             }
         }
 
+        private void FitToWindow_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            ImageViewerImage.Stretch = Stretch.Uniform;
+        }
+
         public void LoadFile(string filePath)
         {
             (DataContext as ImageViewerViewModel)?.LoadFile(filePath);
