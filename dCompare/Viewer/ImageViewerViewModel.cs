@@ -16,6 +16,9 @@ namespace dCompare.Viewer
         [ObservableProperty]
         private Stretch _imageStretch = Stretch.Uniform;
 
+        [ObservableProperty]
+        private ScaleTransform _imageScaleTransform = new ScaleTransform();
+
         private double _zoomFactor = 1.0;
         private string _currentFilePath;
 
@@ -23,6 +26,7 @@ namespace dCompare.Viewer
         public IRelayCommand SaveImageCommand { get; }
         public IRelayCommand ZoomInCommand { get; }
         public IRelayCommand ZoomOutCommand { get; }
+        public IRelayCommand FitToWindowCommand { get; }
 
         public ImageViewerViewModel()
         {
@@ -30,6 +34,7 @@ namespace dCompare.Viewer
             SaveImageCommand = new RelayCommand(SaveImage, CanSaveImage);
             ZoomInCommand = new RelayCommand(ZoomIn);
             ZoomOutCommand = new RelayCommand(ZoomOut);
+            FitToWindowCommand = new RelayCommand(FitToWindow);
         }
 
         public void LoadFile(string filePath)
@@ -95,5 +100,11 @@ namespace dCompare.Viewer
             ImageStretch = Stretch.None;
         }
 
+        private void FitToWindow()
+        {
+            _zoomFactor = 1.0;
+            ImageScaleTransform = new ScaleTransform(1.0, 1.0);
+            ImageStretch = Stretch.Uniform;
+        }
     }
 }
