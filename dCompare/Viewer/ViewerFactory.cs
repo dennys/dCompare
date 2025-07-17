@@ -15,8 +15,14 @@ namespace dCompare.Viewer
 
         public IViewer CreateViewer(string filePath)
         {
-            // For now, we only have a text viewer.
-            // In the future, we can add more viewers here.
+            var fileType = DetermineFileType(filePath);
+
+            if (fileType == dCompare.Diff.Models.FileType.Image)
+            {
+                return new ImageViewer(filePath);
+            }
+
+            // Fallback to text viewer for text and binary files
             return new TextViewer(_configurationService);
         }
 
