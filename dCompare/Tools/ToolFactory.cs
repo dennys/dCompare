@@ -1,4 +1,5 @@
 using dCompare.Configuration;
+using dCompare.Tools.Viewer;
 using System;
 using System.IO;
 
