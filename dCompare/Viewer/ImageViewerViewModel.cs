@@ -16,9 +16,6 @@ namespace dCompare.Viewer
         [ObservableProperty]
         private Stretch _imageStretch = Stretch.Uniform;
 
-        [ObservableProperty]
-        private ScaleTransform _imageScaleTransform = new ScaleTransform();
-
         private double _zoomFactor = 1.0;
         private string _currentFilePath;
 
@@ -98,11 +95,5 @@ namespace dCompare.Viewer
             ImageStretch = Stretch.None;
         }
 
-        public void FitToWindow()
-        {
-            _zoomFactor = 1.0;
-            ImageScaleTransform = new ScaleTransform(1.0, 1.0);
-            ImageStretch = Stretch.Uniform;
-        }
     }
 }
