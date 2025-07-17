@@ -13,10 +13,14 @@
         </Grid.RowDefinitions>
         <ToolBar Grid.Row="0">
             <Button Content="📂 Open" Command="{Binding OpenImageCommand}" Margin="2"/>
+            <!-- 
             <Button Content="💾 Save" Command="{Binding SaveImageCommand}" Margin="2"/>
+            -->
             <Button Content="🔎 Zoom In" Command="{Binding ZoomInCommand}" Margin="2"/>
             <Button Content="🔍 Zoom Out" Command="{Binding ZoomOutCommand}" Margin="2"/>
+            <!-- 
             <Button Content="📏 Fit to Window" Command="{Binding FitToWindowCommand}" Margin="2"/>
+            -->
         </ToolBar>
         <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
             <Grid>
