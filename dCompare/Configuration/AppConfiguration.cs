@@ -31,6 +31,11 @@ namespace dCompare.Configuration
 
         [JsonPropertyName("TextViewer")]
         public TextViewerOptions TextViewer { get; set; } = new();
+        [JsonPropertyName("Tools")]
+        public Dictionary<string, ToolOptions> Tools { get; set; } = new();
+
+        [JsonPropertyName("FileTypeMapping")]
+        public Dictionary<string, FileTypeMappingOptions> FileTypeMapping { get; set; } = new();
     }
 
     public class FontOptions
@@ -40,7 +45,6 @@ namespace dCompare.Configuration
 
         [JsonPropertyName("FontSize")]
         public int FontSize { get; set; } = 12;
-
     }
 
     public class TextViewerOptions
@@ -89,7 +93,7 @@ namespace dCompare.Configuration
             new Dictionary<ComparisonAlgorithm, ComparisonAlgorithmInfo>(ComparisonAlgorithms.AlgorithmSettings);
 
         [JsonPropertyName("DoubleClick")]
-        public string DoubleClick { get; set; } = "compare";
+        public string DoubleClick { get; set; } = DoubleClickActions.Compare;
     }
 
     public class ScanMethodOptions
@@ -101,7 +105,84 @@ namespace dCompare.Configuration
         public bool ParallelOptions { get; set; } = true;
     }
 
-    // New class for external viewer configuration
+    public class ToolOptions
+    {
+        [JsonPropertyName("Name")]
+        public string Name { get; set; } = string.Empty;
+
+        [JsonPropertyName("Type")]
+        public string Type { get; set; } = ToolTypes.BuiltIn;
+
+        [JsonPropertyName("Handler")]
+        public string Handler { get; set; } = string.Empty;
+
+        [JsonPropertyName("Path")]
+        public string Path { get; set; } = string.Empty;
+
+        [JsonPropertyName("DiffArguments")]
+        public string DiffArguments { get; set; } = string.Empty;
+
+        [JsonPropertyName("ViewArguments")]
+        public string ViewArguments { get; set; } = string.Empty;
+
+        [JsonPropertyName("SupportedOperations")]
+        public List<string> SupportedOperations { get; set; } = new();
+
+        [JsonPropertyName("SupportedExtensions")]
+        public List<string> SupportedExtensions { get; set; } = new();
+
+        [JsonPropertyName("Features")]
+        public List<string> Features { get; set; } = new();
+
+        [JsonPropertyName("Enabled")]
+        public bool Enabled { get; set; } = true;
+
+        public bool SupportsOperation(string operation) =>
+            SupportedOperations.Contains(operation, StringComparer.OrdinalIgnoreCase);
+
+        public bool SupportsExtension(string extension) =>
+            SupportedExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase);
+    }
+
+    public class FileTypeMappingOptions
+    {
+        [JsonPropertyName("Extensions")]
+        public List<string> Extensions { get; set; } = new();
+
+        [JsonPropertyName("DefaultDiffTool")]
+        public string DefaultDiffTool { get; set; } = string.Empty;
+
+        [JsonPropertyName("DefaultViewTool")]
+        public string DefaultViewTool { get; set; } = string.Empty;
+
+        [JsonPropertyName("PreferredTools")]
+        public PreferredToolsConfiguration PreferredTools { get; set; } = new();
+    }
+
+    public class PreferredToolsConfiguration
+    {
+        [JsonPropertyName("diff")]
+        public List<string> Diff { get; set; } = new();
+
+        [JsonPropertyName("view")]
+        public List<string> View { get; set; } = new();
+    }
+
+    public class DiffOptions
+    {
+        [JsonPropertyName("Text")]
+        public TextDiffOptions Text { get; set; } = new();
+
+        [JsonPropertyName("Image")]
+        public ImageDiffOptions Image { get; set; } = new();
+
+        [JsonPropertyName("Viewer")]
+        public List<ExternalViewer> Viewer { get; set; } = new()
+        {
+            new ExternalViewer { Name = "WinMerge", Path = "", Arguments = "/e /u \"{left}\" \"{right}\"" }
+        };
+    }
+
     public class ExternalViewer
     {
         [JsonPropertyName("Name")]
@@ -115,22 +196,6 @@ namespace dCompare.Configuration
 
         [JsonPropertyName("SupportedFormats")]
         public string SupportedFormats { get; set; } = string.Empty;
-    }
-
-    public class DiffOptions
-    {
-        [JsonPropertyName("Text")]
-        public TextDiffOptions Text { get; set; } = new();
-
-        [JsonPropertyName("Image")]
-        public ImageDiffOptions Image { get; set; } = new();
-
-        // Updated to support a list of viewers
-        [JsonPropertyName("Viewer")]
-        public List<ExternalViewer> Viewer { get; set; } = new()
-        {
-            new ExternalViewer { Name = "WinMerge", Path = "", Arguments = "/e /u \"{left}\" \"{right}\"" }
-        };
     }
 
     public class TextDiffOptions
@@ -155,19 +220,26 @@ namespace dCompare.Configuration
     {
         [JsonPropertyName("CloseApplication")]
         public bool CloseApplication { get; set; } = false;
+
         [JsonPropertyName("CloseTab")]
         public bool CloseTab { get; set; } = false;
+
         [JsonPropertyName("Copy")]
         public bool Copy { get; set; } = false;
+
         [JsonPropertyName("Move")]
         public bool Move { get; set; } = false;
+
         [JsonPropertyName("CopyOverwrite")]
         public bool CopyOverwrite { get; set; } = true;
+
         [JsonPropertyName("MoveOverwrite")]
         public bool MoveOverwrite { get; set; } = true;
+
         [JsonPropertyName("DeleteFile")]
         public bool DeleteFile { get; set; } = true;
     }
+
     public class SessionOptions
     {
         [JsonPropertyName("DefaultSessionFile")]
@@ -239,5 +311,24 @@ namespace dCompare.Configuration
         [JsonPropertyName("outputTemplate")]
         public string OutputTemplate { get; set; } =
             "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff} {Level:u3}] [T{ThreadId:D2}] {Message:lj}{NewLine}{Exception}";
+    }
+
+    // Enums for better type safety
+    public static class ToolTypes
+    {
+        public const string BuiltIn = "BuiltIn";
+        public const string External = "External";
+    }
+
+    public static class Operations
+    {
+        public const string View = "view";
+        public const string Diff = "diff";
+    }
+
+    public static class DoubleClickActions
+    {
+        public const string Compare = "Compare";
+        public const string View = "View";
     }
 }

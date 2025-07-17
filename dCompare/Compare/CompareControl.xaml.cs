@@ -56,6 +56,7 @@ namespace dCompare.Compare
 
         private readonly IFileManager _fileManager;
         private readonly IConfigurationService _configService;
+        private readonly IToolService _toolService;
         private readonly ILogger<CompareControl> _logger;
         private readonly ViewerFactory _viewerFactory;
 
@@ -130,14 +131,15 @@ namespace dCompare.Compare
             }
         }
 
-        public CompareControl(IConfigurationService configService, IFileManager fileManager, ILogger<CompareControl> logger)
+        public CompareControl(IConfigurationService configService, IToolService toolService, IFileManager fileManager, ILogger<CompareControl> logger)
         {
             InitializeComponent();
 
             _fileManager = fileManager;
             _configService = configService;
+            _toolService = toolService;
             _logger = logger;
-            _viewerFactory = new ViewerFactory(_configService);
+            _viewerFactory = new ViewerFactory(configService);
             _treeNodeManager = new TreeNodeManager(_treeNodes);
             _fileOperationHandler = new FileOperationHandler(_fileManager);
 
@@ -184,9 +186,6 @@ namespace dCompare.Compare
         {
             try
             {
-                var config = await _configService.LoadConfigurationAsync();
-                List<ExternalViewer> viewers = config.Options?.Diff?.Viewer ?? new();
-
                 if (FindResource("LeftContextMenu") is not ContextMenu leftContextMenu ||
                     FindResource("RightContextMenu") is not ContextMenu rightContextMenu)
                     return;
@@ -198,14 +197,14 @@ namespace dCompare.Compare
 
                 if (leftCompareWithMenu == null || rightCompareWithMenu == null || leftViewWithMenu == null || rightViewWithMenu == null) return;
 
-                PopulateViewerMenu(leftCompareWithMenu, viewers, ContextMenu_CompareWithViewer_Click);
-                PopulateViewerMenu(rightCompareWithMenu, viewers, ContextMenu_CompareWithViewer_Click);
+                var config = await _configService.LoadConfigurationAsync();
+                var diffTools = _toolService.GetAllToolsForOperation(config, Operations.Diff);
+                PopulateToolMenu(leftCompareWithMenu, diffTools, ContextMenu_CompareWithViewer_Click);
+                PopulateToolMenu(rightCompareWithMenu, diffTools, ContextMenu_CompareWithViewer_Click);
 
-                var avalonEditViewer = new ExternalViewer { Name = "AvalonEdit" };
-                var viewerViewers = new List<ExternalViewer> { avalonEditViewer };
-
-                PopulateViewerMenu(leftViewWithMenu, viewerViewers, ContextMenu_ViewWithViewer_Click);
-                PopulateViewerMenu(rightViewWithMenu, viewerViewers, ContextMenu_ViewWithViewer_Click);
+                var viewTools = _toolService.GetAllToolsForOperation(config, Operations.View);
+                PopulateToolMenu(leftViewWithMenu, viewTools, ContextMenu_ViewWithViewer_Click);
+                PopulateToolMenu(rightViewWithMenu, viewTools, ContextMenu_ViewWithViewer_Click);
             }
             catch (Exception ex)
             {
@@ -218,16 +217,16 @@ namespace dCompare.Compare
         private MenuItem? FindMenuByName(ContextMenu menu, string name) =>
             menu.Items.OfType<MenuItem>().FirstOrDefault(mi => mi.Name == name);
 
-        private void PopulateViewerMenu(MenuItem parentMenu, List<ExternalViewer> viewers, RoutedEventHandler clickHandler)
+        private void PopulateToolMenu(MenuItem parentMenu, IEnumerable<ToolOptions> tools, RoutedEventHandler clickHandler)
         {
             parentMenu.Items.Clear();
-            foreach (var viewer in viewers)
+            foreach (var tool in tools)
             {
                 var item = new MenuItem
                 {
-                    Header = viewer.Name,
-                    Tag = viewer,
-                    InputGestureText = viewer.Name
+                    Header = tool.Name,
+                    Tag = tool,
+                    InputGestureText = tool.Name
                 };
                 item.Click += clickHandler;
                 parentMenu.Items.Add(item);
@@ -236,9 +235,58 @@ namespace dCompare.Compare
 
         private void ContextMenu_ViewWithViewer_Click(object sender, RoutedEventArgs e)
         {
-            ProcessViewerAction(sender, (selectedItem, viewerConfig) =>
+            ProcessViewerAction(sender, (selectedItem, tool) =>
             {
-                ViewFile(selectedItem);
+                if (selectedItem.IsDirectory)
+                {
+                    MessageBox.Show($"Cannot view directories with {tool.Name}.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                string? path = selectedItem.LeftNode?.FullPath ?? selectedItem.RightNode?.FullPath;
+                if (string.IsNullOrEmpty(path))
+                {
+                    MessageBox.Show("No valid file path to view.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                try
+                {
+                    if (tool.Type == "BuiltIn")
+                    {
+                        if (WpfTreeHelperExtensions.FindParent<TabItem>(this) is not TabItem parentTab ||
+                            WpfTreeHelperExtensions.FindParent<TabControl>(parentTab) is not TabControl tabControl)
+                        {
+                            MessageBox.Show("Cannot locate parent TabControl or TabItem.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                            return;
+                        }
+
+                        var viewer = _viewerFactory.CreateViewer(path);
+                        viewer.LoadFile(path);
+
+                        string tabHeader = $"View: {Path.GetFileName(path)}";
+                        TabItem newTab = new TabItem { Header = tabHeader };
+                        newTab.Content = viewer.GetControl();
+
+                        tabControl.Items.Add(newTab);
+                        tabControl.SelectedItem = newTab;
+                    }
+                    else // External
+                    {
+                        string arguments = tool.ViewArguments.Replace("{file}", path);
+                        ProcessStartInfo startInfo = new()
+                        {
+                            FileName = tool.Path,
+                            Arguments = arguments,
+                            UseShellExecute = true
+                        };
+                        Process.Start(startInfo);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error launching {tool.Name}: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             });
         }
 
@@ -487,7 +535,7 @@ namespace dCompare.Compare
                     var config = await _configService.LoadConfigurationAsync();
                     if (config.Options.Compare.DoubleClick == "View")
                     {
-                        ViewFile(clickedItem);
+                        ViewFileAsync(clickedItem);
                     }
                     else
                     {
@@ -497,7 +545,7 @@ namespace dCompare.Compare
             }
         }
 
-        private void ViewFile(TreeNode selectedItem)
+        private async Task ViewFileAsync(TreeNode selectedItem)
         {
             if (selectedItem.IsDirectory)
             {
@@ -515,22 +563,46 @@ namespace dCompare.Compare
 
             try
             {
-                if (WpfTreeHelperExtensions.FindParent<TabItem>(this) is not TabItem parentTab ||
-                    WpfTreeHelperExtensions.FindParent<TabControl>(parentTab) is not TabControl tabControl)
+                var config = await _configService.LoadConfigurationAsync();
+                string extension = Path.GetExtension(path);
+                var defaultTool = _toolService.GetDefaultTool(config, Operations.View, extension);
+
+                if (defaultTool == null)
                 {
-                    MessageBox.Show("Cannot locate parent TabControl or TabItem.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show($"No default view tool configured for '{extension}' files.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
-                var viewer = _viewerFactory.CreateViewer(path);
-                viewer.LoadFile(path);
+                if (defaultTool.Type == "BuiltIn")
+                {
+                    if (WpfTreeHelperExtensions.FindParent<TabItem>(this) is not TabItem parentTab ||
+                        WpfTreeHelperExtensions.FindParent<TabControl>(parentTab) is not TabControl tabControl)
+                    {
+                        MessageBox.Show("Cannot locate parent TabControl or TabItem.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
 
-                string tabHeader = $"View: {System.IO.Path.GetFileName(path)}";
-                TabItem newTab = new TabItem { Header = tabHeader };
-                newTab.Content = viewer.GetControl();
+                    var viewer = _viewerFactory.CreateViewer(path);
+                    viewer.LoadFile(path);
 
-                tabControl.Items.Add(newTab);
-                tabControl.SelectedItem = newTab;
+                    string tabHeader = $"View: {Path.GetFileName(path)}";
+                    TabItem newTab = new TabItem { Header = tabHeader };
+                    newTab.Content = viewer.GetControl();
+
+                    tabControl.Items.Add(newTab);
+                    tabControl.SelectedItem = newTab;
+                }
+                else // External
+                {
+                    string arguments = defaultTool.ViewArguments.Replace("{file}", path);
+                    ProcessStartInfo startInfo = new()
+                    {
+                        FileName = defaultTool.Path,
+                        Arguments = arguments,
+                        UseShellExecute = true
+                    };
+                    Process.Start(startInfo);
+                }
             }
             catch (Exception ex)
             {
@@ -633,48 +705,37 @@ namespace dCompare.Compare
             try
             {
                 var config = await _configService.LoadConfigurationAsync();
-                FileType fileType = DetermineFileType(leftPath ?? rightPath);
+                string extension = Path.GetExtension(leftPath ?? rightPath);
+                var defaultTool = _toolService.GetDefaultTool(config, Operations.Diff, extension);
+
+                if (defaultTool == null)
+                {
+                    MessageBox.Show($"No default diff tool configured for '{extension}' files.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
 
                 leftPath = leftPath ?? CreateTemporaryEmptyFile();
                 rightPath = rightPath ?? CreateTemporaryEmptyFile();
 
-                if (fileType == FileType.Text && config?.Options?.Diff?.Text?.Viewer?.Equals("WinMerge", StringComparison.OrdinalIgnoreCase) == true)
+                if (defaultTool.Type == "BuiltIn")
                 {
-                    var winMergeViewer = config?.Options?.Diff?.Viewer?.FirstOrDefault(v => v.Name.Equals("WinMerge", StringComparison.OrdinalIgnoreCase));
-                    if (winMergeViewer == null)
-                    {
-                        MessageBox.Show("WinMerge configuration not found.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                        return;
-                    }
-
-                    string arguments = winMergeViewer.Arguments
+                    var viewer = _viewerFactory.CreateViewer(leftPath, rightPath);
+                    viewer.LoadFile(leftPath);
+                    OpenFileComparisonTab(leftPath, rightPath, viewer);
+                }
+                else // External tool
+                {
+                    string arguments = defaultTool.DiffArguments
                         .Replace("{left}", leftPath)
                         .Replace("{right}", rightPath);
 
                     ProcessStartInfo startInfo = new()
                     {
-                        FileName = winMergeViewer.Path,
+                        FileName = defaultTool.Path,
                         Arguments = arguments,
                         UseShellExecute = true
                     };
-
                     Process.Start(startInfo);
-                }
-                else if (fileType == FileType.Text && config?.Options?.Diff?.Text?.Viewer?.Equals("DiffPlex", StringComparison.OrdinalIgnoreCase) == true)
-                {
-                    var viewer = _viewerFactory.CreateViewer(leftPath, rightPath);
-                    viewer.LoadFile(leftPath);
-                    OpenFileComparisonTab(leftPath, rightPath, fileType, viewer);
-                }
-                else if (fileType == FileType.Image)
-                {
-                    var viewer = _viewerFactory.CreateViewer(leftPath, rightPath);
-                    viewer.LoadFile(leftPath);
-                    OpenFileComparisonTab(leftPath, rightPath, fileType, viewer);
-                }
-                else
-                {
-                    MessageBox.Show("Unsupported file type for comparison.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             catch (Exception ex)
@@ -685,11 +746,11 @@ namespace dCompare.Compare
 
         private void ContextMenu_CompareWithViewer_Click(object sender, RoutedEventArgs e)
         {
-            ProcessViewerAction(sender, (selectedItem, viewerConfig) =>
+            ProcessViewerAction(sender, (selectedItem, tool) =>
             {
                 if (selectedItem.IsDirectory)
                 {
-                    MessageBox.Show($"Cannot compare directories with {viewerConfig.Name}.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show($"Cannot compare directories with {tool.Name}.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
@@ -707,13 +768,13 @@ namespace dCompare.Compare
                     leftPath = leftPath ?? CreateTemporaryEmptyFile();
                     rightPath = rightPath ?? CreateTemporaryEmptyFile();
 
-                    string arguments = viewerConfig.Arguments
+                    string arguments = tool.DiffArguments
                         .Replace("{left}", leftPath)
                         .Replace("{right}", rightPath);
 
                     ProcessStartInfo startInfo = new ProcessStartInfo
                     {
-                        FileName = viewerConfig.Path,
+                        FileName = tool.Path,
                         Arguments = arguments,
                         UseShellExecute = true
                     };
@@ -722,14 +783,14 @@ namespace dCompare.Compare
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Error launching {viewerConfig.Name}: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show($"Error launching {tool.Name}: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             });
         }
 
-        private void ProcessViewerAction(object sender, Action<TreeNode, ExternalViewer> action)
+        private void ProcessViewerAction(object sender, Action<TreeNode, ToolOptions> action)
         {
-            if (sender is not MenuItem menuItem || menuItem.Tag is not ExternalViewer viewerConfig)
+            if (sender is not MenuItem menuItem || menuItem.Tag is not ToolOptions tool)
             {
                 MessageBox.Show("Invalid viewer configuration.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
@@ -741,7 +802,7 @@ namespace dCompare.Compare
                 return;
             }
 
-            action(selectedItem, viewerConfig);
+            action(selectedItem, tool);
         }
 
         private string CreateTemporaryEmptyFile()
@@ -751,7 +812,7 @@ namespace dCompare.Compare
             return tempPath;
         }
 
-        private void OpenFileComparisonTab(string leftPath, string rightPath, FileType fileType, IViewer viewer)
+        private void OpenFileComparisonTab(string leftPath, string rightPath, IViewer viewer)
         {
             if (WpfTreeHelperExtensions.FindParent<TabItem>(this) is not TabItem parentTab ||
                 WpfTreeHelperExtensions.FindParent<TabControl>(parentTab) is not TabControl tabControl)
@@ -844,7 +905,7 @@ namespace dCompare.Compare
                 return;
             }
 
-            ViewFile(selectedItem);
+            ViewFileAsync(selectedItem);
         }
 
         private async Task ProcessFileOperationsAsync(
@@ -1262,23 +1323,5 @@ namespace dCompare.Compare
             }
         }
 
-        private FileType DetermineFileType(string filePath)
-        {
-            string extension = Path.GetExtension(filePath).ToLowerInvariant();
-            var textExtensions = new List<string> { ".txt", ".log", ".cs", ".json", ".xml", ".html", ".css", ".js", ".py", ".md", ".sql" };
-            var imageExtensions = new List<string> { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tiff", ".webp" };
-
-            if (textExtensions.Contains(extension))
-            {
-                return FileType.Text;
-            }
-
-            if (imageExtensions.Contains(extension))
-            {
-                return FileType.Image;
-            }
-
-            return FileType.Binary;
-        }
     }
 }
