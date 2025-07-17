@@ -19,7 +19,12 @@
             <Button Content="📏 Fit to Window" Command="{Binding FitToWindowCommand}" Margin="2"/>
         </ToolBar>
         <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-            <Image x:Name="ImageViewerImage" Source="{Binding ImageSource}" Stretch="{Binding ImageStretch}" RenderTransform="{Binding ImageScaleTransform}" />
+            <Grid>
+                <Grid.LayoutTransform>
+                    <ScaleTransform ScaleX="{Binding ZoomFactor}" ScaleY="{Binding ZoomFactor}" />
+                </Grid.LayoutTransform>
+                <Image x:Name="ImageViewerImage" Source="{Binding ImageSource}" Stretch="Uniform" MaxWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ScrollViewer}}" MaxHeight="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"/>
+            </Grid>
         </ScrollViewer>
     </Grid>
 </UserControl>
