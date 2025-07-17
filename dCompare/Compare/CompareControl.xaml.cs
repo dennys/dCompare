@@ -1,9 +1,9 @@
 ﻿using dCompare.Compare.Models;
 using dCompare.Configuration;
-using dCompare.Diff;
-using dCompare.Diff.Models;
+using dCompare.Tools.Diff;
+using dCompare.Tools.Models;
 using dCompare.FileOperation;
-using dCompare.Viewer;
+using dCompare.Tools.Viewer;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
 using Microsoft.Win32;

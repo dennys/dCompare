@@ -1,11 +1,11 @@
 ﻿using dCompare.Compare;
 using System.ComponentModel;
 using System.Windows;
-using dCompare.Viewer;
+using dCompare.Tools.Viewer;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
-namespace dCompare.Diff
+namespace dCompare.Tools.Diff
 {
     public partial class ImageDiff : UserControl, INotifyPropertyChanged, IRefreshable, IViewer
     {

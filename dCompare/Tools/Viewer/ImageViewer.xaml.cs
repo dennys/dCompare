@@ -1,7 +1,7 @@
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace dCompare.Viewer
+namespace dCompare.Tools.Viewer
 {
     public partial class ImageViewer : UserControl, IViewer
     {

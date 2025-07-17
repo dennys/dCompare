@@ -1,4 +1,4 @@
-﻿using dCompare.Viewer;
+﻿using dCompare.Tools.Viewer;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Editing;
 using ICSharpCode.AvalonEdit.Highlighting;
@@ -11,7 +11,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace dCompare.Viewer
+namespace dCompare.Tools.Viewer
 {
     public partial class TextViewer : UserControl, IViewer
     {

@@ -9,11 +9,11 @@ using System;
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
-using dCompare.Viewer;
+using dCompare.Tools.Viewer;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace dCompare.Diff
+namespace dCompare.Tools.Diff
 {
     public partial class TextDiffPlex : UserControl, INotifyPropertyChanged, IRefreshable, IViewer
     {
