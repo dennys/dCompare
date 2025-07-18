@@ -13,6 +13,7 @@
     <Window.Resources>
         <local:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <infra:StringNullOrEmptyToVisibilityConverter x:Key="StringNullOrEmptyToVisibilityConverter" />
+        <local:StringToListConverter x:Key="StringToListConverter" />
 
         <Style x:Key="HotKeyBoxStyle" TargetType="{x:Type controls:HotKeyTextBox}">
             <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -507,7 +508,7 @@
                     <TextBlock Grid.Row="6" Grid.Column="0" Text="Supported Operations:" Margin="5"/>
                     <ListBox Grid.Row="6" Grid.Column="1" ItemsSource="{Binding AvailableOperations}" SelectionMode="Multiple" Margin="5">
                         <ListBox.SelectedValue>
-                            <Binding Path="SupportedOperations"/>
+                            <Binding Path="SupportedOperations" Converter="{StaticResource StringToListConverter}"/>
                         </ListBox.SelectedValue>
                     </ListBox>
 

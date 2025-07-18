@@ -134,12 +134,8 @@ namespace dCompare.Options
 
         public string SupportedOperations
         {
-            get => _tool.SupportedOperations != null ? string.Join(",", _tool.SupportedOperations) : string.Empty;
-            set
-            {
-                _tool.SupportedOperations = !string.IsNullOrEmpty(value) ? value.Split(',').ToList() : new List<string>();
-                OnPropertyChanged();
-            }
+            get => string.Join(",", _tool.SupportedOperations);
+            set { _tool.SupportedOperations = value.Split(',').ToList(); OnPropertyChanged(); }
         }
 
         public string SupportedExtensions
