@@ -132,10 +132,14 @@ namespace dCompare.Options
             set { _tool.ViewArguments = value; OnPropertyChanged(); }
         }
 
-        public string SupportedOperations
+        public List<string> SupportedOperations
         {
-            get => string.Join(",", _tool.SupportedOperations);
-            set { _tool.SupportedOperations = value.Split(',').ToList(); OnPropertyChanged(); }
+            get => _tool.SupportedOperations;
+            set
+            {
+                _tool.SupportedOperations = value;
+                OnPropertyChanged();
+            }
         }
 
         public string SupportedExtensions

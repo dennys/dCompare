@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:dCompare.Options"
         xmlns:controls="clr-namespace:dCompare.Controls"
         xmlns:infra="clr-namespace:dCompare.Infrastructure"
+        xmlns:helper="clr-namespace:dCompare.Options"
         mc:Ignorable="d"
         xmlns:resx="clr-namespace:dCompare.Properties"
         Title="Settings" Height="680" Width="800"
@@ -13,7 +14,6 @@
     <Window.Resources>
         <local:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <infra:StringNullOrEmptyToVisibilityConverter x:Key="StringNullOrEmptyToVisibilityConverter" />
-        <local:StringToListConverter x:Key="StringToListConverter" />
 
         <Style x:Key="HotKeyBoxStyle" TargetType="{x:Type controls:HotKeyTextBox}">
             <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -506,11 +506,8 @@
                     <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding ViewArguments, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsExternal}" Margin="5"/>
 
                     <TextBlock Grid.Row="6" Grid.Column="0" Text="Supported Operations:" Margin="5"/>
-                    <ListBox Grid.Row="6" Grid.Column="1" ItemsSource="{Binding AvailableOperations}" SelectionMode="Multiple" Margin="5">
-                        <ListBox.SelectedValue>
-                            <Binding Path="SupportedOperations" Converter="{StaticResource StringToListConverter}"/>
-                        </ListBox.SelectedValue>
-                    </ListBox>
+                    <ListBox Grid.Row="6" Grid.Column="1" ItemsSource="{Binding AvailableOperations}" SelectionMode="Multiple" Margin="5"
+                             helper:ListBoxHelper.SelectedItems="{Binding SupportedOperations, Mode=TwoWay}"/>
 
                     <TextBlock Grid.Row="7" Grid.Column="0" Text="Supported Extensions:" Margin="5"/>
                     <TextBox Grid.Row="7" Grid.Column="1" Margin="5">
