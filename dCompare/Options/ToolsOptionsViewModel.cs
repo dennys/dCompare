@@ -44,15 +44,12 @@ namespace dCompare.Options
 
         private void RemoveTool()
         {
-            if (SelectedTool == null) return;
-
-            if (_config.Options.Tools.ContainsKey(SelectedTool.Key))
+            if (SelectedTool != null)
             {
                 _config.Options.Tools.Remove(SelectedTool.Key);
+                Tools.Remove(SelectedTool);
+                SelectedTool = Tools.FirstOrDefault();
             }
-
-            Tools.Remove(SelectedTool);
-            SelectedTool = Tools.FirstOrDefault();
         }
 
         private bool CanRemoveTool()
@@ -137,8 +134,12 @@ namespace dCompare.Options
 
         public string SupportedOperations
         {
-            get => string.Join(",", _tool.SupportedOperations);
-            set { _tool.SupportedOperations = value.Split(',').ToList(); OnPropertyChanged(); }
+            get => _tool.SupportedOperations != null ? string.Join(",", _tool.SupportedOperations) : string.Empty;
+            set
+            {
+                _tool.SupportedOperations = !string.IsNullOrEmpty(value) ? value.Split(',').ToList() : new List<string>();
+                OnPropertyChanged();
+            }
         }
 
         public string SupportedExtensions
