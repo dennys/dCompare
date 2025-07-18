@@ -769,18 +769,27 @@ namespace dCompare.Compare
                     leftPath = leftPath ?? CreateTemporaryEmptyFile();
                     rightPath = rightPath ?? CreateTemporaryEmptyFile();
 
-                    string arguments = tool.DiffArguments
-                        .Replace("{left}", leftPath)
-                        .Replace("{right}", rightPath);
-
-                    ProcessStartInfo startInfo = new ProcessStartInfo
+                    if (tool.Type == "BuiltIn")
                     {
-                        FileName = tool.Path,
-                        Arguments = arguments,
-                        UseShellExecute = true
-                    };
+                        var viewer = _toolFactory.CreateViewer(leftPath, rightPath);
+                        viewer.LoadFile(leftPath, rightPath);
+                        OpenFileComparisonTab(leftPath, rightPath, viewer);
+                    }
+                    else // External
+                    {
+                        string arguments = tool.DiffArguments
+                            .Replace("{left}", leftPath)
+                            .Replace("{right}", rightPath);
 
-                    Process.Start(startInfo);
+                        ProcessStartInfo startInfo = new ProcessStartInfo
+                        {
+                            FileName = tool.Path,
+                            Arguments = arguments,
+                            UseShellExecute = true
+                        };
+
+                        Process.Start(startInfo);
+                    }
                 }
                 catch (Exception ex)
                 {
