@@ -495,7 +495,15 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBox Grid.Column="0" Text="{Binding Path, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsExternal}" Margin="5,5,0,5"/>
+                        <TextBox Grid.Column="0" IsEnabled="{Binding IsExternal}" Margin="5,5,0,5">
+                            <TextBox.Text>
+                                <Binding Path="Path" UpdateSourceTrigger="PropertyChanged">
+                                    <Binding.ValidationRules>
+                                        <DataErrorValidationRule/>
+                                    </Binding.ValidationRules>
+                                </Binding>
+                            </TextBox.Text>
+                        </TextBox>
                         <Button Grid.Column="1" Content="..." Command="{Binding BrowseCommand}" IsEnabled="{Binding IsExternal}" Margin="10,5,5,5" Padding="5,1"/>
                     </Grid>
 
@@ -507,7 +515,7 @@
 
                     <TextBlock Grid.Row="6" Grid.Column="0" Text="Supported Operations:" Margin="5"/>
                     <ListBox Grid.Row="6" Grid.Column="1" ItemsSource="{Binding AvailableOperations}" SelectionMode="Multiple" Margin="5"
-                             helper:ListBoxHelper.SelectedItems="{Binding SupportedOperations, Mode=TwoWay}"/>
+                             helper:ListBoxHelper.SelectedItems="{Binding SupportedOperations, Mode=TwoWay, ValidatesOnDataErrors=True}"/>
 
                     <TextBlock Grid.Row="7" Grid.Column="0" Text="Supported Extensions:" Margin="5"/>
                     <TextBox Grid.Row="7" Grid.Column="1" Margin="5">

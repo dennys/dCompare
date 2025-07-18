@@ -193,6 +193,20 @@ namespace dCompare.Options
                         }
                     }
                 }
+                if (columnName == nameof(SupportedOperations))
+                {
+                    if (SupportedOperations == null || SupportedOperations.Count == 0)
+                    {
+                        result = "At least one supported operation must be selected.";
+                    }
+                }
+                if (columnName == nameof(Path))
+                {
+                    if (Type == ToolTypes.External && string.IsNullOrWhiteSpace(Path))
+                    {
+                        result = "Path is required for external tools.";
+                    }
+                }
                 return result;
             }
         }
