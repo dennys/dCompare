@@ -44,12 +44,15 @@ namespace dCompare.Options
 
         private void RemoveTool()
         {
-            if (SelectedTool != null)
+            if (SelectedTool == null) return;
+
+            if (_config.Options.Tools.ContainsKey(SelectedTool.Key))
             {
                 _config.Options.Tools.Remove(SelectedTool.Key);
-                Tools.Remove(SelectedTool);
-                SelectedTool = Tools.FirstOrDefault();
             }
+
+            Tools.Remove(SelectedTool);
+            SelectedTool = Tools.FirstOrDefault();
         }
 
         private bool CanRemoveTool()
