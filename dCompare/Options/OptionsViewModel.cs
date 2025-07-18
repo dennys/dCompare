@@ -27,6 +27,8 @@ namespace dCompare.Options
             OnPropertyChanged(propertyName);
             return true;
         }
+
+        public virtual bool IsValid => true;
     }
 
     public class SettingsViewModel : ViewModelBase
@@ -175,6 +177,15 @@ namespace dCompare.Options
         {
             get => _selectedViewModel;
             set => SetProperty(ref _selectedViewModel, value);
+        }
+
+        public override bool IsValid
+        {
+            get
+            {
+                return MenuItems.SelectMany(m => m.Children)
+                                .All(c => c.ViewModel == null || c.ViewModel.IsValid);
+            }
         }
     }
 

@@ -162,6 +162,16 @@ namespace dCompare.Options
 
         public string Error => null;
 
+        public override bool IsValid
+        {
+            get
+            {
+                return string.IsNullOrWhiteSpace(this[nameof(Name)]) &&
+                       string.IsNullOrWhiteSpace(this[nameof(SupportedExtensions)]) &&
+                       string.IsNullOrWhiteSpace(this[nameof(SupportedOperations)]) &&
+                       string.IsNullOrWhiteSpace(this[nameof(Path)]);
+            }
+        }
         public string this[string columnName]
         {
             get

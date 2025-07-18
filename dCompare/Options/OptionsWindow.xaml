@@ -624,7 +624,7 @@
 
         <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" BorderBrush="LightGray" BorderThickness="0,1,0,0" Background="#F0F0F0">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="10">
-                <Button Content="Save" Width="80" Margin="5" Command="{Binding SaveCommand}"/>
+                <Button Content="Save" Width="80" Margin="5" Command="{Binding SaveCommand}" IsEnabled="{Binding IsValid}"/>
                 <Button Content="Cancel" Width="80" Margin="5" Click="CancelButton_Click"/>
             </StackPanel>
         </Border>
