@@ -41,12 +41,15 @@ namespace dCompare.Options
         {
             if (sender is ListBox listBox)
             {
-                var selectedItems = new List<string>();
-                foreach (var item in listBox.SelectedItems)
+                var list = GetSelectedItems(listBox);
+                if (list != null)
                 {
-                    selectedItems.Add(item.ToString());
+                    list.Clear();
+                    foreach (var item in listBox.SelectedItems)
+                    {
+                        list.Add(item);
+                    }
                 }
-                SetSelectedItems(listBox, selectedItems);
             }
         }
     }

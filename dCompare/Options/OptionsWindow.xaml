@@ -572,10 +572,12 @@
                     <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding AvailableTools}" SelectedItem="{Binding DefaultViewTool}" Margin="5"/>
 
                     <TextBlock Grid.Row="3" Grid.Column="0" Text="Preferred Diff Tools:" Margin="5"/>
-                    <local:PreferredToolsSelector Grid.Row="3" Grid.Column="1" AvailableTools="{Binding AvailableTools}" SelectedTools="{Binding PreferredDiffTools}" Margin="5"/>
+                    <ListBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding AvailableTools}" SelectionMode="Multiple" Margin="5"
+                             helper:ListBoxHelper.SelectedItems="{Binding PreferredDiffTools, Mode=TwoWay}"/>
 
                     <TextBlock Grid.Row="4" Grid.Column="0" Text="Preferred View Tools:" Margin="5"/>
-                    <local:PreferredToolsSelector Grid.Row="4" Grid.Column="1" AvailableTools="{Binding AvailableTools}" SelectedTools="{Binding PreferredViewTools}" Margin="5"/>
+                    <ListBox Grid.Row="4" Grid.Column="1" ItemsSource="{Binding AvailableTools}" SelectionMode="Multiple" Margin="5"
+                             helper:ListBoxHelper.SelectedItems="{Binding PreferredViewTools, Mode=TwoWay}"/>
                 </Grid>
             </DockPanel>
         </DataTemplate>
