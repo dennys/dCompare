@@ -27,6 +27,8 @@ namespace dCompare.Options
             OnPropertyChanged(propertyName);
             return true;
         }
+
+        public virtual bool IsValid => true;
     }
 
     public class SettingsViewModel : ViewModelBase
@@ -107,11 +109,15 @@ namespace dCompare.Options
             var confirmationNode = new SettingsMenuItem("Confirmation", new ConfirmationOptionsViewModel(_appConfig.Options.Confirmation), this);
             var hotkeysNode = new SettingsMenuItem("HotKeys", new HotKeysOptionsViewModel(_appConfig.Options.HotKeys), this);
             var textViewerNode = new SettingsMenuItem("TextViewer", new TextViewerOptionsViewModel(_appConfig.Options.TextViewer), this);
+            var toolsNode = new SettingsMenuItem("Tools", new ToolsOptionsViewModel(_appConfig), this);
+            var fileTypeMappingNode = new SettingsMenuItem("FileTypeMapping", new FileTypeMappingOptionsViewModel(_appConfig), this);
 
             optionsNode.Children.Add(uiNode);
             optionsNode.Children.Add(compareNode);
             optionsNode.Children.Add(diffNode);
             optionsNode.Children.Add(textViewerNode);
+            optionsNode.Children.Add(toolsNode);
+            optionsNode.Children.Add(fileTypeMappingNode);
             optionsNode.Children.Add(confirmationNode);
             optionsNode.Children.Add(sessionNode);
             optionsNode.Children.Add(hotkeysNode);
@@ -171,6 +177,15 @@ namespace dCompare.Options
         {
             get => _selectedViewModel;
             set => SetProperty(ref _selectedViewModel, value);
+        }
+
+        public override bool IsValid
+        {
+            get
+            {
+                return MenuItems.SelectMany(m => m.Children)
+                                .All(c => c.ViewModel == null || c.ViewModel.IsValid);
+            }
         }
     }
 
@@ -447,14 +462,24 @@ namespace dCompare.Options
         private void AddExtension(object obj)
         {
             string newExt = Interaction.InputBox("Enter new file extension (e.g., .txt):", "Add Extension", "");
-            if (!string.IsNullOrWhiteSpace(newExt) && newExt.StartsWith(".") && !Extensions.Contains(newExt, StringComparer.OrdinalIgnoreCase))
+            if (string.IsNullOrWhiteSpace(newExt))
             {
-                Extensions.Add(newExt);
+                return;
             }
-            else if (!string.IsNullOrWhiteSpace(newExt) && !newExt.StartsWith("."))
+
+            if (!newExt.StartsWith("."))
             {
                 MessageBox.Show("Extension must start with a dot (e.g., .txt).", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
             }
+
+            if (Extensions.Contains(newExt, StringComparer.OrdinalIgnoreCase))
+            {
+                MessageBox.Show("Extension already exists.", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            Extensions.Add(newExt);
         }
 
         private void RemoveExtension(object obj)
