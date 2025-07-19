@@ -271,38 +271,59 @@ namespace dCompare.Compare
         }
         private async Task ViewFileAsync(TreeNode selectedItem)
         {
+            await LaunchViewerAsync(selectedItem);
+        }
+        private void ContextMenu_ViewWithViewer_Click(object sender, RoutedEventArgs e)
+        {
+            ProcessViewerAction(sender, async (selectedItem, tool) =>
+            {
+                await LaunchViewerAsync(selectedItem, tool);
+            });
+        }
+        private async Task LaunchViewerAsync(TreeNode selectedItem, ToolOptions? tool = null)
+        {
             if (selectedItem.IsDirectory)
             {
                 MessageBox.Show("Cannot open a directory.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
-            string? path = selectedItem.LeftNode?.FullPath ?? selectedItem.RightNode?.FullPath;
-
-            if (string.IsNullOrEmpty(path))
-            {
-                MessageBox.Show("No valid file path to open.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
             try
             {
-                var config = await _configService.LoadConfigurationAsync();
-                string extension = Path.GetExtension(path);
-                var defaultTool = _toolService.GetDefaultTool(config, Operations.View, extension);
-
-                if (defaultTool == null)
+                if (tool == null)
                 {
-                    MessageBox.Show($"No default view tool configured for '{extension}' files.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    string? pathForExtension = selectedItem.LeftNode?.FullPath ?? selectedItem.RightNode?.FullPath;
+
+                    if (string.IsNullOrEmpty(pathForExtension))
+                    {
+                        MessageBox.Show("Cannot determine file type: the item has no valid path.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    var config = await _configService.LoadConfigurationAsync();
+                    string extension = Path.GetExtension(pathForExtension); // Now guaranteed to be safe.
+                    tool = _toolService.GetDefaultTool(config, Operations.View, extension);
+
+                    if (tool == null)
+                    {
+                        MessageBox.Show($"No default view tool configured for '{extension}' files.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+                }
+
+                // The rest of the launching logic remains the same...
+                string? path = selectedItem.LeftNode?.FullPath ?? selectedItem.RightNode?.FullPath;
+                if (string.IsNullOrEmpty(path))
+                {
+                    MessageBox.Show("No valid file path to open.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
-                if (defaultTool.Type == "BuiltIn")
+                if (tool.Type == "BuiltIn")
                 {
-                    if (WpfTreeHelperExtensions.FindParent<TabItem>(this) is not TabItem parentTab ||
-                        WpfTreeHelperExtensions.FindParent<TabControl>(parentTab) is not TabControl tabControl)
+                    if (WpfTreeHelperExtensions.FindParent<TabControl>(this) is not TabControl tabControl)
                     {
-                        MessageBox.Show("Cannot locate parent TabControl or TabItem.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show("Cannot locate parent TabControl.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                         return;
                     }
 
@@ -310,18 +331,17 @@ namespace dCompare.Compare
                     viewer.LoadFile(path);
 
                     string tabHeader = $"View: {Path.GetFileName(path)}";
-                    TabItem newTab = new TabItem { Header = tabHeader };
-                    newTab.Content = viewer.GetControl();
+                    TabItem newTab = new TabItem { Header = tabHeader, Content = viewer.GetControl() };
 
                     tabControl.Items.Add(newTab);
                     tabControl.SelectedItem = newTab;
                 }
                 else // External
                 {
-                    string arguments = defaultTool.ViewArguments.Replace("{file}", path);
+                    string arguments = tool.ViewArguments.Replace("{file}", path);
                     ProcessStartInfo startInfo = new()
                     {
-                        FileName = defaultTool.Path,
+                        FileName = tool.Path,
                         Arguments = arguments,
                         UseShellExecute = true
                     };
@@ -333,111 +353,50 @@ namespace dCompare.Compare
                 MessageBox.Show($"Error opening file: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void ContextMenu_ViewWithViewer_Click(object sender, RoutedEventArgs e)
-        {
-            ProcessViewerAction(sender, (selectedItem, tool) =>
-            {
-                if (selectedItem.IsDirectory)
-                {
-                    MessageBox.Show($"Cannot view directories with {tool.Name}.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                string? path = selectedItem.LeftNode?.FullPath ?? selectedItem.RightNode?.FullPath;
-                if (string.IsNullOrEmpty(path))
-                {
-                    MessageBox.Show("No valid file path to view.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                try
-                {
-                    if (tool.Type == "BuiltIn")
-                    {
-                        if (WpfTreeHelperExtensions.FindParent<TabItem>(this) is not TabItem parentTab ||
-                            WpfTreeHelperExtensions.FindParent<TabControl>(parentTab) is not TabControl tabControl)
-                        {
-                            MessageBox.Show("Cannot locate parent TabControl or TabItem.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                            return;
-                        }
-
-                        var viewer = _toolFactory.CreateViewer(path);
-                        viewer.LoadFile(path);
-
-                        string tabHeader = $"View: {Path.GetFileName(path)}";
-                        TabItem newTab = new TabItem { Header = tabHeader };
-                        newTab.Content = viewer.GetControl();
-
-                        tabControl.Items.Add(newTab);
-                        tabControl.SelectedItem = newTab;
-                    }
-                    else // External
-                    {
-                        string arguments = tool.ViewArguments.Replace("{file}", path);
-                        ProcessStartInfo startInfo = new()
-                        {
-                            FileName = tool.Path,
-                            Arguments = arguments,
-                            UseShellExecute = true
-                        };
-                        Process.Start(startInfo);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Error launching {tool.Name}: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            });
-        }
         private async void CompareFile(TreeNode selectedItem)
         {
-            try
-            {
-                var config = await _configService.LoadConfigurationAsync();
-                string extension = Path.GetExtension(selectedItem.LeftNode?.FullPath ?? selectedItem.RightNode?.FullPath);
-                var defaultTool = _toolService.GetDefaultTool(config, Operations.Diff, extension);
-
-                if (defaultTool == null)
-                {
-                    MessageBox.Show($"No default diff tool configured for '{extension}' files.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                CompareFileWithTool(selectedItem, defaultTool);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error preparing to compare files: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            await LaunchComparerAsync(selectedItem);
         }
         private void ContextMenu_CompareWithViewer_Click(object sender, RoutedEventArgs e)
         {
-            ProcessViewerAction(sender, (selectedItem, tool) =>
+            ProcessViewerAction(sender, async (selectedItem, tool) =>
             {
-                CompareFileWithTool(selectedItem, tool);
+                await LaunchComparerAsync(selectedItem, tool);
             });
         }
-        private void CompareFileWithTool(TreeNode selectedItem, ToolOptions tool)
+        private async Task LaunchComparerAsync(TreeNode selectedItem, ToolOptions? tool = null)
         {
             if (selectedItem.IsDirectory)
             {
-                MessageBox.Show($"Cannot compare directories with {tool.Name}.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            string? leftPath = selectedItem.LeftNode?.FullPath;
-            string? rightPath = selectedItem.RightNode?.FullPath;
-
-            if (string.IsNullOrEmpty(leftPath) && string.IsNullOrEmpty(rightPath))
-            {
-                MessageBox.Show("No valid file paths to compare.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Cannot compare directories with a file comparison tool.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
             try
             {
-                leftPath = leftPath ?? CreateTemporaryEmptyFile();
-                rightPath = rightPath ?? CreateTemporaryEmptyFile();
+                if (tool == null)
+                {
+                    string? pathForExtension = selectedItem.LeftNode?.FullPath ?? selectedItem.RightNode?.FullPath;
+
+                    if (string.IsNullOrEmpty(pathForExtension))
+                    {
+                        MessageBox.Show("Cannot determine file type: the item has no valid path.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    var config = await _configService.LoadConfigurationAsync();
+                    string extension = Path.GetExtension(pathForExtension); // Now guaranteed to be safe.
+                    tool = _toolService.GetDefaultTool(config, Operations.Diff, extension);
+
+                    if (tool == null)
+                    {
+                        MessageBox.Show($"No default diff tool configured for '{extension}' files.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+                }
+
+                string leftPath = selectedItem.LeftNode?.FullPath ?? CreateTemporaryEmptyFile();
+                string rightPath = selectedItem.RightNode?.FullPath ?? CreateTemporaryEmptyFile();
 
                 if (tool.Type == "BuiltIn")
                 {
@@ -462,7 +421,7 @@ namespace dCompare.Compare
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error launching {tool.Name}: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error launching comparison tool: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         private string CreateTemporaryEmptyFile()
