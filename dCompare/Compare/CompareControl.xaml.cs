@@ -1,4 +1,4 @@
-﻿using dCompare.Compare.Models;
+using dCompare.Compare.Models;
 using dCompare.Configuration;
 using dCompare.Tools.Diff;
 using dCompare.Tools.Models;
@@ -688,25 +688,10 @@ namespace dCompare.Compare
 
         private async void CompareFile(TreeNode selectedItem)
         {
-            if (selectedItem.IsDirectory)
-            {
-                MessageBox.Show("Cannot compare contents of directories.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            string? leftPath = selectedItem.LeftNode?.FullPath;
-            string? rightPath = selectedItem.RightNode?.FullPath;
-
-            if (string.IsNullOrEmpty(leftPath) || string.IsNullOrEmpty(rightPath))
-            {
-                MessageBox.Show("No valid file paths to compare.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
             try
             {
                 var config = await _configService.LoadConfigurationAsync();
-                string extension = Path.GetExtension(leftPath ?? rightPath);
+                string extension = Path.GetExtension(selectedItem.LeftNode?.FullPath ?? selectedItem.RightNode?.FullPath);
                 var defaultTool = _toolService.GetDefaultTool(config, Operations.Diff, extension);
 
                 if (defaultTool == null)
@@ -715,33 +700,11 @@ namespace dCompare.Compare
                     return;
                 }
 
-                leftPath = leftPath ?? CreateTemporaryEmptyFile();
-                rightPath = rightPath ?? CreateTemporaryEmptyFile();
-
-                if (defaultTool.Type == "BuiltIn")
-                {
-                    var viewer = _toolFactory.CreateViewer(leftPath, rightPath);
-                    viewer.LoadFile(leftPath);
-                    OpenFileComparisonTab(leftPath, rightPath, viewer);
-                }
-                else // External tool
-                {
-                    string arguments = defaultTool.DiffArguments
-                        .Replace("{left}", leftPath)
-                        .Replace("{right}", rightPath);
-
-                    ProcessStartInfo startInfo = new()
-                    {
-                        FileName = defaultTool.Path,
-                        Arguments = arguments,
-                        UseShellExecute = true
-                    };
-                    Process.Start(startInfo);
-                }
+                CompareFileWithTool(selectedItem, defaultTool);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error comparing files: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error preparing to compare files: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -749,26 +712,39 @@ namespace dCompare.Compare
         {
             ProcessViewerAction(sender, (selectedItem, tool) =>
             {
-                if (selectedItem.IsDirectory)
+                CompareFileWithTool(selectedItem, tool);
+            });
+        }
+
+        private void CompareFileWithTool(TreeNode selectedItem, ToolOptions tool)
+        {
+            if (selectedItem.IsDirectory)
+            {
+                MessageBox.Show($"Cannot compare directories with {tool.Name}.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            string? leftPath = selectedItem.LeftNode?.FullPath;
+            string? rightPath = selectedItem.RightNode?.FullPath;
+
+            if (string.IsNullOrEmpty(leftPath) && string.IsNullOrEmpty(rightPath))
+            {
+                MessageBox.Show("No valid file paths to compare.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            try
+            {
+                leftPath = leftPath ?? CreateTemporaryEmptyFile();
+                rightPath = rightPath ?? CreateTemporaryEmptyFile();
+
+                if (tool.Type == "BuiltIn")
                 {
-                    MessageBox.Show($"Cannot compare directories with {tool.Name}.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
+                    var viewer = _toolFactory.CreateViewer(leftPath, rightPath);
+                    OpenFileComparisonTab(leftPath, rightPath, viewer);
                 }
-
-                string? leftPath = selectedItem.LeftNode?.FullPath;
-                string? rightPath = selectedItem.RightNode?.FullPath;
-
-                if (string.IsNullOrEmpty(leftPath) && string.IsNullOrEmpty(rightPath))
+                else // External
                 {
-                    MessageBox.Show("No valid file paths to compare.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                try
-                {
-                    leftPath = leftPath ?? CreateTemporaryEmptyFile();
-                    rightPath = rightPath ?? CreateTemporaryEmptyFile();
-
                     string arguments = tool.DiffArguments
                         .Replace("{left}", leftPath)
                         .Replace("{right}", rightPath);
@@ -782,11 +758,11 @@ namespace dCompare.Compare
 
                     Process.Start(startInfo);
                 }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Error launching {tool.Name}: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error launching {tool.Name}: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void ProcessViewerAction(object sender, Action<TreeNode, ToolOptions> action)
