@@ -183,6 +183,44 @@ namespace dCompare.Compare
             await PopulateCompareWithMenusAsync();
         }
 
+        #region ViewAndCompare
+        private async void ResultListView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            DependencyObject obj = (DependencyObject)e.OriginalSource;
+            while (obj != null && obj is not ListViewItem)
+            {
+                obj = VisualTreeHelper.GetParent(obj);
+            }
+
+            if (obj is ListViewItem item && item.Content is TreeNode clickedItem)
+            {
+                if (clickedItem.IsDirectory)
+                {
+                    if (clickedItem.IsExpanded)
+                    {
+                        clickedItem.IsExpanded = false;
+                        _treeNodeManager.RemoveChildren(clickedItem);
+                    }
+                    else
+                    {
+                        clickedItem.IsExpanded = true;
+                        _treeNodeManager.LoadChildren(clickedItem, _cachedComparisonResults, LeftPathViewModel.Path?.Trim() ?? string.Empty, RightPathViewModel.Path?.Trim() ?? string.Empty);
+                    }
+                }
+                else
+                {
+                    var config = await _configService.LoadConfigurationAsync();
+                    if (config.Options.Compare.DoubleClick == "View")
+                    {
+                        ViewFileAsync(clickedItem);
+                    }
+                    else
+                    {
+                        CompareFile(clickedItem);
+                    }
+                }
+            }
+        }
         private async Task PopulateCompareWithMenusAsync()
         {
             try
@@ -214,10 +252,8 @@ namespace dCompare.Compare
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
         private MenuItem? FindMenuByName(ContextMenu menu, string name) =>
             menu.Items.OfType<MenuItem>().FirstOrDefault(mi => mi.Name == name);
-
         private void PopulateToolMenu(MenuItem parentMenu, IEnumerable<ToolOptions> tools, RoutedEventHandler clickHandler)
         {
             parentMenu.Items.Clear();
@@ -233,7 +269,70 @@ namespace dCompare.Compare
                 parentMenu.Items.Add(item);
             }
         }
+        private async Task ViewFileAsync(TreeNode selectedItem)
+        {
+            if (selectedItem.IsDirectory)
+            {
+                MessageBox.Show("Cannot open a directory.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
 
+            string? path = selectedItem.LeftNode?.FullPath ?? selectedItem.RightNode?.FullPath;
+
+            if (string.IsNullOrEmpty(path))
+            {
+                MessageBox.Show("No valid file path to open.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            try
+            {
+                var config = await _configService.LoadConfigurationAsync();
+                string extension = Path.GetExtension(path);
+                var defaultTool = _toolService.GetDefaultTool(config, Operations.View, extension);
+
+                if (defaultTool == null)
+                {
+                    MessageBox.Show($"No default view tool configured for '{extension}' files.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (defaultTool.Type == "BuiltIn")
+                {
+                    if (WpfTreeHelperExtensions.FindParent<TabItem>(this) is not TabItem parentTab ||
+                        WpfTreeHelperExtensions.FindParent<TabControl>(parentTab) is not TabControl tabControl)
+                    {
+                        MessageBox.Show("Cannot locate parent TabControl or TabItem.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+
+                    var viewer = _toolFactory.CreateViewer(path);
+                    viewer.LoadFile(path);
+
+                    string tabHeader = $"View: {Path.GetFileName(path)}";
+                    TabItem newTab = new TabItem { Header = tabHeader };
+                    newTab.Content = viewer.GetControl();
+
+                    tabControl.Items.Add(newTab);
+                    tabControl.SelectedItem = newTab;
+                }
+                else // External
+                {
+                    string arguments = defaultTool.ViewArguments.Replace("{file}", path);
+                    ProcessStartInfo startInfo = new()
+                    {
+                        FileName = defaultTool.Path,
+                        Arguments = arguments,
+                        UseShellExecute = true
+                    };
+                    Process.Start(startInfo);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error opening file: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
         private void ContextMenu_ViewWithViewer_Click(object sender, RoutedEventArgs e)
         {
             ProcessViewerAction(sender, (selectedItem, tool) =>
@@ -290,6 +389,106 @@ namespace dCompare.Compare
                 }
             });
         }
+        private async void CompareFile(TreeNode selectedItem)
+        {
+            try
+            {
+                var config = await _configService.LoadConfigurationAsync();
+                string extension = Path.GetExtension(selectedItem.LeftNode?.FullPath ?? selectedItem.RightNode?.FullPath);
+                var defaultTool = _toolService.GetDefaultTool(config, Operations.Diff, extension);
+
+                if (defaultTool == null)
+                {
+                    MessageBox.Show($"No default diff tool configured for '{extension}' files.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                CompareFileWithTool(selectedItem, defaultTool);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error preparing to compare files: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void ContextMenu_CompareWithViewer_Click(object sender, RoutedEventArgs e)
+        {
+            ProcessViewerAction(sender, (selectedItem, tool) =>
+            {
+                CompareFileWithTool(selectedItem, tool);
+            });
+        }
+        private void CompareFileWithTool(TreeNode selectedItem, ToolOptions tool)
+        {
+            if (selectedItem.IsDirectory)
+            {
+                MessageBox.Show($"Cannot compare directories with {tool.Name}.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            string? leftPath = selectedItem.LeftNode?.FullPath;
+            string? rightPath = selectedItem.RightNode?.FullPath;
+
+            if (string.IsNullOrEmpty(leftPath) && string.IsNullOrEmpty(rightPath))
+            {
+                MessageBox.Show("No valid file paths to compare.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            try
+            {
+                leftPath = leftPath ?? CreateTemporaryEmptyFile();
+                rightPath = rightPath ?? CreateTemporaryEmptyFile();
+
+                if (tool.Type == "BuiltIn")
+                {
+                    var viewer = _toolFactory.CreateViewer(leftPath, rightPath);
+                    OpenFileComparisonTab(leftPath, rightPath, viewer);
+                }
+                else // External
+                {
+                    string arguments = tool.DiffArguments
+                        .Replace("{left}", leftPath)
+                        .Replace("{right}", rightPath);
+
+                    ProcessStartInfo startInfo = new ProcessStartInfo
+                    {
+                        FileName = tool.Path,
+                        Arguments = arguments,
+                        UseShellExecute = true
+                    };
+
+                    Process.Start(startInfo);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error launching {tool.Name}: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private string CreateTemporaryEmptyFile()
+        {
+            string tempPath = Path.Combine(Path.GetTempPath(), $"dCompare_Empty_{Guid.NewGuid()}.txt");
+            File.WriteAllText(tempPath, string.Empty);
+            return tempPath;
+        }
+        private void OpenFileComparisonTab(string leftPath, string rightPath, IViewer viewer)
+        {
+            if (WpfTreeHelperExtensions.FindParent<TabItem>(this) is not TabItem parentTab ||
+                WpfTreeHelperExtensions.FindParent<TabControl>(parentTab) is not TabControl tabControl)
+            {
+                MessageBox.Show("Cannot locate parent TabControl or TabItem.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            string tabHeader = $"Compare: {System.IO.Path.GetFileName(leftPath)} - {System.IO.Path.GetFileName(rightPath)}";
+            TabItem newTab = new() { Header = tabHeader };
+
+            newTab.Content = viewer.GetControl();
+
+            tabControl.Items.Add(newTab);
+            tabControl.SelectedItem = newTab;
+        }
+        #endregion
 
         private void LoadConfigurationAsync()
         {
@@ -507,110 +706,6 @@ namespace dCompare.Compare
                 _cancellationTokenSource = null;
             }
         }
-
-        private async void ResultListView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
-        {
-            DependencyObject obj = (DependencyObject)e.OriginalSource;
-            while (obj != null && obj is not ListViewItem)
-            {
-                obj = VisualTreeHelper.GetParent(obj);
-            }
-
-            if (obj is ListViewItem item && item.Content is TreeNode clickedItem)
-            {
-                if (clickedItem.IsDirectory)
-                {
-                    if (clickedItem.IsExpanded)
-                    {
-                        clickedItem.IsExpanded = false;
-                        _treeNodeManager.RemoveChildren(clickedItem);
-                    }
-                    else
-                    {
-                        clickedItem.IsExpanded = true;
-                        _treeNodeManager.LoadChildren(clickedItem, _cachedComparisonResults, LeftPathViewModel.Path?.Trim() ?? string.Empty, RightPathViewModel.Path?.Trim() ?? string.Empty);
-                    }
-                }
-                else
-                {
-                    var config = await _configService.LoadConfigurationAsync();
-                    if (config.Options.Compare.DoubleClick == "View")
-                    {
-                        ViewFileAsync(clickedItem);
-                    }
-                    else
-                    {
-                        CompareFile(clickedItem);
-                    }
-                }
-            }
-        }
-
-        private async Task ViewFileAsync(TreeNode selectedItem)
-        {
-            if (selectedItem.IsDirectory)
-            {
-                MessageBox.Show("Cannot open a directory.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            string? path = selectedItem.LeftNode?.FullPath ?? selectedItem.RightNode?.FullPath;
-
-            if (string.IsNullOrEmpty(path))
-            {
-                MessageBox.Show("No valid file path to open.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            try
-            {
-                var config = await _configService.LoadConfigurationAsync();
-                string extension = Path.GetExtension(path);
-                var defaultTool = _toolService.GetDefaultTool(config, Operations.View, extension);
-
-                if (defaultTool == null)
-                {
-                    MessageBox.Show($"No default view tool configured for '{extension}' files.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                if (defaultTool.Type == "BuiltIn")
-                {
-                    if (WpfTreeHelperExtensions.FindParent<TabItem>(this) is not TabItem parentTab ||
-                        WpfTreeHelperExtensions.FindParent<TabControl>(parentTab) is not TabControl tabControl)
-                    {
-                        MessageBox.Show("Cannot locate parent TabControl or TabItem.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                        return;
-                    }
-
-                    var viewer = _toolFactory.CreateViewer(path);
-                    viewer.LoadFile(path);
-
-                    string tabHeader = $"View: {Path.GetFileName(path)}";
-                    TabItem newTab = new TabItem { Header = tabHeader };
-                    newTab.Content = viewer.GetControl();
-
-                    tabControl.Items.Add(newTab);
-                    tabControl.SelectedItem = newTab;
-                }
-                else // External
-                {
-                    string arguments = defaultTool.ViewArguments.Replace("{file}", path);
-                    ProcessStartInfo startInfo = new()
-                    {
-                        FileName = defaultTool.Path,
-                        Arguments = arguments,
-                        UseShellExecute = true
-                    };
-                    Process.Start(startInfo);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error opening file: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
         private void ExpandAll_Click(object sender, RoutedEventArgs e)
         {
             if (_cachedComparisonResults == null) return;
@@ -644,6 +739,7 @@ namespace dCompare.Compare
             ApplyFilter();
         }
 
+        #region Filter
         private void ShowAll_Click(object sender, RoutedEventArgs e) => SetFilter(null);
         private void ShowDifferent_Click(object sender, RoutedEventArgs e) =>
             SetFilter(node => node.Status == ComparisonStatus.Modified ||
@@ -653,7 +749,6 @@ namespace dCompare.Compare
         private void ShowIdentical_Click(object sender, RoutedEventArgs e) => SetFilter(node => node.Status == ComparisonStatus.Identical);
         private void ShowLeftUnique_Click(object sender, RoutedEventArgs e) => SetFilter(node => node.Status == ComparisonStatus.LeftOnly);
         private void ShowRightUnique_Click(object sender, RoutedEventArgs e) => SetFilter(node => node.Status == ComparisonStatus.RightOnly);
-
         private void SetFilter(Predicate<TreeNode>? filter)
         {
             _currentFilter = obj =>
@@ -676,7 +771,6 @@ namespace dCompare.Compare
             _treeNodeManager.SetCurrentFilter(filter, LeftPathViewModel.SearchText);
             ApplyFilter();
         }
-
         private void ApplyFilter()
         {
             ICollectionView? view = CollectionViewSource.GetDefaultView(ResultListView.ItemsSource);
@@ -685,86 +779,7 @@ namespace dCompare.Compare
                 view.Filter = _currentFilter;
             }
         }
-
-        private async void CompareFile(TreeNode selectedItem)
-        {
-            try
-            {
-                var config = await _configService.LoadConfigurationAsync();
-                string extension = Path.GetExtension(selectedItem.LeftNode?.FullPath ?? selectedItem.RightNode?.FullPath);
-                var defaultTool = _toolService.GetDefaultTool(config, Operations.Diff, extension);
-
-                if (defaultTool == null)
-                {
-                    MessageBox.Show($"No default diff tool configured for '{extension}' files.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                CompareFileWithTool(selectedItem, defaultTool);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error preparing to compare files: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void ContextMenu_CompareWithViewer_Click(object sender, RoutedEventArgs e)
-        {
-            ProcessViewerAction(sender, (selectedItem, tool) =>
-            {
-                CompareFileWithTool(selectedItem, tool);
-            });
-        }
-
-        private void CompareFileWithTool(TreeNode selectedItem, ToolOptions tool)
-        {
-            if (selectedItem.IsDirectory)
-            {
-                MessageBox.Show($"Cannot compare directories with {tool.Name}.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            string? leftPath = selectedItem.LeftNode?.FullPath;
-            string? rightPath = selectedItem.RightNode?.FullPath;
-
-            if (string.IsNullOrEmpty(leftPath) && string.IsNullOrEmpty(rightPath))
-            {
-                MessageBox.Show("No valid file paths to compare.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            try
-            {
-                leftPath = leftPath ?? CreateTemporaryEmptyFile();
-                rightPath = rightPath ?? CreateTemporaryEmptyFile();
-
-                if (tool.Type == "BuiltIn")
-                {
-                    var viewer = _toolFactory.CreateViewer(leftPath, rightPath);
-                    OpenFileComparisonTab(leftPath, rightPath, viewer);
-                }
-                else // External
-                {
-                    string arguments = tool.DiffArguments
-                        .Replace("{left}", leftPath)
-                        .Replace("{right}", rightPath);
-
-                    ProcessStartInfo startInfo = new ProcessStartInfo
-                    {
-                        FileName = tool.Path,
-                        Arguments = arguments,
-                        UseShellExecute = true
-                    };
-
-                    Process.Start(startInfo);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error launching {tool.Name}: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
+        #endregion
         private void ProcessViewerAction(object sender, Action<TreeNode, ToolOptions> action)
         {
             if (sender is not MenuItem menuItem || menuItem.Tag is not ToolOptions tool)
@@ -781,32 +796,6 @@ namespace dCompare.Compare
 
             action(selectedItem, tool);
         }
-
-        private string CreateTemporaryEmptyFile()
-        {
-            string tempPath = Path.Combine(Path.GetTempPath(), $"dCompare_Empty_{Guid.NewGuid()}.txt");
-            File.WriteAllText(tempPath, string.Empty);
-            return tempPath;
-        }
-
-        private void OpenFileComparisonTab(string leftPath, string rightPath, IViewer viewer)
-        {
-            if (WpfTreeHelperExtensions.FindParent<TabItem>(this) is not TabItem parentTab ||
-                WpfTreeHelperExtensions.FindParent<TabControl>(parentTab) is not TabControl tabControl)
-            {
-                MessageBox.Show("Cannot locate parent TabControl or TabItem.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            string tabHeader = $"Compare: {System.IO.Path.GetFileName(leftPath)} - {System.IO.Path.GetFileName(rightPath)}";
-            TabItem newTab = new() { Header = tabHeader };
-
-            newTab.Content = viewer.GetControl();
-
-            tabControl.Items.Add(newTab);
-            tabControl.SelectedItem = newTab;
-        }
-
         private void ListView_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             DependencyObject obj = (DependencyObject)e.OriginalSource;
@@ -884,7 +873,7 @@ namespace dCompare.Compare
 
             ViewFileAsync(selectedItem);
         }
-
+        #region ConextMenuOperations
         private async Task ProcessFileOperationsAsync(
             List<TreeNode> selectedNodes,
             string leftDir,
@@ -957,7 +946,6 @@ namespace dCompare.Compare
                 MessageBox.Show($"The operation failed and the view may not be fully refreshed. Details: {ex.Message}", "Operation Failed", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
         private async void ContextMenu_CopyToLeft_Click(object sender, RoutedEventArgs e)
         {
             var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
@@ -968,7 +956,6 @@ namespace dCompare.Compare
                 null,
                 _fileOperationHandler.CopyToLeft);
         }
-
         private async void ContextMenu_CopyToRight_Click(object sender, RoutedEventArgs e)
         {
             var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
@@ -979,7 +966,6 @@ namespace dCompare.Compare
                 null,
                 _fileOperationHandler.CopyToRight);
         }
-
         private async void ContextMenu_MoveToLeft_Click(object sender, RoutedEventArgs e)
         {
             var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
@@ -990,7 +976,6 @@ namespace dCompare.Compare
                 null,
                 _fileOperationHandler.MoveToLeft);
         }
-
         private async void ContextMenu_MoveToRight_Click(object sender, RoutedEventArgs e)
         {
             var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
@@ -1001,7 +986,6 @@ namespace dCompare.Compare
                 null,
                 _fileOperationHandler.MoveToRight);
         }
-
         private async void ContextMenu_DeleteLeft_Click(object sender, RoutedEventArgs e)
         {
             var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
@@ -1016,7 +1000,6 @@ namespace dCompare.Compare
                     if (items.Count > 0) await _fileOperationHandler.DeleteAsync(items);
                 });
         }
-
         private async void ContextMenu_DeleteRight_Click(object sender, RoutedEventArgs e)
         {
             var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
@@ -1031,7 +1014,6 @@ namespace dCompare.Compare
                     if (items.Count > 0) await _fileOperationHandler.DeleteAsync(items);
                 });
         }
-
         private async void ContextMenu_Rename_Click(object sender, RoutedEventArgs e)
         {
             if (ResultListView.SelectedItem is not TreeNode selectedItem)
@@ -1092,7 +1074,6 @@ namespace dCompare.Compare
                 MessageBox.Show($"Error renaming item: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
         private void ContextMenu_Properties_Click(object sender, RoutedEventArgs e)
         {
             var selectedItem = ResultListView.SelectedItem as TreeNode;
@@ -1103,7 +1084,6 @@ namespace dCompare.Compare
             }
             FileOperations.ShowPropertiesDialog(selectedItem);
         }
-
         private void ContextMenu_OpenLeftLocation_Click(object sender, RoutedEventArgs e)
         {
             if (ResultListView.SelectedItem is TreeNode selectedNode && selectedNode.LeftNode != null)
@@ -1111,7 +1091,6 @@ namespace dCompare.Compare
                 FileOperations.OpenFileLocation(selectedNode.LeftNode.FullPath);
             }
         }
-
         private void ContextMenu_OpenRightLocation_Click(object sender, RoutedEventArgs e)
         {
             if (ResultListView.SelectedItem is TreeNode selectedNode && selectedNode.RightNode != null)
@@ -1119,7 +1098,6 @@ namespace dCompare.Compare
                 FileOperations.OpenFileLocation(selectedNode.RightNode.FullPath);
             }
         }
-
         private void ContextMenu_CopyPathnames_Click(object sender, RoutedEventArgs e)
         {
             bool isLeft = (sender as MenuItem)?.Parent is ContextMenu contextMenu &&
@@ -1144,7 +1122,6 @@ namespace dCompare.Compare
                 MessageBox.Show("No valid paths selected.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
         private void ContextMenu_CopyFilenames_Click(object sender, RoutedEventArgs e)
         {
             bool isLeft = (sender as MenuItem)?.Parent is ContextMenu contextMenu &&
@@ -1170,6 +1147,7 @@ namespace dCompare.Compare
                 MessageBox.Show("No valid files selected.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+        #endregion
 
         // Event Handlers for Path TextBoxes and Suggestion ListBoxes
         private void PathBox_PreviewKeyDown(object sender, KeyEventArgs e)
