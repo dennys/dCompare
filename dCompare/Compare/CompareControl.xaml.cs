@@ -721,7 +721,6 @@ namespace dCompare.Compare
                 if (defaultTool.Type == "BuiltIn")
                 {
                     var viewer = _toolFactory.CreateViewer(leftPath, rightPath);
-                    viewer.LoadFile(leftPath);
                     OpenFileComparisonTab(leftPath, rightPath, viewer);
                 }
                 else // External tool
@@ -772,7 +771,6 @@ namespace dCompare.Compare
                     if (tool.Type == "BuiltIn")
                     {
                         var viewer = _toolFactory.CreateViewer(leftPath, rightPath);
-                        viewer.LoadFile(leftPath, rightPath);
                         OpenFileComparisonTab(leftPath, rightPath, viewer);
                     }
                     else // External
