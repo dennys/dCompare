@@ -1,5 +1,4 @@
 using dCompare.Configuration;
-using dCompare.Tools.Viewer;
 using System;
 using System.IO;
 
@@ -14,7 +13,7 @@ namespace dCompare.Tools
             _configurationService = configurationService;
         }
 
-        public IViewer CreateViewer(string filePath)
+        public ITool CreateTool(string filePath)
         {
             var fileType = DetermineFileType(filePath);
 
@@ -27,7 +26,7 @@ namespace dCompare.Tools
             return new Tools.Viewer.TextViewer(_configurationService);
         }
 
-        public Tools.Viewer.IViewer CreateViewer(string leftFilePath, string rightFilePath)
+        public ITool CreateTool(string leftFilePath, string rightFilePath)
         {
             var fileType = DetermineFileType(leftFilePath ?? rightFilePath);
 

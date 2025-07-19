@@ -3,7 +3,6 @@ using dCompare.Configuration;
 using dCompare.Tools.Diff;
 using dCompare.Tools.Models;
 using dCompare.FileOperation;
-using dCompare.Tools.Viewer;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
 using Microsoft.Win32;
@@ -248,7 +247,7 @@ namespace dCompare.Compare
             catch (Exception ex)
             {
                 _logger.LogError("Failed to populate Compare With menus: {Message}", ex.Message);
-                MessageBox.Show($"Error loading viewers: {ex.Message}", Properties.Resources.ErrorTitle,
+                MessageBox.Show($"Error loading tools: {ex.Message}", Properties.Resources.ErrorTitle,
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -275,7 +274,7 @@ namespace dCompare.Compare
         }
         private void ContextMenu_ViewWithViewer_Click(object sender, RoutedEventArgs e)
         {
-            ProcessViewerAction(sender, async (selectedItem, tool) =>
+            ProcessToolAction(sender, async (selectedItem, tool) =>
             {
                 await LaunchToolAsync(selectedItem, Operations.View, tool);
             });
@@ -286,12 +285,12 @@ namespace dCompare.Compare
         }
         private void ContextMenu_CompareWithViewer_Click(object sender, RoutedEventArgs e)
         {
-            ProcessViewerAction(sender, async (selectedItem, tool) =>
+            ProcessToolAction(sender, async (selectedItem, tool) =>
             {
                 await LaunchToolAsync(selectedItem, Operations.Diff, tool);
             });
         }
-        private async Task LaunchToolAsync(TreeNode selectedItem, string operation, ToolOptions? tool = null)
+        private async Task LaunchToolAsync(TreeNode selectedItem, string operation, ToolOptions? toolConfig = null)
         {
             if (selectedItem.IsDirectory)
             {
@@ -319,15 +318,14 @@ namespace dCompare.Compare
                     return;
                 }
 
-                // Get the tool if not provided
-                if (tool == null)
+                if (toolConfig == null)
                 {
                     string pathForExtension = path ?? leftPath; // Use available path for extension
                     var config = await _configService.LoadConfigurationAsync();
                     string extension = Path.GetExtension(pathForExtension);
-                    tool = _toolService.GetDefaultTool(config, operation, extension);
+                    toolConfig = _toolService.GetDefaultTool(config, operation, extension);
 
-                    if (tool == null)
+                    if (toolConfig == null)
                     {
                         MessageBox.Show(
                             $"No default {(operation == Operations.View ? "view" : "diff")} tool configured for '{extension}' files.",
@@ -341,7 +339,7 @@ namespace dCompare.Compare
                     ? $"View: {Path.GetFileName(leftPath)}"
                     : $"Compare: {Path.GetFileName(leftPath)} - {Path.GetFileName(rightPath)}";
 
-                if (tool.Type == "BuiltIn")
+                if (toolConfig.Type == "BuiltIn")
                 {
                     // Find parent TabControl
                     if (WpfTreeHelperExtensions.FindParent<TabControl>(this) is not TabControl tabControl)
@@ -350,31 +348,31 @@ namespace dCompare.Compare
                         return;
                     }
 
-                    // Create viewer based on operation
-                    IViewer viewer = operation == Operations.View
-                        ? _toolFactory.CreateViewer(leftPath)
-                        : _toolFactory.CreateViewer(leftPath, rightPath ?? string.Empty); // Ensure rightPath is not null
+                    // Create tool based on operation
+                    ITool tool = operation == Operations.View
+                        ? _toolFactory.CreateTool(leftPath)
+                        : _toolFactory.CreateTool(leftPath, rightPath ?? string.Empty); // Ensure rightPath is not null
 
-                    // Load file(s) into viewer
+                    // Load file(s) into tool
                     if (operation == Operations.View)
                     {
-                        viewer.LoadFile(leftPath);
+                        tool.LoadFile(leftPath);
                     }
 
                     // Create and add new tab
-                    TabItem newTab = new() { Header = tabHeader, Content = viewer.GetControl() };
+                    TabItem newTab = new() { Header = tabHeader, Content = tool.GetControl() };
                     tabControl.Items.Add(newTab);
                     tabControl.SelectedItem = newTab;
                 }
                 else // External
                 {
                     string arguments = operation == Operations.View
-                        ? tool.ViewArguments.Replace("{file}", leftPath)
-                        : tool.DiffArguments.Replace("{left}", leftPath).Replace("{right}", rightPath);
+                        ? toolConfig.ViewArguments.Replace("{file}", leftPath)
+                        : toolConfig.DiffArguments.Replace("{left}", leftPath).Replace("{right}", rightPath);
 
                     ProcessStartInfo startInfo = new()
                     {
-                        FileName = tool.Path,
+                        FileName = toolConfig.Path,
                         Arguments = arguments,
                         UseShellExecute = true
                     };
@@ -394,7 +392,7 @@ namespace dCompare.Compare
             File.WriteAllText(tempPath, string.Empty);
             return tempPath;
         }
-        private void OpenFileComparisonTab(string leftPath, string rightPath, IViewer viewer)
+        private void OpenFileComparisonTab(string leftPath, string rightPath, ITool tool)
         {
             if (WpfTreeHelperExtensions.FindParent<TabItem>(this) is not TabItem parentTab ||
                 WpfTreeHelperExtensions.FindParent<TabControl>(parentTab) is not TabControl tabControl)
@@ -406,7 +404,7 @@ namespace dCompare.Compare
             string tabHeader = $"Compare: {System.IO.Path.GetFileName(leftPath)} - {System.IO.Path.GetFileName(rightPath)}";
             TabItem newTab = new() { Header = tabHeader };
 
-            newTab.Content = viewer.GetControl();
+            newTab.Content = tool.GetControl();
 
             tabControl.Items.Add(newTab);
             tabControl.SelectedItem = newTab;
@@ -703,11 +701,11 @@ namespace dCompare.Compare
             }
         }
         #endregion
-        private void ProcessViewerAction(object sender, Action<TreeNode, ToolOptions> action)
+        private void ProcessToolAction(object sender, Action<TreeNode, ToolOptions> action)
         {
             if (sender is not MenuItem menuItem || menuItem.Tag is not ToolOptions tool)
             {
-                MessageBox.Show("Invalid viewer configuration.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Invalid tool configuration.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
