@@ -9,13 +9,12 @@ using System;
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
-using dCompare.Tools.Viewer;
 using System.Windows.Controls;
 using System.Windows.Media;
 
 namespace dCompare.Tools.Diff
 {
-    public partial class TextDiffPlex : UserControl, INotifyPropertyChanged, IRefreshable, IViewer
+    public partial class TextDiffPlex : UserControl, INotifyPropertyChanged, IRefreshable, ITool
     {
         private string _leftPath = string.Empty;
         private string _rightPath = string.Empty;

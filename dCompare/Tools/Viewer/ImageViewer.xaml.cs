@@ -3,7 +3,7 @@ using System.Windows.Input;
 
 namespace dCompare.Tools.Viewer
 {
-    public partial class ImageViewer : UserControl, IViewer
+    public partial class ImageViewer : UserControl, ITool
     {
         public ImageViewer(string filePath)
         {
@@ -33,7 +33,6 @@ namespace dCompare.Tools.Viewer
                 e.Handled = true;
             }
         }
-
 
         public void LoadFile(string filePath)
         {

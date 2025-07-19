@@ -1,5 +1,4 @@
-﻿using dCompare.Tools.Viewer;
-using ICSharpCode.AvalonEdit;
+﻿using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Editing;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Search;
@@ -13,7 +12,7 @@ using System.Windows.Input;
 
 namespace dCompare.Tools.Viewer
 {
-    public partial class TextViewer : UserControl, IViewer
+    public partial class TextViewer : UserControl, ITool
     {
         private string? currentFilePath;
         private SearchPanel? searchPanel;

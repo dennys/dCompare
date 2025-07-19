@@ -1,8 +1,8 @@
 using System.Windows.Controls;
 
-namespace dCompare.Tools.Viewer
+namespace dCompare.Tools
 {
-    public interface IViewer
+    public interface ITool
     {
         void LoadFile(string filePath);
         UserControl GetControl();
