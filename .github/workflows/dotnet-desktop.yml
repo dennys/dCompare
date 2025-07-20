@@ -90,15 +90,13 @@ jobs:
 
     - name: 🐙 Get latest tag
       id: get_latest_tag
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == 'refs/heads/main'
       shell: pwsh
       run: |
         $tag = git describe --tags --abbrev=0
         echo "latest_tag=$tag" >> $env:GITHUB_OUTPUT
-    
+
     - name: ⚙️ Calculate next patch version
       id: next_version
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == 'refs/heads/main'
       shell: pwsh
       run: |
         $currentVersion = '${{ steps.get_latest_tag.outputs.latest_tag }}'
@@ -106,10 +104,9 @@ jobs:
         $patch = [int]$verParts[2] + 1
         $nextVersion = "v$($verParts[0]).$($verParts[1]).$patch"
         echo "next_version=$nextVersion" >> $env:GITHUB_OUTPUT
-    
+
     - name: 🔍 Check if tag exists
       id: check_tag
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == 'refs/heads/main'
       shell: pwsh
       run: |
         $tag = '${{ steps.next_version.outputs.next_version }}'
@@ -120,18 +117,16 @@ jobs:
         else {
           echo "tag_exists=false" >> $env:GITHUB_OUTPUT
         }
-    
+
     - name: 🏷️ Create and push git tag
-      if: (github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == 'refs/heads/main') && steps.check_tag.outputs.tag_exists == 'false'
       shell: pwsh
       run: |
         git config user.name "${{ github.actor }}"
         git config user.email "${{ github.actor }}@users.noreply.github.com"
         git tag ${{ steps.next_version.outputs.next_version }}
         git push origin ${{ steps.next_version.outputs.next_version }}
-    
+
     - name: 🚀 Create GitHub Release
-      if: (github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == 'refs/heads/main') && steps.check_tag.outputs.tag_exists == 'false'
       uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ steps.next_version.outputs.next_version }}
