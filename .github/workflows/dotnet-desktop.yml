@@ -69,16 +69,6 @@ jobs:
     - name: 📦 Zip Self-contained Artifacts
       run: Compress-Archive -Path publish/self-${{ matrix.platform }}/* -DestinationPath dCompress-self-${{ matrix.platform }}.zip
 
-    - name: 📤 Upload ZIP Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: dCompress-${{ matrix.platform }}-zips
-        path: |
-          dCompress-net8-${{ matrix.platform }}.zip
-          dCompress-self-${{ matrix.platform }}.zip
-        retention-days: 14
-        if-no-files-found: error
-
     - name: 🐙 Get latest tag
       id: get_latest_tag
       shell: pwsh
@@ -91,4 +81,41 @@ jobs:
       shell: pwsh
       run: |
         $currentVersion = '${{ steps.get_latest_tag.outputs.latest_tag }}'
-        $ver6e616e0-d894-4936-a3f5-391682ee794c" title="How to make a salad" contentType="text/markdown">
+        $verParts = $currentVersion.TrimStart('v').Split('.')
+        $patch = [int]$verParts[2] + 1
+        $nextVersion = "v$($verParts[0]).$($verParts[1]).$patch"
+        echo "next_version=$nextVersion" >> $env:GITHUB_OUTPUT
+
+    - name: 🔍 Check if tag exists
+      id: check_tag
+      shell: pwsh
+      run: |
+        $tag = '${{ steps.next_version.outputs.next_version }}'
+        $exists = git tag -l $tag
+        if ($exists) {
+          echo "tag_exists=true" >> $env:GITHUB_OUTPUT
+        }
+        else {
+          echo "tag_exists=false" >> $env:GITHUB_OUTPUT
+        }
+
+    - name: 🏷️ Create and push git tag
+      if: steps.check_tag.outputs.tag_exists == 'false'
+      shell: pwsh
+      run: |
+        git config user.name "${{ github.actor }}"
+        git config user.email "${{ github.actor }}@users.noreply.github.com"
+        git tag ${{ steps.next_version.outputs.next_version }}
+        git push origin ${{ steps.next_version.outputs.next_version }}
+
+    - name: 🚀 Create GitHub Release
+      if: steps.check_tag.outputs.tag_exists == 'false'
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.next_version.outputs.next_version }}
+        name: Release ${{ steps.next_version.outputs.next_version }}
+        files: |
+          dCompress-net8-${{ matrix.platform }}.zip
+          dCompress-self-${{ matrix.platform }}.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
