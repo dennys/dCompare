@@ -27,6 +27,14 @@ jobs:
       with:
         dotnet-version: 8.0.x
 
+    - name: 🗄 Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
     - name: 📦 Restore packages
       run: dotnet restore $env:Solution_Name
 
@@ -71,6 +79,7 @@ jobs:
 
     - name: 🐙 Get latest tag
       id: get_latest_tag
+      if: github.ref == 'refs/heads/main'
       shell: pwsh
       run: |
         $tag = git describe --tags --abbrev=0
@@ -78,6 +87,7 @@ jobs:
 
     - name: ⚙️ Calculate next patch version
       id: next_version
+      if: github.ref == 'refs/heads/main'
       shell: pwsh
       run: |
         $currentVersion = '${{ steps.get_latest_tag.outputs.latest_tag }}'
@@ -88,6 +98,7 @@ jobs:
 
     - name: 🔍 Check if tag exists
       id: check_tag
+      if: github.ref == 'refs/heads/main'
       shell: pwsh
       run: |
         $tag = '${{ steps.next_version.outputs.next_version }}'
@@ -100,7 +111,7 @@ jobs:
         }
 
     - name: 🏷️ Create and push git tag
-      if: steps.check_tag.outputs.tag_exists == 'false'
+      if: github.ref == 'refs/heads/main' && steps.check_tag.outputs.tag_exists == 'false'
       shell: pwsh
       run: |
         git config user.name "${{ github.actor }}"
@@ -109,11 +120,12 @@ jobs:
         git push origin ${{ steps.next_version.outputs.next_version }}
 
     - name: 🚀 Create GitHub Release
-      if: steps.check_tag.outputs.tag_exists == 'false'
+      if: github.ref == 'refs/heads/main' && steps.check_tag.outputs.tag_exists == 'false'
       uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ steps.next_version.outputs.next_version }}
         name: Release ${{ steps.next_version.outputs.next_version }}
+        generate_release_notes: true
         files: |
           dCompress-net8-${{ matrix.platform }}.zip
           dCompress-self-${{ matrix.platform }}.zip
