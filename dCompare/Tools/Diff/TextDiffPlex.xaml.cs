@@ -64,7 +64,7 @@ namespace dCompare.Tools.Diff
             }
         }
 
-        public TextDiffPlex(string leftPath, string rightPath, object comparisonResult = null)
+        public TextDiffPlex(string leftPath, string rightPath)
         {
             InitializeComponent();
             DataContext = this;
@@ -126,7 +126,7 @@ namespace dCompare.Tools.Diff
             win.Show();
         }
 
-        private ScrollViewer? FindScrollViewer(DependencyObject depObj, string name)
+        private static ScrollViewer? FindScrollViewer(DependencyObject depObj, string name)
         {
             if (depObj is FrameworkElement element && element.Name == name)
             {
@@ -146,7 +146,7 @@ namespace dCompare.Tools.Diff
             return null;
         }
 
-        private ScrollViewer? FindScrollViewer(DependencyObject depObj)
+        private static ScrollViewer? FindScrollViewer(DependencyObject depObj)
         {
             if (depObj is ScrollViewer scrollViewer)
             {

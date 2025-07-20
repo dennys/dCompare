@@ -68,7 +68,7 @@ namespace dCompare.Tools.Diff
             {
                 try
                 {
-                    BitmapImage bitmap = new BitmapImage();
+                    BitmapImage bitmap = new();
                     bitmap.BeginInit();
                     bitmap.UriSource = new System.Uri(LeftPath);
                     bitmap.CacheOption = BitmapCacheOption.OnLoad;
@@ -92,7 +92,7 @@ namespace dCompare.Tools.Diff
             {
                 try
                 {
-                    BitmapImage bitmap = new BitmapImage();
+                    BitmapImage bitmap = new();
                     bitmap.BeginInit();
                     bitmap.UriSource = new System.Uri(RightPath);
                     bitmap.CacheOption = BitmapCacheOption.OnLoad;

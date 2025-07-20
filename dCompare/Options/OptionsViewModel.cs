@@ -333,7 +333,6 @@ namespace dCompare.Options
                 OnPropertyChanged();
             }
         }
-        public string Error => null;
 
         public string this[string columnName]
         {
@@ -361,6 +360,8 @@ namespace dCompare.Options
 
     public class CompareOptionsViewModel : ViewModelBase, IConfigurationUpdater
     {
+        public static List<string> AvailableScanMethods => new() { "General", "MFT" };
+
         private readonly CompareOptions _model;
         public ObservableCollection<AlgorithmItemViewModel> AlgorithmItems { get; } = new();
 
@@ -372,8 +373,6 @@ namespace dCompare.Options
                 AlgorithmItems.Add(new AlgorithmItemViewModel(kvp.Key, kvp.Value, this));
             }
         }
-
-        public List<string> AvailableScanMethods => new List<string> { "General", "MFT" };
 
         public string ScanMethod
         {
@@ -395,7 +394,7 @@ namespace dCompare.Options
             }
         }
 
-        public List<string> AvailableDoubleClickActions => new List<string> { "View", "Compare" };
+        public static List<string> AvailableDoubleClickActions => new() { "View", "Compare" };
 
         public string DoubleClickAction
         {
@@ -492,10 +491,9 @@ namespace dCompare.Options
     }
 
     // New ViewModel to wrap an ExternalViewer model
-    public class ExternalViewerItemViewModel : ViewModelBase
+    public class ExternalViewerItemViewModel(ExternalViewer model) : ViewModelBase
     {
-        private ExternalViewer _model;
-        public ExternalViewerItemViewModel(ExternalViewer model) { _model = model; }
+        private ExternalViewer _model = model;
 
         public ExternalViewer Model => _model;
 
@@ -546,7 +544,7 @@ namespace dCompare.Options
         {
             _model = model;
             _model.Viewer ??= new List<ExternalViewer>();
-            if (!_model.Viewer.Any())
+            if (_model.Viewer.Count == 0)
             {
                 _model.Viewer.Add(new ExternalViewer { Name = "WinMerge", Arguments = "/e /u \"{left}\" \"{right}\"" });
             }
