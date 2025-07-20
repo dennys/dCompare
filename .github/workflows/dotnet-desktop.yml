@@ -3,6 +3,8 @@ name: .NET App Build & Release
 on:
   push:
     branches: [ "main", "dev" ]
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -55,7 +57,7 @@ jobs:
         name: codecov-umbrella
         verbose: true
 
-    - name: 📤 Upload Coverage to Codacy
+    - name: 📤 Upload to Codacy
       run: |
         curl -Ls -o codacy-coverage-reporter https://github.com/codacy/codacy-coverage-reporter/releases/latest/download/codacy-coverage-reporter-windows
         chmod +x codacy-coverage-reporter
@@ -78,7 +80,6 @@ jobs:
       run: Compress-Archive -Path publish/self-${{ matrix.platform }}/* -DestinationPath dCompress-self-${{ matrix.platform }}.zip
 
     - name: 📤 Upload ZIP Artifacts
-      if: ${{ false }} # Temporarily disabled, set to true to enable
       uses: actions/upload-artifact@v4
       with:
         name: dCompress-${{ matrix.platform }}-zips
@@ -90,13 +91,16 @@ jobs:
 
     - name: 🐙 Get latest tag
       id: get_latest_tag
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == 'refs/heads/main'
       shell: pwsh
       run: |
-        $tag = git describe --tags --abbrev=0
+        $tag = git tag -l 'v[0-9]*.[0-9]*.[0-9]*' | Sort-Object -Property @{Expression={[Version]($_.Substring(1))}} -Descending | Select-Object -First 1
+        if (-not $tag) { $tag = "v0.0.0" }
         echo "latest_tag=$tag" >> $env:GITHUB_OUTPUT
 
     - name: ⚙️ Calculate next patch version
       id: next_version
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == 'refs/heads/main'
       shell: pwsh
       run: |
         $currentVersion = '${{ steps.get_latest_tag.outputs.latest_tag }}'
@@ -107,6 +111,7 @@ jobs:
 
     - name: 🔍 Check if tag exists
       id: check_tag
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == 'refs/heads/main'
       shell: pwsh
       run: |
         $tag = '${{ steps.next_version.outputs.next_version }}'
@@ -119,6 +124,7 @@ jobs:
         }
 
     - name: 🏷️ Create and push git tag
+      if: (github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == 'refs/heads/main') && steps.check_tag.outputs.tag_exists == 'false'
       shell: pwsh
       run: |
         git config user.name "${{ github.actor }}"
@@ -127,6 +133,7 @@ jobs:
         git push origin ${{ steps.next_version.outputs.next_version }}
 
     - name: 🚀 Create GitHub Release
+      if: (github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == 'refs/heads/main') && steps.check_tag.outputs.tag_exists == 'false'
       uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ steps.next_version.outputs.next_version }}
