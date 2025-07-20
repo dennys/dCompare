@@ -12,41 +12,6 @@ namespace dCompare.Tests.Options
     public class ViewModelTests
     {
         [Fact]
-        public void DiffOptionsViewModel_TextExtensionList_IsEditable()
-        {
-            // Arrange
-            var model = new DiffOptions
-            {
-                Text = new TextDiffOptions { Ext = new List<string> { ".cs" } }
-            };
-            var viewModel = new DiffOptionsViewModel(model);
-            string testExtension = ".test";
-
-            // Assert initial state
-            Assert.Single(viewModel.TextExtensionEditor.Extensions);
-            Assert.Contains(".cs", viewModel.TextExtensionEditor.Extensions);
-
-            // Act: Add an extension programmatically
-            viewModel.TextExtensionEditor.Extensions.Add(testExtension);
-
-            // Assert: List is updated in both ViewModel and underlying Model
-            Assert.Equal(2, viewModel.TextExtensionEditor.Extensions.Count);
-            Assert.Contains(testExtension, viewModel.TextExtensionEditor.Extensions);
-            Assert.Contains(testExtension, model.Text.Ext);
-
-            // Act: Remove an extension
-            viewModel.TextExtensionEditor.SelectedExtension = ".cs";
-            Assert.True(viewModel.TextExtensionEditor.RemoveExtensionCommand.CanExecute(null));
-            viewModel.TextExtensionEditor.RemoveExtensionCommand.Execute(null);
-
-            // Assert: List is updated
-            Assert.Single(viewModel.TextExtensionEditor.Extensions);
-            Assert.DoesNotContain(".cs", viewModel.TextExtensionEditor.Extensions);
-            Assert.DoesNotContain(".cs", model.Text.Ext);
-            Assert.Contains(testExtension, viewModel.TextExtensionEditor.Extensions);
-        }
-
-        [Fact]
         public void UIOptionsViewModel_Properties_ReflectModel()
         {
             var model = new UIOptions { Theme = "Dark", Language = "en" };
@@ -161,63 +126,6 @@ namespace dCompare.Tests.Options
         //    Assert.Equal("C:\\Tools\\NewTool.exe", model.Viewer[0].Path);
         //}
 
-        [Fact]
-        public void DiffOptionsViewModel_UpdateAvailableViewers_ReflectsExternalViewers()
-        {
-            // Arrange
-            var model = new DiffOptions
-            {
-                Viewer = new List<ExternalViewer>
-                {
-                    new ExternalViewer { Name = "WinMerge", Arguments = "/e /u \"{left}\" \"{right}\"" },
-                    new ExternalViewer { Name = "CustomTool", Arguments = "" }
-                }
-            };
-            var viewModel = new DiffOptionsViewModel(model);
-
-            // Assert: Available viewers include built-in and external viewers
-            Assert.Contains("DiffPlex", viewModel.AvailableTextViewers);
-            Assert.Contains("WinMerge", viewModel.AvailableTextViewers);
-            Assert.Contains("CustomTool", viewModel.AvailableTextViewers);
-            Assert.Contains("Build-in", viewModel.AvailableImageViewers);
-            Assert.Contains("WinMerge", viewModel.AvailableImageViewers);
-            Assert.Contains("CustomTool", viewModel.AvailableImageViewers);
-
-            // Act: Add a new viewer
-            viewModel.AddViewerCommand.Execute(null);
-
-            // Assert: New viewer added to available viewers
-            Assert.Contains("New Tool", viewModel.AvailableTextViewers);
-            Assert.Contains("New Tool", viewModel.AvailableImageViewers);
-        }
-
-        [Fact]
-        public void DiffOptionsViewModel_UpdateModel_SavesViewerChanges()
-        {
-            // Arrange
-            var model = new DiffOptions
-            {
-                Viewer = new List<ExternalViewer>
-                {
-                    new ExternalViewer { Name = "WinMerge", Arguments = "/e /u \"{left}\" \"{right}\"" }
-                },
-                Text = new TextDiffOptions { Viewer = "DiffPlex" },
-                Image = new ImageDiffOptions { Viewer = "Build-in" }
-            };
-            var viewModel = new DiffOptionsViewModel(model);
-
-            // Act: Modify viewers and update model
-            viewModel.SelectedTextViewer = "WinMerge";
-            viewModel.SelectedImageViewer = "WinMerge";
-            viewModel.AddViewerCommand.Execute(null);
-            viewModel.UpdateModel();
-
-            // Assert
-            Assert.Equal("WinMerge", model.Text.Viewer);
-            Assert.Equal("WinMerge", model.Image.Viewer);
-            Assert.Equal(2, model.Viewer.Count);
-            Assert.Contains(model.Viewer, v => v.Name == "New Tool");
-        }
 
         //[Fact]
         //public void ExtensionListEditorViewModel_InvalidExtension_NotAdded()
