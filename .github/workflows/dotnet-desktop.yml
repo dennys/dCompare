@@ -4,14 +4,10 @@ on:
   push:
     branches: [ "main","dev" ]
   workflow_dispatch:
-    
+
 jobs:
-  build:
+  build_and_release:
     runs-on: windows-latest
-    strategy:
-      matrix:
-        configuration: [Release]
-        platform: [x64, x86]
     env:
       Solution_Name: dCompare.sln
       Project_Path: dCompare/dCompare.csproj
@@ -19,98 +15,40 @@ jobs:
     steps:
     - name: 📥 Checkout
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0   # 因為後面要用 git tag 推送
+
     - name: 🛠 Setup .NET SDK
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
+
     - name: 📦 Restore packages
       run: dotnet restore $env:Solution_Name
+
     - name: 🧪 Run unit tests
-      run: dotnet test $env:Test_Project_Path --configuration ${{ matrix.configuration }} --collect:"XPlat Code Coverage" /p:ExcludeByFile="**/Properties/*"
-    - name: 📈 Install ReportGenerator
-      run: dotnet tool install -g dotnet-reportgenerator-globaltool
-    - name: 🧾 Generate coverage reports
+      run: dotnet test $env:Test_Project_Path --configuration Release --collect:"XPlat Code Coverage" /p:ExcludeByFile="**/Properties/*"
+
+    - name: 🔨 Build App (x64 and x86)
       run: |
-        reportgenerator -reports:**/coverage.cobertura.xml -targetdir:coveragereport -reporttypes:Html,JsonSummary -filefilters:"-**/Properties/*"
-    - name: 📤 Upload to Codecov
-      uses: codecov/codecov-action@v5
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        name: codecov-umbrella
-        verbose: true
-    - name: Upload Coverage to Codacy
-      run: |
-        curl -Ls -o codacy-coverage-reporter https://github.com/codacy/codacy-coverage-reporter/releases/latest/download/codacy-coverage-reporter-windows
-        chmod +x codacy-coverage-reporter
-        $coverage_file = Get-ChildItem -Path ./dCompare.Tests/TestResults -Recurse -Include coverage.cobertura.xml | Select-Object -First 1 -ExpandProperty FullName
-        if (-not $coverage_file) { Write-Error "Coverage file not found"; exit 1 }
-        ./codacy-coverage-reporter report -r "$coverage_file"
-      env:
-        CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
-    - name: 🔨 Build App
-      run: dotnet build $env:Solution_Name --configuration ${{ matrix.configuration }} --no-restore
-    - name: 🚀 Publish - Framework-dependent (.NET 8)
-      run: |
-        dotnet publish $env:Project_Path -c ${{ matrix.configuration }} -r win-${{ matrix.platform }} --self-contained false -o publish/net8-${{ matrix.platform }}
-    - name: 🚀 Publish - Self-contained
-      run: |
-        dotnet publish $env:Project_Path -c ${{ matrix.configuration }} -r win-${{ matrix.platform }} --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o publish/self-${{ matrix.platform }}
+        dotnet publish $env:Project_Path -c Release -r win-x64 --self-contained false -o publish/net8-x64
+        dotnet publish $env:Project_Path -c Release -r win-x86 --self-contained false -o publish/net8-x86
+
     - name: 📦 Zip Artifacts
       run: |
-        Compress-Archive -Path publish/net8-${{ matrix.platform }}/* -DestinationPath dCompress-net8-${{ matrix.platform }}.zip
-        Compress-Archive -Path publish/self-${{ matrix.platform }}/* -DestinationPath dCompress-self-${{ matrix.platform }}.zip
-    - name: 📤 Upload ZIP Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: dCompress-${{ matrix.platform }}-zips
-        path: |
-          dCompress-net8-${{ matrix.platform }}.zip
-          dCompress-self-${{ matrix.platform }}.zip
-        retention-days: 14
-        if-no-files-found: error
-    # - name: 🧱 Build MSI (future)
-    #   uses: caphyon/advinst-github-action@main
-    #   with:
-    #     advinst-version: '22.0'
-    #     advinst-license: ${{ secrets.ADVINST_LICENSE_KEY }}
-    #     advinst-enable-automation: true
-    #     aip-path: dCompareInstaller/dCompare.aip
-    #     aip-build-name: DefaultBuild
-    #     aip-package-name: dCompress-${{ matrix.platform }}.msi
-    #     aip-output-dir: ${{ github.workspace }}/msi
+        Compress-Archive -Path publish/net8-x64/* -DestinationPath dCompress-net8-x64.zip
+        Compress-Archive -Path publish/net8-x86/* -DestinationPath dCompress-net8-x86.zip
 
-    # - name: 📤 Upload MSI
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: dCompress-${{ matrix.platform }}-msi
-    #     path: msi/dCompress-${{ matrix.platform }}.msi
-
-  release:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-    - name: 📥 Checkout
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    - name: 📥 Download ZIP Artifacts (x64)
-      uses: actions/download-artifact@v4
-      with:
-        name: dCompress-x64-zips
-        path: artifacts/x64/
-    - name: 📥 Download ZIP Artifacts (x86)
-      uses: actions/download-artifact@v4
-      with:
-        name: dCompress-x86-zips
-        path: artifacts/x86/
     - name: 🏷️ Get Previous Tag
       id: previoustag
       uses: WyriHaximus/github-action-get-previous-tag@v1
+
     - name: 🔢 Get Next Patch Version
       id: semver
       uses: WyriHaximus/github-action-next-semvers@v1
       with:
         version: ${{ steps.previoustag.outputs.tag }}
+
     - name: 🔍 Check if Tag Exists
       id: check_tag
       run: |
@@ -120,13 +58,15 @@ jobs:
         else
           echo "tag_exists=false" >> $GITHUB_OUTPUT
         fi
-    - name: 🏷️ Create Git Tag
+
+    - name: 🏷️ Create and Push Git Tag
       if: steps.check_tag.outputs.tag_exists == 'false'
       run: |
         git config user.name "${{ github.actor }}"
         git config user.email "${{ github.actor }}@users.noreply.github.com"
         git tag ${{ steps.semver.outputs.patch }}
         git push origin ${{ steps.semver.outputs.patch }}
+
     - name: 🚀 Create GitHub Release
       if: steps.check_tag.outputs.tag_exists == 'false'
       uses: softprops/action-gh-release@v2
@@ -134,9 +74,7 @@ jobs:
         tag_name: ${{ steps.semver.outputs.patch }}
         name: Release ${{ steps.semver.outputs.patch }}
         files: |
-          artifacts/x64/dCompress-net8-x64.zip
-          artifacts/x64/dCompress-self-x64.zip
-          artifacts/x86/dCompress-net8-x86.zip
-          artifacts/x86/dCompress-self-x86.zip
+          dCompress-net8-x64.zip
+          dCompress-net8-x86.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
