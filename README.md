@@ -36,13 +36,18 @@ Use these algorithm to compare calculate a 2.6GB file.
 
 - xxHash64: Use Microsoft's implementation: <https://learn.microsoft.com/zh-tw/dotnet/api/system.io.hashing.xxhash64.hash>
 
+## Tools (Viewer, Diff)
+
+| Type  | View          | Diff     |
+| ----- | ------------- | -------- |
+| Text  | Avalon.Edit   | DiffPlex |
+| Image | Build-in      | Build-in |
+
 ## Planned Features
 
 Partial implemented
 
-- **External File Comparison**: Integrate with external tools like WinMerge for advanced file content comparison.
 - **Custom Diff Viewer Selection**: Enable selection of diff viewers based on file extensions (partially implemented in settings).
-- **External Editor Support**: Configure a default external editor (e.g., Notepad by default at `%windir%\NOTEPAD.EXE`) for viewing or editing files.
 
 Not implemented
 
@@ -53,7 +58,6 @@ Not implemented
   - Implementation: Add a DockPanel or ContentControl in CompareControl.xamlx that displays content based on the selected file’s extension, using the TextDiffOptions or ImageDiffOptions from AppConfiguration.cs.
 - **Cloud Storage Support**:
   - Feature: Allow comparisons and operations with cloud storage services (e.g., Google Drive, Dropbox, OneDrive).
-- **Customizable Double-Click Behavior**: Allow users to choose whether double-clicking a file opens a comparison view or displays file content (currently configurable in settings).
 - **Archive File Support**: Add support for comparing archive files (e.g., .zip) using libraries like [SharpZipLib](https://github.com/icsharpcode/SharpZipLib).
 - **JSON-Specific Comparison**: Implement specialized comparison for JSON files to highlight structural differences.
 - **File Explorer Integration**: Associate dCompare with Windows File Explorer for quick access to comparisons.

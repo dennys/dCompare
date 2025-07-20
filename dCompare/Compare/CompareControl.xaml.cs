@@ -41,7 +41,7 @@ namespace dCompare.Compare
     public partial class CompareControl : UserControl, INotifyPropertyChanged, IRefreshable
     {
         private ObservableCollection<TreeNode> _treeNodes = new();
-        private DirectoryComparer _comparer = new DirectoryComparer();
+        private DirectoryComparer _comparer = new();
         private ListSortDirection _lastSortDirection;
         private GridViewColumnHeader _lastHeaderClicked;
         private Predicate<object>? _currentFilter = null;   // null for non-filter, means all data
@@ -720,7 +720,7 @@ namespace dCompare.Compare
         private void ListView_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             DependencyObject obj = (DependencyObject)e.OriginalSource;
-            while (obj != null && !(obj is ListViewItem))
+            while (obj != null && obj is not ListViewItem)
             {
                 obj = VisualTreeHelper.GetParent(obj);
             }
@@ -1098,7 +1098,7 @@ namespace dCompare.Compare
                     e.Handled = true;
                     break;
                 case Key.Down:
-                    if (vm.IsSuggestionsOpen && vm.Suggestions.Any())
+                    if (vm.IsSuggestionsOpen && vm.Suggestions.Count != 0)
                     {
                         suggestionsListBox.Focus();
                         if (suggestionsListBox.SelectedIndex < 0 && suggestionsListBox.Items.Count > 0)

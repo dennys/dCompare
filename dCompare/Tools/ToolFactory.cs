@@ -32,7 +32,7 @@ namespace dCompare.Tools
 
             if (fileType == dCompare.Tools.Models.FileType.Text)
             {
-                return new dCompare.Tools.Diff.TextDiffPlex(leftFilePath, rightFilePath, null);
+                return new dCompare.Tools.Diff.TextDiffPlex(leftFilePath, rightFilePath);
             }
             else if (fileType == dCompare.Tools.Models.FileType.Image)
             {
@@ -44,7 +44,7 @@ namespace dCompare.Tools
             }
         }
 
-        private dCompare.Tools.Models.FileType DetermineFileType(string filePath)
+        private static dCompare.Tools.Models.FileType DetermineFileType(string filePath)
         {
             string extension = Path.GetExtension(filePath).ToLowerInvariant();
             var textExtensions = new System.Collections.Generic.List<string> { ".txt", ".log", ".cs", ".json", ".xml", ".html", ".css", ".js", ".py", ".md", ".sql" };

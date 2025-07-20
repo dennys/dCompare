@@ -13,7 +13,7 @@ namespace dCompare.Compare
     {
         private string _path = string.Empty;
         private bool _isSuggestionsOpen;
-        private List<string> _suggestions = new List<string>();
+        private List<string> _suggestions = new();
         private string _selectedSuggestion = string.Empty;
         private bool _suppressSuggestions;
         private string _searchText = string.Empty;
@@ -123,7 +123,7 @@ namespace dCompare.Compare
                     .Where(dir => System.IO.Path.GetFileName(dir).StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
-                IsSuggestionsOpen = Suggestions.Any();
+                IsSuggestionsOpen = Suggestions.Count != 0;
             }
             catch (Exception)
             {
