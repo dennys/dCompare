@@ -1,11 +1,12 @@
-﻿using ICSharpCode.AvalonEdit;
+﻿using dCompare.Configuration;
+using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Editing;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Search;
 using Microsoft.Win32;
 using System;
-using dCompare.Configuration;
 using System.IO;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -14,10 +15,9 @@ namespace dCompare.Tools.Viewer
 {
     public partial class TextViewer : UserControl, ITool
     {
-        private string? currentFilePath;
-        private SearchPanel? searchPanel;
-        private Window? replaceDialog;
         private readonly IConfigurationService _configurationService;
+        private readonly SearchPanel? searchPanel;
+        private string? currentFilePath;
 
         public TextViewer(IConfigurationService configurationService)
         {
@@ -159,39 +159,51 @@ namespace dCompare.Tools.Viewer
 
         private void Replace_Click(object sender, RoutedEventArgs e)
         {
-            replaceDialog = new Window
+            var findReplaceDialog = new FindReplaceDialog();
+            //findReplaceDialog.Owner = this;
+
+            if (findReplaceDialog.ShowDialog() == true)
             {
-                Title = "Find and Replace",
-                Width = 300,
-                Height = 150,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Content = new StackPanel
+                PerformReplace(findReplaceDialog.FindText, findReplaceDialog.ReplaceText,
+                              findReplaceDialog.MatchCase, findReplaceDialog.ReplaceFirst,
+                              findReplaceDialog.ReplaceInSelection);
+            }
+        }
+        private void PerformReplace(string find, string replace, bool caseSensitive, bool replaceFirst, bool replaceSelection)
+        {
+            if (string.IsNullOrEmpty(find)) return;
+
+            StringComparison comparison = caseSensitive ?
+                StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+
+            try
+            {
+                if (replaceSelection && textEditor.SelectionLength > 0)
                 {
-                    Margin = new Thickness(10),
-                    Children =
+                    string selectedText = textEditor.SelectedText;
+                    string replacedText = replaceFirst ?
+                        selectedText.ReplaceFirst(find, replace, comparison) :
+                        selectedText.Replace(find, replace, comparison);
+                    textEditor.Document.Replace(textEditor.SelectionStart, textEditor.SelectionLength, replacedText);
+                }
+                else if (replaceFirst)
+                {
+                    int index = textEditor.Text.IndexOf(find, comparison);
+                    if (index >= 0)
                     {
-                        new TextBox { Name = "findText", Margin = new Thickness(5) },
-                        new TextBox { Name = "replaceText", Margin = new Thickness(5) },
-                        new Button { Content = "Replace All", Margin = new Thickness(5) }
+                        textEditor.Document.Replace(index, find.Length, replace);
                     }
                 }
-            };
-            var replaceButton = (replaceDialog.Content as StackPanel).Children[2] as Button;
-            replaceButton.Click += (s, args) =>
-            {
-                string find = ((replaceDialog.Content as StackPanel).Children[0] as TextBox).Text;
-                string replace = ((replaceDialog.Content as StackPanel).Children[1] as TextBox).Text;
-                textEditor.Text = textEditor.Text.Replace(find, replace);
-                replaceDialog.Close();
-            };
-            replaceDialog.KeyDown += (s, args) =>
-            {
-                if (args.Key == Key.Escape)
+                else
                 {
-                    replaceDialog.Close();
+                    textEditor.Text = textEditor.Text.Replace(find, replace, comparison);
                 }
-            };
-            replaceDialog.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error during replace operation: {ex.Message}", "Replace Error",
+                               MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void GoToLine_Click(object sender, RoutedEventArgs e)
@@ -245,16 +257,16 @@ namespace dCompare.Tools.Viewer
                 }
             };
         }
-
-        private void TextEditor_TextChanged(object sender, EventArgs e)
+        private void TextEditor_TextChanged(object? sender, EventArgs e)
         {
             UpdateWordCount();
         }
+        private static readonly char[] WordSplitCharacters = new[] { ' ', '\n', '\r' };
 
         private void UpdateWordCount()
         {
             string text = textEditor.Text;
-            int wordCount = string.IsNullOrWhiteSpace(text) ? 0 : text.Split(new[] { ' ', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries).Length;
+            int wordCount = string.IsNullOrWhiteSpace(text) ? 0 : text.Split(WordSplitCharacters, StringSplitOptions.RemoveEmptyEntries).Length;
             WordCountLabel.Content = $"Words: {wordCount}, Chars: {text.Length}";
         }
 
@@ -306,6 +318,238 @@ namespace dCompare.Tools.Viewer
         public UserControl GetControl()
         {
             return this;
+        }
+    }
+    public partial class FindReplaceDialog : Window
+    {
+        public string FindText => findTextBox.Text;
+        public string ReplaceText => replaceTextBox.Text;
+        public bool MatchCase => matchCaseCheckBox.IsChecked ?? false;
+        public bool ReplaceFirst => replaceFirstCheckBox.IsChecked ?? false;
+        public bool ReplaceInSelection => replaceSelectionCheckBox.IsChecked ?? false;
+
+        private TextBox findTextBox = null!;
+        private TextBox replaceTextBox = null!;
+        private CheckBox matchCaseCheckBox = null!;
+        private CheckBox replaceFirstCheckBox = null!;
+        private CheckBox replaceSelectionCheckBox = null!;
+
+        public FindReplaceDialog()
+        {
+            //InitializeComponent();
+            CreateUI();
+            SetupEventHandlers();
+        }
+
+        private void CreateUI()
+        {
+            Title = "Find and Replace";
+            Width = 380;
+            Height = 280;
+            WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            ResizeMode = ResizeMode.NoResize;
+
+            var mainGrid = new Grid
+            {
+                Margin = new Thickness(15)
+            };
+
+            // Define rows
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(5) });
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(5) });
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(5) });
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(5) });
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(15) });
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+            // Define columns
+            mainGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            mainGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(10) });
+            mainGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            // Find label and textbox
+            var findLabel = new Label { Content = "Find what:", VerticalAlignment = VerticalAlignment.Center };
+            Grid.SetRow(findLabel, 0);
+            Grid.SetColumn(findLabel, 0);
+            mainGrid.Children.Add(findLabel);
+
+            findTextBox = new TextBox
+            {
+                VerticalAlignment = VerticalAlignment.Center,
+                Height = 23
+            };
+            Grid.SetRow(findTextBox, 0);
+            Grid.SetColumn(findTextBox, 2);
+            mainGrid.Children.Add(findTextBox);
+
+            // Replace label and textbox
+            var replaceLabel = new Label { Content = "Replace with:", VerticalAlignment = VerticalAlignment.Center };
+            Grid.SetRow(replaceLabel, 2);
+            Grid.SetColumn(replaceLabel, 0);
+            mainGrid.Children.Add(replaceLabel);
+
+            replaceTextBox = new TextBox
+            {
+                VerticalAlignment = VerticalAlignment.Center,
+                Height = 23
+            };
+            Grid.SetRow(replaceTextBox, 2);
+            Grid.SetColumn(replaceTextBox, 2);
+            mainGrid.Children.Add(replaceTextBox);
+
+            // Options
+            matchCaseCheckBox = new CheckBox
+            {
+                Content = "Match case",
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            Grid.SetRow(matchCaseCheckBox, 4);
+            Grid.SetColumn(matchCaseCheckBox, 0);
+            Grid.SetColumnSpan(matchCaseCheckBox, 3);
+            mainGrid.Children.Add(matchCaseCheckBox);
+
+            replaceFirstCheckBox = new CheckBox
+            {
+                Content = "Replace first occurrence only",
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            Grid.SetRow(replaceFirstCheckBox, 6);
+            Grid.SetColumn(replaceFirstCheckBox, 0);
+            Grid.SetColumnSpan(replaceFirstCheckBox, 3);
+            mainGrid.Children.Add(replaceFirstCheckBox);
+
+            replaceSelectionCheckBox = new CheckBox
+            {
+                Content = "Replace in selection only",
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            Grid.SetRow(replaceSelectionCheckBox, 8);
+            Grid.SetColumn(replaceSelectionCheckBox, 0);
+            Grid.SetColumnSpan(replaceSelectionCheckBox, 3);
+            mainGrid.Children.Add(replaceSelectionCheckBox);
+
+            // Buttons
+            var buttonPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right
+            };
+
+            var replaceButton = new Button
+            {
+                Content = "Replace All",
+                Width = 80,
+                Height = 23,
+                Margin = new Thickness(0, 0, 5, 0),
+                IsDefault = true
+            };
+            replaceButton.Click += ReplaceButton_Click;
+
+            var cancelButton = new Button
+            {
+                Content = "Cancel",
+                Width = 80,
+                Height = 23,
+                IsCancel = true
+            };
+
+            buttonPanel.Children.Add(replaceButton);
+            buttonPanel.Children.Add(cancelButton);
+
+            Grid.SetRow(buttonPanel, 10);
+            Grid.SetColumn(buttonPanel, 0);
+            Grid.SetColumnSpan(buttonPanel, 3);
+            mainGrid.Children.Add(buttonPanel);
+
+            Content = mainGrid;
+        }
+
+        private void SetupEventHandlers()
+        {
+            // Focus on find textbox when dialog opens
+            Loaded += (s, e) => findTextBox.Focus();
+
+            // Handle Enter key in textboxes
+            findTextBox.KeyDown += TextBox_KeyDown;
+            replaceTextBox.KeyDown += TextBox_KeyDown;
+
+            // Handle Escape key for the entire dialog
+            KeyDown += (s, e) =>
+            {
+                if (e.Key == Key.Escape)
+                {
+                    DialogResult = false;
+                    Close();
+                }
+            };
+        }
+
+        private void TextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                ReplaceButton_Click(sender, e);
+                e.Handled = true;
+            }
+        }
+
+        private void ReplaceButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(FindText))
+            {
+                MessageBox.Show("Please enter text to find.", "Find and Replace",
+                               MessageBoxButton.OK, MessageBoxImage.Information);
+                findTextBox.Focus();
+                return;
+            }
+
+            DialogResult = true;
+            Close();
+        }
+    }
+
+    // Enhanced String Extensions with better performance
+    public static class StringExtensions
+    {
+        public static string ReplaceFirst(this string text, string search, string replace, StringComparison comparison)
+        {
+            if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(search))
+                return text;
+
+            int pos = text.IndexOf(search, comparison);
+            if (pos < 0)
+                return text;
+
+            return string.Concat(text.AsSpan(0, pos), replace, text.AsSpan(pos + search.Length));
+        }
+
+        public static string Replace(this string text, string search, string replace, StringComparison comparison)
+        {
+            if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(search))
+                return text;
+
+            // Use StringBuilder for better performance with multiple replacements
+            var result = new StringBuilder(text);
+            int pos = 0;
+            int searchLength = search.Length;
+
+            while (pos < result.Length)
+            {
+                int index = result.ToString().IndexOf(search, pos, comparison);
+                if (index < 0)
+                    break;
+
+                result.Remove(index, searchLength);
+                result.Insert(index, replace);
+                pos = index + replace.Length;
+            }
+
+            return result.ToString();
         }
     }
 }
