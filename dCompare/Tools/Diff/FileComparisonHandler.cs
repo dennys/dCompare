@@ -18,29 +18,6 @@ namespace dCompare.Tools.Diff
             _config = config ?? throw new ArgumentNullException(nameof(config));
         }
 
-        public FileType DetermineFileType(string filePath)
-        {
-            if (string.IsNullOrWhiteSpace(filePath))
-                return FileType.Unsupported;
-
-            string? extension = Path.GetExtension(filePath)?.ToLowerInvariant();
-            if (string.IsNullOrEmpty(extension))
-                return FileType.Unsupported;
-
-            // Check text file extensions from configuration
-            if (_config.Options.Diff.Text.Ext.Contains(extension))
-                return FileType.Text;
-
-            // Check image file extensions from configuration
-            if (_config.Options.Diff.Image.Ext.Contains(extension))
-                return FileType.Image;
-
-            // Future extensions: Add checks for additional file types (e.g., Zip, Rar)
-            // Example: if (_config.Options.Diff.Zip?.Ext.Contains(extension)) return FileType.Zip;
-
-            return FileType.Unsupported;
-        }
-
         public async Task<SideBySideDiffModel> CompareTextFilesAsync(string leftPath, string rightPath)
         {
             try

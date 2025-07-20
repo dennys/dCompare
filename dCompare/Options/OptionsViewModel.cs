@@ -10,6 +10,7 @@ using System.Windows;
 using System.Windows.Input;
 using Microsoft.VisualBasic; // For InputBox
 using System.Collections.Specialized;
+using dCompare.Infrastructure;
 
 namespace dCompare.Options
 {
@@ -85,10 +86,6 @@ namespace dCompare.Options
                     updater.UpdateModel();
                 }
             }
-            // Also update the top-level Diff view model
-            var diffVm = MenuItems.SelectMany(m => m.Children)
-                                  .FirstOrDefault(c => c.ViewModel is DiffOptionsViewModel)?.ViewModel as IConfigurationUpdater;
-            diffVm?.UpdateModel();
 
             await _configService.SaveConfigurationAsync(_appConfig);
             MessageBox.Show("Settings saved successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -102,9 +99,6 @@ namespace dCompare.Options
             var uiNode = new SettingsMenuItem("UI", new UIOptionsViewModel(_appConfig.Options.UI), this);
             var compareNode = new SettingsMenuItem("Compare", new CompareOptionsViewModel(_appConfig.Options.Compare), this);
 
-            // Consolidate Diff settings under one ViewModel
-            var diffNode = new SettingsMenuItem("Diff", new DiffOptionsViewModel(_appConfig.Options.Diff), this);
-
             var sessionNode = new SettingsMenuItem("Session", new SessionOptionsViewModel(_appConfig.Options.Session), this);
             var confirmationNode = new SettingsMenuItem("Confirmation", new ConfirmationOptionsViewModel(_appConfig.Options.Confirmation), this);
             var hotkeysNode = new SettingsMenuItem("HotKeys", new HotKeysOptionsViewModel(_appConfig.Options.HotKeys), this);
@@ -114,7 +108,6 @@ namespace dCompare.Options
 
             optionsNode.Children.Add(uiNode);
             optionsNode.Children.Add(compareNode);
-            optionsNode.Children.Add(diffNode);
             optionsNode.Children.Add(textViewerNode);
             optionsNode.Children.Add(toolsNode);
             optionsNode.Children.Add(fileTypeMappingNode);
@@ -489,156 +482,6 @@ namespace dCompare.Options
             }
         }
     }
-
-    // New ViewModel to wrap an ExternalViewer model
-    public class ExternalViewerItemViewModel(ExternalViewer model) : ViewModelBase
-    {
-        private ExternalViewer _model = model;
-
-        public ExternalViewer Model => _model;
-
-        public string Name
-        {
-            get => _model.Name;
-            set
-            {
-                if (_model.Name == "WinMerge") return; // Cannot rename default
-                _model.Name = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public string Path { get => _model.Path; set { _model.Path = value; OnPropertyChanged(); } }
-        public string Arguments { get => _model.Arguments; set { _model.Arguments = value; OnPropertyChanged(); } }
-    }
-
-    // New consolidated ViewModel for all Diff settings
-    public class DiffOptionsViewModel : ViewModelBase, IConfigurationUpdater
-    {
-        private readonly DiffOptions _model;
-        private ExternalViewerItemViewModel _selectedExternalViewer;
-
-        // Text Diff Properties
-        public ListEditorViewModelBase<TextDiffOptions, string> TextExtensionEditor { get; }
-        public ObservableCollection<string> AvailableTextViewers { get; } = new();
-        public string SelectedTextViewer { get => _model.Text.Viewer; set { _model.Text.Viewer = value; OnPropertyChanged(); } }
-
-        // Image Diff Properties
-        public ListEditorViewModelBase<ImageDiffOptions, string> ImageExtensionEditor { get; }
-        public ObservableCollection<string> AvailableImageViewers { get; } = new();
-        public string SelectedImageViewer { get => _model.Image.Viewer; set { _model.Image.Viewer = value; OnPropertyChanged(); } }
-
-        // External Viewer Properties
-        public ObservableCollection<ExternalViewerItemViewModel> ExternalViewers { get; }
-        public ICommand AddViewerCommand { get; }
-        public ICommand RemoveViewerCommand { get; }
-        public ICommand BrowsePathCommand { get; }
-        public class ExtensionListEditorViewModel<TModel> : ListEditorViewModelBase<TModel, string> where TModel : class
-        {
-            public ExtensionListEditorViewModel(TModel model, List<string> extensions, Action<TModel, List<string>> updateModelAction)
-                : base(model, extensions, updateModelAction)
-            {
-            }
-        }
-        public DiffOptionsViewModel(DiffOptions model)
-        {
-            _model = model;
-            _model.Viewer ??= new List<ExternalViewer>();
-            if (_model.Viewer.Count == 0)
-            {
-                _model.Viewer.Add(new ExternalViewer { Name = "WinMerge", Arguments = "/e /u \"{left}\" \"{right}\"" });
-            }
-
-            //TextExtensionEditor = new ListEditorViewModelBase<TextDiffOptions, string>(model.Text, model.Text.Ext, (m, l) => m.Ext = l);
-            //ImageExtensionEditor = new ListEditorViewModelBase<ImageDiffOptions, string>(model.Image, model.Image.Ext, (m, l) => m.Ext = l);
-            TextExtensionEditor = new ExtensionListEditorViewModel<TextDiffOptions>(model.Text, model.Text.Ext, (m, l) => m.Ext = l);
-            ImageExtensionEditor = new ExtensionListEditorViewModel<ImageDiffOptions>(model.Image, model.Image.Ext, (m, l) => m.Ext = l);
-
-            ExternalViewers = new ObservableCollection<ExternalViewerItemViewModel>(
-                _model.Viewer.Select(v => new ExternalViewerItemViewModel(v))
-            );
-            ExternalViewers.CollectionChanged += OnExternalViewersChanged;
-
-            AddViewerCommand = new RelayCommand(AddViewer);
-            RemoveViewerCommand = new RelayCommand(RemoveViewer, _ => SelectedExternalViewer != null && SelectedExternalViewer.Name != "WinMerge");
-            BrowsePathCommand = new RelayCommand(BrowsePath, _ => SelectedExternalViewer != null);
-
-            UpdateAvailableViewers();
-        }
-
-        public ExternalViewerItemViewModel SelectedExternalViewer
-        {
-            get => _selectedExternalViewer;
-            set => SetProperty(ref _selectedExternalViewer, value);
-        }
-
-        private void OnExternalViewersChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            UpdateAvailableViewers();
-        }
-
-        private void UpdateAvailableViewers()
-        {
-            var externalNames = ExternalViewers.Select(v => v.Name).ToList();
-
-            // Update Text Viewers
-            var oldTextViewer = SelectedTextViewer;
-            AvailableTextViewers.Clear();
-            AvailableTextViewers.Add("DiffPlex"); // Built-in
-            externalNames.ForEach(name => AvailableTextViewers.Add(name));
-            if (AvailableTextViewers.Contains(oldTextViewer))
-                SelectedTextViewer = oldTextViewer;
-            else
-                SelectedTextViewer = AvailableTextViewers.FirstOrDefault();
-            OnPropertyChanged(nameof(SelectedTextViewer));
-
-            // Update Image Viewers
-            var oldImageViewer = SelectedImageViewer;
-            AvailableImageViewers.Clear();
-            AvailableImageViewers.Add("Build-in"); // Built-in
-            externalNames.ForEach(name => AvailableImageViewers.Add(name));
-            if (AvailableImageViewers.Contains(oldImageViewer))
-                SelectedImageViewer = oldImageViewer;
-            else
-                SelectedImageViewer = AvailableImageViewers.FirstOrDefault();
-            OnPropertyChanged(nameof(SelectedImageViewer));
-        }
-
-        private void AddViewer(object obj)
-        {
-            var newViewer = new ExternalViewer { Name = "New Tool" };
-            ExternalViewers.Add(new ExternalViewerItemViewModel(newViewer));
-        }
-
-        private void RemoveViewer(object obj)
-        {
-            if (SelectedExternalViewer != null && SelectedExternalViewer.Name != "WinMerge")
-            {
-                ExternalViewers.Remove(SelectedExternalViewer);
-            }
-        }
-
-        private void BrowsePath(object parameter)
-        {
-            if (SelectedExternalViewer == null) return;
-            var openFileDialog = new OpenFileDialog
-            {
-                Filter = "Executable Files (*.exe)|*.exe|All files (*.*)|*.*",
-                Title = "Select executable"
-            };
-
-            if (openFileDialog.ShowDialog() == true)
-            {
-                SelectedExternalViewer.Path = openFileDialog.FileName;
-            }
-        }
-
-        public void UpdateModel()
-        {
-            _model.Viewer = ExternalViewers.Select(vm => vm.Model).ToList();
-        }
-    }
-
 
     public class SessionOptionsViewModel : ViewModelBase
     {

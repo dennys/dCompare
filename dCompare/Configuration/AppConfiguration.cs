@@ -17,9 +17,6 @@ namespace dCompare.Configuration
         [JsonPropertyName("Compare")]
         public CompareOptions Compare { get; set; } = new();
 
-        [JsonPropertyName("Diff")]
-        public DiffOptions Diff { get; set; } = new();
-
         [JsonPropertyName("Confirmation")]
         public ConfirmationOptions Confirmation { get; set; } = new();
 
@@ -166,54 +163,6 @@ namespace dCompare.Configuration
 
         [JsonPropertyName("view")]
         public List<string> View { get; set; } = new();
-    }
-
-    public class DiffOptions
-    {
-        [JsonPropertyName("Text")]
-        public TextDiffOptions Text { get; set; } = new();
-
-        [JsonPropertyName("Image")]
-        public ImageDiffOptions Image { get; set; } = new();
-
-        [JsonPropertyName("Viewer")]
-        public List<ExternalViewer> Viewer { get; set; } = new()
-        {
-            new ExternalViewer { Name = "WinMerge", Path = "", Arguments = "/e /u \"{left}\" \"{right}\"" }
-        };
-    }
-
-    public class ExternalViewer
-    {
-        [JsonPropertyName("Name")]
-        public string Name { get; set; } = string.Empty;
-
-        [JsonPropertyName("Path")]
-        public string Path { get; set; } = string.Empty;
-
-        [JsonPropertyName("Arguments")]
-        public string Arguments { get; set; } = string.Empty;
-
-        [JsonPropertyName("SupportedFormats")]
-        public string SupportedFormats { get; set; } = string.Empty;
-    }
-
-    public class TextDiffOptions
-    {
-        [JsonPropertyName("Ext")]
-        public List<string> Ext { get; set; } = new List<string> { ".txt", ".log", ".cs", ".json", ".xml", ".html", ".css", ".js", ".py", ".md", ".sql" };
-
-        [JsonPropertyName("Viewer")]
-        public string Viewer { get; set; } = "DiffPlex";
-    }
-
-    public class ImageDiffOptions
-    {
-        [JsonPropertyName("Ext")]
-        public List<string> Ext { get; set; } = new List<string> { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tiff", ".webp" };
-
-        [JsonPropertyName("Viewer")]
-        public string Viewer { get; set; } = "Build-in";
     }
 
     public class ConfirmationOptions

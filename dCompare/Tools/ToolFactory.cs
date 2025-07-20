@@ -29,19 +29,17 @@ namespace dCompare.Tools
         public ITool CreateTool(string leftFilePath, string rightFilePath)
         {
             var fileType = DetermineFileType(leftFilePath ?? rightFilePath);
+            if (string.IsNullOrEmpty(leftFilePath) || string.IsNullOrEmpty(rightFilePath))
+            {
+                throw new ArgumentException("Both file paths cannot be null or empty.");
+            }
 
-            if (fileType == dCompare.Tools.Models.FileType.Text)
+            return fileType switch
             {
-                return new dCompare.Tools.Diff.TextDiffPlex(leftFilePath, rightFilePath);
-            }
-            else if (fileType == dCompare.Tools.Models.FileType.Image)
-            {
-                return new dCompare.Tools.Diff.ImageDiff(leftFilePath, rightFilePath);
-            }
-            else
-            {
-                throw new NotSupportedException("Unsupported file type for comparison.");
-            }
+                dCompare.Tools.Models.FileType.Text => new dCompare.Tools.Diff.TextDiffPlex(leftFilePath, rightFilePath),
+                dCompare.Tools.Models.FileType.Image => new dCompare.Tools.Diff.ImageDiff(leftFilePath, rightFilePath),
+                _ => throw new NotSupportedException("Unsupported file type for comparison.")
+            };
         }
 
         private static dCompare.Tools.Models.FileType DetermineFileType(string filePath)
