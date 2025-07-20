@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Windows.Input;
 using System.Windows.Forms;
 using System.Drawing;
+using dCompare.Infrastructure;
 
 namespace dCompare.Options
 {
