@@ -8,6 +8,10 @@ on:
 jobs:
   build_and_release:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        configuration: [Release]
+        platform: [x64, x86]
     env:
       Solution_Name: dCompare.sln
       Project_Path: dCompare/dCompare.csproj
@@ -27,19 +31,53 @@ jobs:
       run: dotnet restore $env:Solution_Name
 
     - name: 🧪 Run unit tests
-      run: dotnet test $env:Test_Project_Path --configuration Release --collect:"XPlat Code Coverage" /p:ExcludeByFile="**/Properties/*"
+      run: dotnet test $env:Test_Project_Path --configuration ${{ matrix.configuration }} --collect:"XPlat Code Coverage" /p:ExcludeByFile="**/Properties/*"
 
-    - name: 🔨 Build x64
-      run: dotnet publish $env:Project_Path -c Release -r win-x64 --self-contained false -o publish/net8-x64
+    - name: 📈 Install ReportGenerator
+      run: dotnet tool install -g dotnet-reportgenerator-globaltool
 
-    - name: 🔨 Build x86
-      run: dotnet publish $env:Project_Path -c Release -r win-x86 --self-contained false -o publish/net8-x86
+    - name: 🧾 Generate coverage reports
+      run: |
+        reportgenerator -reports:**/coverage.cobertura.xml -targetdir:coveragereport -reporttypes:Html,JsonSummary -filefilters:"-**/Properties/*"
 
-    - name: 📦 Zip x64 artifacts
-      run: Compress-Archive -Path publish/net8-x64/* -DestinationPath dCompress-net8-x64.zip
+    - name: 📤 Upload to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        name: codecov-umbrella
+        verbose: true
 
-    - name: 📦 Zip x86 artifacts
-      run: Compress-Archive -Path publish/net8-x86/* -DestinationPath dCompress-net8-x86.zip
+    - name: 📤 Upload Coverage to Codacy
+      run: |
+        curl -Ls -o codacy-coverage-reporter https://github.com/codacy/codacy-coverage-reporter/releases/latest/download/codacy-coverage-reporter-windows
+        chmod +x codacy-coverage-reporter
+        $coverage_file = Get-ChildItem -Path ./dCompare.Tests/TestResults -Recurse -Include coverage.cobertura.xml | Select-Object -First 1 -ExpandProperty FullName
+        if (-not $coverage_file) { Write-Error "Coverage file not found"; exit 1 }
+        ./codacy-coverage-reporter report -r "$coverage_file"
+      env:
+        CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
+
+    - name: 🔨 Build Framework-dependent (.NET 8)
+      run: dotnet publish $env:Project_Path -c ${{ matrix.configuration }} -r win-${{ matrix.platform }} --self-contained false -o publish/net8-${{ matrix.platform }}
+
+    - name: 🔨 Build Self-contained
+      run: dotnet publish $env:Project_Path -c ${{ matrix.configuration }} -r win-${{ matrix.platform }} --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o publish/self-${{ matrix.platform }}
+
+    - name: 📦 Zip Framework-dependent Artifacts
+      run: Compress-Archive -Path publish/net8-${{ matrix.platform }}/* -DestinationPath dCompress-net8-${{ matrix.platform }}.zip
+
+    - name: 📦 Zip Self-contained Artifacts
+      run: Compress-Archive -Path publish/self-${{ matrix.platform }}/* -DestinationPath dCompress-self-${{ matrix.platform }}.zip
+
+    - name: 📤 Upload ZIP Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: dCompress-${{ matrix.platform }}-zips
+        path: |
+          dCompress-net8-${{ matrix.platform }}.zip
+          dCompress-self-${{ matrix.platform }}.zip
+        retention-days: 14
+        if-no-files-found: error
 
     - name: 🐙 Get latest tag
       id: get_latest_tag
@@ -53,41 +91,4 @@ jobs:
       shell: pwsh
       run: |
         $currentVersion = '${{ steps.get_latest_tag.outputs.latest_tag }}'
-        $verParts = $currentVersion.TrimStart('v').Split('.')
-        $patch = [int]$verParts[2] + 1
-        $nextVersion = "v$($verParts[0]).$($verParts[1]).$patch"
-        echo "next_version=$nextVersion" >> $env:GITHUB_OUTPUT
-
-    - name: 🔍 Check if tag exists
-      id: check_tag
-      shell: pwsh
-      run: |
-        $tag = '${{ steps.next_version.outputs.next_version }}'
-        $exists = git tag -l $tag
-        if ($exists) {
-          echo "tag_exists=true" >> $env:GITHUB_OUTPUT
-        }
-        else {
-          echo "tag_exists=false" >> $env:GITHUB_OUTPUT
-        }
-
-    - name: 🏷️ Create and push git tag
-      if: steps.check_tag.outputs.tag_exists == 'false'
-      shell: pwsh
-      run: |
-        git config user.name "${{ github.actor }}"
-        git config user.email "${{ github.actor }}@users.noreply.github.com"
-        git tag ${{ steps.next_version.outputs.next_version }}
-        git push origin ${{ steps.next_version.outputs.next_version }}
-
-    - name: 🚀 Create GitHub Release
-      if: steps.check_tag.outputs.tag_exists == 'false'
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: ${{ steps.next_version.outputs.next_version }}
-        name: Release ${{ steps.next_version.outputs.next_version }}
-        files: |
-          dCompress-net8-x64.zip
-          dCompress-net8-x86.zip
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        $ver6e616e0-d894-4936-a3f5-391682ee794c" title="How to make a salad" contentType="text/markdown">
