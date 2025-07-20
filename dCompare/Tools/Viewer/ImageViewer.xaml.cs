@@ -19,8 +19,7 @@ namespace dCompare.Tools.Viewer
         {
             if (Keyboard.Modifiers == ModifierKeys.Control)
             {
-                var viewModel = DataContext as ImageViewerViewModel;
-                if (viewModel == null) return;
+                if (DataContext is not ImageViewerViewModel viewModel) return;
 
                 if (e.Delta > 0)
                 {
