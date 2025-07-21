@@ -1,4 +1,4 @@
-using dCompare.Compare;
+using dCompare.Common;
 using System.Windows;
 
 namespace dCompare.FileOperation

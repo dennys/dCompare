@@ -11,15 +11,14 @@ using System.Windows.Controls;
 
 namespace dCompare.Session
 {
-    public class SessionManager(IConfigurationService configService, IServiceProvider serviceProvider) : ISessionManager
+    public class SessionManager(IServiceProvider serviceProvider) : ISessionManager
     {
         private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        private readonly IConfigurationService _configService = configService ?? throw new ArgumentNullException(nameof(configService));
         private readonly List<string> _recentSessions = new();
         private readonly Dictionary<string, string> _tabIdMap = new();
+        private MenuItem? _recentSessionsMenu;
+        private TabControl? _tabControl;
         private const int MaxRecentSessions = 5;
-        private MenuItem _recentSessionsMenu;
-        private TabControl _tabControl;
         private int _tabCounter = 1;
 
         public void Initialize(TabControl tabControl, MenuItem recentSessionsMenu)
@@ -88,6 +87,7 @@ namespace dCompare.Session
             }
         }
 
+        public bool CanClearRecentSessions() => _recentSessions.Count > 0;
         public void ClearRecentSessions()
         {
             try
@@ -102,13 +102,13 @@ namespace dCompare.Session
             }
         }
 
-        public bool CanClearRecentSessions()
-        {
-            return _recentSessions.Count > 0;
-        }
-
         private void UpdateRecentSessionsMenu()
         {
+            if (_recentSessionsMenu is null)
+            {
+                MessageBox.Show("Cannot locate _recentSessionsMenu.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
             try
             {
                 // Clear existing menu items (excluding the first item and separator)
@@ -146,9 +146,15 @@ namespace dCompare.Session
                 Log.Warning("Failed to update recent sessions menu: {Message}", ex.Message);
             }
         }
-
+        public bool CanSaveSession() => _tabControl?.Items.Count > 0;
         public void SaveSession(Action<string> updateStatus)
         {
+            if (_tabControl is null)
+            {
+                MessageBox.Show("Cannot locate parent TabControl.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            
             try
             {
                 Dictionary<string, SessionConfig> sessions = new();
@@ -193,13 +199,14 @@ namespace dCompare.Session
             }
         }
 
-        public bool CanSaveSession()
-        {
-            return _tabControl.Items.Count > 0;
-        }
-
+        public bool CanLoadSession() => true;
         public void LoadSession(string filePath, bool executeCompare = false, Action<string>? updateStatus = null, Action<string>? executeCompareMethod = null)
         {
+            if (_tabControl is null)
+            {
+                MessageBox.Show("Cannot locate parent TabControl.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
             try
             {
                 string json;
@@ -292,11 +299,6 @@ namespace dCompare.Session
                 MessageBox.Show($"Error loading session: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 updateStatus?.Invoke($"Error loading session: {ex.Message}");
             }
-        }
-
-        public bool CanLoadSession()
-        {
-            return true;
         }
     }
 }

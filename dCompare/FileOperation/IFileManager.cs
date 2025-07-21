@@ -1,9 +1,5 @@
-﻿using dCompare.Compare;
+﻿using dCompare.Common;
 using dCompare.FileOperation.Models;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace dCompare.FileOperation
 {

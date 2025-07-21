@@ -13,6 +13,7 @@
 - **File Operations**: Copy or move files between directories directly within the application, with a dedicated file operation window showing queued, successful, and failed transfers, including progress, speed, and filtering capabilities.
 - **Text File Comparison**: View differences in text files (e.g., .txt, .cs, .json, .xml) side-by-side using DiffPlex, with color-coded highlights for insertions (green), deletions (red), and unchanged content, displayed in a scrollable ListBox with Consolas font.
 - **Image Comparison**: Display two images side-by-side for visual comparison, with automatic scaling to fit the window while preserving aspect ratio, using ScrollViewer for large images.
+- **Archive File Support**: Add support for comparing archive files (e.g., .zip) using libraries like [SharpZipLib](https://github.com/icsharpcode/SharpZipLib).
 - **Context Menus**: Right-click context menus on comparison results provide actions like comparing contents, copying/moving files, deleting, renaming, opening file locations, copying paths/filenames, and viewing properties.
 - **Session Management**: Save and load comparison sessions (Ctrl+S, Ctrl+O), with recent sessions accessible via the File menu, and options to auto-load default sessions on startup.
 - **Customizable Settings**: Configure via a settings window with sections for:
@@ -58,7 +59,6 @@ Not implemented
   - Implementation: Add a DockPanel or ContentControl in CompareControl.xamlx that displays content based on the selected file’s extension, using the TextDiffOptions or ImageDiffOptions from AppConfiguration.cs.
 - **Cloud Storage Support**:
   - Feature: Allow comparisons and operations with cloud storage services (e.g., Google Drive, Dropbox, OneDrive).
-- **Archive File Support**: Add support for comparing archive files (e.g., .zip) using libraries like [SharpZipLib](https://github.com/icsharpcode/SharpZipLib).
 - **JSON-Specific Comparison**: Implement specialized comparison for JSON files to highlight structural differences.
 - **File Explorer Integration**: Associate dCompare with Windows File Explorer for quick access to comparisons.
 

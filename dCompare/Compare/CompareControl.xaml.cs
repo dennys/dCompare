@@ -1,44 +1,24 @@
 using dCompare.Compare.Models;
 using dCompare.Configuration;
-using dCompare.Tools.Diff;
-using dCompare.Tools.Models;
 using dCompare.FileOperation;
+using dCompare.Tools;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
 using Microsoft.Win32;
-using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
-using dCompare.Tools;
 
 namespace dCompare.Compare
 {
-    public enum SourceType
-    {
-        Left,
-        Right
-    }
-    public enum FileOperationType
-    {
-        CopyToLeft,
-        CopyToRight,
-        MoveToLeft,
-        MoveToRight,
-        DeleteLeft,
-        DeleteRight
-    }
-
-    public partial class CompareControl : UserControl, INotifyPropertyChanged, IRefreshable
+    public partial class CompareControl : UserControl, INotifyPropertyChanged, IRefreshable, ITool
     {
         private ObservableCollection<TreeNode> _treeNodes = new();
         private DirectoryComparer _comparer = new();
@@ -56,9 +36,8 @@ namespace dCompare.Compare
 
         private readonly IFileManager _fileManager;
         private readonly IConfigurationService _configService;
-        private readonly IToolService _toolService;
+        private readonly ToolHandler _toolHandler;
         private readonly ILogger<CompareControl> _logger;
-        private readonly ToolFactory _toolFactory;
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName)
@@ -131,15 +110,14 @@ namespace dCompare.Compare
             }
         }
 
-        public CompareControl(IConfigurationService configService, IToolService toolService, IFileManager fileManager, ILogger<CompareControl> logger)
+        public CompareControl(IConfigurationService configService, IFileManager fileManager, ILogger<CompareControl> logger)
         {
             InitializeComponent();
 
+            _logger = logger;
             _fileManager = fileManager;
             _configService = configService;
-            _toolService = toolService;
-            _logger = logger;
-            _toolFactory = new ToolFactory(configService);
+            _toolHandler = new ToolHandler();
             _treeNodeManager = new TreeNodeManager(_treeNodes);
             _fileOperationHandler = new FileOperationHandler(_fileManager);
 
@@ -160,9 +138,37 @@ namespace dCompare.Compare
             ResultListView.AddHandler(GridViewColumnHeader.ClickEvent, new RoutedEventHandler(ColumnHeader_Click));
             DataContext = this; // For IsComparing, Progress, SelectedAlgorithm etc.
 
-            Loaded += CompareControl_Loaded;
-            LoadConfigurationAsync();
             SetFilter(null);
+        }
+
+        public CompareControl(IConfigurationService configService, IFileManager fileManager, ILogger<CompareControl> logger, string leftPath, string rightPath)
+            : this(configService, fileManager, logger)
+        {
+            // TODO This is for archive file only, may consider using other solution
+            LoadedLeftPath = leftPath;
+            LoadedRightPath = rightPath;
+            this.Refresh();
+        }
+        private async void CompareControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(LoadedLeftPath))
+                {
+                    var defaultAlgorithm = (await _configService.LoadConfigurationAsync())
+                        .Options.Compare.Algorithms
+                        .FirstOrDefault(a => a.Value.IsDefault && a.Value.IsEnabled)
+                        .Key;
+                    SelectedAlgorithm = defaultAlgorithm;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Failed to load configuration: {Message}", ex.Message);
+                MessageBox.Show($"Error loading configuration: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                SelectedAlgorithm = ComparisonAlgorithm.ModifiedDateAndSize;
+            }
+            await PopulateCompareWithMenusAsync();
         }
 
         private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -175,11 +181,6 @@ namespace dCompare.Compare
             {
                 ApplyFilter();
             }
-        }
-
-        private async void CompareControl_Loaded(object sender, RoutedEventArgs e)
-        {
-            await PopulateCompareWithMenusAsync();
         }
 
         #region ViewAndCompare
@@ -209,7 +210,7 @@ namespace dCompare.Compare
                 else
                 {
                     var config = await _configService.LoadConfigurationAsync();
-                    if (config.Options.Compare.DoubleClick == "View")
+                    if (config.Options.Compare.DoubleClick == DoubleClickActions.View)
                     {
                         ViewFileAsync(clickedItem);
                     }
@@ -222,6 +223,7 @@ namespace dCompare.Compare
         }
         private async Task PopulateCompareWithMenusAsync()
         {
+            ToolConfigService _toolConfigService = new();
             try
             {
                 if (FindResource("LeftContextMenu") is not ContextMenu leftContextMenu ||
@@ -236,22 +238,21 @@ namespace dCompare.Compare
                 if (leftCompareWithMenu == null || rightCompareWithMenu == null || leftViewWithMenu == null || rightViewWithMenu == null) return;
 
                 var config = await _configService.LoadConfigurationAsync();
-                var diffTools = _toolService.GetAllToolsForOperation(config, Operations.Diff);
+                var diffTools = _toolConfigService.GetAllToolsForOperation(config, Operations.Diff);
                 PopulateToolMenu(leftCompareWithMenu, diffTools, ContextMenu_CompareWithViewer_Click);
                 PopulateToolMenu(rightCompareWithMenu, diffTools, ContextMenu_CompareWithViewer_Click);
 
-                var viewTools = _toolService.GetAllToolsForOperation(config, Operations.View);
+                var viewTools = _toolConfigService.GetAllToolsForOperation(config, Operations.View);
                 PopulateToolMenu(leftViewWithMenu, viewTools, ContextMenu_ViewWithViewer_Click);
                 PopulateToolMenu(rightViewWithMenu, viewTools, ContextMenu_ViewWithViewer_Click);
             }
             catch (Exception ex)
             {
                 _logger.LogError("Failed to populate Compare With menus: {Message}", ex.Message);
-                MessageBox.Show($"Error loading tools: {ex.Message}", Properties.Resources.ErrorTitle,
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error loading tools: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private MenuItem? FindMenuByName(ContextMenu menu, string name) =>
+        private static MenuItem? FindMenuByName(ContextMenu menu, string name) =>
             menu.Items.OfType<MenuItem>().FirstOrDefault(mi => mi.Name == name);
         private void PopulateToolMenu(MenuItem parentMenu, IEnumerable<ToolOptions> tools, RoutedEventHandler clickHandler)
         {
@@ -292,141 +293,19 @@ namespace dCompare.Compare
         }
         private async Task LaunchToolAsync(TreeNode selectedItem, string operation, ToolOptions? toolConfig = null)
         {
-            if (selectedItem.IsDirectory)
+            TabItem? tab = await _toolHandler.LaunchToolAsync(selectedItem, operation, toolConfig);
+            if (tab != null)
             {
-                MessageBox.Show(
-                    operation == Operations.View ? "Cannot open a directory." : "Cannot compare directories with a file comparison tool.",
-                    Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-            if (String.IsNullOrEmpty(operation))
-            {
-                MessageBox.Show("Invalid operation specified.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            try
-            {
-                // Determine the file path(s) based on operation
-                string? path = selectedItem.LeftNode?.FullPath ?? selectedItem.RightNode?.FullPath;
-                string? leftPath = operation == Operations.View ? path : (selectedItem.LeftNode?.FullPath ?? CreateTemporaryEmptyFile());
-                string? rightPath = operation == Operations.View ? null : (selectedItem.RightNode?.FullPath ?? CreateTemporaryEmptyFile());
-
-                if (string.IsNullOrEmpty(leftPath))
+                if (WpfTreeHelperExtensions.FindParent<TabControl>(this) is not TabControl tabControl)
                 {
-                    MessageBox.Show("No valid file path to open.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("Cannot locate parent TabControl.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
-
-                if (toolConfig == null)
-                {
-                    string pathForExtension = path ?? leftPath; // Use available path for extension
-                    var config = await _configService.LoadConfigurationAsync();
-                    string extension = Path.GetExtension(pathForExtension);
-                    toolConfig = _toolService.GetDefaultTool(config, operation, extension);
-
-                    if (toolConfig == null)
-                    {
-                        MessageBox.Show(
-                            $"No default {(operation == Operations.View ? "view" : "diff")} tool configured for '{extension}' files.",
-                            Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
-                        return;
-                    }
-                }
-
-                // Generate tab header based on operation
-                string tabHeader = operation == Operations.View
-                    ? $"View: {Path.GetFileName(leftPath)}"
-                    : $"Compare: {Path.GetFileName(leftPath)} - {Path.GetFileName(rightPath)}";
-
-                if (toolConfig.Type == "BuiltIn")
-                {
-                    // Find parent TabControl
-                    if (WpfTreeHelperExtensions.FindParent<TabControl>(this) is not TabControl tabControl)
-                    {
-                        MessageBox.Show("Cannot locate parent TabControl.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                        return;
-                    }
-
-                    // Create tool based on operation
-                    ITool tool = operation == Operations.View
-                        ? _toolFactory.CreateTool(leftPath)
-                        : _toolFactory.CreateTool(leftPath, rightPath ?? string.Empty); // Ensure rightPath is not null
-
-                    // Load file(s) into tool
-                    if (operation == Operations.View)
-                    {
-                        tool.LoadFile(leftPath);
-                    }
-
-                    // Create and add new tab
-                    TabItem newTab = new() { Header = tabHeader, Content = tool.GetControl() };
-                    tabControl.Items.Add(newTab);
-                    tabControl.SelectedItem = newTab;
-                }
-                else // External
-                {
-                    string arguments = operation == Operations.View
-                        ? toolConfig.ViewArguments.Replace("{file}", leftPath)
-                        : toolConfig.DiffArguments.Replace("{left}", leftPath).Replace("{right}", rightPath);
-
-                    ProcessStartInfo startInfo = new()
-                    {
-                        FileName = toolConfig.Path,
-                        Arguments = arguments,
-                        UseShellExecute = true
-                    };
-                    Process.Start(startInfo);
-                }
+                tabControl.Items.Add(tab);
+                tabControl.SelectedItem = tab;
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show(
-                    $"Error {(operation == Operations.View ? "opening file" : "launching comparison tool")}: {ex.Message}",
-                    Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-        private string CreateTemporaryEmptyFile()
-        {
-            string tempPath = Path.Combine(Path.GetTempPath(), $"dCompare_Empty_{Guid.NewGuid()}.txt");
-            File.WriteAllText(tempPath, string.Empty);
-            return tempPath;
-        }
-        private void OpenFileComparisonTab(string leftPath, string rightPath, ITool tool)
-        {
-            if (WpfTreeHelperExtensions.FindParent<TabItem>(this) is not TabItem parentTab ||
-                WpfTreeHelperExtensions.FindParent<TabControl>(parentTab) is not TabControl tabControl)
-            {
-                MessageBox.Show("Cannot locate parent TabControl or TabItem.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            string tabHeader = $"Compare: {System.IO.Path.GetFileName(leftPath)} - {System.IO.Path.GetFileName(rightPath)}";
-            TabItem newTab = new() { Header = tabHeader };
-
-            newTab.Content = tool.GetControl();
-
-            tabControl.Items.Add(newTab);
-            tabControl.SelectedItem = newTab;
         }
         #endregion
-
-        private void LoadConfigurationAsync()
-        {
-            try
-            {
-                var defaultAlgorithm = ComparisonAlgorithms.AlgorithmSettings
-                    .FirstOrDefault(kvp => kvp.Value.IsDefault && kvp.Value.IsEnabled)
-                    .Key;
-                SelectedAlgorithm = defaultAlgorithm;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("Failed to load configuration: {Message}", ex.Message);
-                MessageBox.Show($"Error loading configuration: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                SelectedAlgorithm = ComparisonAlgorithm.ModifiedDateAndSize;
-            }
-        }
 
         private void UpdateTabHeader()
         {
@@ -447,12 +326,11 @@ namespace dCompare.Compare
             if (string.IsNullOrEmpty(leftName) && !string.IsNullOrEmpty(leftPath)) leftName = leftPath;
             if (string.IsNullOrEmpty(rightName) && !string.IsNullOrEmpty(rightPath)) rightName = rightPath;
 
-
             string baseHeader = $"{leftName} - {rightName}";
             if (string.IsNullOrWhiteSpace(leftName) && string.IsNullOrWhiteSpace(rightName))
             {
                 //baseHeader = Properties.Resources.NewTabTitle;
-                baseHeader = "QQ";
+                baseHeader = "TODO";
             }
             else if (string.IsNullOrWhiteSpace(leftName))
             {
@@ -481,16 +359,32 @@ namespace dCompare.Compare
 
         private void Browse_Click(object sender, RoutedEventArgs e)
         {
-            var folderDialog = new OpenFolderDialog { Title = "Select Folder" };
-            if (folderDialog.ShowDialog() == true)
+            var openFileDialog = new OpenFileDialog
             {
-                if ((sender as Button)?.Name == "BrowseLeftButton")
+                Title = "Select Folder or Archive File",
+                Filter = "Archive files (*.zip, *.rar, *.7z, *.tar)|*.zip;*.rar;*.7z;*.tar|All files (*.*)|*.*",
+                ValidateNames = false,
+                CheckFileExists = false,
+                CheckPathExists = true,
+                FileName = "Folder Selection."
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                string selectedPath = openFileDialog.FileName;
+                // If the user selected a directory, the file name will be "Folder Selection."
+                if (selectedPath.Contains("Folder Selection."))
                 {
-                    LeftPathViewModel.Path = folderDialog.FolderName;
+                    selectedPath = Path.GetDirectoryName(selectedPath);
+                }
+
+                if (sender is Button { Name: "BrowseLeftButton" })
+                {
+                    LeftPathViewModel.Path = selectedPath;
                 }
                 else
                 {
-                    RightPathViewModel.Path = folderDialog.FolderName;
+                    RightPathViewModel.Path = selectedPath;
                 }
             }
         }
@@ -511,9 +405,15 @@ namespace dCompare.Compare
             string leftDir = LeftPathViewModel.Path?.Trim() ?? string.Empty;
             string rightDir = RightPathViewModel.Path?.Trim() ?? string.Empty;
 
-            if (!Directory.Exists(leftDir) || !Directory.Exists(rightDir))
+            if ((!Directory.Exists(leftDir) && !File.Exists(leftDir)) && !string.IsNullOrEmpty(leftDir))
             {
-                MessageBox.Show("Please enter valid source and target folder paths.");
+                MessageBox.Show("Please enter a valid source path.");
+                return;
+            }
+
+            if ((!Directory.Exists(rightDir) && !File.Exists(rightDir)) && !string.IsNullOrEmpty(rightDir))
+            {
+                MessageBox.Show("Please enter a valid target path.");
                 return;
             }
 
@@ -773,25 +673,21 @@ namespace dCompare.Compare
 
         private void ContextMenu_CompareContents_Click(object sender, RoutedEventArgs e)
         {
-            var selectedItem = ResultListView.SelectedItem as TreeNode;
-            if (selectedItem == null)
+            if (ResultListView.SelectedItem is not TreeNode selectedItem)
             {
                 MessageBox.Show("Please select an item.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-
             CompareFileAsync(selectedItem);
         }
 
         private void ContextMenu_ViewFile_Click(object sender, RoutedEventArgs e)
         {
-            var selectedItem = ResultListView.SelectedItem as TreeNode;
-            if (selectedItem == null)
+            if (ResultListView.SelectedItem is not TreeNode selectedItem)
             {
                 MessageBox.Show("Please select an item.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-
             ViewFileAsync(selectedItem);
         }
         #region ConextMenuOperations
@@ -1197,6 +1093,16 @@ namespace dCompare.Compare
                     }
                 }), System.Windows.Threading.DispatcherPriority.Input);
             }
+        }
+
+        void ITool.LoadFile(string filePath)
+        {
+            throw new NotImplementedException();
+        }
+
+        UserControl ITool.GetControl()
+        {
+            return this;
         }
 
     }

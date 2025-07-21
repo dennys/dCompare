@@ -4,7 +4,8 @@ namespace dCompare.Tools.Models
     {
         Text,
         Image,
-        Unsupported,
-        Binary
+        Archive,
+        Binary,
+        Unsupported
     }
 }
