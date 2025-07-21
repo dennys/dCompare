@@ -387,9 +387,9 @@ namespace dCompare.Options
             }
         }
 
-        public static List<string> AvailableDoubleClickActions => new() { "View", "Compare" };
+        public static List<DoubleClickActions> AvailableDoubleClickActions => Enum.GetValues(typeof(DoubleClickActions)).Cast<DoubleClickActions>().ToList();
 
-        public string DoubleClickAction
+        public DoubleClickActions DoubleClickAction
         {
             get => _model.DoubleClick;
             set

@@ -1,4 +1,5 @@
-﻿using dCompare.Compare.Models;
+﻿using dCompare.Common;
+using dCompare.Compare.Models;
 using dCompare.Configuration;
 using dCompare.DirTreeSystem;
 using dCompare.DirTreeSystem.Models;
@@ -89,17 +90,12 @@ namespace dCompare.Compare
     {
         private readonly IFileSystem _fileSystem;
         private readonly IHashProvider _hashProvider;
-        private readonly IFileSystemTreeBuilder _treeBuilder;
         private readonly bool _parallel;
 
         public DirectoryComparer(AppConfiguration? config = null, IFileSystem? fileSystem = null, IHashProvider? hashProvider = null)
         {
             _fileSystem = fileSystem ?? new FileSystem();
             _hashProvider = hashProvider ?? new HashProvider();
-            string scanMethod = config?.Options?.Compare?.ScanMethod?.MethodOptions ?? "General";
-            _treeBuilder = scanMethod.Equals("MFT", StringComparison.OrdinalIgnoreCase)
-                ? new MftFileSystemTreeBuilder()
-                : new DotnetFileSystemTreeBuilder(_fileSystem);
             _parallel = config?.Options?.Compare?.ScanMethod?.ParallelOptions ?? true;
         }
 
@@ -130,9 +126,19 @@ namespace dCompare.Compare
             Action<double>? progressCallback = null,
             ComparisonAlgorithm algorithm = ComparisonAlgorithm.ModifiedDateAndSize)
         {
-            Log.Information("Start to compare with method: {Method}, parallel: {Parallel}",
-                _treeBuilder is MftFileSystemTreeBuilder ? "MFT" : "General", _parallel);
-            int totalDirs = CountDirectories(leftPath) + CountDirectories(rightPath);
+            FileSystemNode? leftRoot = null;
+            FileSystemNode? rightRoot = null;
+
+            int totalDirs = 0;
+            if (!string.IsNullOrEmpty(leftPath) && (Directory.Exists(leftPath) || FileExtensions.IsArchiveFile(leftPath)))
+            {
+                totalDirs += CountDirectories(leftPath);
+            }
+            if (!string.IsNullOrEmpty(rightPath) && (Directory.Exists(rightPath) || FileExtensions.IsArchiveFile(leftPath)))
+            {
+                totalDirs += CountDirectories(rightPath);
+            }
+
             int processedDirs = 0;
             double progressPerDir = totalDirs > 0 ? 1.0 / totalDirs : 1.0;
             double lastReportedProgress = -0.1;
@@ -148,28 +154,41 @@ namespace dCompare.Compare
                 }
             };
 
-            FileSystemNode? leftRoot = null;
-            FileSystemNode? rightRoot = null;
-
             if (_parallel)
-            {   // This is the parallel execution path (multi-threaded)
-                Task leftTask = Task.Run(() =>
+            {
+                var tasks = new List<Task>();
+                if (!string.IsNullOrEmpty(leftPath))
                 {
-                    leftRoot = _treeBuilder.BuildTreeRecursive(leftPath, 0, cancellationToken, updateProgress);
-                }, cancellationToken);
+                    tasks.Add(Task.Run(() =>
+                    {
+                        var leftTreeBuilder = FileSystemTreeBuilderFactory.Create(leftPath, _fileSystem);
+                        leftRoot = leftTreeBuilder.BuildTreeRecursive(leftPath, 0, cancellationToken, updateProgress);
+                    }, cancellationToken));
+                }
 
-                Task rightTask = Task.Run(() =>
+                if (!string.IsNullOrEmpty(rightPath))
                 {
-                    rightRoot = _treeBuilder.BuildTreeRecursive(rightPath, 0, cancellationToken, updateProgress);
-                }, cancellationToken);
-
-                await Task.WhenAll(leftTask, rightTask);
+                    tasks.Add(Task.Run(() =>
+                    {
+                        var rightTreeBuilder = FileSystemTreeBuilderFactory.Create(rightPath, _fileSystem);
+                        rightRoot = rightTreeBuilder.BuildTreeRecursive(rightPath, 0, cancellationToken, updateProgress);
+                    }, cancellationToken));
+                }
+                await Task.WhenAll(tasks);
             }
             else
-            {   // This is the sequential execution path (single-threaded)
-                leftRoot = _treeBuilder.BuildTreeRecursive(leftPath, 0, cancellationToken, updateProgress);
+            {
+                if (!string.IsNullOrEmpty(leftPath))
+                {
+                    var leftTreeBuilder = FileSystemTreeBuilderFactory.Create(leftPath, _fileSystem);
+                    leftRoot = leftTreeBuilder.BuildTreeRecursive(leftPath, 0, cancellationToken, updateProgress);
+                }
                 cancellationToken.ThrowIfCancellationRequested();
-                rightRoot = _treeBuilder.BuildTreeRecursive(rightPath, 0, cancellationToken, updateProgress);
+                if (!string.IsNullOrEmpty(rightPath))
+                {
+                    var rightTreeBuilder = FileSystemTreeBuilderFactory.Create(rightPath, _fileSystem);
+                    rightRoot = rightTreeBuilder.BuildTreeRecursive(rightPath, 0, cancellationToken, updateProgress);
+                }
             }
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -218,9 +237,12 @@ namespace dCompare.Compare
             bool rightIsDir = _fileSystem.DirectoryExists(rightSubPath);
 
             // Build FileSystemNode trees for the paths
-            FileSystemNode? leftSubRoot = leftIsFile || leftIsDir ? _treeBuilder.BuildTreeRecursive(leftSubPath, subDirDepth, cancellationToken) : null;
+            var leftTreeBuilder = FileSystemTreeBuilderFactory.Create(leftSubPath, _fileSystem);
+            var rightTreeBuilder = FileSystemTreeBuilderFactory.Create(rightSubPath, _fileSystem);
+
+            FileSystemNode? leftSubRoot = leftIsFile || leftIsDir ? leftTreeBuilder.BuildTreeRecursive(leftSubPath, subDirDepth, cancellationToken) : null;
             cancellationToken.ThrowIfCancellationRequested();
-            FileSystemNode? rightSubRoot = rightIsFile || rightIsDir ? _treeBuilder.BuildTreeRecursive(rightSubPath, subDirDepth, cancellationToken) : null;
+            FileSystemNode? rightSubRoot = rightIsFile || rightIsDir ? rightTreeBuilder.BuildTreeRecursive(rightSubPath, subDirDepth, cancellationToken) : null;
             cancellationToken.ThrowIfCancellationRequested();
 
             List<ComparisonItem> result = new();
@@ -256,6 +278,11 @@ namespace dCompare.Compare
 
         private int CountDirectories(string path)
         {
+            if (File.Exists(path) && FileExtensions.IsArchiveFile(path))
+            {
+                return 1;
+            }
+
             if (!_fileSystem.DirectoryExists(path)) return 0;
             int count = 1;
             try

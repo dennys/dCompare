@@ -1,9 +1,9 @@
-﻿using dCompare.FileOperation.Strategies;
+﻿using dCompare.Common;
 using dCompare.FileOperation.Models;
+using dCompare.FileOperation.Strategies;
 using Serilog;
 using System.Diagnostics;
 using System.IO;
-using dCompare.Compare;
 
 namespace dCompare.FileOperation
 {

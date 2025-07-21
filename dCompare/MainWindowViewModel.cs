@@ -21,7 +21,6 @@ namespace dCompare
         public readonly IConfigurationService _configService;
         public readonly ISessionManager _sessionManager;
         private readonly IServiceProvider _serviceProvider;
-        private readonly IToolService _toolService;
         public readonly IUserInteractionService _userInteractionService;
         private readonly ILogger<MainWindowViewModel> _logger;
 
@@ -81,14 +80,12 @@ namespace dCompare
         public MainWindowViewModel(
             IConfigurationService configService,
             ISessionManager sessionManager,
-            IToolService toolService,
             IServiceProvider serviceProvider,
             IUserInteractionService userInteractionService,
             ILogger<MainWindowViewModel> logger)
         {
             _configService = configService;
             _sessionManager = sessionManager;
-            _toolService = toolService;
             _serviceProvider = serviceProvider;
             _userInteractionService = userInteractionService;
             _logger = logger;
@@ -148,7 +145,6 @@ namespace dCompare
                     Header = $"Tab {_sessionManager.TabCounter}",
                     Content = new CompareControl(
                         _serviceProvider.GetRequiredService<IConfigurationService>(),
-                        _toolService,
                         _serviceProvider.GetRequiredService<IFileManager>(),
                         _serviceProvider.GetRequiredService<ILogger<CompareControl>>())
                 };

@@ -1,4 +1,9 @@
+using CommunityToolkit.Mvvm.DependencyInjection;
+using dCompare.Common;
+using dCompare.Compare;
 using dCompare.Configuration;
+using dCompare.FileOperation;
+using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 
@@ -36,8 +41,13 @@ namespace dCompare.Tools
 
             return fileType switch
             {
-                dCompare.Tools.Models.FileType.Text => new dCompare.Tools.Diff.TextDiffPlex(leftFilePath, rightFilePath),
-                dCompare.Tools.Models.FileType.Image => new dCompare.Tools.Diff.ImageDiff(leftFilePath, rightFilePath),
+                Models.FileType.Text => new dCompare.Tools.Diff.TextDiffPlex(leftFilePath, rightFilePath),
+                Models.FileType.Image => new dCompare.Tools.Diff.ImageDiff(leftFilePath, rightFilePath),
+                Models.FileType.Archive => new CompareControl(
+                    Ioc.Default.GetRequiredService<IConfigurationService>(),
+                    Ioc.Default.GetRequiredService<IFileManager>(),
+                    Ioc.Default.GetRequiredService<ILogger<CompareControl>>(),
+                    leftFilePath, rightFilePath),
                 _ => throw new NotSupportedException("Unsupported file type for comparison.")
             };
         }
@@ -45,20 +55,23 @@ namespace dCompare.Tools
         private static dCompare.Tools.Models.FileType DetermineFileType(string filePath)
         {
             string extension = Path.GetExtension(filePath).ToLowerInvariant();
-            var textExtensions = new System.Collections.Generic.List<string> { ".txt", ".log", ".cs", ".json", ".xml", ".html", ".css", ".js", ".py", ".md", ".sql" };
-            var imageExtensions = new System.Collections.Generic.List<string> { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tiff", ".webp" };
 
-            if (textExtensions.Contains(extension))
+            if (FileExtensions.IsTextFile(extension))
             {
                 return dCompare.Tools.Models.FileType.Text;
             }
 
-            if (imageExtensions.Contains(extension))
+            if (FileExtensions.IsImageFile(extension))
             {
                 return dCompare.Tools.Models.FileType.Image;
             }
 
-            return dCompare.Tools.Models.FileType.Binary;
+            if (FileExtensions.IsArchiveFile(extension))
+            {
+                return dCompare.Tools.Models.FileType.Archive;
+            }
+
+            return dCompare.Tools.Models.FileType.Unsupported;
         }
     }
 }
