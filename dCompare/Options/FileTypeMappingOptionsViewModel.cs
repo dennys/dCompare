@@ -29,7 +29,7 @@ namespace dCompare.Options
             AddMappingCommand = new RelayCommand(_ => AddMapping());
             RemoveMappingCommand = new RelayCommand(_ => RemoveMapping(), _ => CanRemoveMapping());
 
-            _selectedMapping = Mappings.FirstOrDefault();
+            SelectedMapping = Mappings.FirstOrDefault();
         }
 
         private void AddMapping()
@@ -44,12 +44,11 @@ namespace dCompare.Options
 
         private void RemoveMapping()
         {
-            if (SelectedMapping != null)
-            {
-                _config.Options.FileTypeMapping.Remove(SelectedMapping.Key);
-                Mappings.Remove(SelectedMapping);
-                SelectedMapping = Mappings.FirstOrDefault();
-            }
+            if (SelectedMapping == null) return;
+
+            _config.Options.FileTypeMapping.Remove(SelectedMapping.Key);
+            Mappings.Remove(SelectedMapping);
+            SelectedMapping = Mappings.FirstOrDefault();
         }
 
         private bool CanRemoveMapping()
@@ -107,15 +106,7 @@ namespace dCompare.Options
             set { _mapping.PreferredTools.View = value; OnPropertyChanged(); }
         }
 
-        public string Error
-        {
-            get
-            {
-                // The Error property is not used in this ViewModel.
-                // Instead, individual properties are validated.
-                return string.Empty;
-            }
-        }
+        public string Error => string.Empty;
 
         public string this[string columnName]
         {
