@@ -55,32 +55,6 @@ namespace dCompare.Compare
 
         public CompareControlViewModel ViewModel { get; }
 
-        /// <summary>
-        /// Gets or sets the left path, primarily for session management.
-        /// Setting this property updates the underlying LeftPathViewModel.Path.
-        /// </summary>
-        public string LoadedLeftPath
-        {
-            get => ViewModel.LeftPath ?? string.Empty;
-            set
-            {
-                ViewModel.LeftPath = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the right path, primarily for session management.
-        /// Setting this property updates the underlying RightPathViewModel.Path.
-        /// </summary>
-        public string LoadedRightPath
-        {
-            get => ViewModel.RightPath ?? string.Empty;
-            set
-            {
-                ViewModel.RightPath = value;
-            }
-        }
-
         public CompareControl(IConfigurationService configService, IFileManager fileManager, ILogger<CompareControl> logger)
         {
             InitializeComponent();
@@ -109,15 +83,15 @@ namespace dCompare.Compare
             : this(configService, fileManager, logger)
         {
             // TODO This is for archive file only, may consider using other solution
-            LoadedLeftPath = leftPath;
-            LoadedRightPath = rightPath;
+            ViewModel.LeftPath = leftPath;
+            ViewModel.RightPath = rightPath;
             this.Refresh();
         }
         private async void CompareControl_Loaded(object sender, RoutedEventArgs e)
         {
             try
             {
-                if (string.IsNullOrEmpty(LoadedLeftPath))
+                if (string.IsNullOrEmpty(ViewModel.LeftPath))
                 {
                     var defaultAlgorithm = (await _configService.LoadConfigurationAsync())
                         .Options.Compare.Algorithms
@@ -154,8 +128,8 @@ namespace dCompare.Compare
         private void UpdateTabHeader()
         {
             // Use Path from ViewModels (which are the source of truth)
-            string leftPath = LoadedLeftPath.Trim();
-            string rightPath = LoadedRightPath.Trim();
+            string leftPath = ViewModel.LeftPath.Trim();
+            string rightPath = ViewModel.RightPath.Trim();
 
             FullPathsTooltip = $"Left: {leftPath}\nRight: {rightPath}";
             OnPropertyChanged(nameof(FullPathsTooltip));
