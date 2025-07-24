@@ -28,6 +28,8 @@ namespace dCompare.Options
 
             AddMappingCommand = new RelayCommand(_ => AddMapping());
             RemoveMappingCommand = new RelayCommand(_ => RemoveMapping(), _ => CanRemoveMapping());
+
+            _selectedMapping = Mappings.FirstOrDefault();
         }
 
         private void AddMapping()
@@ -105,33 +107,35 @@ namespace dCompare.Options
             set { _mapping.PreferredTools.View = value; OnPropertyChanged(); }
         }
 
-        public string Error => null;
+        public string Error
+        {
+            get
+            {
+                // The Error property is not used in this ViewModel.
+                // Instead, individual properties are validated.
+                return string.Empty;
+            }
+        }
 
         public string this[string columnName]
         {
             get
             {
-                string result = null;
                 if (columnName == nameof(Extensions))
                 {
                     if (string.IsNullOrWhiteSpace(Extensions))
                     {
-                        result = "Extensions cannot be empty.";
+                        return "Extensions cannot be empty.";
                     }
-                    else
+
+                    var extensions = Extensions.Split(',');
+                    if (extensions.Any(ext => !ext.StartsWith(".")))
                     {
-                        var extensions = Extensions.Split(',');
-                        foreach (var ext in extensions)
-                        {
-                            if (!ext.StartsWith("."))
-                            {
-                                result = "All extensions must start with a dot.";
-                                break;
-                            }
-                        }
+                        return "All extensions must start with a dot.";
                     }
                 }
-                return result;
+
+                return string.Empty;
             }
         }
     }
