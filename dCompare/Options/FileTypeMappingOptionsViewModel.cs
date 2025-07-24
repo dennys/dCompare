@@ -28,6 +28,8 @@ namespace dCompare.Options
 
             AddMappingCommand = new RelayCommand(_ => AddMapping());
             RemoveMappingCommand = new RelayCommand(_ => RemoveMapping(), _ => CanRemoveMapping());
+
+            SelectedMapping = Mappings.FirstOrDefault();
         }
 
         private void AddMapping()
@@ -42,12 +44,11 @@ namespace dCompare.Options
 
         private void RemoveMapping()
         {
-            if (SelectedMapping != null)
-            {
-                _config.Options.FileTypeMapping.Remove(SelectedMapping.Key);
-                Mappings.Remove(SelectedMapping);
-                SelectedMapping = Mappings.FirstOrDefault();
-            }
+            if (SelectedMapping == null) return;
+
+            _config.Options.FileTypeMapping.Remove(SelectedMapping.Key);
+            Mappings.Remove(SelectedMapping);
+            SelectedMapping = Mappings.FirstOrDefault();
         }
 
         private bool CanRemoveMapping()
@@ -105,33 +106,27 @@ namespace dCompare.Options
             set { _mapping.PreferredTools.View = value; OnPropertyChanged(); }
         }
 
-        public string Error => null;
+        public string Error => string.Empty;
 
         public string this[string columnName]
         {
             get
             {
-                string result = null;
                 if (columnName == nameof(Extensions))
                 {
                     if (string.IsNullOrWhiteSpace(Extensions))
                     {
-                        result = "Extensions cannot be empty.";
+                        return "Extensions cannot be empty.";
                     }
-                    else
+
+                    var extensions = Extensions.Split(',');
+                    if (extensions.Any(ext => !ext.StartsWith(".")))
                     {
-                        var extensions = Extensions.Split(',');
-                        foreach (var ext in extensions)
-                        {
-                            if (!ext.StartsWith("."))
-                            {
-                                result = "All extensions must start with a dot.";
-                                break;
-                            }
-                        }
+                        return "All extensions must start with a dot.";
                     }
                 }
-                return result;
+
+                return string.Empty;
             }
         }
     }
