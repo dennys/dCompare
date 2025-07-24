@@ -1,4 +1,4 @@
-﻿using dCompare.Compare;
+﻿using dCompare.Common;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;

@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Media;
 
-namespace dCompare.Compare
+namespace dCompare.Common
 {
     /// <summary>
     /// Provides extension methods for traversing the WPF logical and visual trees.

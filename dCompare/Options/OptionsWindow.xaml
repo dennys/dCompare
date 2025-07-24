@@ -12,7 +12,7 @@
         Title="Settings" Height="680" Width="800"
         d:DataContext="{d:DesignInstance Type=local:SettingsViewModel, IsDesignTimeCreatable=True}">
     <Window.Resources>
-        <local:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <infra:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <infra:StringNullOrEmptyToVisibilityConverter x:Key="StringNullOrEmptyToVisibilityConverter" />
 
         <Style x:Key="HotKeyBoxStyle" TargetType="{x:Type controls:HotKeyTextBox}">

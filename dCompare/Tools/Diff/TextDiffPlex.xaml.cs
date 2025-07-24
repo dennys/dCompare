@@ -1,11 +1,5 @@
-using dCompare.Compare;
-using DiffPlex.DiffBuilder;
-using DiffPlex.DiffBuilder.Model;
-using DiffPlex.Model;
-using DiffPlex.WindowsForms.Controls;
+using dCompare.Common;
 using DiffPlex.Wpf;
-using DiffPlex.Wpf.Controls;
-using System;
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
@@ -187,7 +181,7 @@ namespace dCompare.Tools.Diff
             _leftScrollViewer.ScrollToHorizontalOffset(e.HorizontalOffset);
             _isSyncingScroll = false;
         }
-     
+
         public void Refresh()
         {
             if (string.IsNullOrEmpty(LeftPath) || string.IsNullOrEmpty(RightPath))

@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace dCompare.Session
 {
     public interface ISessionFileSystem

@@ -1,18 +1,17 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using dCompare.Common;
 using dCompare.Compare;
 using dCompare.Configuration;
+using dCompare.FileOperation;
 using dCompare.Options;
 using dCompare.Session;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Globalization;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
-using dCompare.FileOperation;
 
 namespace dCompare
 {

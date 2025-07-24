@@ -13,10 +13,10 @@ namespace dCompare.Compare
 
         // Method to set the current filter
         public void SetCurrentFilter(Predicate<TreeNode>? filter, string searchFilterText)
-		{
-			_currentFilter = filter;
+        {
+            _currentFilter = filter;
             _searchFilterText = searchFilterText;
-		}
+        }
 
         public void BuildTree(List<DirectoryComparer.ComparisonItem> items, string leftRoot, string rightRoot, int maxDepth = 0)
         {
@@ -206,7 +206,7 @@ namespace dCompare.Compare
                 node.LeftName = item.Left.Name;
                 node.LeftSize = FileSystemNode.FormatSize(item.Left.Size);
                 node.LeftDate = item.Left.ModifiedTime.ToString("yyyy/MM/dd HH:mm");
-            } 
+            }
             else
             {
                 node.LeftName = null;

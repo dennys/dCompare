@@ -32,7 +32,7 @@ namespace dCompare.FileOperation
         }
         public Task<OperationResult> CopyAsync(string source, string destination, bool overwrite = false, IProgress<OperationProgress>? progress = null, CancellationToken cancellationToken = default)
         {
-            List<(string, string, SourceType)>  items = [(source, destination, SourceType.Left)];
+            List<(string, string, SourceType)> items = [(source, destination, SourceType.Left)];
             return ProcessItemsAsync(items, OperationType.Copy, overwrite, progress, cancellationToken);
         }
 

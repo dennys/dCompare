@@ -1,6 +1,3 @@
-using dCompare.Configuration;
-using System.Threading.Tasks;
-
 namespace dCompare.Configuration
 {
     public interface IConfigurationService

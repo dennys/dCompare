@@ -11,7 +11,7 @@
              d:DesignHeight="450" d:DesignWidth="800" Loaded="CompareControl_Loaded">
     <UserControl.Resources>
         <infra:TextToForegroundConverter x:Key="TextToForegroundConverter"/>
-        <local:DepthToMarginConverter x:Key="DepthToMarginConverter"/>
+        <infra:DepthToMarginConverter x:Key="DepthToMarginConverter"/>
         <Style x:Key="SortableColumnHeaderStyle" TargetType="GridViewColumnHeader">
             <Setter Property="Background" Value="Transparent"/>
             <EventSetter Event="MouseLeftButtonUp" Handler="ColumnHeader_Click"/>
@@ -109,17 +109,17 @@
                 <!-- Left Path Input Area -->
                 <Grid Grid.Column="1" Name="LeftPathInputArea">
                     <TextBox Name="LeftPathBox"
-                             Text="{Binding Path, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Text="{Binding LeftPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                              Margin="5,0" VerticalAlignment="Center" IsReadOnly="False" IsEnabled="True" TextWrapping="NoWrap"
                              PreviewKeyDown="PathBox_PreviewKeyDown" LostFocus="PathBox_LostFocus" />
                     <Popup Name="LeftSuggestionsPopup"
-                           IsOpen="{Binding IsSuggestionsOpen}"
+                           IsOpen="{Binding IsLeftSuggestionsOpen}"
                            PlacementTarget="{Binding ElementName=LeftPathBox}"
                            Placement="Bottom"
                            StaysOpen="False">
                         <ListBox Name="LeftSuggestionsListBox"
-                                 ItemsSource="{Binding Suggestions}"
-                                 SelectedItem="{Binding SelectedSuggestion, Mode=TwoWay}"
+                                 ItemsSource="{Binding LeftSuggestions}"
+                                 SelectedItem="{Binding SelectedLeftSuggestion, Mode=TwoWay}"
                                  MaxHeight="200" Width="{Binding ActualWidth, ElementName=LeftPathBox}"
                                  PreviewKeyDown="SuggestionsListBox_PreviewKeyDown">
                             <ListBox.ItemContainerStyle>
@@ -138,7 +138,7 @@
 
                 <ComboBox Grid.Column="3" Name="AlgorithmComboBox" Margin="5,0" VerticalAlignment="Center" Width="200"
                           ItemsSource="{x:Static config:ComparisonAlgorithms.EnabledAlgorithms}"
-                          DisplayMemberPath="Key" SelectedValuePath="Value" SelectedValue="{Binding SelectedAlgorithm}"/>
+                          DisplayMemberPath="Key" SelectedValuePath="Value" SelectedValue="{Binding SelectedAlgorithm, Mode=TwoWay}"/>
 
                 <Label Grid.Column="4" Content="{x:Static resx:Resources.Filter}" VerticalAlignment="Center"/>
                 <TextBox Grid.Column="5" Name="SearchTextBox" Margin="5,0" VerticalAlignment="Center"
@@ -149,17 +149,17 @@
                 <!-- Right Path Input Area -->
                 <Grid Grid.Column="7" Name="RightPathInputArea">
                     <TextBox Name="RightPathBox"
-                             Text="{Binding Path, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Text="{Binding RightPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                              Margin="5,0" VerticalAlignment="Center" IsReadOnly="False" IsEnabled="True" TextWrapping="NoWrap"
                              PreviewKeyDown="PathBox_PreviewKeyDown" LostFocus="PathBox_LostFocus" />
                     <Popup Name="RightSuggestionsPopup"
-                           IsOpen="{Binding IsSuggestionsOpen}"
+                           IsOpen="{Binding IsRightSuggestionsOpen}"
                            PlacementTarget="{Binding ElementName=RightPathBox}"
                            Placement="Bottom"
                            StaysOpen="False">
                         <ListBox Name="RightSuggestionsListBox"
-                                 ItemsSource="{Binding Suggestions}"
-                                 SelectedItem="{Binding SelectedSuggestion, Mode=TwoWay}"
+                                 ItemsSource="{Binding RightSuggestions}"
+                                 SelectedItem="{Binding SelectedRightSuggestion, Mode=TwoWay}"
                                  MaxHeight="200" Width="{Binding ActualWidth, ElementName=RightPathBox}"
                                  PreviewKeyDown="SuggestionsListBox_PreviewKeyDown">
                             <ListBox.ItemContainerStyle>

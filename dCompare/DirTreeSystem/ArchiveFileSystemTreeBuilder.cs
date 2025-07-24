@@ -1,11 +1,7 @@
-using dCompare.DirTreeSystem.Models;
 using dCompare.Common;
+using dCompare.DirTreeSystem.Models;
 using SharpCompress.Archives;
-using SharpCompress.Common;
-using System;
 using System.IO;
-using System.Linq;
-using System.Threading;
 
 namespace dCompare.DirTreeSystem
 {
@@ -15,7 +11,7 @@ namespace dCompare.DirTreeSystem
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (!File.Exists(path) || !FileExtensions.IsArchiveFile(path) )
+            if (!File.Exists(path) || !FileExtensions.IsArchiveFile(path))
             {
                 throw new ArgumentException($"The file '{path}' is not a supported archive format ({string.Join(", ", FileExtensions.ArchiveExtensions)}).");
             }
