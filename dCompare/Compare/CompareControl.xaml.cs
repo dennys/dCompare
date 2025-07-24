@@ -188,7 +188,7 @@ namespace dCompare.Compare
                 // If the user selected a directory, the file name will be "Folder Selection."
                 if (selectedPath.Contains("Folder Selection."))
                 {
-                    selectedPath = Path.GetDirectoryName(selectedPath);
+            selectedPath = Path.GetDirectoryName(selectedPath) ?? selectedPath;
                 }
 
                 if (sender is Button { Name: "BrowseLeftButton" })
