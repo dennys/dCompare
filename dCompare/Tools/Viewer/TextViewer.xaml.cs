@@ -1,10 +1,8 @@
 ﻿using dCompare.Configuration;
-using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Editing;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Search;
 using Microsoft.Win32;
-using System;
 using System.IO;
 using System.Text;
 using System.Windows;

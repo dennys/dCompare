@@ -4,7 +4,6 @@ using dCompare.Compare;
 using dCompare.Configuration;
 using dCompare.FileOperation;
 using Microsoft.Extensions.Logging;
-using System;
 using System.IO;
 
 namespace dCompare.Tools

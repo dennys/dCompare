@@ -1,9 +1,7 @@
 ﻿using dCompare.Compare;
-using dCompare.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using Serilog;
-using System;
 using System.IO;
 using System.Text.Json;
 using System.Windows;
@@ -154,7 +152,7 @@ namespace dCompare.Session
                 MessageBox.Show("Cannot locate parent TabControl.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
-            
+
             try
             {
                 Dictionary<string, SessionConfig> sessions = new();
@@ -169,9 +167,9 @@ namespace dCompare.Session
                         sessions[tabId] = new SessionConfig
                         {
                             TabName = tabName, // Save the tab header
-                            Left = ucCompare.LoadedLeftPath,  // Use new property
-                            Right = ucCompare.LoadedRightPath, // Use new property
-                            Algorithm = ucCompare.SelectedAlgorithm
+                            Left = ucCompare.ViewModel.LeftPath,
+                            Right = ucCompare.ViewModel.RightPath,
+                            Algorithm = ucCompare.ViewModel.SelectedAlgorithm
                         };
                     }
                 }
@@ -263,9 +261,11 @@ namespace dCompare.Session
                             Content = ucCompareInstance
                         };
                         // Use the new properties to set paths, which will update the ViewModels
-                        ucCompareInstance.LoadedLeftPath = session.Value.Left;
-                        ucCompareInstance.LoadedRightPath = session.Value.Right;
-                        ucCompareInstance.SelectedAlgorithm = session.Value.Algorithm;
+                        ucCompareInstance.ViewModel.SuppressLeftSuggestionsOnce();
+                        ucCompareInstance.ViewModel.LeftPath = session.Value.Left;
+                        ucCompareInstance.ViewModel.SuppressRightSuggestionsOnce();
+                        ucCompareInstance.ViewModel.RightPath = session.Value.Right;
+                        ucCompareInstance.ViewModel.SelectedAlgorithm = session.Value.Algorithm;
 
                         // The logic to keep suggestions closed is now handled within PathInputViewModel
                         // and CompareControl's LoadedLeftPath/LoadedRightPath setters via SuppressSuggestionsOnce().

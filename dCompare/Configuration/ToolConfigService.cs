@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace dCompare.Configuration
 {
     public class ToolConfigService : IToolConfigService
@@ -41,11 +37,11 @@ namespace dCompare.Configuration
             if (fileMapping == null) yield break;
 
             List<string> preferredToolNames;
-            if (operation.ToLower() == Operations.Diff)
+            if (operation.Equals(Operations.Diff, StringComparison.OrdinalIgnoreCase))
             {
                 preferredToolNames = fileMapping.PreferredTools.Diff;
             }
-            else if (operation.ToLower() == Operations.View)
+            else if (operation.Equals(Operations.View, StringComparison.OrdinalIgnoreCase))
             {
                 preferredToolNames = fileMapping.PreferredTools.View;
             }

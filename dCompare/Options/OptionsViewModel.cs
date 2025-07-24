@@ -1,16 +1,12 @@
 using dCompare.Configuration;
+using dCompare.Infrastructure;
+using Microsoft.VisualBasic; // For InputBox
 using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
-using Microsoft.VisualBasic; // For InputBox
-using System.Collections.Specialized;
-using dCompare.Infrastructure;
 
 namespace dCompare.Options
 {

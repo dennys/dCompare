@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
 using dCompare.Configuration;
 using Serilog;
-using System;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;

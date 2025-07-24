@@ -1,9 +1,9 @@
 ﻿using dCompare.Common;
 using dCompare.FileOperation.Models;
 using dCompare.FileOperation.Strategies;
+using dCompare.Infrastructure;
 using Serilog;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -51,9 +51,9 @@ namespace dCompare.FileOperation
         private bool _isPaused;
         private readonly FileManager _fileManager;
 
-        public ObservableCollection<FileTransfer> QueuedTransfers { get; } = new ObservableCollection<FileTransfer>();
-        public ObservableCollection<FileTransfer> SuccessfulTransfers { get; } = new ObservableCollection<FileTransfer>();
-        public ObservableCollection<FileTransfer> FailedTransfers { get; } = new ObservableCollection<FileTransfer>();
+        public ObservableCollection<FileTransfer> QueuedTransfers { get; } = new();
+        public ObservableCollection<FileTransfer> SuccessfulTransfers { get; } = new();
+        public ObservableCollection<FileTransfer> FailedTransfers { get; } = new();
 
         public delegate void TransferStatusChangedHandler(string jobId, bool success, string message);
         public event TransferStatusChangedHandler? OnTransferStatusChanged;
@@ -109,36 +109,6 @@ namespace dCompare.FileOperation
             Dispatcher.Invoke(() => FailedTransfers.Clear());
         }
 
-        public List<string> CopyMultiple(List<(string Source, string TargetPath, SourceType Type)> items, bool overwrite = false)
-        {
-            var jobIds = new List<string>();
-            foreach (var item in items)
-            {
-                jobIds.Add(Transfer(item.Source, item.TargetPath, overwrite, true, item.Type));
-            }
-            return jobIds;
-        }
-
-        public List<string> MoveMultiple(List<(string Source, string TargetPath, SourceType Type)> items, bool overwrite = false)
-        {
-            var jobIds = new List<string>();
-            foreach (var item in items)
-            {
-                jobIds.Add(Transfer(item.Source, item.TargetPath, overwrite, false, item.Type));
-            }
-            return jobIds;
-        }
-
-        public List<string> DeleteMultiple(List<(string Path, SourceType Type)> items)
-        {
-            var jobIds = new List<string>();
-            foreach (var item in items)
-            {
-                jobIds.Add(Delete(item.Path, item.Type));
-            }
-            return jobIds;
-        }
-
         public void CompleteTransfer(FileTransfer transfer, bool success, string message)
         {
             QueuedTransfers.Remove(transfer);
@@ -156,7 +126,7 @@ namespace dCompare.FileOperation
             OnTransferStatusChanged?.Invoke(transfer.JobId, success, message);
         }
 
-        private long GetItemSize(string path)
+        private static long GetItemSize(string path)
         {
             try
             {
@@ -170,91 +140,6 @@ namespace dCompare.FileOperation
             {
                 return 0;
             }
-        }
-
-        private string Delete(string path, SourceType sourceType)
-        {
-            Log.Information($"Start to delete {path}");
-            string jobId = Guid.NewGuid().ToString();
-            var transfer = new FileTransfer
-            {
-                JobId = jobId,
-                Operation = "Delete",
-                Source = path,
-                Target = string.Empty,
-                Status = "Queued",
-                FileSize = GetItemSize(path),
-                SourceType = sourceType
-            };
-
-            Dispatcher.Invoke(() => QueuedTransfers.Add(transfer));
-
-            Task.Run(async () =>
-            {
-                try
-                {
-                    var progress = new Progress<OperationProgress>(p =>
-                    {
-                        Dispatcher.Invoke(() =>
-                        {
-                            transfer.Progress = p.Percentage / 100.0;
-                            transfer.Status = "Deleting";
-                        });
-                    });
-
-                    while (_isPaused && !_cancellationTokenSource.Token.IsCancellationRequested)
-                    {
-                        await Task.Delay(100, _cancellationTokenSource.Token);
-                    }
-
-                    transfer.StartTime = DateTime.Now;
-
-                    OperationResult result = await _fileManager.DeleteAsync(path, progress, _cancellationTokenSource.Token);
-
-                    if (result.SuccessCount > 0)
-                    {
-                        Dispatcher.Invoke(() =>
-                        {
-                            QueuedTransfers.Remove(transfer);
-                            transfer.Status = "Completed";
-                            transfer.Progress = 1.0;
-                            SuccessfulTransfers.Add(transfer);
-                            LogTransfer(transfer);
-                        });
-
-                        OnTransferStatusChanged?.Invoke(jobId, true, "Operation completed successfully.");
-                    }
-                    else
-                    {
-                        throw new Exception(string.Join("; ", result.FailedItems));
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    Dispatcher.Invoke(() =>
-                    {
-                        QueuedTransfers.Remove(transfer);
-                        transfer.Status = "Cancelled";
-                        FailedTransfers.Add(transfer);
-                        LogTransfer(transfer);
-                    });
-
-                    OnTransferStatusChanged?.Invoke(jobId, false, "Operation cancelled.");
-                }
-                catch (Exception ex)
-                {
-                    Dispatcher.Invoke(() =>
-                    {
-                        QueuedTransfers.Remove(transfer);
-                        transfer.Status = $"Failed: {ex.Message}";
-                        FailedTransfers.Add(transfer);
-                        LogTransfer(transfer);
-                    });
-
-                    OnTransferStatusChanged?.Invoke(jobId, false, ex.Message);
-                }
-            }, _cancellationTokenSource.Token);
-            return jobId;
         }
 
         private string Transfer(string source, string target, bool overwrite, bool isCopy, SourceType sourceType)
@@ -354,7 +239,7 @@ namespace dCompare.FileOperation
             return jobId;
         }
 
-        private void LogTransfer(FileTransfer transfer)
+        private static void LogTransfer(FileTransfer transfer)
         {
             string logPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "FileOperationLog.txt");
             string logEntry = $"{DateTime.Now}: {transfer.Operation} - {transfer.Source} to {transfer.Target} - {transfer.Status}\n";
@@ -445,98 +330,5 @@ namespace dCompare.FileOperation
         }
 
         private bool CanClearFailed(object parameter) => FailedTransfers.Any();
-    }
-
-    public class FileTransfer : INotifyPropertyChanged
-    {
-        private string _status = string.Empty;
-        private double _progress;
-        private double _transferSpeed;
-
-        public required string JobId { get; set; }
-        public required string Operation { get; set; }
-        public required string Source { get; set; }
-        public required string Target { get; set; }
-        public long FileSize { get; set; }
-        public DateTime StartTime { get; set; }
-        public SourceType SourceType { get; set; }
-
-        public string Status
-        {
-            get => _status;
-            set
-            {
-                _status = value;
-                OnPropertyChanged(nameof(Status));
-            }
-        }
-
-        public double Progress
-        {
-            get => _progress;
-            set
-            {
-                _progress = value;
-                OnPropertyChanged(nameof(Progress));
-            }
-        }
-
-        public double TransferSpeed
-        {
-            get => _transferSpeed;
-            set
-            {
-                _transferSpeed = value;
-                OnPropertyChanged(nameof(TransferSpeed));
-            }
-        }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-    }
-    public class RelayCommand : ICommand
-    {
-        private readonly Action<object> _execute;
-        private readonly Func<object, bool> _canExecute;
-
-        public RelayCommand(Action<object> execute, Func<object, bool> canExecute = null)
-        {
-            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
-            _canExecute = canExecute;
-        }
-
-        public event EventHandler CanExecuteChanged
-        {
-            add { CommandManager.RequerySuggested += value; }
-            remove { CommandManager.RequerySuggested -= value; }
-        }
-
-        public bool CanExecute(object parameter)
-        {
-            try
-            {
-                return _canExecute?.Invoke(parameter) ?? true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        public void Execute(object parameter)
-        {
-            try
-            {
-                _execute(parameter);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Command execution failed: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
     }
 }

@@ -1,6 +1,3 @@
-using dCompare.Configuration;
-using System.Collections.Generic;
-
 namespace dCompare.Configuration
 {
     public interface IToolConfigService

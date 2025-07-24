@@ -1,10 +1,8 @@
 using dCompare.Configuration;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Windows.Input;
-using System.Windows.Forms;
-using System.Drawing;
 using dCompare.Infrastructure;
+using System.Drawing;
+using System.Windows.Forms;
+using System.Windows.Input;
 
 namespace dCompare.Options
 {

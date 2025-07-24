@@ -1,7 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
-using System;
 using System.IO;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;

@@ -1,136 +1,140 @@
-﻿using System.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using dCompare.Configuration;
 using System.IO;
-using System.Runtime.CompilerServices;
 
 namespace dCompare.Compare
 {
-    public class CompareControlViewModel : INotifyPropertyChanged
+    public partial class CompareControlViewModel : ObservableObject
     {
-        private string _path = string.Empty;
-        private bool _isSuggestionsOpen;
-        private List<string> _suggestions = new();
-        private string _selectedSuggestion = string.Empty;
-        private bool _suppressSuggestions;
+        [ObservableProperty]
+        private string _leftPath = string.Empty;
+
+        [ObservableProperty]
+        private string _rightPath = string.Empty;
+
+        [ObservableProperty]
+        private bool _isLeftSuggestionsOpen;
+
+        [ObservableProperty]
+        private bool _isRightSuggestionsOpen;
+
+        [ObservableProperty]
+        private List<string> _leftSuggestions = new();
+
+        [ObservableProperty]
+        private List<string> _rightSuggestions = new();
+
+        [ObservableProperty]
+        private string _selectedLeftSuggestion = string.Empty;
+
+        [ObservableProperty]
+        private string _selectedRightSuggestion = string.Empty;
+
+        private bool _suppressLeftSuggestions;
+        private bool _suppressRightSuggestions;
+
+        [ObservableProperty]
         private string _searchText = string.Empty;
 
-        public string Path
+        [ObservableProperty]
+        private bool _isComparing;
+
+        [ObservableProperty]
+        private double _comparisonProgress;
+
+        [ObservableProperty]
+        private ComparisonAlgorithm _selectedAlgorithm;
+
+        partial void OnLeftPathChanged(string value)
         {
-            get => _path;
-            set
+            if (!_suppressLeftSuggestions)
             {
-                if (_path != value)
-                {
-                    _path = value;
-                    OnPropertyChanged();
-                    if (!_suppressSuggestions)
-                    {
-                        UpdateSuggestions();
-                    }
-                    else
-                    {
-                        _suppressSuggestions = false;
-                    }
-                }
+                UpdateSuggestions(true);
+            }
+            _suppressLeftSuggestions = false;
+        }
+
+        partial void OnRightPathChanged(string value)
+        {
+            if (!_suppressRightSuggestions)
+            {
+                UpdateSuggestions(false);
+            }
+            _suppressRightSuggestions = false;
+        }
+
+        partial void OnSelectedLeftSuggestionChanged(string value)
+        {
+            if (value != null)
+            {
+                LeftPath = value;
+                IsLeftSuggestionsOpen = false;
             }
         }
 
-        public bool IsSuggestionsOpen
+        partial void OnSelectedRightSuggestionChanged(string value)
         {
-            get => _isSuggestionsOpen;
-            set
+            if (value != null)
             {
-                if (_isSuggestionsOpen != value)
-                {
-                    _isSuggestionsOpen = value;
-                    OnPropertyChanged();
-                }
+                RightPath = value;
+                IsRightSuggestionsOpen = false;
             }
         }
 
-        public List<string> Suggestions
+        public void SuppressLeftSuggestionsOnce()
         {
-            get => _suggestions;
-            set
-            {
-                _suggestions = value;
-                OnPropertyChanged();
-            }
+            _suppressLeftSuggestions = true;
         }
 
-        public string SelectedSuggestion
+        public void SuppressRightSuggestionsOnce()
         {
-            get => _selectedSuggestion;
-            set
-            {
-                if (_selectedSuggestion != value)
-                {
-                    _selectedSuggestion = value;
-                    OnPropertyChanged();
-                    if (_selectedSuggestion != null)
-                    {
-                        Path = _selectedSuggestion;
-                        IsSuggestionsOpen = false;
-                    }
-                }
-            }
+            _suppressRightSuggestions = true;
         }
 
-        public string SearchText
+        private void UpdateSuggestions(bool isLeft)
         {
-            get => _searchText;
-            set
+            var path = isLeft ? LeftPath : RightPath;
+            if (string.IsNullOrEmpty(path))
             {
-                if (_searchText != value)
-                {
-                    _searchText = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public void SuppressSuggestionsOnce()
-        {
-            _suppressSuggestions = true;
-        }
-
-        private void UpdateSuggestions()
-        {
-            if (string.IsNullOrEmpty(Path))
-            {
-                IsSuggestionsOpen = false;
+                if (isLeft) IsLeftSuggestionsOpen = false;
+                else IsRightSuggestionsOpen = false;
                 return;
             }
 
             try
             {
-                string? directory = System.IO.Path.GetDirectoryName(Path);
-                string prefix = System.IO.Path.GetFileName(Path);
+                string? directory = System.IO.Path.GetDirectoryName(path);
+                string prefix = System.IO.Path.GetFileName(path);
 
                 if (string.IsNullOrEmpty(directory) || !Directory.Exists(directory))
                 {
-                    IsSuggestionsOpen = false;
+                    if (isLeft) IsLeftSuggestionsOpen = false;
+                    else IsRightSuggestionsOpen = false;
                     return;
                 }
 
                 var allDirectories = Directory.GetDirectories(directory).ToList();
 
-                Suggestions = allDirectories
+                var suggestions = allDirectories
                     .Where(dir => System.IO.Path.GetFileName(dir).StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
-                IsSuggestionsOpen = Suggestions.Count != 0;
+                if (isLeft)
+                {
+                    LeftSuggestions = suggestions;
+                    IsLeftSuggestionsOpen = suggestions.Count != 0;
+                }
+                else
+                {
+                    RightSuggestions = suggestions;
+                    IsRightSuggestionsOpen = suggestions.Count != 0;
+                }
             }
             catch (Exception)
             {
-                IsSuggestionsOpen = false;
+                if (isLeft) IsLeftSuggestionsOpen = false;
+                else IsRightSuggestionsOpen = false;
             }
-        }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }
