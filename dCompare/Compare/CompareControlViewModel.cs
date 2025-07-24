@@ -94,10 +94,12 @@ namespace dCompare.Compare
         private void UpdateSuggestions(bool isLeft)
         {
             var path = isLeft ? LeftPath : RightPath;
+            Action<bool> setIsSuggestionsOpen = isLeft ? (val => IsLeftSuggestionsOpen = val) : (val => IsRightSuggestionsOpen = val);
+            Action<List<string>> setSuggestions = isLeft ? (val => LeftSuggestions = val) : (val => RightSuggestions = val);
+
             if (string.IsNullOrEmpty(path))
             {
-                if (isLeft) IsLeftSuggestionsOpen = false;
-                else IsRightSuggestionsOpen = false;
+                setIsSuggestionsOpen(false);
                 return;
             }
 
@@ -108,32 +110,21 @@ namespace dCompare.Compare
 
                 if (string.IsNullOrEmpty(directory) || !Directory.Exists(directory))
                 {
-                    if (isLeft) IsLeftSuggestionsOpen = false;
-                    else IsRightSuggestionsOpen = false;
+                    setIsSuggestionsOpen(false);
                     return;
                 }
 
                 var allDirectories = Directory.GetDirectories(directory).ToList();
-
                 var suggestions = allDirectories
                     .Where(dir => System.IO.Path.GetFileName(dir).StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
-                if (isLeft)
-                {
-                    LeftSuggestions = suggestions;
-                    IsLeftSuggestionsOpen = suggestions.Count != 0;
-                }
-                else
-                {
-                    RightSuggestions = suggestions;
-                    IsRightSuggestionsOpen = suggestions.Count != 0;
-                }
+                setSuggestions(suggestions);
+                setIsSuggestionsOpen(suggestions.Count != 0);
             }
             catch (Exception)
             {
-                if (isLeft) IsLeftSuggestionsOpen = false;
-                else IsRightSuggestionsOpen = false;
+                setIsSuggestionsOpen(false);
             }
         }
     }

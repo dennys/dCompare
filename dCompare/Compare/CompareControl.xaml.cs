@@ -55,32 +55,6 @@ namespace dCompare.Compare
 
         public CompareControlViewModel ViewModel { get; }
 
-        /// <summary>
-        /// Gets or sets the left path, primarily for session management.
-        /// Setting this property updates the underlying LeftPathViewModel.Path.
-        /// </summary>
-        public string LoadedLeftPath
-        {
-            get => ViewModel.LeftPath ?? string.Empty;
-            set
-            {
-                ViewModel.LeftPath = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the right path, primarily for session management.
-        /// Setting this property updates the underlying RightPathViewModel.Path.
-        /// </summary>
-        public string LoadedRightPath
-        {
-            get => ViewModel.RightPath ?? string.Empty;
-            set
-            {
-                ViewModel.RightPath = value;
-            }
-        }
-
         public CompareControl(IConfigurationService configService, IFileManager fileManager, ILogger<CompareControl> logger)
         {
             InitializeComponent();
@@ -109,15 +83,15 @@ namespace dCompare.Compare
             : this(configService, fileManager, logger)
         {
             // TODO This is for archive file only, may consider using other solution
-            LoadedLeftPath = leftPath;
-            LoadedRightPath = rightPath;
+            ViewModel.LeftPath = leftPath;
+            ViewModel.RightPath = rightPath;
             this.Refresh();
         }
         private async void CompareControl_Loaded(object sender, RoutedEventArgs e)
         {
             try
             {
-                if (string.IsNullOrEmpty(LoadedLeftPath))
+                if (string.IsNullOrEmpty(ViewModel.LeftPath))
                 {
                     var defaultAlgorithm = (await _configService.LoadConfigurationAsync())
                         .Options.Compare.Algorithms
@@ -154,8 +128,8 @@ namespace dCompare.Compare
         private void UpdateTabHeader()
         {
             // Use Path from ViewModels (which are the source of truth)
-            string leftPath = LoadedLeftPath.Trim();
-            string rightPath = LoadedRightPath.Trim();
+            string leftPath = ViewModel.LeftPath.Trim();
+            string rightPath = ViewModel.RightPath.Trim();
 
             FullPathsTooltip = $"Left: {leftPath}\nRight: {rightPath}";
             OnPropertyChanged(nameof(FullPathsTooltip));
@@ -214,7 +188,7 @@ namespace dCompare.Compare
                 // If the user selected a directory, the file name will be "Folder Selection."
                 if (selectedPath.Contains("Folder Selection."))
                 {
-                    selectedPath = Path.GetDirectoryName(selectedPath);
+            selectedPath = Path.GetDirectoryName(selectedPath) ?? selectedPath;
                 }
 
                 if (sender is Button { Name: "BrowseLeftButton" })
@@ -654,23 +628,23 @@ namespace dCompare.Compare
                     switch (operation)
                     {
                         case FileOperationType.CopyToLeft:
-                            await _fileOperationHandler.CopyToLeft(selectedNodes, destDir);
+                            await _fileOperationHandler.CopyToLeft(new List<TreeNode> { node }, destDir);
                             break;
                         case FileOperationType.CopyToRight:
-                            await _fileOperationHandler.CopyToRight(selectedNodes, destDir);
+                            await _fileOperationHandler.CopyToRight(new List<TreeNode> { node }, destDir);
                             break;
                         case FileOperationType.MoveToLeft:
-                            await _fileOperationHandler.MoveToLeft(selectedNodes, destDir);
+                            await _fileOperationHandler.MoveToLeft(new List<TreeNode> { node }, destDir);
                             break;
                         case FileOperationType.MoveToRight:
-                            await _fileOperationHandler.MoveToRight(selectedNodes, destDir);
+                            await _fileOperationHandler.MoveToRight(new List<TreeNode> { node }, destDir);
                             break;
                         case FileOperationType.DeleteLeft:
-                            var items = _fileOperationHandler.GetItemsForDeletion(selectedNodes, true);
+                            var items = _fileOperationHandler.GetItemsForDeletion(new List<TreeNode> { node }, true);
                             if (items.Count > 0) await _fileOperationHandler.DeleteAsync(items);
                             break;
                         case FileOperationType.DeleteRight:
-                            var items2 = _fileOperationHandler.GetItemsForDeletion(selectedNodes, false);
+                            var items2 = _fileOperationHandler.GetItemsForDeletion(new List<TreeNode> { node }, false);
                             if (items2.Count > 0) await _fileOperationHandler.DeleteAsync(items2);
                             break;
                     }
