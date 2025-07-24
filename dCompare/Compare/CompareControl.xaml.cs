@@ -628,23 +628,23 @@ namespace dCompare.Compare
                     switch (operation)
                     {
                         case FileOperationType.CopyToLeft:
-                            await _fileOperationHandler.CopyToLeft(selectedNodes, destDir);
+                            await _fileOperationHandler.CopyToLeft(new List<TreeNode> { node }, destDir);
                             break;
                         case FileOperationType.CopyToRight:
-                            await _fileOperationHandler.CopyToRight(selectedNodes, destDir);
+                            await _fileOperationHandler.CopyToRight(new List<TreeNode> { node }, destDir);
                             break;
                         case FileOperationType.MoveToLeft:
-                            await _fileOperationHandler.MoveToLeft(selectedNodes, destDir);
+                            await _fileOperationHandler.MoveToLeft(new List<TreeNode> { node }, destDir);
                             break;
                         case FileOperationType.MoveToRight:
-                            await _fileOperationHandler.MoveToRight(selectedNodes, destDir);
+                            await _fileOperationHandler.MoveToRight(new List<TreeNode> { node }, destDir);
                             break;
                         case FileOperationType.DeleteLeft:
-                            var items = _fileOperationHandler.GetItemsForDeletion(selectedNodes, true);
+                            var items = _fileOperationHandler.GetItemsForDeletion(new List<TreeNode> { node }, true);
                             if (items.Count > 0) await _fileOperationHandler.DeleteAsync(items);
                             break;
                         case FileOperationType.DeleteRight:
-                            var items2 = _fileOperationHandler.GetItemsForDeletion(selectedNodes, false);
+                            var items2 = _fileOperationHandler.GetItemsForDeletion(new List<TreeNode> { node }, false);
                             if (items2.Count > 0) await _fileOperationHandler.DeleteAsync(items2);
                             break;
                     }
