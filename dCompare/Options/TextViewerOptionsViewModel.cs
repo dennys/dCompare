@@ -8,9 +8,10 @@ using System.Windows.Input;
 
 namespace dCompare.Options
 {
-    public partial class TextViewerOptionsViewModel : ViewModelBase, IConfigurationUpdater
+    public partial class TextViewerOptionsViewModel : ObservableObject, IConfigurationUpdater
     {
         private readonly TextViewerOptions _model;
+        public virtual bool IsValid => true;
 
         public TextViewerOptionsViewModel(TextViewerOptions model)
         {

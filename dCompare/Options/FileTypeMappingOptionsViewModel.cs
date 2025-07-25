@@ -1,6 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using dCompare.Configuration;
+using CommunityToolkit.Mvvm.ComponentModel;
+using dCompare.Configuration;
 using dCompare.Infrastructure;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -8,10 +10,12 @@ using System.Windows.Input;
 
 namespace dCompare.Options
 {
-    public partial class FileTypeMappingOptionsViewModel : ViewModelBase, IConfigurationUpdater
+    public partial class FileTypeMappingOptionsViewModel : ObservableObject, IConfigurationUpdater
     {
         private readonly AppConfiguration _config;
         public ObservableCollection<FileTypeMappingViewModel> Mappings { get; }
+
+        public virtual bool IsValid => true;
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(RemoveMappingCommand))]
@@ -58,10 +62,12 @@ namespace dCompare.Options
         }
     }
 
-    public partial class FileTypeMappingViewModel : ViewModelBase, IDataErrorInfo
+    public partial class FileTypeMappingViewModel : ObservableObject, IDataErrorInfo
     {
         private readonly FileTypeMappingOptions _mapping;
         public string Key { get; }
+
+        public virtual bool IsValid => true;
 
         public List<string> AvailableTools { get; }
 

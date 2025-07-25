@@ -8,10 +8,11 @@ using System.Windows.Input;
 
 namespace dCompare.Options
 {
-    public partial class ToolsOptionsViewModel : ViewModelBase, IConfigurationUpdater
+    public partial class ToolsOptionsViewModel : ObservableObject, IConfigurationUpdater
     {
         private readonly AppConfiguration _config;
         public ObservableCollection<ToolOptionsViewModel> Tools { get; }
+        public virtual bool IsValid => true;
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(RemoveToolCommand))]
@@ -57,7 +58,7 @@ namespace dCompare.Options
         }
     }
 
-    public partial class ToolOptionsViewModel : ViewModelBase, IDataErrorInfo
+    public partial class ToolOptionsViewModel : ObservableObject, IDataErrorInfo
     {
         private readonly ToolOptions _tool;
         public string Key { get; }
@@ -154,16 +155,16 @@ namespace dCompare.Options
 
         public string Error => null;
 
-        public override bool IsValid
-        {
-            get
-            {
-                return string.IsNullOrWhiteSpace(this[nameof(Name)]) &&
-                       string.IsNullOrWhiteSpace(this[nameof(SupportedExtensions)]) &&
-                       string.IsNullOrWhiteSpace(this[nameof(SupportedOperations)]) &&
-                       string.IsNullOrWhiteSpace(this[nameof(Path)]);
-            }
-        }
+        //public override bool IsValid
+        //{
+        //    get
+        //    {
+        //        return string.IsNullOrWhiteSpace(this[nameof(Name)]) &&
+        //               string.IsNullOrWhiteSpace(this[nameof(SupportedExtensions)]) &&
+        //               string.IsNullOrWhiteSpace(this[nameof(SupportedOperations)]) &&
+        //               string.IsNullOrWhiteSpace(this[nameof(Path)]);
+        //    }
+        //}
         public string this[string columnName]
         {
             get

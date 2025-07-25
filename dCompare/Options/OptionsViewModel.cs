@@ -5,20 +5,20 @@ using dCompare.Infrastructure;
 using Microsoft.VisualBasic; // For InputBox
 using Microsoft.Win32;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Windows;
-using System.Windows.Input;
 
 namespace dCompare.Options
 {
-    public partial class SettingsViewModel : ViewModelBase
+    public partial class SettingsViewModel : ObservableObject
     {
         private readonly ConfigurationService _configService;
         private AppConfiguration _appConfig;
+
         [ObservableProperty]
         private string _filterText = "Filter settings...";
+
         [ObservableProperty]
-        private ViewModelBase _selectedViewModel;
+        private ObservableObject _selectedViewModel;
 
         public ObservableCollection<SettingsMenuItem> MenuItems { get; } = new();
 
@@ -29,12 +29,12 @@ namespace dCompare.Options
         }
 
 
-        public SettingsViewModel()
-        {
-            _filterText = "Filter...";
-            _appConfig = new AppConfiguration();
-            BuildMenu();
-        }
+        //public SettingsViewModel()
+        //{
+        //    _filterText = "Filter...";
+        //    _appConfig = new AppConfiguration();
+        //    BuildMenu();
+        //}
 
         private async void LoadConfigurationAsync()
         {
@@ -45,11 +45,9 @@ namespace dCompare.Options
         [RelayCommand]
         private async Task SaveConfiguration()
         {
-            var hotkeysVm = MenuItems.SelectMany(m => m.Children)
+            if (MenuItems.SelectMany(m => m.Children)
                                      .FirstOrDefault(c => c.ViewModel is HotKeysOptionsViewModel)?
-                                     .ViewModel as HotKeysOptionsViewModel;
-
-            if (hotkeysVm != null)
+                                     .ViewModel is HotKeysOptionsViewModel hotkeysVm)
             {
                 hotkeysVm.ValidateHotKeys();
                 if (hotkeysVm.HasDuplicateHotKeys())
@@ -139,17 +137,17 @@ namespace dCompare.Options
             return false;
         }
 
-        public override bool IsValid
-        {
-            get
-            {
-                return MenuItems.SelectMany(m => m.Children)
-                                .All(c => c.ViewModel == null || c.ViewModel.IsValid);
-            }
-        }
+        //public override bool IsValid
+        //{
+        //    get
+        //    {
+        //        return MenuItems.SelectMany(m => m.Children)
+        //                        .All(c => c.ViewModel == null || c.ViewModel.IsValid);
+        //    }
+        //}
     }
 
-    public partial class SettingsMenuItem : ViewModelBase
+    public partial class SettingsMenuItem : ObservableObject
     {
         [ObservableProperty]
         private bool _isSelected;
@@ -160,10 +158,10 @@ namespace dCompare.Options
         private readonly SettingsViewModel _mainViewModel;
 
         public string Name { get; }
-        public ViewModelBase ViewModel { get; }
+        public ObservableObject ViewModel { get; }
         public ObservableCollection<SettingsMenuItem> Children { get; } = new();
 
-        public SettingsMenuItem(string name, ViewModelBase viewModel, SettingsViewModel mainViewModel)
+        public SettingsMenuItem(string name, ObservableObject viewModel, SettingsViewModel mainViewModel)
         {
             Name = name;
             ViewModel = viewModel;
@@ -184,9 +182,10 @@ namespace dCompare.Options
         void UpdateModel();
     }
 
-    public partial class UIOptionsViewModel : ViewModelBase
+    public partial class UIOptionsViewModel : ObservableObject
     {
         private readonly UIOptions _model;
+        public virtual bool IsValid => true;
         public UIOptionsViewModel(UIOptions model) { _model = model; }
         public UIOptionsViewModel() : this(new UIOptions()) { }
         public static List<string> AvailableThemes => ["Light", "Dark"];
@@ -201,10 +200,11 @@ namespace dCompare.Options
         public string Language { get => _model.Language; set { _model.Language = value; OnPropertyChanged(); } }
     }
 
-    public partial class AlgorithmItemViewModel : ViewModelBase
+    public partial class AlgorithmItemViewModel : ObservableObject
     {
         private readonly ComparisonAlgorithm _algorithm;
         private readonly ComparisonAlgorithmInfo _info;
+        public virtual bool IsValid => true;
         private readonly CompareOptionsViewModel _parent;
         private readonly bool _supportsPercentage;
 
@@ -309,11 +309,12 @@ namespace dCompare.Options
         //}
     }
 
-    public partial class CompareOptionsViewModel : ViewModelBase, IConfigurationUpdater
+    public partial class CompareOptionsViewModel : ObservableObject, IConfigurationUpdater
     {
         public static List<string> AvailableScanMethods => new() { "General", "MFT" };
 
         private readonly CompareOptions _model;
+        public virtual bool IsValid => true;
         public ObservableCollection<AlgorithmItemViewModel> AlgorithmItems { get; } = new();
 
         public CompareOptionsViewModel(CompareOptions model)
@@ -386,10 +387,11 @@ namespace dCompare.Options
         }
     }
 
-    public abstract partial class ListEditorViewModelBase<TModel, TItem> : ViewModelBase where TModel : class
+    public abstract partial class ListEditorViewModelBase<TModel, TItem> : ObservableObject where TModel : class
     {
         protected readonly TModel _model;
         private readonly Action<TModel, List<string>> _updateModelAction;
+        public virtual bool IsValid => true;
         [ObservableProperty]
         private string _selectedExtension;
 
@@ -439,9 +441,10 @@ namespace dCompare.Options
         private bool CanRemoveExtension() => !string.IsNullOrEmpty(SelectedExtension);
     }
 
-    public partial class SessionOptionsViewModel : ViewModelBase
+    public partial class SessionOptionsViewModel : ObservableObject
     {
         private readonly SessionOptions _model;
+        public virtual bool IsValid => true;
         public SessionOptionsViewModel(SessionOptions model)
         {
             _model = model;
@@ -494,10 +497,11 @@ namespace dCompare.Options
         }
     }
 
-    public partial class HotKeyItemViewModel : ViewModelBase
+    public partial class HotKeyItemViewModel : ObservableObject
     {
         [ObservableProperty]
         private string _combination;
+        public virtual bool IsValid => true;
         [ObservableProperty]
         private bool _isDuplicate;
         private readonly HotKeysOptionsViewModel _parent;
@@ -520,10 +524,11 @@ namespace dCompare.Options
         private void Clear() => Combination = string.Empty;
     }
 
-    public partial class HotKeysOptionsViewModel : ViewModelBase, IConfigurationUpdater
+    public partial class HotKeysOptionsViewModel : ObservableObject, IConfigurationUpdater
     {
         private readonly HotKeysOptions _model;
         public ObservableCollection<HotKeyItemViewModel> HotKeyItems { get; } = new();
+        public virtual bool IsValid => true;
 
         public HotKeysOptionsViewModel(HotKeysOptions model)
         {
@@ -567,9 +572,10 @@ namespace dCompare.Options
         }
     }
 
-    public partial class ConfirmationOptionsViewModel : ViewModelBase, IConfigurationUpdater
+    public partial class ConfirmationOptionsViewModel : ObservableObject, IConfigurationUpdater
     {
         private readonly ConfirmationOptions _model;
+        public virtual bool IsValid => true;
 
         public ConfirmationOptionsViewModel(ConfirmationOptions model)
         {
@@ -624,8 +630,8 @@ namespace dCompare.Options
         }
     }
 
-    public class LogOptionsViewModel : ViewModelBase
+    public class LogOptionsViewModel : ObservableObject
     {
-        // Implementation remains unchanged
+        public virtual bool IsValid => true;
     }
 }
