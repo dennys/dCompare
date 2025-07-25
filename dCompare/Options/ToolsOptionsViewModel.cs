@@ -1,3 +1,5 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using dCompare.Configuration;
 using dCompare.Infrastructure;
 using System.Collections.ObjectModel;
@@ -6,30 +8,23 @@ using System.Windows.Input;
 
 namespace dCompare.Options
 {
-    public class ToolsOptionsViewModel : ViewModelBase, IConfigurationUpdater
+    public partial class ToolsOptionsViewModel : ViewModelBase, IConfigurationUpdater
     {
         private readonly AppConfiguration _config;
         public ObservableCollection<ToolOptionsViewModel> Tools { get; }
-        public ICommand AddToolCommand { get; }
-        public ICommand RemoveToolCommand { get; }
 
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(RemoveToolCommand))]
         private ToolOptionsViewModel _selectedTool;
-        public ToolOptionsViewModel SelectedTool
-        {
-            get => _selectedTool;
-            set => SetProperty(ref _selectedTool, value);
-        }
 
         public ToolsOptionsViewModel(AppConfiguration config)
         {
             _config = config;
             Tools = new ObservableCollection<ToolOptionsViewModel>(
                 _config.Options.Tools.Select(kvp => new ToolOptionsViewModel(kvp.Key, kvp.Value)));
-
-            AddToolCommand = new RelayCommand(_ => AddTool());
-            RemoveToolCommand = new RelayCommand(_ => RemoveTool(), _ => CanRemoveTool());
         }
 
+        [RelayCommand]
         private void AddTool()
         {
             var newToolName = "NewTool" + (Tools.Count + 1);
@@ -40,6 +35,7 @@ namespace dCompare.Options
             SelectedTool = newToolViewModel;
         }
 
+        [RelayCommand(CanExecute = nameof(CanRemoveTool))]
         private void RemoveTool()
         {
             if (SelectedTool != null)
@@ -61,7 +57,7 @@ namespace dCompare.Options
         }
     }
 
-    public class ToolOptionsViewModel : ViewModelBase, IDataErrorInfo
+    public partial class ToolOptionsViewModel : ViewModelBase, IDataErrorInfo
     {
         private readonly ToolOptions _tool;
         public string Key { get; }
@@ -69,15 +65,13 @@ namespace dCompare.Options
         public List<string> AvailableTypes => new List<string> { ToolTypes.BuiltIn, ToolTypes.External };
         public List<string> AvailableOperations => new List<string> { Operations.View, Operations.Diff };
 
-        public ICommand BrowseCommand { get; }
-
         public ToolOptionsViewModel(string key, ToolOptions tool)
         {
             Key = key;
             _tool = tool;
-            BrowseCommand = new RelayCommand(_ => BrowseForPath());
         }
 
+        [RelayCommand]
         private void BrowseForPath()
         {
             var openFileDialog = new Microsoft.Win32.OpenFileDialog();

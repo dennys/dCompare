@@ -1,47 +1,30 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using dCompare.Configuration;
 using dCompare.Infrastructure;
 using Microsoft.VisualBasic; // For InputBox
 using Microsoft.Win32;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
 
 namespace dCompare.Options
 {
-    public class ViewModelBase : INotifyPropertyChanged
-    {
-        public event PropertyChangedEventHandler? PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
-        {
-            if (EqualityComparer<T>.Default.Equals(field, value)) return false;
-            field = value;
-            OnPropertyChanged(propertyName);
-            return true;
-        }
-
-        public virtual bool IsValid => true;
-    }
-
-    public class SettingsViewModel : ViewModelBase
+    public partial class SettingsViewModel : ViewModelBase
     {
         private readonly ConfigurationService _configService;
         private AppConfiguration _appConfig;
+        [ObservableProperty]
         private string _filterText = "Filter settings...";
+        [ObservableProperty]
         private ViewModelBase _selectedViewModel;
 
         public ObservableCollection<SettingsMenuItem> MenuItems { get; } = new();
-        public ICommand SaveCommand { get; }
 
         public SettingsViewModel(ConfigurationService configService)
         {
             _configService = configService;
-            SaveCommand = new RelayCommand(async _ => await SaveConfiguration());
             LoadConfigurationAsync();
         }
 
@@ -59,6 +42,7 @@ namespace dCompare.Options
             BuildMenu();
         }
 
+        [RelayCommand]
         private async Task SaveConfiguration()
         {
             var hotkeysVm = MenuItems.SelectMany(m => m.Children)
@@ -117,21 +101,14 @@ namespace dCompare.Options
             if (uiNode != null) uiNode.IsSelected = true;
         }
 
-        public string FilterText
+        partial void OnFilterTextChanged(string value)
         {
-            get => _filterText;
-            set
-            {
-                if (SetProperty(ref _filterText, value))
-                {
-                    ApplyFilter();
-                }
-            }
+            ApplyFilter();
         }
 
         private void ApplyFilter()
         {
-            string effectiveFilter = (string.IsNullOrWhiteSpace(_filterText) || _filterText == "Filter settings...") ? "" : _filterText;
+            string effectiveFilter = (string.IsNullOrWhiteSpace(FilterText) || FilterText == "Filter settings...") ? "" : FilterText;
 
             foreach (var node in MenuItems)
             {
@@ -162,12 +139,6 @@ namespace dCompare.Options
             return false;
         }
 
-        public ViewModelBase SelectedViewModel
-        {
-            get => _selectedViewModel;
-            set => SetProperty(ref _selectedViewModel, value);
-        }
-
         public override bool IsValid
         {
             get
@@ -178,10 +149,13 @@ namespace dCompare.Options
         }
     }
 
-    public class SettingsMenuItem : ViewModelBase
+    public partial class SettingsMenuItem : ViewModelBase
     {
+        [ObservableProperty]
         private bool _isSelected;
+        [ObservableProperty]
         private bool _isExpanded;
+        [ObservableProperty]
         private bool _isVisible = true;
         private readonly SettingsViewModel _mainViewModel;
 
@@ -196,28 +170,12 @@ namespace dCompare.Options
             _mainViewModel = mainViewModel;
         }
 
-        public bool IsSelected
+        partial void OnIsSelectedChanged(bool value)
         {
-            get => _isSelected;
-            set
+            if (value && ViewModel != null)
             {
-                if (SetProperty(ref _isSelected, value) && _isSelected && ViewModel != null)
-                {
-                    _mainViewModel.SelectedViewModel = ViewModel;
-                }
+                _mainViewModel.SelectedViewModel = ViewModel;
             }
-        }
-
-        public bool IsExpanded
-        {
-            get => _isExpanded;
-            set => SetProperty(ref _isExpanded, value);
-        }
-
-        public bool IsVisible
-        {
-            get => _isVisible;
-            set => SetProperty(ref _isVisible, value);
         }
     }
 
@@ -226,7 +184,7 @@ namespace dCompare.Options
         void UpdateModel();
     }
 
-    public class UIOptionsViewModel : ViewModelBase
+    public partial class UIOptionsViewModel : ViewModelBase
     {
         private readonly UIOptions _model;
         public UIOptionsViewModel(UIOptions model) { _model = model; }
@@ -243,7 +201,7 @@ namespace dCompare.Options
         public string Language { get => _model.Language; set { _model.Language = value; OnPropertyChanged(); } }
     }
 
-    public class AlgorithmItemViewModel : ViewModelBase
+    public partial class AlgorithmItemViewModel : ViewModelBase
     {
         private readonly ComparisonAlgorithm _algorithm;
         private readonly ComparisonAlgorithmInfo _info;
@@ -306,9 +264,13 @@ namespace dCompare.Options
                 }
             }
         }
-        public string ComparisonPercentage
+        public string? ComparisonPercentage
         {
-            get => _info.ComparisonPercentage?.ToString();
+            get
+            {
+                return _info.ComparisonPercentage?.ToString();
+            }
+
             set
             {
                 if (string.IsNullOrWhiteSpace(value))
@@ -323,31 +285,31 @@ namespace dCompare.Options
             }
         }
 
-        public string this[string columnName]
-        {
-            get
-            {
-                string result = null;
-                if (columnName == nameof(ComparisonPercentage))
-                {
-                    if (!string.IsNullOrWhiteSpace(ComparisonPercentage))
-                    {
-                        if (!int.TryParse(ComparisonPercentage, out int percentage))
-                        {
-                            result = "Value must be a number.";
-                        }
-                        else if (percentage < 1 || percentage > 100)
-                        {
-                            result = "Value must be between 1 and 100.";
-                        }
-                    }
-                }
-                return result;
-            }
-        }
+        //public string this[string columnName]
+        //{
+        //    get
+        //    {
+        //        string result = null;
+        //        if (columnName == nameof(ComparisonPercentage))
+        //        {
+        //            if (!string.IsNullOrWhiteSpace(ComparisonPercentage))
+        //            {
+        //                if (!int.TryParse(ComparisonPercentage, out int percentage))
+        //                {
+        //                    result = "Value must be a number.";
+        //                }
+        //                else if (percentage < 1 || percentage > 100)
+        //                {
+        //                    result = "Value must be between 1 and 100.";
+        //                }
+        //            }
+        //        }
+        //        return result;
+        //    }
+        //}
     }
 
-    public class CompareOptionsViewModel : ViewModelBase, IConfigurationUpdater
+    public partial class CompareOptionsViewModel : ViewModelBase, IConfigurationUpdater
     {
         public static List<string> AvailableScanMethods => new() { "General", "MFT" };
 
@@ -424,15 +386,14 @@ namespace dCompare.Options
         }
     }
 
-    public abstract class ListEditorViewModelBase<TModel, TItem> : ViewModelBase where TModel : class
+    public abstract partial class ListEditorViewModelBase<TModel, TItem> : ViewModelBase where TModel : class
     {
         protected readonly TModel _model;
         private readonly Action<TModel, List<string>> _updateModelAction;
+        [ObservableProperty]
         private string _selectedExtension;
 
         public ObservableCollection<string> Extensions { get; set; }
-        public ICommand AddExtensionCommand { get; }
-        public ICommand RemoveExtensionCommand { get; }
 
         protected ListEditorViewModelBase(TModel model, List<string> extensions, Action<TModel, List<string>> updateModelAction)
         {
@@ -440,14 +401,10 @@ namespace dCompare.Options
             _updateModelAction = updateModelAction;
             Extensions = new ObservableCollection<string>(extensions);
             Extensions.CollectionChanged += (s, e) => _updateModelAction(_model, Extensions.ToList());
-
-            AddExtensionCommand = new RelayCommand(AddExtension);
-            RemoveExtensionCommand = new RelayCommand(RemoveExtension, _ => !string.IsNullOrEmpty(SelectedExtension));
         }
 
-        public string SelectedExtension { get => _selectedExtension; set => SetProperty(ref _selectedExtension, value); }
-
-        private void AddExtension(object obj)
+        [RelayCommand]
+        private void AddExtension()
         {
             string newExt = Interaction.InputBox("Enter new file extension (e.g., .txt):", "Add Extension", "");
             if (string.IsNullOrWhiteSpace(newExt))
@@ -470,22 +427,24 @@ namespace dCompare.Options
             Extensions.Add(newExt);
         }
 
-        private void RemoveExtension(object obj)
+        [RelayCommand(CanExecute = nameof(CanRemoveExtension))]
+        private void RemoveExtension()
         {
             if (!string.IsNullOrEmpty(SelectedExtension))
             {
                 Extensions.Remove(SelectedExtension);
             }
         }
+
+        private bool CanRemoveExtension() => !string.IsNullOrEmpty(SelectedExtension);
     }
 
-    public class SessionOptionsViewModel : ViewModelBase
+    public partial class SessionOptionsViewModel : ViewModelBase
     {
         private readonly SessionOptions _model;
         public SessionOptionsViewModel(SessionOptions model)
         {
             _model = model;
-            BrowseSessionFileCommand = new RelayCommand(BrowseSessionFile);
         }
 
         public string DefaultSessionFile
@@ -519,9 +478,8 @@ namespace dCompare.Options
             }
         }
 
-        public ICommand BrowseSessionFileCommand { get; }
-
-        private void BrowseSessionFile(object parameter)
+        [RelayCommand]
+        private void BrowseSessionFile()
         {
             var openFileDialog = new OpenFileDialog
             {
@@ -536,43 +494,33 @@ namespace dCompare.Options
         }
     }
 
-    public class HotKeyItemViewModel : ViewModelBase
+    public partial class HotKeyItemViewModel : ViewModelBase
     {
+        [ObservableProperty]
         private string _combination;
+        [ObservableProperty]
         private bool _isDuplicate;
         private readonly HotKeysOptionsViewModel _parent;
 
         public string Name { get; }
-        public string Combination
-        {
-            get => _combination;
-            set
-            {
-                if (SetProperty(ref _combination, value))
-                {
-                    _parent.ValidateHotKeys();
-                }
-            }
-        }
-
-        public bool IsDuplicate
-        {
-            get => _isDuplicate;
-            set => SetProperty(ref _isDuplicate, value);
-        }
-
-        public ICommand ClearCommand { get; }
 
         public HotKeyItemViewModel(string name, string combination, HotKeysOptionsViewModel parent)
         {
             Name = name;
             _combination = combination;
             _parent = parent;
-            ClearCommand = new RelayCommand(_ => Combination = string.Empty);
         }
+
+        partial void OnCombinationChanged(string value)
+        {
+            _parent.ValidateHotKeys();
+        }
+
+        [RelayCommand]
+        private void Clear() => Combination = string.Empty;
     }
 
-    public class HotKeysOptionsViewModel : ViewModelBase, IConfigurationUpdater
+    public partial class HotKeysOptionsViewModel : ViewModelBase, IConfigurationUpdater
     {
         private readonly HotKeysOptions _model;
         public ObservableCollection<HotKeyItemViewModel> HotKeyItems { get; } = new();
@@ -619,7 +567,7 @@ namespace dCompare.Options
         }
     }
 
-    public class ConfirmationOptionsViewModel : ViewModelBase, IConfigurationUpdater
+    public partial class ConfirmationOptionsViewModel : ViewModelBase, IConfigurationUpdater
     {
         private readonly ConfirmationOptions _model;
 
