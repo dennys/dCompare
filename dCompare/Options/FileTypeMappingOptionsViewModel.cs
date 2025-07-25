@@ -1,3 +1,7 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using dCompare.Configuration;
+using CommunityToolkit.Mvvm.ComponentModel;
 using dCompare.Configuration;
 using dCompare.Infrastructure;
 using System.Collections.ObjectModel;
@@ -6,19 +10,16 @@ using System.Windows.Input;
 
 namespace dCompare.Options
 {
-    public class FileTypeMappingOptionsViewModel : ViewModelBase, IConfigurationUpdater
+    public partial class FileTypeMappingOptionsViewModel : ObservableObject, IConfigurationUpdater
     {
         private readonly AppConfiguration _config;
         public ObservableCollection<FileTypeMappingViewModel> Mappings { get; }
-        public ICommand AddMappingCommand { get; }
-        public ICommand RemoveMappingCommand { get; }
 
+        public virtual bool IsValid => true;
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(RemoveMappingCommand))]
         private FileTypeMappingViewModel _selectedMapping;
-        public FileTypeMappingViewModel SelectedMapping
-        {
-            get => _selectedMapping;
-            set => SetProperty(ref _selectedMapping, value);
-        }
 
         public FileTypeMappingOptionsViewModel(AppConfiguration config)
         {
@@ -26,12 +27,10 @@ namespace dCompare.Options
             Mappings = new ObservableCollection<FileTypeMappingViewModel>(
                 _config.Options.FileTypeMapping.Select(kvp => new FileTypeMappingViewModel(kvp.Key, kvp.Value, _config.Options.Tools.Values.ToList())));
 
-            AddMappingCommand = new RelayCommand(_ => AddMapping());
-            RemoveMappingCommand = new RelayCommand(_ => RemoveMapping(), _ => CanRemoveMapping());
-
             SelectedMapping = Mappings.FirstOrDefault();
         }
 
+        [RelayCommand]
         private void AddMapping()
         {
             var newMappingName = "NewMapping" + (Mappings.Count + 1);
@@ -42,6 +41,7 @@ namespace dCompare.Options
             SelectedMapping = newMappingViewModel;
         }
 
+        [RelayCommand(CanExecute = nameof(CanRemoveMapping))]
         private void RemoveMapping()
         {
             if (SelectedMapping == null) return;
@@ -62,10 +62,12 @@ namespace dCompare.Options
         }
     }
 
-    public class FileTypeMappingViewModel : ViewModelBase, IDataErrorInfo
+    public partial class FileTypeMappingViewModel : ObservableObject, IDataErrorInfo
     {
         private readonly FileTypeMappingOptions _mapping;
         public string Key { get; }
+
+        public virtual bool IsValid => true;
 
         public List<string> AvailableTools { get; }
 

@@ -1,3 +1,5 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using dCompare.Configuration;
 using dCompare.Infrastructure;
 using System.Drawing;
@@ -6,18 +8,14 @@ using System.Windows.Input;
 
 namespace dCompare.Options
 {
-    public class TextViewerOptionsViewModel : ViewModelBase, IConfigurationUpdater
+    public partial class TextViewerOptionsViewModel : ObservableObject, IConfigurationUpdater
     {
         private readonly TextViewerOptions _model;
-
-        public ICommand SelectFontCommand { get; }
-        public ICommand ResetToDefaultCommand { get; }
+        public virtual bool IsValid => true;
 
         public TextViewerOptionsViewModel(TextViewerOptions model)
         {
             _model = model;
-            SelectFontCommand = new RelayCommand(SelectFont);
-            ResetToDefaultCommand = new RelayCommand(ResetToDefault);
 
             _readOnly = _model.ReadOnly;
             _lineNumber = _model.LineNumber;
@@ -30,87 +28,41 @@ namespace dCompare.Options
             _verticalScrollBarVisibility = _model.VerticalScrollBarVisibility;
         }
 
+        [ObservableProperty]
         private bool _readOnly;
+
+        [ObservableProperty]
         private bool _lineNumber;
+
+        [ObservableProperty]
         private bool _syntaxHighlight;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(FontDisplay))]
         private string _fontFamily;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(FontDisplay))]
         private int _fontSize;
+
+        [ObservableProperty]
         private bool _wordWrap;
+
+        [ObservableProperty]
         private bool _showStatusBar;
+
+        [ObservableProperty]
         private string _horizontalScrollBarVisibility;
+
+        [ObservableProperty]
         private string _verticalScrollBarVisibility;
-
-        public bool ReadOnly
-        {
-            get => _readOnly;
-            set => SetProperty(ref _readOnly, value);
-        }
-
-        public bool LineNumber
-        {
-            get => _lineNumber;
-            set => SetProperty(ref _lineNumber, value);
-        }
-
-        public bool SyntaxHighlight
-        {
-            get => _syntaxHighlight;
-            set => SetProperty(ref _syntaxHighlight, value);
-        }
-
-        public string FontFamily
-        {
-            get => _fontFamily;
-            set
-            {
-                if (SetProperty(ref _fontFamily, value))
-                {
-                    OnPropertyChanged(nameof(FontDisplay));
-                }
-            }
-        }
-
-        public int FontSize
-        {
-            get => _fontSize;
-            set
-            {
-                if (SetProperty(ref _fontSize, value))
-                {
-                    OnPropertyChanged(nameof(FontDisplay));
-                }
-            }
-        }
 
         public string FontDisplay => $"{FontFamily}, {FontSize}pt";
 
-        public bool WordWrap
-        {
-            get => _wordWrap;
-            set => SetProperty(ref _wordWrap, value);
-        }
-
-        public bool ShowStatusBar
-        {
-            get => _showStatusBar;
-            set => SetProperty(ref _showStatusBar, value);
-        }
-
         public List<string> ScrollBarVisibilities { get; } = new List<string> { "Auto", "Visible", "Hidden" };
 
-        public string HorizontalScrollBarVisibility
-        {
-            get => _horizontalScrollBarVisibility;
-            set => SetProperty(ref _horizontalScrollBarVisibility, value);
-        }
-
-        public string VerticalScrollBarVisibility
-        {
-            get => _verticalScrollBarVisibility;
-            set => SetProperty(ref _verticalScrollBarVisibility, value);
-        }
-
-        private void SelectFont(object obj)
+        [RelayCommand]
+        private void SelectFont()
         {
             var fontDialog = new FontDialog();
             fontDialog.Font = new Font(FontFamily, (float)FontSize);
@@ -135,7 +87,8 @@ namespace dCompare.Options
             _model.VerticalScrollBarVisibility = VerticalScrollBarVisibility;
         }
 
-        private void ResetToDefault(object obj)
+        [RelayCommand]
+        private void ResetToDefault()
         {
             var defaultOptions = new TextViewerOptions();
             ReadOnly = defaultOptions.ReadOnly;
