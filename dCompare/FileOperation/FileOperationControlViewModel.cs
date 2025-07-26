@@ -278,7 +278,6 @@ namespace dCompare.FileOperation
             File.AppendAllText(logPath, logEntry);
         }
 
-_
         private bool FilterTransfers(object item)
         {
             if (string.IsNullOrEmpty(FilterText))
