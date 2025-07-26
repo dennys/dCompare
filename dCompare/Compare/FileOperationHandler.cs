@@ -12,7 +12,7 @@ namespace dCompare.Compare
     public class FileOperationHandler
     {
         private readonly IFileManager _fileManager;
-        private readonly FileOperationControl _fileOperationControl;
+        private readonly FileOperationControlViewModel _fileOperationControlViewModel;
 
         // Dictionary to track active jobs and their completion sources.
         private readonly Dictionary<string, TaskCompletionSource<bool>> _activeJobs = new();
@@ -20,11 +20,11 @@ namespace dCompare.Compare
         public FileOperationHandler(IFileManager fileManager)
         {
             _fileManager = fileManager;
-            _fileOperationControl = FindFileOperationControl();
+            _fileOperationControlViewModel = FindFileOperationControlViewModel();
         }
 
         // Helper method to find FileOperationControl in the visual tree
-        private FileOperationControl FindFileOperationControl()
+        private FileOperationControlViewModel FindFileOperationControlViewModel()
         {
             var mainWindow = Application.Current.MainWindow;
 
@@ -33,15 +33,15 @@ namespace dCompare.Compare
             // Fallback: Traverse the visual tree to find FileOperationControl
             control ??= WpfTreeHelperExtensions.FindVisualChild<FileOperationControl>(mainWindow);
 
-            if (control is null)
+            if (control?.DataContext is not FileOperationControlViewModel viewModel)
             {
-                const string message = "FileOperationControl not found in visual tree.";
+                const string message = "FileOperationControlViewModel not found in visual tree.";
                 Log.Error(message);
                 throw new InvalidOperationException(message);
             }
 
-            control.OnTransferStatusChanged += FileOperation_OnTransferStatusChanged;
-            return control;
+            viewModel.OnTransferStatusChanged += FileOperation_OnTransferStatusChanged;
+            return viewModel;
         }
 
         public List<(string Source, string TargetPath, SourceType Type)> GetItemsForTransfer(List<TreeNode> selectedItems, bool toLeft, string targetRoot)
@@ -85,7 +85,7 @@ namespace dCompare.Compare
 
             try
             {
-                if (_fileOperationControl == null)
+                if (_fileOperationControlViewModel == null)
                 {
                     throw new Exception("FileOperationControl is not available.");
                 }
@@ -112,7 +112,7 @@ namespace dCompare.Compare
                         StartTime = DateTime.Now
                     };
 
-                    Application.Current.Dispatcher.Invoke(() => _fileOperationControl.QueuedTransfers.Add(transfer));
+                    Application.Current.Dispatcher.Invoke(() => _fileOperationControlViewModel.QueuedTransfers.Add(transfer));
 
                     tasks.Add(Task.Run(async () =>
                     {
@@ -132,7 +132,7 @@ namespace dCompare.Compare
                             {
                                 Application.Current.Dispatcher.Invoke(() =>
                                 {
-                                    _fileOperationControl.CompleteTransfer(transfer, true, "Operation completed successfully.");
+                                    _fileOperationControlViewModel.CompleteTransfer(transfer, true, "Operation completed successfully.");
                                 });
                                 tcs.TrySetResult(true);
                             }
@@ -145,7 +145,7 @@ namespace dCompare.Compare
                         {
                             Application.Current.Dispatcher.Invoke(() =>
                             {
-                                _fileOperationControl.CompleteTransfer(transfer, false, ex.Message);
+                                _fileOperationControlViewModel.CompleteTransfer(transfer, false, ex.Message);
                             });
                             tcs.TrySetException(ex);
                         }
@@ -171,7 +171,7 @@ namespace dCompare.Compare
 
             try
             {
-                if (_fileOperationControl == null)
+                if (_fileOperationControlViewModel == null)
                 {
                     throw new Exception("FileOperationControl is not available.");
                 }
@@ -198,7 +198,7 @@ namespace dCompare.Compare
                         StartTime = DateTime.Now
                     };
 
-                    Application.Current.Dispatcher.Invoke(() => _fileOperationControl.QueuedTransfers.Add(transfer));
+                    Application.Current.Dispatcher.Invoke(() => _fileOperationControlViewModel.QueuedTransfers.Add(transfer));
 
                     tasks.Add(Task.Run(async () =>
                     {
@@ -225,7 +225,7 @@ namespace dCompare.Compare
                             {
                                 Application.Current.Dispatcher.Invoke(() =>
                                 {
-                                    _fileOperationControl.CompleteTransfer(transfer, true, "Operation completed successfully.");
+                                    _fileOperationControlViewModel.CompleteTransfer(transfer, true, "Operation completed successfully.");
                                 });
                                 tcs.TrySetResult(true);
                             }
@@ -238,7 +238,7 @@ namespace dCompare.Compare
                         {
                             Application.Current.Dispatcher.Invoke(() =>
                             {
-                                _fileOperationControl.CompleteTransfer(transfer, false, ex.Message);
+                                _fileOperationControlViewModel.CompleteTransfer(transfer, false, ex.Message);
                             });
                             tcs.TrySetException(ex);
                         }
