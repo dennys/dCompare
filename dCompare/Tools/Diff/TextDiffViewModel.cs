@@ -1,5 +1,4 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using dCompare.Common;
 using DiffPlex.DiffBuilder;
 using DiffPlex.DiffBuilder.Model;
 using System.Collections.ObjectModel;

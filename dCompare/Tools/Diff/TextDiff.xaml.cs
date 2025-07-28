@@ -5,7 +5,7 @@ using System.Windows.Media;
 
 namespace dCompare.Tools.Diff
 {
-    public partial class TextDiff : UserControl, IRefreshable
+    public partial class TextDiff : UserControl, IRefreshable, ITool
     {
         private ScrollViewer? _leftScrollViewer;
         private ScrollViewer? _rightScrollViewer;
@@ -80,6 +80,16 @@ namespace dCompare.Tools.Diff
         public void Refresh()
         {
             ViewModel.Refresh();
+        }
+
+        void ITool.LoadFile(string filePath)
+        {
+            throw new NotImplementedException();
+        }
+
+        UserControl ITool.GetControl()
+        {
+            return this;
         }
     }
 }
