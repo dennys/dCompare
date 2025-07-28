@@ -40,9 +40,9 @@ namespace dCompare.Tools
 
             return fileType switch
             {
-                //Models.FileType.Text => new dCompare.Tools.Diff.TextDiff(leftFilePath, rightFilePath, CompareFiles(leftFilePath, rightFilePath)),
-                Models.FileType.Text => new dCompare.Tools.Diff.TextDiffPlex(leftFilePath, rightFilePath),
-                Models.FileType.Image => new dCompare.Tools.Diff.ImageDiff(leftFilePath, rightFilePath),
+                //Models.FileType.Text => new Diff.TextDiff(leftFilePath, rightFilePath, CompareFiles(leftFilePath, rightFilePath)),
+                Models.FileType.Text => new Diff.TextDiffPlex(leftFilePath, rightFilePath),
+                Models.FileType.Image => new Diff.ImageDiff(leftFilePath, rightFilePath),
                 Models.FileType.Archive => new CompareControl(
                     Ioc.Default.GetRequiredService<IConfigurationService>(),
                     Ioc.Default.GetRequiredService<IFileManager>(),
@@ -52,7 +52,7 @@ namespace dCompare.Tools
             };
         }
 
-        private static dCompare.Tools.Models.FileType DetermineFileType(string filePath)
+        private static Models.FileType DetermineFileType(string filePath)
         {
             string extension = Path.GetExtension(filePath).ToLowerInvariant();
 
