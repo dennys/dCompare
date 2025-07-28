@@ -15,8 +15,8 @@ namespace dCompare.Tools.Diff
     {
         private string _leftPath = string.Empty;
         private string _rightPath = string.Empty;
-        private ObservableCollection<DiffPiece> _leftLines;
-        private ObservableCollection<DiffPiece> _rightLines;
+        private ObservableCollection<DiffPiece>? _leftLines;
+        private ObservableCollection<DiffPiece>? _rightLines;
         private ScrollViewer? _leftScrollViewer;
         private ScrollViewer? _rightScrollViewer;
         private bool _isSyncingScroll;
@@ -41,7 +41,7 @@ namespace dCompare.Tools.Diff
             }
         }
 
-        public ObservableCollection<DiffPiece> LeftLines
+        public ObservableCollection<DiffPiece>? LeftLines
         {
             get => _leftLines;
             set
@@ -51,7 +51,7 @@ namespace dCompare.Tools.Diff
             }
         }
 
-        public ObservableCollection<DiffPiece> RightLines
+        public ObservableCollection<DiffPiece>? RightLines
         {
             get => _rightLines;
             set

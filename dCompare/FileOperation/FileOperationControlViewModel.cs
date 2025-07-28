@@ -27,7 +27,7 @@ namespace dCompare.FileOperation
         private ObservableCollection<FileTransfer> _failedTransfers = new();
 
         [ObservableProperty]
-        private string _filterText;
+        private string? _filterText;
 
         public delegate void TransferStatusChangedHandler(string jobId, bool success, string message);
         public event TransferStatusChangedHandler? OnTransferStatusChanged;

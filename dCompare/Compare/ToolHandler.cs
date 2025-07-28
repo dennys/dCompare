@@ -11,15 +11,18 @@ namespace dCompare.Compare
 {
     public class ToolHandler
     {
-        ToolFactory? _toolFactory;
+        private readonly IConfigurationService _configService;
+        private readonly ToolConfigService _toolConfigService;
+        private readonly ToolFactory _toolFactory;
 
+        public ToolHandler()
+        {
+            _configService = Ioc.Default.GetRequiredService<IConfigurationService>();
+            _toolFactory = new(_configService);
+            _toolConfigService = new();
+        }
         public async Task<TabItem?> LaunchToolAsync(TreeNode selectedItem, string operation, ToolOptions? toolConfig = null)
         {
-            var _configService = Ioc.Default.GetRequiredService<IConfigurationService>();
-            _toolFactory = new ToolFactory(_configService);
-
-            ToolConfigService _toolConfigService = new();
-
             if (selectedItem.IsDirectory)
             {
                 MessageBox.Show(
