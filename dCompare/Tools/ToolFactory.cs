@@ -40,7 +40,8 @@ namespace dCompare.Tools
 
             return fileType switch
             {
-                Models.FileType.Text => new dCompare.Tools.Diff.TextDiff(leftFilePath, rightFilePath, CompareFiles(leftFilePath, rightFilePath)),
+                //Models.FileType.Text => new dCompare.Tools.Diff.TextDiff(leftFilePath, rightFilePath, CompareFiles(leftFilePath, rightFilePath)),
+                Models.FileType.Text => new dCompare.Tools.Diff.TextDiffPlex(leftFilePath, rightFilePath),
                 Models.FileType.Image => new dCompare.Tools.Diff.ImageDiff(leftFilePath, rightFilePath),
                 Models.FileType.Archive => new CompareControl(
                     Ioc.Default.GetRequiredService<IConfigurationService>(),
