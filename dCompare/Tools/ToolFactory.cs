@@ -40,8 +40,9 @@ namespace dCompare.Tools
 
             return fileType switch
             {
-                Models.FileType.Text => new dCompare.Tools.Diff.TextDiffPlex(leftFilePath, rightFilePath),
-                Models.FileType.Image => new dCompare.Tools.Diff.ImageDiff(leftFilePath, rightFilePath),
+                //Models.FileType.Text => new Diff.TextDiff(leftFilePath, rightFilePath, CompareFiles(leftFilePath, rightFilePath)),
+                Models.FileType.Text => new Diff.TextDiffPlex(leftFilePath, rightFilePath),
+                Models.FileType.Image => new Diff.ImageDiff(leftFilePath, rightFilePath),
                 Models.FileType.Archive => new CompareControl(
                     Ioc.Default.GetRequiredService<IConfigurationService>(),
                     Ioc.Default.GetRequiredService<IFileManager>(),
@@ -51,7 +52,7 @@ namespace dCompare.Tools
             };
         }
 
-        private static dCompare.Tools.Models.FileType DetermineFileType(string filePath)
+        private static Models.FileType DetermineFileType(string filePath)
         {
             string extension = Path.GetExtension(filePath).ToLowerInvariant();
 
@@ -71,6 +72,14 @@ namespace dCompare.Tools
             }
 
             return dCompare.Tools.Models.FileType.Unsupported;
+        }
+
+        private static object CompareFiles(string leftFilePath, string rightFilePath)
+        {
+            var leftText = File.ReadAllText(leftFilePath);
+            var rightText = File.ReadAllText(rightFilePath);
+            var diffBuilder = new DiffPlex.DiffBuilder.SideBySideDiffBuilder();
+            return diffBuilder.BuildDiffModel(leftText, rightText);
         }
     }
 }
