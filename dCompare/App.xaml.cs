@@ -77,10 +77,16 @@ namespace dCompare
         {
             try
             {
-                var configService = AppHost.Services.GetRequiredService<IConfigurationService>();
-                var configuration = configService.GetConfiguration();
-                var language = configuration.Get<AppConfiguration>().Options.UI.Language;
-                Thread.CurrentThread.CurrentUICulture = new CultureInfo(language);
+                IConfigurationService configService = AppHost.Services.GetRequiredService<IConfigurationService>();
+                IConfiguration? configuration = configService.GetConfiguration();
+                if (configuration != null)
+                {
+                    var appConfig = configuration.Get<AppConfiguration>();
+                    if (appConfig?.Options?.UI?.Language != null)
+                    {
+                        Thread.CurrentThread.CurrentUICulture = new CultureInfo(appConfig.Options.UI.Language);
+                    }
+                }
 
                 Log.Information("Application starting up.");
                 await AppHost!.StartAsync();
