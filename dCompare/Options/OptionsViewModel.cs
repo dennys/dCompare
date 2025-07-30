@@ -191,8 +191,8 @@ namespace dCompare.Options
         public static List<KeyValuePair<string, string>> AvailableLanguages =>
         [
             new KeyValuePair<string, string>("English", "en"),
-            new KeyValuePair<string, string>("繁體中文", "zh_TW"),
-            new KeyValuePair<string, string>("简体中文", "zh_CN")
+            new KeyValuePair<string, string>("繁體中文", "zh-TW"),
+            new KeyValuePair<string, string>("简体中文", "zh-CN")
         ];
 
         public string Theme { get => _model.Theme; set { _model.Theme = value; OnPropertyChanged(); } }

@@ -76,7 +76,7 @@ namespace dCompare.Configuration
         public string Theme { get; set; } = "Light";
 
         [JsonPropertyName("Language")]
-        public string Language { get; set; } = "zh-TW";
+        public string Language { get; set; } = "en";
     }
 
     public class CompareOptions
