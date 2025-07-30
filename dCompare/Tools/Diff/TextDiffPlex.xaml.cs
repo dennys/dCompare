@@ -1,78 +1,24 @@
-using dCompare.Common;
-using DiffPlex.Wpf;
-using System.ComponentModel;
-using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
 namespace dCompare.Tools.Diff
 {
-    public partial class TextDiffPlex : UserControl, INotifyPropertyChanged, IRefreshable, ITool
+    public partial class TextDiffPlex : UserControl, ITool
     {
-        private string _leftPath = string.Empty;
-        private string _rightPath = string.Empty;
-        private string _leftText = string.Empty;
-        private string _rightText = string.Empty;
         private ScrollViewer? _leftScrollViewer;
         private ScrollViewer? _rightScrollViewer;
         private bool _isSyncingScroll;
 
-        public string LeftPath
-        {
-            get => _leftPath;
-            set
-            {
-                _leftPath = value;
-                OnPropertyChanged(nameof(LeftPath));
-            }
-        }
-
-        public string RightPath
-        {
-            get => _rightPath;
-            set
-            {
-                _rightPath = value;
-                OnPropertyChanged(nameof(RightPath));
-            }
-        }
-
-        public string LeftText
-        {
-            get => _leftText;
-            set
-            {
-                _leftText = value;
-                OnPropertyChanged(nameof(LeftText));
-            }
-        }
-
-        public string RightText
-        {
-            get => _rightText;
-            set
-            {
-                _rightText = value;
-                OnPropertyChanged(nameof(RightText));
-            }
-        }
-
         public TextDiffPlex(string leftPath, string rightPath)
         {
             InitializeComponent();
-            DataContext = this;
+            DataContext = new TextDiffPlexViewModel(leftPath, rightPath, DiffView);
             Loaded += UcFileCompare_Loaded;
-
-            LeftPath = leftPath;
-            RightPath = rightPath;
-            DiffView.IsCommandBarVisible = true;
-            Refresh();
         }
 
         private void UcFileCompare_Loaded(object sender, RoutedEventArgs e)
         {
-            // Find the internal TextBox controls within SideBySideDiffViewer
             _leftScrollViewer = FindScrollViewer(DiffView, "PART_OldText");
             if (_leftScrollViewer != null)
             {
@@ -84,40 +30,6 @@ namespace dCompare.Tools.Diff
             {
                 _rightScrollViewer.ScrollChanged += RightScrollViewer_ScrollChanged;
             }
-        }
-        private void DiffButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (DiffView.IsInlineViewMode)
-            {
-                DiffView.ShowSideBySide();
-                return;
-            }
-
-            DiffView.ShowInline();
-        }
-
-        private void FutherActionsButton_Click(object sender, RoutedEventArgs e)
-        {
-            DiffView.OpenViewModeContextMenu();
-        }
-
-        private void WindowButton_Click(object sender, RoutedEventArgs e)
-        {
-            var has = false;
-            foreach (var w in Application.Current.Windows)
-            {
-                if (w is DiffWindow dw)
-                {
-                    dw.Activate();
-                    has = true;
-                    break;
-                }
-            }
-
-            if (has) return;
-            var win = new DiffWindow();
-            win.OpenFileOnBoth();
-            win.Show();
         }
 
         private static ScrollViewer? FindScrollViewer(DependencyObject depObj, string name)
@@ -182,45 +94,20 @@ namespace dCompare.Tools.Diff
             _isSyncingScroll = false;
         }
 
-        public void Refresh()
-        {
-            if (string.IsNullOrEmpty(LeftPath) || string.IsNullOrEmpty(RightPath))
-            {
-                MessageBox.Show("Both file paths must be set to refresh the comparison.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            try
-            {
-                // Read file contents
-                LeftText = File.ReadAllText(LeftPath);
-                RightText = File.ReadAllText(RightPath);
-                // SideBySideDiffViewer updates automatically via bindings
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Failed to refresh comparison: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
         public void LoadFile(string filePath)
         {
-            // In a comparison view, we load both files, so this method can be a no-op
-            // or load the left file path.
-            LeftPath = filePath;
-            Refresh();
+            // TODO this function is non-meaningful
+            (DataContext as TextDiffPlexViewModel)?.LoadFile(filePath);
+        }
+
+        public void Refresh()
+        {
+            (DataContext as TextDiffPlexViewModel)?.Refresh();
         }
 
         public void SaveFile(string? path = null)
         {
-            throw new NotImplementedException();
+            throw new System.NotImplementedException();
         }
 
         public UserControl GetControl()

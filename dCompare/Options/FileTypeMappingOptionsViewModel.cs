@@ -1,12 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using dCompare.Configuration;
-using CommunityToolkit.Mvvm.ComponentModel;
-using dCompare.Configuration;
-using dCompare.Infrastructure;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Windows.Input;
 
 namespace dCompare.Options
 {
@@ -19,7 +15,7 @@ namespace dCompare.Options
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(RemoveMappingCommand))]
-        private FileTypeMappingViewModel _selectedMapping;
+        private FileTypeMappingViewModel? _selectedMapping;
 
         public FileTypeMappingOptionsViewModel(AppConfiguration config)
         {
@@ -27,7 +23,10 @@ namespace dCompare.Options
             Mappings = new ObservableCollection<FileTypeMappingViewModel>(
                 _config.Options.FileTypeMapping.Select(kvp => new FileTypeMappingViewModel(kvp.Key, kvp.Value, _config.Options.Tools.Values.ToList())));
 
-            SelectedMapping = Mappings.FirstOrDefault();
+            if (Mappings.Any())
+            {
+                SelectedMapping = Mappings.First();
+            }
         }
 
         [RelayCommand]
@@ -48,7 +47,10 @@ namespace dCompare.Options
 
             _config.Options.FileTypeMapping.Remove(SelectedMapping.Key);
             Mappings.Remove(SelectedMapping);
-            SelectedMapping = Mappings.FirstOrDefault();
+            if (Mappings.Any())
+            {
+                SelectedMapping = Mappings.First();
+            }
         }
 
         private bool CanRemoveMapping()
@@ -122,7 +124,7 @@ namespace dCompare.Options
                     }
 
                     var extensions = Extensions.Split(',');
-                    if (extensions.Any(ext => !ext.StartsWith(".")))
+                    if (extensions.Any(ext => !ext.StartsWith('.')))
                     {
                         return "All extensions must start with a dot.";
                     }

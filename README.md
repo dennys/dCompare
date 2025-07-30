@@ -1,48 +1,49 @@
 # dCompare - A Directory/File Comparison Tool
 
 <a href="docs/screenshot-main.webp">
-  <img src="docs/screenshot-main.webp" alt="MainWindow" width="500">
+  <img src="docs/screenshot-main.webp" align="center" alt="MainWindow" width="500">
 </a>
 
 **Disclosure**: Approximately 80% of this project's code was generated with the assistance of AI tools.
 
 ## Features
 
-- **Directory Comparison**: Compare folder structures to identify differences in files and subdirectories, with a side-by-side view showing file names, sizes, dates, and status symbols (e.g., identical, different, unique to left/right).
-- **Tabbed Interface**: Supports multiple comparison sessions in a Chrome-style tabbed layout, with drag-and-drop tab reordering, close buttons, and keyboard shortcuts (e.g., Ctrl+N for new tab, Ctrl+W to close tab).
-- **File Operations**: Copy or move files between directories directly within the application, with a dedicated file operation window showing queued, successful, and failed transfers, including progress, speed, and filtering capabilities.
-- **Text File Comparison**: View differences in text files (e.g., .txt, .cs, .json, .xml) side-by-side using DiffPlex, with color-coded highlights for insertions (green), deletions (red), and unchanged content, displayed in a scrollable ListBox with Consolas font.
-- **Image Comparison**: Display two images side-by-side for visual comparison, with automatic scaling to fit the window while preserving aspect ratio, using ScrollViewer for large images.
-- **Archive File Support**: Add support for comparing archive files (e.g., .zip) using libraries like [SharpZipLib](https://github.com/icsharpcode/SharpZipLib).
+- **Tabbed Interface**: Supports multiple comparison sessions in a a tabbed layout, with drag-and-drop tab reordering, close buttons, and keyboard shortcuts (e.g., Ctrl+N for new tab, Ctrl+W to close tab).
+
+- **Directory Comparison**:
+  - Compare folder structures side-by-side to identify differences in files and subdirectories.  
+  - The comparison view displays file names, sizes, last modified dates, and status indicators.  
+  - Provides filters to focus on specific differences (e.g., identical, different, only in left/right).  
+  - Comparison Methods (Algorithms)
+    - **Modified time and file size** (✅ *Recommended for speed*)
+    - **xxHash64** (⚡ *Recommended for fast content comparison*)
+    - **MD5**
+    - **Byte-by-byte**
+    > 🟢 For most use cases, **"Modified time + size" is the fastest and most efficient** method.  
+    > 🔍 If you need to **compare actual file contents**, we recommend **`xxHash64`** for its excellent speed–accuracy balance (e.g., comparing a 2.6 GB file took ~5 seconds with xxHash64 vs. ~20 seconds with MD5).
+
+- **File Operations**:
+  - Perform common file operations — copy, move, delete, and rename — directly within the application.
+  - A dedicated file operation window displays queued, successful, and failed tasks, with detailed progress, speed, and filtering capabilities.
+  - Real-time progress feedback is provided via a cancelable overlay showing percentage completion and a progress bar.
+
+- **File Comparison**:  Compare file contents side-by-side with intuitive visual feedback.
+  - **Text File Comparison**: Compare text-based files (e.g., .txt, .cs, .json, .xml) side-by-side with color-coded highlights
+    - 🟩 insertions in green
+    - 🟥 deletions in red
+    - ⬜ unchanged content
+    - Scrollable view for easy navigation.
+  - **Image Comparison**: Display two images side-by-side for visual comparison. Images are automatically scaled to fit the window while preserving their aspect ratio. Large images can be viewed using a ScrollViewer.
+  - **Archive File Support**: Supports comparison of archive files, including: .zip, .rar, .7z, .tar, .gz, .tar.gz, .bz2, .tar.bz2, .xz, .tar.xz, .lzma, .tar.lzma, .z, .iso, .deb, .ar, .cab (This feature is powered by [SharpCompress](https://github.com/adamhathcock/sharpcompress). The tool supports any archive formats that SharpCompress can read.)
+
 - **Context Menus**: Right-click context menus on comparison results provide actions like comparing contents, copying/moving files, deleting, renaming, opening file locations, copying paths/filenames, and viewing properties.
-- **Session Management**: Save and load comparison sessions (Ctrl+S, Ctrl+O), with recent sessions accessible via the File menu, and options to auto-load default sessions on startup.
+- **Session Management**: Save and load comparison sessions, with recent sessions accessible via the File menu, and options to auto-load default sessions on startup.
 - **Customizable Settings**: Configure via a settings window with sections for:
   - UI (theme, language)
   - Comparison algorithm and double-click action
   - Text and image diff viewers with customizable file extensions
   - Session settings (default session file, auto-load/compare)
   - Hotkeys for various commands
-  - Logging (enable/disable, log level, retention days)
-- **Toolbar and Menu**: Unified menu and toolbar with icons for quick access to common actions like compare (Ctrl+R), copy to left/right, expand/collapse all, and filtering options (show all, different, identical, unique).
-- **Progress Feedback**: Displays comparison progress with a cancelable overlay showing percentage and a progress bar, plus a status bar indicating tab count and application status.
-
-## Comparison
-
-Use these algorithm to compare calculate a 2.6GB file.
-
-| Algorithm | Speed |
-| --------- | ----- |
-| MD5       | 20s   |
-| xxHash64  | 5s    |
-
-- xxHash64: Use Microsoft's implementation: <https://learn.microsoft.com/zh-tw/dotnet/api/system.io.hashing.xxhash64.hash>
-
-## Tools (Viewer, Diff)
-
-| Type  | View          | Diff     |
-| ----- | ------------- | -------- |
-| Text  | Avalon.Edit   | DiffPlex |
-| Image | Build-in      | Build-in |
 
 ## Planned Features
 
@@ -74,13 +75,35 @@ Not implemented
 
 ### Requirements
 
-- **.NET 8**: Required for features like `OpenFolderDialog` used for folder selection. See [Microsoft Documentation](https://learn.microsoft.com/en-us/dotnet/api/microsoft.win32.openfolderdialog?view=windowsdesktop-8.0).
+- **.NET 8** is required for features like `OpenFolderDialog` used for folder selection. See [Microsoft Documentation](https://learn.microsoft.com/en-us/dotnet/api/microsoft.win32.openfolderdialog?view=windowsdesktop-8.0).
+
+### Comparison Algorithm
+
+- xxHash64: Use Microsoft's implementation: <https://learn.microsoft.com/zh-tw/dotnet/api/system.io.hashing.xxhash64.hash>
+
+### 3rd party tools to view or compare files
+
+| Type    | View          | Diff          |
+| ------- | ------------- | --------      |
+| Text    | Avalon.Edit   | DiffPlex      |
+| Image   | Build-in      | Build-in      |
+| Archive | N/A           | SharpCompress |
+
+### 3dr party libraries
+
 - **[CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet)**:  See <https://learn.microsoft.com/zh-tw/dotnet/communitytoolkit/mvvm/>
-- **[AvalonEdit ](https://github.com/icsharpcode/AvalonEdit)**: Used for text file viewer/editor.
-- **[DiffPlex on GitHub](https://github.com/mmanela/diffplex)**: Used for text file comparison.
+- **[AvalonEdit](https://github.com/icsharpcode/AvalonEdit)**: Used for text file viewer/editor.
+- **[DiffPlex](https://github.com/mmanela/diffplex)**: Used for text file comparison.
 - **[Serilog](https://github.com/serilog/serilog)**: Used for logging application events and debugging.
 
-# File Copy Method Comparison (by ChatGPT)
+Not used yet
+
+- **[Dragablz](https://github.com/ButchersBoy/Dragablz)**
+- **[MetadataExtractor](https://github.com/drewnoakes/metadata-extractor-dotnet)**:
+- **[Google APIs client Library for .NET](https://github.com/googleapis/google-api-dotnet-client)**:
+- **[jsondiffpatch.net](https://github.com/wbish/jsondiffpatch.net)**:
+
+### File Copy Method Comparison (by ChatGPT)
 
 Below is a table comparing three methods for file and directory copying in .NET 8—`CopyFileEx`, `.NET File.Copy`, and `FileStream`—based on requirements: Windows 10 or above, directory copying, progress callbacks, metadata preservation (e.g., timestamps), and no copy window.
 
