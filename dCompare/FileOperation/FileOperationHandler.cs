@@ -17,10 +17,10 @@ namespace dCompare.FileOperation
         // Dictionary to track active jobs and their completion sources.
         private readonly Dictionary<string, TaskCompletionSource<bool>> _activeJobs = new();
 
-        public FileOperationHandler(IFileManager fileManager, IMessenger messenger)
+        public FileOperationHandler(IFileManager fileManager)
         {
             _fileManager = fileManager;
-            _messenger = messenger;
+            _messenger = CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default;
         }
 
         public List<(string Source, string TargetPath, SourceType Type)> GetItemsForTransfer(List<TreeNode> selectedItems, bool toLeft, string targetRoot)
