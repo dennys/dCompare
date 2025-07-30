@@ -1,17 +1,20 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using dCompare.Common;
+using dCompare.FileOperation.Messages;
 using dCompare.FileOperation.Models;
 using dCompare.FileOperation.Strategies;
 using Serilog;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows.Data;
-using System.Windows.Input;
 
 namespace dCompare.FileOperation
 {
-    public partial class FileOperationControlViewModel : ObservableObject
+    public partial class FileOperationControlViewModel : ObservableObject,
+        IRecipient<QueueTransferMessage>,
+        IRecipient<CompleteTransferMessage>
     {
         private readonly FileManager _fileManager;
         private CancellationTokenSource _cancellationTokenSource;
@@ -29,13 +32,14 @@ namespace dCompare.FileOperation
         [ObservableProperty]
         private string? _filterText;
 
-        public delegate void TransferStatusChangedHandler(string jobId, bool success, string message);
-        public event TransferStatusChangedHandler? OnTransferStatusChanged;
-
         public FileOperationControlViewModel()
         {
             _fileManager = new FileManager(new Kernel32FileCopyStrategy());
             _cancellationTokenSource = new CancellationTokenSource();
+
+            // Register for messages
+            WeakReferenceMessenger.Default.Register<QueueTransferMessage>(this);
+            WeakReferenceMessenger.Default.Register<CompleteTransferMessage>(this);
 
             var queuedView = CollectionViewSource.GetDefaultView(QueuedTransfers);
             queuedView.Filter = FilterTransfers;
@@ -141,21 +145,32 @@ namespace dCompare.FileOperation
             App.Current.Dispatcher.Invoke(() => FailedTransfers.Clear());
         }
 
-        public void CompleteTransfer(FileTransfer transfer, bool success, string message)
+        public void Receive(QueueTransferMessage message)
         {
-            QueuedTransfers.Remove(transfer);
-            transfer.Status = success ? "Completed" : $"Failed: {message}";
-            transfer.Progress = success ? 1.0 : transfer.Progress;
-            if (success)
+            App.Current.Dispatcher.Invoke(() =>
             {
-                SuccessfulTransfers.Add(transfer);
-            }
-            else
+                QueuedTransfers.Add(message.Transfer);
+            });
+        }
+
+        public void Receive(CompleteTransferMessage message)
+        {
+            App.Current.Dispatcher.Invoke(() =>
             {
-                FailedTransfers.Add(transfer);
-            }
-            LogTransfer(transfer);
-            OnTransferStatusChanged?.Invoke(transfer.JobId, success, message);
+                var transfer = message.Transfer;
+                QueuedTransfers.Remove(transfer);
+                transfer.Status = message.Success ? "Completed" : $"Failed: {message.Message}";
+                transfer.Progress = message.Success ? 1.0 : transfer.Progress;
+                if (message.Success)
+                {
+                    SuccessfulTransfers.Add(transfer);
+                }
+                else
+                {
+                    FailedTransfers.Add(transfer);
+                }
+                LogTransfer(transfer);
+            });
         }
 
         private static long GetItemSize(string path)
@@ -236,7 +251,6 @@ namespace dCompare.FileOperation
                             LogTransfer(transfer);
                         });
 
-                        OnTransferStatusChanged?.Invoke(jobId, true, "Operation completed successfully.");
                     }
                     else
                     {
@@ -252,8 +266,6 @@ namespace dCompare.FileOperation
                         FailedTransfers.Add(transfer);
                         LogTransfer(transfer);
                     });
-
-                    OnTransferStatusChanged?.Invoke(jobId, false, "Operation cancelled.");
                 }
                 catch (Exception ex)
                 {
@@ -264,8 +276,6 @@ namespace dCompare.FileOperation
                         FailedTransfers.Add(transfer);
                         LogTransfer(transfer);
                     });
-
-                    OnTransferStatusChanged?.Invoke(jobId, false, ex.Message);
                 }
             }, _cancellationTokenSource.Token);
             return jobId;
