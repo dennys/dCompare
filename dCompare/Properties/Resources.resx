@@ -345,4 +345,28 @@
   <data name="ViewWith" xml:space="preserve">
     <value>View with</value>
   </data>
+  <data name="UI" xml:space="preserve">
+    <value>UI</value>
+  </data>
+  <data name="Compare" xml:space="preserve">
+    <value>Compare</value>
+  </data>
+  <data name="Session" xml:space="preserve">
+    <value>Session</value>
+  </data>
+  <data name="Confirmation" xml:space="preserve">
+    <value>Confirmation</value>
+  </data>
+  <data name="HotKeys" xml:space="preserve">
+    <value>HotKeys</value>
+  </data>
+  <data name="TextViewer" xml:space="preserve">
+    <value>TextViewer</value>
+  </data>
+  <data name="Tools" xml:space="preserve">
+    <value>Tools</value>
+  </data>
+  <data name="FileTypeMapping" xml:space="preserve">
+    <value>FileTypeMapping</value>
+  </data>
 </root>

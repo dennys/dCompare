@@ -73,15 +73,15 @@ namespace dCompare.Options
             MenuItems.Clear();
             var optionsNode = new SettingsMenuItem(Properties.Resources.OptionsMenu, null, this);
 
-            var uiNode = new SettingsMenuItem("UI", new UIOptionsViewModel(_appConfig.Options.UI), this);
-            var compareNode = new SettingsMenuItem("Compare", new CompareOptionsViewModel(_appConfig.Options.Compare), this);
+            var uiNode = new SettingsMenuItem(Properties.Resources.UI, new UIOptionsViewModel(_appConfig.Options.UI), this);
+            var compareNode = new SettingsMenuItem(Properties.Resources.Compare, new CompareOptionsViewModel(_appConfig.Options.Compare), this);
 
-            var sessionNode = new SettingsMenuItem("Session", new SessionOptionsViewModel(_appConfig.Options.Session), this);
-            var confirmationNode = new SettingsMenuItem("Confirmation", new ConfirmationOptionsViewModel(_appConfig.Options.Confirmation), this);
-            var hotkeysNode = new SettingsMenuItem("HotKeys", new HotKeysOptionsViewModel(_appConfig.Options.HotKeys), this);
-            var textViewerNode = new SettingsMenuItem("TextViewer", new TextViewerOptionsViewModel(_appConfig.Options.TextViewer), this);
-            var toolsNode = new SettingsMenuItem("Tools", new ToolsOptionsViewModel(_appConfig), this);
-            var fileTypeMappingNode = new SettingsMenuItem("FileTypeMapping", new FileTypeMappingOptionsViewModel(_appConfig), this);
+            var sessionNode = new SettingsMenuItem(Properties.Resources.Session, new SessionOptionsViewModel(_appConfig.Options.Session), this);
+            var confirmationNode = new SettingsMenuItem(Properties.Resources.Confirmation, new ConfirmationOptionsViewModel(_appConfig.Options.Confirmation), this);
+            var hotkeysNode = new SettingsMenuItem(Properties.Resources.HotKeys, new HotKeysOptionsViewModel(_appConfig.Options.HotKeys), this);
+            var textViewerNode = new SettingsMenuItem(Properties.Resources.TextViewer, new TextViewerOptionsViewModel(_appConfig.Options.TextViewer), this);
+            var toolsNode = new SettingsMenuItem(Properties.Resources.Tools, new ToolsOptionsViewModel(_appConfig), this);
+            var fileTypeMappingNode = new SettingsMenuItem(Properties.Resources.FileTypeMapping, new FileTypeMappingOptionsViewModel(_appConfig), this);
 
             optionsNode.Children.Add(uiNode);
             optionsNode.Children.Add(compareNode);
