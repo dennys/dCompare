@@ -101,7 +101,7 @@
                       ItemsSource="{Binding AvailableThemes}" 
                       DisplayMemberPath="Key"
                       SelectedValuePath="Value"
-                      SelectedValue="{Binding SelectedTheme}"/>
+                      SelectedValue="{Binding Theme}"/>
 
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="{x:Static resx:Resources.Language}" VerticalAlignment="Center" Margin="0,5,10,5"/>
                     <ComboBox Grid.Row="1" Grid.Column="1" Margin="0,5"
