@@ -78,7 +78,8 @@ namespace dCompare
             try
             {
                 var configService = AppHost.Services.GetRequiredService<IConfigurationService>();
-                var language = configService.Get<AppConfiguration>().Options.UI.Language;
+                var configuration = configService.GetConfiguration();
+                var language = configuration.Get<AppConfiguration>().Options.UI.Language;
                 Thread.CurrentThread.CurrentUICulture = new CultureInfo(language);
 
                 Log.Information("Application starting up.");
