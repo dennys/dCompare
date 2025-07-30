@@ -179,5 +179,10 @@ namespace dCompare.Configuration
                 }
             }
         }
+
+        public IConfiguration GetConfiguration()
+        {
+            return _configuration;
+        }
     }
 }

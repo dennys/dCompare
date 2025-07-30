@@ -1,7 +1,10 @@
+using Microsoft.Extensions.Configuration;
+
 namespace dCompare.Configuration
 {
     public interface IConfigurationService
     {
+        IConfiguration GetConfiguration();
         Task<AppConfiguration> LoadConfigurationAsync();
         Task SaveConfigurationAsync(AppConfiguration config);
         IEnumerable<ToolOptions> GetSupportedTools(string operation, string extension);
