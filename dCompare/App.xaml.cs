@@ -8,7 +8,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using System.Globalization;
 using System.IO;
+using System.Threading;
 using System.Windows;
 
 namespace dCompare
@@ -75,6 +77,10 @@ namespace dCompare
         {
             try
             {
+                var configService = AppHost.Services.GetRequiredService<IConfigurationService>();
+                var language = configService.Get<AppConfiguration>().Options.UI.Language;
+                Thread.CurrentThread.CurrentUICulture = new CultureInfo(language);
+
                 Log.Information("Application starting up.");
                 await AppHost!.StartAsync();
                 var startupForm = AppHost.Services.GetRequiredService<MainWindow>();

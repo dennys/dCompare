@@ -45,6 +45,13 @@ namespace dCompare.Options
         [RelayCommand]
         private async Task SaveConfiguration()
         {
+            var uiOptionsVM = MenuItems.SelectMany(m => m.Children)
+                                     .Select(c => c.ViewModel)
+                                     .OfType<UIOptionsViewModel>()
+                                     .FirstOrDefault();
+
+            bool languageChanged = uiOptionsVM?.IsLanguageChanged ?? false;
+
             if (MenuItems.SelectMany(m => m.Children)
                                      .FirstOrDefault(c => c.ViewModel is HotKeysOptionsViewModel)?
                                      .ViewModel is HotKeysOptionsViewModel hotkeysVm)
@@ -66,6 +73,13 @@ namespace dCompare.Options
             }
 
             await _configService.SaveConfigurationAsync(_appConfig);
+
+            if (languageChanged)
+            {
+                MessageBox.Show(dCompare.Properties.Resources.RestartRequiredHint, dCompare.Properties.Resources.Language, MessageBoxButton.OK, MessageBoxImage.Information);
+                uiOptionsVM.ResetLanguageChangedFlag();
+            }
+
             MessageBox.Show("Settings saved successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
@@ -185,19 +199,39 @@ namespace dCompare.Options
     public partial class UIOptionsViewModel : ObservableObject
     {
         private readonly UIOptions _model;
+        private string _originalLanguage;
+        public bool IsLanguageChanged { get; private set; }
+
+        public void ResetLanguageChangedFlag() => IsLanguageChanged = false;
         public virtual bool IsValid => true;
-        public UIOptionsViewModel(UIOptions model) { _model = model; }
+        public UIOptionsViewModel(UIOptions model)
+        {
+            _model = model;
+            _originalLanguage = model.Language;
+        }
         public UIOptionsViewModel() : this(new UIOptions()) { }
         public static List<string> AvailableThemes => ["Light", "Dark"];
         public static List<KeyValuePair<string, string>> AvailableLanguages =>
         [
             new KeyValuePair<string, string>("English", "en"),
-            new KeyValuePair<string, string>("繁體中文", "zh_TW"),
-            new KeyValuePair<string, string>("简体中文", "zh_CN")
+            new KeyValuePair<string, string>("繁體中文", "zh-TW"),
+            new KeyValuePair<string, string>("简体中文", "zh-CN")
         ];
 
         public string Theme { get => _model.Theme; set { _model.Theme = value; OnPropertyChanged(); } }
-        public string Language { get => _model.Language; set { _model.Language = value; OnPropertyChanged(); } }
+        public string Language
+        {
+            get => _model.Language;
+            set
+            {
+                if (_model.Language != value)
+                {
+                    _model.Language = value;
+                    OnPropertyChanged();
+                    IsLanguageChanged = _model.Language != _originalLanguage;
+                }
+            }
+        }
     }
 
     public partial class AlgorithmItemViewModel : ObservableObject
