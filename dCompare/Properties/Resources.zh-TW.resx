@@ -345,4 +345,28 @@
   <data name="ViewWith" xml:space="preserve">
     <value>查看方式</value>
   </data>
+  <data name="UI" xml:space="preserve">
+    <value>界面</value>
+  </data>
+  <data name="Compare" xml:space="preserve">
+    <value>比較</value>
+  </data>
+  <data name="Session" xml:space="preserve">
+    <value>會話</value>
+  </data>
+  <data name="Confirmation" xml:space="preserve">
+    <value>確認</value>
+  </data>
+  <data name="HotKeys" xml:space="preserve">
+    <value>熱鍵</value>
+  </data>
+  <data name="TextViewer" xml:space="preserve">
+    <value>文本查看器</value>
+  </data>
+  <data name="Tools" xml:space="preserve">
+    <value>工具</value>
+  </data>
+  <data name="FileTypeMapping" xml:space="preserve">
+    <value>文件類型映射</value>
+  </data>
 </root>
