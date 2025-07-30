@@ -64,7 +64,7 @@ namespace dCompare.Compare
             _configService = configService;
             _toolHandler = new ToolHandler();
             _treeNodeManager = new TreeNodeManager(_treeNodes);
-            _fileOperationHandler = new FileOperationHandler(_fileManager);
+            _fileOperationHandler = new FileOperationHandler(_fileManager, CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default);
 
             // Initialize ViewModel
             ViewModel = new CompareControlViewModel();

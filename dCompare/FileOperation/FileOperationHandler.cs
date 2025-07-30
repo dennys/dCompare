@@ -1,47 +1,26 @@
-﻿using dCompare.Common;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using dCompare.Common;
 using dCompare.Compare.Models;
-using dCompare.FileOperation;
+using dCompare.FileOperation.Messages;
 using dCompare.FileOperation.Models;
-using Serilog;
 using System.IO;
 using System.Text;
 using System.Windows;
 
-namespace dCompare.Compare
+namespace dCompare.FileOperation
 {
     public class FileOperationHandler
     {
         private readonly IFileManager _fileManager;
-        private readonly FileOperationControlViewModel _fileOperationControlViewModel;
+        private readonly IMessenger _messenger;
 
         // Dictionary to track active jobs and their completion sources.
         private readonly Dictionary<string, TaskCompletionSource<bool>> _activeJobs = new();
 
-        public FileOperationHandler(IFileManager fileManager)
+        public FileOperationHandler(IFileManager fileManager, IMessenger messenger)
         {
             _fileManager = fileManager;
-            _fileOperationControlViewModel = FindFileOperationControlViewModel();
-        }
-
-        // Helper method to find FileOperationControl in the visual tree
-        private FileOperationControlViewModel FindFileOperationControlViewModel()
-        {
-            var mainWindow = Application.Current.MainWindow;
-
-            // Find FileOperationControl by x:Name or type
-            FileOperationControl? control = (FileOperationControl)mainWindow.FindName("fileOperationControl");
-            // Fallback: Traverse the visual tree to find FileOperationControl
-            control ??= WpfTreeHelperExtensions.FindVisualChild<FileOperationControl>(mainWindow);
-
-            if (control?.DataContext is not FileOperationControlViewModel viewModel)
-            {
-                const string message = "FileOperationControlViewModel not found in visual tree.";
-                Log.Error(message);
-                throw new InvalidOperationException(message);
-            }
-
-            viewModel.OnTransferStatusChanged += FileOperation_OnTransferStatusChanged;
-            return viewModel;
+            _messenger = messenger;
         }
 
         public List<(string Source, string TargetPath, SourceType Type)> GetItemsForTransfer(List<TreeNode> selectedItems, bool toLeft, string targetRoot)
@@ -85,11 +64,6 @@ namespace dCompare.Compare
 
             try
             {
-                if (_fileOperationControlViewModel == null)
-                {
-                    throw new Exception("FileOperationControl is not available.");
-                }
-
                 var jobIds = new List<string>();
                 var tasks = new List<Task>();
 
@@ -112,7 +86,7 @@ namespace dCompare.Compare
                         StartTime = DateTime.Now
                     };
 
-                    Application.Current.Dispatcher.Invoke(() => _fileOperationControlViewModel.QueuedTransfers.Add(transfer));
+                    _messenger.Send(new QueueTransferMessage(transfer));
 
                     tasks.Add(Task.Run(async () =>
                     {
@@ -120,20 +94,14 @@ namespace dCompare.Compare
                         {
                             var progress = new Progress<OperationProgress>(p =>
                             {
-                                Application.Current.Dispatcher.Invoke(() =>
-                                {
-                                    transfer.Progress = p.Percentage / 100.0;
-                                    transfer.Status = $"Deleting ({p.Percentage:P0})";
-                                });
+                                transfer.Progress = p.Percentage / 100.0;
+                                transfer.Status = $"Deleting ({p.Percentage:P0})";
                             });
 
                             OperationResult result = await _fileManager.DeleteAsync(item.Path, progress);
                             if (result.SuccessCount > 0)
                             {
-                                Application.Current.Dispatcher.Invoke(() =>
-                                {
-                                    _fileOperationControlViewModel.CompleteTransfer(transfer, true, "Operation completed successfully.");
-                                });
+                                _messenger.Send(new CompleteTransferMessage(transfer, true, "Operation completed successfully."));
                                 tcs.TrySetResult(true);
                             }
                             else
@@ -143,10 +111,7 @@ namespace dCompare.Compare
                         }
                         catch (Exception ex)
                         {
-                            Application.Current.Dispatcher.Invoke(() =>
-                            {
-                                _fileOperationControlViewModel.CompleteTransfer(transfer, false, ex.Message);
-                            });
+                            _messenger.Send(new CompleteTransferMessage(transfer, false, ex.Message));
                             tcs.TrySetException(ex);
                         }
                     }));
@@ -171,11 +136,6 @@ namespace dCompare.Compare
 
             try
             {
-                if (_fileOperationControlViewModel == null)
-                {
-                    throw new Exception("FileOperationControl is not available.");
-                }
-
                 var jobIds = new List<string>();
                 var tasks = new List<Task>();
 
@@ -198,7 +158,7 @@ namespace dCompare.Compare
                         StartTime = DateTime.Now
                     };
 
-                    Application.Current.Dispatcher.Invoke(() => _fileOperationControlViewModel.QueuedTransfers.Add(transfer));
+                    _messenger.Send(new QueueTransferMessage(transfer));
 
                     tasks.Add(Task.Run(async () =>
                     {
@@ -206,15 +166,12 @@ namespace dCompare.Compare
                         {
                             var progress = new Progress<OperationProgress>(p =>
                             {
-                                Application.Current.Dispatcher.Invoke(() =>
+                                transfer.Progress = p.Percentage / 100.0;
+                                transfer.Status = $"Transferring";
+                                if (p.Percentage > 0)
                                 {
-                                    transfer.Progress = p.Percentage / 100.0;
-                                    transfer.Status = $"Transferring";
-                                    if (p.Percentage > 0)
-                                    {
-                                        transfer.TransferSpeed = (transfer.FileSize * (p.Percentage / 100.0) / 1024.0) / (DateTime.Now - transfer.StartTime).TotalSeconds;
-                                    }
-                                });
+                                    transfer.TransferSpeed = (transfer.FileSize * (p.Percentage / 100.0) / 1024.0) / (DateTime.Now - transfer.StartTime).TotalSeconds;
+                                }
                             });
 
                             OperationResult result = operation == "Copy"
@@ -223,10 +180,7 @@ namespace dCompare.Compare
 
                             if (result.SuccessCount > 0)
                             {
-                                Application.Current.Dispatcher.Invoke(() =>
-                                {
-                                    _fileOperationControlViewModel.CompleteTransfer(transfer, true, "Operation completed successfully.");
-                                });
+                                _messenger.Send(new CompleteTransferMessage(transfer, true, "Operation completed successfully."));
                                 tcs.TrySetResult(true);
                             }
                             else
@@ -236,10 +190,7 @@ namespace dCompare.Compare
                         }
                         catch (Exception ex)
                         {
-                            Application.Current.Dispatcher.Invoke(() =>
-                            {
-                                _fileOperationControlViewModel.CompleteTransfer(transfer, false, ex.Message);
-                            });
+                            _messenger.Send(new CompleteTransferMessage(transfer, false, ex.Message));
                             tcs.TrySetException(ex);
                         }
                     }));
@@ -318,28 +269,6 @@ namespace dCompare.Compare
             return newPath;
         }
 
-        private void FileOperation_OnTransferStatusChanged(string jobId, bool success, string message)
-        {
-            string a = $"Job {jobId}: {message}";
-            Log.Information($"complete copy or move or delete: {a}");
-
-            // Find the TaskCompletionSource for the completed job.
-            if (_activeJobs.TryGetValue(jobId, out var tcs))
-            {
-                if (success)
-                {
-                    // Signal that the task completed successfully.
-                    tcs.TrySetResult(true);
-                }
-                else
-                {
-                    // Signal that the task failed.
-                    tcs.TrySetException(new Exception(message));
-                }
-                // Remove the completed job from tracking.
-                _activeJobs.Remove(jobId);
-            }
-        }
         public static void ShowPropertiesDialog(TreeNode node)
         {
             StringBuilder properties = new();
