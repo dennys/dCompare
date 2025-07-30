@@ -10,7 +10,8 @@
         mc:Ignorable="d"
         xmlns:resx="clr-namespace:dCompare.Properties"
         Title="Settings" Height="680" Width="800"
-        d:DataContext="{d:DesignInstance Type=local:SettingsViewModel, IsDesignTimeCreatable=True}">
+        d:DataContext="{d:DesignInstance Type=local:SettingsViewModel, IsDesignTimeCreatable=True}"
+        KeyDown="Window_KeyDown">
     <Window.Resources>
         <infra:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <infra:StringNullOrEmptyToVisibilityConverter x:Key="StringNullOrEmptyToVisibilityConverter" />

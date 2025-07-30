@@ -1,8 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using dCompare.Configuration;
-using dCompare.Infrastructure;
-using Microsoft.VisualBasic; // For InputBox
+using Microsoft.VisualBasic;
 using Microsoft.Win32;
 using System.Collections.ObjectModel;
 using System.Windows;
@@ -393,7 +392,7 @@ namespace dCompare.Options
         private readonly Action<TModel, List<string>> _updateModelAction;
         public virtual bool IsValid => true;
         [ObservableProperty]
-        private string _selectedExtension;
+        private string? _selectedExtension;
 
         public ObservableCollection<string> Extensions { get; set; }
 
@@ -414,7 +413,7 @@ namespace dCompare.Options
                 return;
             }
 
-            if (!newExt.StartsWith("."))
+            if (!newExt.StartsWith('.'))
             {
                 MessageBox.Show("Extension must start with a dot (e.g., .txt).", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
