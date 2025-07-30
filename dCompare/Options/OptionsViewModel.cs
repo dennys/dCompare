@@ -185,7 +185,11 @@ namespace dCompare.Options
     {
         private readonly UIOptions _model;
         public virtual bool IsValid => true;
-        public UIOptionsViewModel(UIOptions model) { _model = model; }
+        public UIOptionsViewModel(UIOptions model)
+        {
+            _model = model;
+            _selectedTheme = AvailableThemes.FirstOrDefault(t => t.Value == _model.Theme);
+        }
         public UIOptionsViewModel() : this(new UIOptions()) { }
         public static List<KeyValuePair<string, string>> AvailableThemes =>
         [
@@ -198,6 +202,19 @@ namespace dCompare.Options
             new KeyValuePair<string, string>("繁體中文", "zh-TW"),
             new KeyValuePair<string, string>("简体中文", "zh-CN")
         ];
+
+        private KeyValuePair<string, string> _selectedTheme;
+        public KeyValuePair<string, string> SelectedTheme
+        {
+            get => _selectedTheme;
+            set
+            {
+                if (SetProperty(ref _selectedTheme, value))
+                {
+                    Theme = value.Value;
+                }
+            }
+        }
 
         public string Theme { get => _model.Theme; set { _model.Theme = value; OnPropertyChanged(); } }
         public string Language { get => _model.Language; set { _model.Language = value; OnPropertyChanged(); } }

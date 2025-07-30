@@ -99,7 +99,9 @@
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="{x:Static resx:Resources.Theme}" VerticalAlignment="Center" Margin="0,5,10,5"/>
                     <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,5"
                       ItemsSource="{Binding AvailableThemes}" 
-                      SelectedItem="{Binding Theme}"/>
+                      DisplayMemberPath="Key"
+                      SelectedValuePath="Value"
+                      SelectedValue="{Binding SelectedTheme}"/>
 
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="{x:Static resx:Resources.Language}" VerticalAlignment="Center" Margin="0,5,10,5"/>
                     <ComboBox Grid.Row="1" Grid.Column="1" Margin="0,5"
