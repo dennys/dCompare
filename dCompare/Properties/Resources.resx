@@ -369,4 +369,10 @@
   <data name="FileTypeMapping" xml:space="preserve">
     <value>FileTypeMapping</value>
   </data>
+  <data name="LightTheme" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="DarkTheme" xml:space="preserve">
+    <value>Dark</value>
+  </data>
 </root>
