@@ -187,6 +187,15 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Compare 的當地語系化字串。
+        /// </summary>
+        public static string Compare {
+            get {
+                return ResourceManager.GetString("Compare", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Compare Contents... 的當地語系化字串。
         /// </summary>
         public static string CompareContentsMenu {
@@ -210,6 +219,15 @@ namespace dCompare.Properties {
         public static string CompareWith {
             get {
                 return ResourceManager.GetString("CompareWith", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Confirmation 的當地語系化字串。
+        /// </summary>
+        public static string Confirmation {
+            get {
+                return ResourceManager.GetString("Confirmation", resourceCulture);
             }
         }
         
@@ -282,6 +300,15 @@ namespace dCompare.Properties {
         public static string CopyToRightMenu {
             get {
                 return ResourceManager.GetString("CopyToRightMenu", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Dark 的當地語系化字串。
+        /// </summary>
+        public static string DarkTheme {
+            get {
+                return ResourceManager.GetString("DarkTheme", resourceCulture);
             }
         }
         
@@ -367,6 +394,15 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 FileTypeMapping 的當地語系化字串。
+        /// </summary>
+        public static string FileTypeMapping {
+            get {
+                return ResourceManager.GetString("FileTypeMapping", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Filter 的當地語系化字串。
         /// </summary>
         public static string Filter {
@@ -385,6 +421,15 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 HotKeys 的當地語系化字串。
+        /// </summary>
+        public static string HotKeys {
+            get {
+                return ResourceManager.GetString("HotKeys", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Language 的當地語系化字串。
         /// </summary>
         public static string Language {
@@ -399,6 +444,15 @@ namespace dCompare.Properties {
         public static string LeftPath {
             get {
                 return ResourceManager.GetString("LeftPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Light 的當地語系化字串。
+        /// </summary>
+        public static string LightTheme {
+            get {
+                return ResourceManager.GetString("LightTheme", resourceCulture);
             }
         }
         
@@ -547,6 +601,15 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Session 的當地語系化字串。
+        /// </summary>
+        public static string Session {
+            get {
+                return ResourceManager.GetString("Session", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Show All Items 的當地語系化字串。
         /// </summary>
         public static string ShowAllMenu {
@@ -682,6 +745,15 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 TextViewer 的當地語系化字串。
+        /// </summary>
+        public static string TextViewer {
+            get {
+                return ResourceManager.GetString("TextViewer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Theme 的當地語系化字串。
         /// </summary>
         public static string Theme {
@@ -691,11 +763,29 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Tools 的當地語系化字串。
+        /// </summary>
+        public static string Tools {
+            get {
+                return ResourceManager.GetString("Tools", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Traditional Chinese 的當地語系化字串。
         /// </summary>
         public static string TraditionalChinese {
             get {
                 return ResourceManager.GetString("TraditionalChinese", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 UI 的當地語系化字串。
+        /// </summary>
+        public static string UI {
+            get {
+                return ResourceManager.GetString("UI", resourceCulture);
             }
         }
         
