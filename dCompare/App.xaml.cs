@@ -10,7 +10,6 @@ using Microsoft.Extensions.Hosting;
 using Serilog;
 using System.Globalization;
 using System.IO;
-using System.Threading;
 using System.Windows;
 
 namespace dCompare
@@ -21,26 +20,44 @@ namespace dCompare
 
         public App()
         {
-            // --- Configuration Setup ---
-            var configuration = new ConfigurationBuilder()
+            // Configuration Setup
+            IConfigurationRoot configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("dCompare.json", optional: true, reloadOnChange: true)
                 .Build();
 
-            // Configuration for the logger
-            var loggerConfiguration = new ConfigurationBuilder()
+            // Configure Culture
+            string languageCode = configuration["Options:UI:Language"] ?? "en";
+            if (!string.IsNullOrEmpty(languageCode))
+            {
+                try
+                {
+                    CultureInfo culture = new(languageCode);
+                    CultureInfo.DefaultThreadCurrentCulture = culture;
+                    CultureInfo.DefaultThreadCurrentUICulture = culture;
+                }
+                catch (CultureNotFoundException ex)
+                {
+                    Log.Warning(ex, "Invalid culture code '{LanguageCode}', falling back to 'en'", languageCode);
+                    CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en");
+                    CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("en");
+                }
+            }
+
+            // Configuration for the logger
+            IConfigurationRoot loggerConfiguration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("Serilog.json", optional: false, reloadOnChange: true)
+                .AddJsonFile("Serilog.json", optional: true, reloadOnChange: true)
                 .Build();
 
-            // Configure the static logger
-            Log.Logger = new LoggerConfiguration()
+            // Configure the static logger
+            Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(loggerConfiguration)
                 .Enrich.WithThreadId()
                 .CreateLogger();
 
-            // --- Host Setup ---
-            AppHost = Host.CreateDefaultBuilder()
+            // --- Host Setup ---
+            AppHost = Host.CreateDefaultBuilder()
                 .ConfigureAppConfiguration((context, configBuilder) =>
                 {
                     // Add the same configuration to the host
@@ -57,47 +74,34 @@ namespace dCompare
                     services.AddSingleton<IConfigurationService, ConfigurationService>();
                     services.AddSingleton<ISessionManager, SessionManager>();
                     services.AddSingleton<IFileManager, FileManager>();
-
-                    // Register other dependencies
                     services.AddSingleton<IFileOperationStrategy, Kernel32FileCopyStrategy>();
                     services.AddSingleton<IFileSystem, FileSystem>();
-
-                    // Register UserInteractionService for ViewModel
                     services.AddSingleton<IUserInteractionService, UserInteractionService>();
                 })
-                // --- Integrate Serilog with the Host ---
-                .UseSerilog() // This replaces the default logger with Serilog
-                .Build();
+            // --- Integrate Serilog with the Host ---
+            .UseSerilog() // This replaces the default logger with Serilog
+            .Build();
 
-            // Configure CommunityToolkit.Mvvm IoC with the Host's service provider
-            Ioc.Default.ConfigureServices(AppHost.Services);
+            // Configure CommunityToolkit.Mvvm IoC with the Host's service provider
+            Ioc.Default.ConfigureServices(AppHost.Services);
         }
 
         protected override async void OnStartup(StartupEventArgs e)
         {
             try
             {
-                IConfigurationService configService = AppHost.Services.GetRequiredService<IConfigurationService>();
-                IConfiguration? configuration = configService.GetConfiguration();
-                if (configuration != null)
-                {
-                    var appConfig = configuration.Get<AppConfiguration>();
-                    if (appConfig?.Options?.UI?.Language != null)
-                    {
-                        Thread.CurrentThread.CurrentUICulture = new CultureInfo(appConfig.Options.UI.Language);
-                    }
-                }
-
                 Log.Information("Application starting up.");
-                await AppHost!.StartAsync();
-                var startupForm = AppHost.Services.GetRequiredService<MainWindow>();
-                startupForm.Show();
+                await AppHost.StartAsync();
+                MainWindow mainWindow = AppHost.Services.GetRequiredService<MainWindow>();
+                mainWindow.Show();
                 base.OnStartup(e);
             }
             catch (Exception ex)
             {
                 Log.Fatal(ex, "Application failed to start.");
                 MessageBox.Show($"Application failed to start: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Current.Shutdown(1);
+                return;
             }
         }
 
@@ -107,7 +111,7 @@ namespace dCompare
             AppHost.Dispose();
             Log.Information("Application shutting down.");
             Log.CloseAndFlush(); // Ensures all logs are written before the app closes
-            base.OnExit(e);
+            base.OnExit(e);
         }
     }
 }
