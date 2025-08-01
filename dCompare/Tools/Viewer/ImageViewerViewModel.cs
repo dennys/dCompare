@@ -54,7 +54,7 @@ namespace dCompare.Tools.Viewer
         {
             var openFileDialog = new OpenFileDialog
             {
-                Filter = "Image files (*.png;*.jpeg;*.jpg;*.bmp;*.gif)|*.png;*.jpeg;*.jpg;*.bmp;*.gif|All files (*.*)|*.*",
+                Filter = Properties.Resources.ImageFiles,
                 InitialDirectory = !string.IsNullOrEmpty(_currentFilePath)
                     ? Path.GetDirectoryName(_currentFilePath)
                     : Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
@@ -81,7 +81,7 @@ namespace dCompare.Tools.Viewer
             {
                 FileName = Path.GetFileName(_currentFilePath),
                 DefaultExt = defaultExt,
-                Filter = $"Same as original (*{defaultExt})|*{defaultExt}|All files (*.*)|*.*"
+                Filter = string.Format(Properties.Resources.SameAsOriginal, defaultExt)
             };
 
             if (saveFileDialog.ShowDialog() == true)

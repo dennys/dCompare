@@ -4,6 +4,7 @@
              xmlns:local="clr-namespace:dCompare"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:p="clr-namespace:dCompare.Properties"
              mc:Ignorable="d" 
              MinHeight="200">
     <Grid>
@@ -14,9 +15,9 @@
 
         <!-- Toolbar -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="5">
-            <Button Content="Start" Command="{Binding StartCommand}" Margin="5"/>
-            <Button Content="Pause" Command="{Binding PauseCommand}" Margin="5"/>
-            <Button Content="Cancel" Command="{Binding CancelCommand}" Margin="5"/>
+            <Button Content="{x:Static p:Resources.Start}" Command="{Binding StartCommand}" Margin="5"/>
+            <Button Content="{x:Static p:Resources.Pause}" Command="{Binding PauseCommand}" Margin="5"/>
+            <Button Content="{x:Static p:Resources.Cancel}" Command="{Binding CancelCommand}" Margin="5"/>
             <TextBox Width="200" Margin="5" Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}" ToolTip="Filter by source or target path"/>
         </StackPanel>
 
@@ -26,7 +27,7 @@
                       HorizontalScrollBarVisibility="Disabled"
                       CanContentScroll="True">
             <TabControl MaxHeight="250">
-                <TabItem Header="Queued">
+                <TabItem Header="{x:Static p:Resources.Queued}">
                     <DataGrid AutoGenerateColumns="False"
                               IsReadOnly="True" 
                               ItemsSource="{Binding QueuedTransfers}"
@@ -35,23 +36,23 @@
                               VirtualizingStackPanel.IsVirtualizing="True"
                               VirtualizingStackPanel.VirtualizationMode="Recycling">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Operation" Binding="{Binding Operation}" Width="100"/>
-                            <DataGridTextColumn Header="Source" Binding="{Binding Source}" Width="*"/>
-                            <DataGridTextColumn Header="Target" Binding="{Binding Target}" Width="*"/>
-                            <DataGridTextColumn Header="Size" Binding="{Binding FileSize, StringFormat={}{0:N0} bytes}" Width="100"/>
-                            <DataGridTextColumn Header="Progress" Binding="{Binding Progress, StringFormat={}{0:P0}}" Width="80"/>
-                            <DataGridTextColumn Header="Speed" Binding="{Binding TransferSpeed, StringFormat={}{0:N2} KB/s}" Width="80"/>
-                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="120"/>
+                            <DataGridTextColumn Header="{x:Static p:Resources.Operation}" Binding="{Binding Operation}" Width="100"/>
+                            <DataGridTextColumn Header="{x:Static p:Resources.Source}" Binding="{Binding Source}" Width="*"/>
+                            <DataGridTextColumn Header="{x:Static p:Resources.Target}" Binding="{Binding Target}" Width="*"/>
+                            <DataGridTextColumn Header="{x:Static p:Resources.PropertySize}" Binding="{Binding FileSize, StringFormat={}{0:N0} bytes}" Width="100"/>
+                            <DataGridTextColumn Header="{x:Static p:Resources.Progress}" Binding="{Binding Progress, StringFormat={}{0:P0}}" Width="80"/>
+                            <DataGridTextColumn Header="{x:Static p:Resources.Speed}" Binding="{Binding TransferSpeed, StringFormat={}{0:N2} KB/s}" Width="80"/>
+                            <DataGridTextColumn Header="{x:Static p:Resources.PropertyStatus}" Binding="{Binding Status}" Width="120"/>
                         </DataGrid.Columns>
                         <DataGrid.ContextMenu>
                             <ContextMenu>
-                                <MenuItem Header="Cancel" Command="{Binding CancelTransferCommand}" CommandParameter="{Binding}"/>
-                                <MenuItem Header="Clear Queued" Command="{Binding ClearQueuedCommand}"/>
+                                <MenuItem Header="{x:Static p:Resources.Cancel}" Command="{Binding CancelTransferCommand}" CommandParameter="{Binding}"/>
+                                <MenuItem Header="{x:Static p:Resources.ClearQueued}" Command="{Binding ClearQueuedCommand}"/>
                             </ContextMenu>
                         </DataGrid.ContextMenu>
                     </DataGrid>
                 </TabItem>
-                <TabItem Header="Successful">
+                <TabItem Header="{x:Static p:Resources.Successful}">
                     <DataGrid AutoGenerateColumns="False"
                               IsReadOnly="True" 
                               ItemsSource="{Binding SuccessfulTransfers}"
@@ -60,20 +61,20 @@
                               VirtualizingStackPanel.IsVirtualizing="True"
                               VirtualizingStackPanel.VirtualizationMode="Recycling">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Operation" Binding="{Binding Operation}" Width="100"/>
-                            <DataGridTextColumn Header="Source" Binding="{Binding Source}" Width="*"/>
-                            <DataGridTextColumn Header="Target" Binding="{Binding Target}" Width="*"/>
-                            <DataGridTextColumn Header="Size" Binding="{Binding FileSize, StringFormat={}{0:N0} bytes}" Width="100"/>
-                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="120"/>
+                            <DataGridTextColumn Header="{x:Static p:Resources.Operation}" Binding="{Binding Operation}" Width="100"/>
+                            <DataGridTextColumn Header="{x:Static p:Resources.Source}" Binding="{Binding Source}" Width="*"/>
+                            <DataGridTextColumn Header="{x:Static p:Resources.Target}" Binding="{Binding Target}" Width="*"/>
+                            <DataGridTextColumn Header="{x:Static p:Resources.PropertySize}" Binding="{Binding FileSize, StringFormat={}{0:N0} bytes}" Width="100"/>
+                            <DataGridTextColumn Header="{x:Static p:Resources.PropertyStatus}" Binding="{Binding Status}" Width="120"/>
                         </DataGrid.Columns>
                         <DataGrid.ContextMenu>
                             <ContextMenu>
-                                <MenuItem Header="Clear Successful" Command="{Binding ClearSuccessfulCommand}"/>
+                                <MenuItem Header="{x:Static p:Resources.ClearSuccessful}" Command="{Binding ClearSuccessfulCommand}"/>
                             </ContextMenu>
                         </DataGrid.ContextMenu>
                     </DataGrid>
                 </TabItem>
-                <TabItem Header="Failed">
+                <TabItem Header="{x:Static p:Resources.Failed}">
                     <DataGrid AutoGenerateColumns="False"
                               IsReadOnly="True" 
                               ItemsSource="{Binding FailedTransfers}"
@@ -82,16 +83,16 @@
                               VirtualizingStackPanel.IsVirtualizing="True"
                               VirtualizingStackPanel.VirtualizationMode="Recycling">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Operation" Binding="{Binding Operation}" Width="100"/>
-                            <DataGridTextColumn Header="Source" Binding="{Binding Source}" Width="*"/>
-                            <DataGridTextColumn Header="Target" Binding="{Binding Target}" Width="*"/>
-                            <DataGridTextColumn Header="Size" Binding="{Binding FileSize, StringFormat={}{0:N0} bytes}" Width="100"/>
-                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="120"/>
+                            <DataGridTextColumn Header="{x:Static p:Resources.Operation}" Binding="{Binding Operation}" Width="100"/>
+                            <DataGridTextColumn Header="{x:Static p:Resources.Source}" Binding="{Binding Source}" Width="*"/>
+                            <DataGridTextColumn Header="{x:Static p:Resources.Target}" Binding="{Binding Target}" Width="*"/>
+                            <DataGridTextColumn Header="{x:Static p:Resources.PropertySize}" Binding="{Binding FileSize, StringFormat={}{0:N0} bytes}" Width="100"/>
+                            <DataGridTextColumn Header="{x:Static p:Resources.PropertyStatus}" Binding="{Binding Status}" Width="120"/>
                         </DataGrid.Columns>
                         <DataGrid.ContextMenu>
                             <ContextMenu>
-                                <MenuItem Header="Retry" Command="{Binding RetryTransferCommand}" CommandParameter="{Binding}"/>
-                                <MenuItem Header="Clear Failed" Command="{Binding ClearFailedCommand}"/>
+                                <MenuItem Header="{x:Static p:Resources.Retry}" Command="{Binding RetryTransferCommand}" CommandParameter="{Binding}"/>
+                                <MenuItem Header="{x:Static p:Resources.ClearFailed}" Command="{Binding ClearFailedCommand}"/>
                             </ContextMenu>
                         </DataGrid.ContextMenu>
                     </DataGrid>

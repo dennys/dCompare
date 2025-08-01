@@ -102,7 +102,7 @@ namespace dCompare.Compare
 
         private bool MatchesSearch(TreeNode node)
         {
-            if (string.IsNullOrEmpty(_searchFilterText) || _searchFilterText == "Search...")
+            if (string.IsNullOrEmpty(_searchFilterText) || _searchFilterText == Properties.Resources.SearchWatermark)
             {
                 return true;
             }

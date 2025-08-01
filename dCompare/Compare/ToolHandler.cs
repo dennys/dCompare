@@ -26,13 +26,13 @@ namespace dCompare.Compare
             if (selectedItem.IsDirectory)
             {
                 MessageBox.Show(
-                    operation == Operations.View ? "Cannot open a directory." : "Cannot compare directories with a file comparison tool.",
+                    operation == Operations.View ? Properties.Resources.CannotOpenDirectory : Properties.Resources.CannotCompareDirectory,
                     Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return null;
             }
             if (String.IsNullOrEmpty(operation))
             {
-                MessageBox.Show("Invalid operation specified.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Properties.Resources.InvalidOperation, Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return null;
             }
 
@@ -60,7 +60,7 @@ namespace dCompare.Compare
                     if (toolConfig == null)
                     {
                         MessageBox.Show(
-                            $"No default {(operation == Operations.View ? "view" : "diff")} tool configured for '{extension}' files.",
+                            string.Format(Properties.Resources.NoDefaultTool, operation == Operations.View ? Properties.Resources.View : Properties.Resources.Diff, extension),
                             Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                         return null;
                     }
@@ -78,8 +78,8 @@ namespace dCompare.Compare
                     }
 
                     string tabHeader = operation == Operations.View
-                        ? $"View: {Path.GetFileName(leftPath)}"
-                        : $"Compare: {Path.GetFileName(leftPath)} - {Path.GetFileName(rightPath)}";
+                        ? string.Format(Properties.Resources.ViewTabHeader, Path.GetFileName(leftPath))
+                        : string.Format(Properties.Resources.CompareTabHeader, Path.GetFileName(leftPath), Path.GetFileName(rightPath));
 
                     var newTab = new TabItem { Header = tabHeader, Content = tool.GetControl() };
                     return newTab;
@@ -102,7 +102,7 @@ namespace dCompare.Compare
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    $"Error {(operation == Operations.View ? "opening file" : "launching comparison tool")}: {ex.Message}",
+                    string.Format(Properties.Resources.ErrorTool, operation == Operations.View ? Properties.Resources.ErrorOpeningFile : Properties.Resources.ErrorLaunchingTool, ex.Message),
                     Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             return null;

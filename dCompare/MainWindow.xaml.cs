@@ -81,7 +81,7 @@ namespace dCompare
                     else
                     {
                         Log.Warning($"Invalid hotkey format: {keyString}");
-                        _viewModel.StatusMessage = $"Invalid hotkey format: {keyString}";
+                        _viewModel.StatusMessage = string.Format(Properties.Resources.StatusInvalidHotkeyFormat, keyString);
                     }
                 }
 
@@ -96,7 +96,7 @@ namespace dCompare
             catch (Exception ex)
             {
                 Log.Error(ex, "Failed to apply hotkey bindings.");
-                _viewModel.StatusMessage = $"Failed to apply hotkeys: {ex.Message}";
+                _viewModel.StatusMessage = string.Format(Properties.Resources.StatusFailedToApplyHotkeys, ex.Message);
             }
         }
 
@@ -147,7 +147,7 @@ namespace dCompare
                 if (tabItem != null && tabControl != null)
                 {
                     tabControl.SelectedItem = tabItem;
-                    _viewModel.StatusMessage = $"Selected tab: {tabItem.Header}";
+                    _viewModel.StatusMessage = string.Format(Properties.Resources.StatusSelectedTab, tabItem.Header);
                 }
             }
         }
@@ -160,7 +160,7 @@ namespace dCompare
                 if (tabItem != null && tabControl != null)
                 {
                     tabControl.SelectedItem = tabItem;
-                    _viewModel.StatusMessage = $"Selected tab: {tabItem.Header}";
+                    _viewModel.StatusMessage = string.Format(Properties.Resources.StatusSelectedTab, tabItem.Header);
 
                     if (textBlock.ContextMenu != null)
                     {
@@ -199,7 +199,7 @@ namespace dCompare
                 }
                 catch (Exception ex)
                 {
-                    _viewModel.StatusMessage = $"Drag operation failed: {ex.Message}";
+                    _viewModel.StatusMessage = string.Format(Properties.Resources.StatusDragOperationFailed, ex.Message);
                 }
                 finally
                 {
@@ -225,13 +225,13 @@ namespace dCompare
                         tabControl.Items.Insert(targetIndex, sourceTab);
                         tabControl.SelectedItem = sourceTab;
 
-                        _viewModel.StatusMessage = $"Moved tab '{sourceTab.Header}' to position {targetIndex + 1}";
+                        _viewModel.StatusMessage = string.Format(Properties.Resources.StatusMovedTab, sourceTab.Header, targetIndex + 1);
                     }
                 }
             }
             catch (Exception ex)
             {
-                _viewModel.StatusMessage = $"Drop operation failed: {ex.Message}";
+                _viewModel.StatusMessage = string.Format(Properties.Resources.StatusDropOperationFailed, ex.Message);
             }
             finally
             {

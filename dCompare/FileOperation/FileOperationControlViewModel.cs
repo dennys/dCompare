@@ -159,7 +159,7 @@ namespace dCompare.FileOperation
             {
                 var transfer = message.Transfer;
                 QueuedTransfers.Remove(transfer);
-                transfer.Status = message.Success ? "Completed" : $"Failed: {message.Message}";
+                transfer.Status = message.Success ? Properties.Resources.Completed : $"{Properties.Resources.Failed}: {message.Message}";
                 transfer.Progress = message.Success ? 1.0 : transfer.Progress;
                 if (message.Success)
                 {

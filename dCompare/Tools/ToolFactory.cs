@@ -35,7 +35,7 @@ namespace dCompare.Tools
             var fileType = DetermineFileType(leftFilePath ?? rightFilePath);
             if (string.IsNullOrEmpty(leftFilePath) || string.IsNullOrEmpty(rightFilePath))
             {
-                throw new ArgumentException("Both file paths cannot be null or empty.");
+                throw new ArgumentException(Properties.Resources.ErrorBothFilePathsNull);
             }
 
             return fileType switch
@@ -48,7 +48,7 @@ namespace dCompare.Tools
                     Ioc.Default.GetRequiredService<IFileManager>(),
                     Ioc.Default.GetRequiredService<ILogger<CompareControl>>(),
                     leftFilePath, rightFilePath),
-                _ => throw new NotSupportedException("Unsupported file type for comparison.")
+                _ => throw new NotSupportedException(Properties.Resources.ErrorUnsupportedFileType)
             };
         }
 
