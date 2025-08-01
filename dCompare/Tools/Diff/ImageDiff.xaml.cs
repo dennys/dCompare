@@ -19,7 +19,7 @@ namespace dCompare.Tools.Diff
         {
             if (string.IsNullOrEmpty(_viewModel.LeftPath) || string.IsNullOrEmpty(_viewModel.RightPath))
             {
-                MessageBox.Show("Both image paths must be set to refresh the comparison.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Properties.Resources.ErrorBothImagePaths, Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -29,7 +29,7 @@ namespace dCompare.Tools.Diff
             }
             catch (System.Exception ex)
             {
-                MessageBox.Show($"Failed to refresh images: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(string.Format(Properties.Resources.ErrorFailedToRefreshImages, ex.Message), Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

@@ -104,7 +104,7 @@ namespace dCompare.Session
         {
             if (_recentSessionsMenu is null)
             {
-                MessageBox.Show("Cannot locate _recentSessionsMenu.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Properties.Resources.CannotLocateParentTabControl, Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
             try
@@ -149,7 +149,7 @@ namespace dCompare.Session
         {
             if (_tabControl is null)
             {
-                MessageBox.Show("Cannot locate parent TabControl.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Properties.Resources.CannotLocateParentTabControl, Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -161,7 +161,7 @@ namespace dCompare.Session
                 {
                     if (tab.Content is CompareControl ucCompare)
                     {
-                        string tabName = tab.Header?.ToString() ?? "Untitled";
+                        string tabName = tab.Header?.ToString() ?? Properties.Resources.Untitled;
                         string tabId = _tabIdMap.TryGetValue(tabName, out string? id) ? id : Guid.NewGuid().ToString();
                         _tabIdMap[tabName] = tabId;
                         sessions[tabId] = new SessionConfig
@@ -176,7 +176,7 @@ namespace dCompare.Session
 
                 var saveFileDialog = new SaveFileDialog
                 {
-                    Filter = "JSON files (*.json)|*.json",
+                    Filter = Properties.Resources.JsonFiles,
                     DefaultExt = "json",
                     FileName = "dCompareSession.json"
                 };
@@ -187,13 +187,13 @@ namespace dCompare.Session
                     string json = JsonSerializer.Serialize(sessions, options);
                     File.WriteAllText(saveFileDialog.FileName, json);
                     AddRecentSession(saveFileDialog.FileName);
-                    updateStatus($"Session saved to {saveFileDialog.FileName}");
+                    updateStatus(string.Format(Properties.Resources.SessionSaved, saveFileDialog.FileName));
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error saving session: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                updateStatus($"Error saving session: {ex.Message}");
+                MessageBox.Show(string.Format(Properties.Resources.ErrorSavingSession, ex.Message), Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                updateStatus(string.Format(Properties.Resources.ErrorSavingSession, ex.Message));
             }
         }
 
@@ -202,7 +202,7 @@ namespace dCompare.Session
         {
             if (_tabControl is null)
             {
-                MessageBox.Show("Cannot locate parent TabControl.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Properties.Resources.CannotLocateParentTabControl, Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
             try
@@ -214,7 +214,7 @@ namespace dCompare.Session
                 {
                     var openFileDialog = new OpenFileDialog
                     {
-                        Filter = "JSON files (*.json)|*.json",
+                        Filter = Properties.Resources.JsonFiles,
                         DefaultExt = "json"
                     };
 
@@ -228,8 +228,8 @@ namespace dCompare.Session
                 {
                     if (!File.Exists(filePath))
                     {
-                        updateStatus?.Invoke($"Session file not found: {filePath}");
-                        throw new FileNotFoundException($"Session file not found: {filePath}");
+                        updateStatus?.Invoke(string.Format(Properties.Resources.SessionFileNotFound, filePath));
+                        throw new FileNotFoundException(string.Format(Properties.Resources.SessionFileNotFound, filePath));
                     }
                     json = File.ReadAllText(filePath);
                     sessionFileName = filePath;
@@ -287,7 +287,7 @@ namespace dCompare.Session
                     }
 
                     AddRecentSession(sessionFileName);
-                    updateStatus?.Invoke($"Session loaded from {sessionFileName}");
+                    updateStatus?.Invoke(string.Format(Properties.Resources.SessionLoaded, sessionFileName));
                 }
             }
             catch (FileNotFoundException)
@@ -296,8 +296,8 @@ namespace dCompare.Session
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading session: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                updateStatus?.Invoke($"Error loading session: {ex.Message}");
+                MessageBox.Show(string.Format(Properties.Resources.ErrorLoadingSession, ex.Message), Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                updateStatus?.Invoke(string.Format(Properties.Resources.ErrorLoadingSession, ex.Message));
             }
         }
     }

@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:diffplex="clr-namespace:DiffPlex.Wpf.Controls;assembly=DiffPlex.Wpf"
+             xmlns:p="clr-namespace:dCompare.Properties"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
@@ -14,9 +15,9 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="5">
-            <TextBlock Text="Left File: " FontWeight="Bold"/>
+            <TextBlock Text="{x:Static p:Resources.LeftFile}" FontWeight="Bold"/>
             <TextBlock Text="{Binding LeftPath}" Margin="5,0"/>
-            <TextBlock Text="Right File: " FontWeight="Bold" Margin="20,0,5,0"/>
+            <TextBlock Text="{x:Static p:Resources.RightFile}" FontWeight="Bold" Margin="20,0,5,0"/>
             <TextBlock Text="{Binding RightPath}"/>
         </StackPanel>
 
@@ -29,13 +30,13 @@
                                            Background="#F5F5F5" FontFamily="Consolas" FontSize="12"/>
         </Grid>
         <StackPanel Orientation="Horizontal" Grid.Row="2" Background="#F5F5F5">
-            <Button Width="100" Height="20" Content="Switch Mode" Command="{Binding SwitchModeCommand}" BorderBrush="{x:Null}" BorderThickness="0" Margin="16,0,1,0" />
-            <Button Width="20" Height="20" Content="..." Command="{Binding FurtherActionsCommand}" BorderBrush="{x:Null}" BorderThickness="0" Margin="0,0,31,0" />
-            <CheckBox Width="120" Height="20" VerticalContentAlignment="Center" IsChecked="{Binding IsSideBySide, ElementName=DiffView}" Content="Is_SideBySide" Foreground="{Binding Foreground, ElementName=DiffView}" />
-            <CheckBox Height="20" VerticalContentAlignment="Center" IsChecked="{Binding IgnoreUnchanged, ElementName=DiffView}" Content="IgnoreUnchanged" Margin="0,0,24,0" Foreground="{Binding Foreground, ElementName=DiffView}" />
-            <Label Height="20" VerticalContentAlignment="Center" Padding="0,0,8,0" Target="{Binding ElementName=MarginLineCount}" Foreground="{Binding Foreground, ElementName=DiffView}">LinesContext</Label>
+            <Button Width="100" Height="20" Content="{x:Static p:Resources.SwitchMode}" Command="{Binding SwitchModeCommand}" BorderBrush="{x:Null}" BorderThickness="0" Margin="16,0,1,0" />
+            <Button Width="20" Height="20" Content="{x:Static p:Resources.FurtherActions}" Command="{Binding FurtherActionsCommand}" BorderBrush="{x:Null}" BorderThickness="0" Margin="0,0,31,0" />
+            <CheckBox Width="120" Height="20" VerticalContentAlignment="Center" IsChecked="{Binding IsSideBySide, ElementName=DiffView}" Content="{x:Static p:Resources.IsSideBySide}" Foreground="{Binding Foreground, ElementName=DiffView}" />
+            <CheckBox Height="20" VerticalContentAlignment="Center" IsChecked="{Binding IgnoreUnchanged, ElementName=DiffView}" Content="{x:Static p:Resources.IgnoreUnchanged}" Margin="0,0,24,0" Foreground="{Binding Foreground, ElementName=DiffView}" />
+            <Label Height="20" VerticalContentAlignment="Center" Padding="0,0,8,0" Target="{Binding ElementName=MarginLineCount}" Foreground="{Binding Foreground, ElementName=DiffView}" Content="{x:Static p:Resources.LinesContext}"/>
             <TextBox Width="100" Height="20" VerticalContentAlignment="Center" Padding="8,0,8,0" Text="{Binding LinesContext, ElementName=DiffView, UpdateSourceTrigger=PropertyChanged}" Foreground="{Binding Foreground, ElementName=DiffView}" Background="{x:Null}" Margin="0,0,32,0" />
-            <Button Width="100" Height="20" Content="Test window" Command="{Binding TestWindowCommand}" BorderBrush="{x:Null}" BorderThickness="0" Margin="16,0,1,0" />
+            <Button Width="100" Height="20" Content="{x:Static p:Resources.TestWindow}" Command="{Binding TestWindowCommand}" BorderBrush="{x:Null}" BorderThickness="0" Margin="16,0,1,0" />
         </StackPanel>
     </Grid>
 </UserControl>

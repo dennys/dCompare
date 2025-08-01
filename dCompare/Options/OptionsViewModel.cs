@@ -10,7 +10,7 @@ namespace dCompare.Options
 {
     public partial class SettingsViewModel : ObservableObject
     {
-        private readonly ConfigurationService _configService;
+        private readonly IConfigurationService _configService;
         private AppConfiguration _appConfig;
 
         [ObservableProperty]
@@ -21,7 +21,7 @@ namespace dCompare.Options
 
         public ObservableCollection<SettingsMenuItem> MenuItems { get; } = new();
 
-        public SettingsViewModel(ConfigurationService configService)
+        public SettingsViewModel(IConfigurationService configService)
         {
             _configService = configService;
             LoadConfigurationAsync();
@@ -536,22 +536,22 @@ namespace dCompare.Options
         public HotKeysOptionsViewModel(HotKeysOptions model)
         {
             _model = model;
-            HotKeyItems.Add(new HotKeyItemViewModel("Add Tab", _model.AddTab, this));
-            HotKeyItems.Add(new HotKeyItemViewModel("Close Tab", _model.CloseTab, this));
-            HotKeyItems.Add(new HotKeyItemViewModel("Compare", _model.Compare, this));
-            HotKeyItems.Add(new HotKeyItemViewModel("Save Session", _model.SaveSession, this));
-            HotKeyItems.Add(new HotKeyItemViewModel("Load Session", _model.LoadSession, this));
-            HotKeyItems.Add(new HotKeyItemViewModel("Open Options", _model.OpenOptions, this));
+            HotKeyItems.Add(new HotKeyItemViewModel(Properties.Resources.AddTab, _model.AddTab, this));
+            HotKeyItems.Add(new HotKeyItemViewModel(Properties.Resources.CloseTab, _model.CloseTab, this));
+            HotKeyItems.Add(new HotKeyItemViewModel(Properties.Resources.Compare, _model.Compare, this));
+            HotKeyItems.Add(new HotKeyItemViewModel(Properties.Resources.SaveSessionMenu, _model.SaveSession, this));
+            HotKeyItems.Add(new HotKeyItemViewModel(Properties.Resources.LoadSessionMenu, _model.LoadSession, this));
+            HotKeyItems.Add(new HotKeyItemViewModel(Properties.Resources.OpenOptions, _model.OpenOptions, this));
         }
 
         public void UpdateModel()
         {
-            _model.AddTab = HotKeyItems.FirstOrDefault(i => i.Name == "Add Tab")?.Combination ?? _model.AddTab;
-            _model.CloseTab = HotKeyItems.FirstOrDefault(i => i.Name == "Close Tab")?.Combination ?? _model.CloseTab;
-            _model.Compare = HotKeyItems.FirstOrDefault(i => i.Name == "Compare")?.Combination ?? _model.Compare;
-            _model.SaveSession = HotKeyItems.FirstOrDefault(i => i.Name == "Save Session")?.Combination ?? _model.SaveSession;
-            _model.LoadSession = HotKeyItems.FirstOrDefault(i => i.Name == "Load Session")?.Combination ?? _model.LoadSession;
-            _model.OpenOptions = HotKeyItems.FirstOrDefault(i => i.Name == "Open Options")?.Combination ?? _model.OpenOptions;
+            _model.AddTab = HotKeyItems.FirstOrDefault(i => i.Name == Properties.Resources.AddTab)?.Combination ?? _model.AddTab;
+            _model.CloseTab = HotKeyItems.FirstOrDefault(i => i.Name == Properties.Resources.CloseTab)?.Combination ?? _model.CloseTab;
+            _model.Compare = HotKeyItems.FirstOrDefault(i => i.Name == Properties.Resources.Compare)?.Combination ?? _model.Compare;
+            _model.SaveSession = HotKeyItems.FirstOrDefault(i => i.Name == Properties.Resources.SaveSessionMenu)?.Combination ?? _model.SaveSession;
+            _model.LoadSession = HotKeyItems.FirstOrDefault(i => i.Name == Properties.Resources.LoadSessionMenu)?.Combination ?? _model.LoadSession;
+            _model.OpenOptions = HotKeyItems.FirstOrDefault(i => i.Name == Properties.Resources.OpenOptions)?.Combination ?? _model.OpenOptions;
         }
 
         public void ValidateHotKeys()

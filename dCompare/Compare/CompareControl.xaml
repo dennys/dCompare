@@ -191,7 +191,7 @@
             </ListView.ItemContainerStyle>
             <ListView.View>
                 <GridView ColumnHeaderContainerStyle="{StaticResource SortableColumnHeaderStyle}">
-                    <GridViewColumn Header="Left Name" Width="250">
+                    <GridViewColumn Header="{x:Static resx:Resources.HeaderLeftName}" Width="250">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding LeftDisplayName}" 
@@ -200,7 +200,7 @@
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
-                    <GridViewColumn Header="Left Size" Width="60">
+                    <GridViewColumn Header="{x:Static resx:Resources.HeaderLeftSize}" Width="60">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding LeftSize}" HorizontalAlignment="Right" FontSize="11" 
@@ -208,7 +208,7 @@
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
-                    <GridViewColumn Header="Left Date">
+                    <GridViewColumn Header="{x:Static resx:Resources.HeaderLeftDate}">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding LeftDate}" FontSize="11" 
@@ -216,7 +216,7 @@
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
-                    <GridViewColumn Header="Status" Width="40">
+                    <GridViewColumn Header="{x:Static resx:Resources.HeaderStatus}" Width="40">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding StatusSymbol}" HorizontalAlignment="Center" TextAlignment="Center"
@@ -243,7 +243,7 @@
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
-                    <GridViewColumn Header="Right Name" Width="250">
+                    <GridViewColumn Header="{x:Static resx:Resources.HeaderRightName}" Width="250">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding RightDisplayName}" 
@@ -252,7 +252,7 @@
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
-                    <GridViewColumn Header="Right Size" Width="60">
+                    <GridViewColumn Header="{x:Static resx:Resources.HeaderRightSize}" Width="60">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding RightSize}" HorizontalAlignment="Right" FontSize="11" 
@@ -260,7 +260,7 @@
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
-                    <GridViewColumn Header="Right Date" Width="120">
+                    <GridViewColumn Header="{x:Static resx:Resources.HeaderRightDate}" Width="120">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding RightDate}" FontSize="11" 

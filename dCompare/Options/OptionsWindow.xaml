@@ -9,7 +9,7 @@
         xmlns:helper="clr-namespace:dCompare.Options"
         mc:Ignorable="d"
         xmlns:resx="clr-namespace:dCompare.Properties"
-        Title="Settings" Height="680" Width="800"
+        Title="{x:Static resx:Resources.Settings}" Height="680" Width="800"
         d:DataContext="{d:DesignInstance Type=local:SettingsViewModel, IsDesignTimeCreatable=True}"
         KeyDown="Window_KeyDown">
     <Window.Resources>
@@ -23,7 +23,7 @@
                     <ControlTemplate TargetType="{x:Type controls:HotKeyTextBox}">
                         <Border x:Name="border" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
                             <Grid>
-                                <TextBlock x:Name="watermark" Text="Click to set a hotkey" Foreground="Gray" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="5,0,0,0"
+                                <TextBlock x:Name="watermark" Text="{x:Static resx:Resources.HotkeyWatermark}" Foreground="Gray" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="5,0,0,0"
                                            Visibility="Collapsed"/>
                                 <ScrollViewer x:Name="PART_ContentHost" Focusable="false" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
                             </Grid>
@@ -44,7 +44,7 @@
                 <DataTrigger Binding="{Binding IsDuplicate}" Value="True">
                     <Setter Property="BorderBrush" Value="Red"/>
                     <Setter Property="BorderThickness" Value="1.5"/>
-                    <Setter Property="ToolTip" Value="This hotkey is already in use."/>
+                    <Setter Property="ToolTip" Value="{x:Static resx:Resources.DuplicateHotkeyTooltip}"/>
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -118,8 +118,8 @@
 
         <DataTemplate DataType="{x:Type local:CompareOptionsViewModel}">
             <StackPanel Margin="20" Background="#FFF" >
-                <TextBlock Text="Compare Settings" FontSize="24" FontWeight="SemiBold" Margin="0,0,0,20"/>
-                <GroupBox Header="Scan Options" Margin="0,0,0,15">
+                <TextBlock Text="{x:Static resx:Resources.CompareSettings}" FontSize="24" FontWeight="SemiBold" Margin="0,0,0,20"/>
+                <GroupBox Header="{x:Static resx:Resources.ScanOptions}" Margin="0,0,0,15">
                     <StackPanel Margin="10">
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -131,22 +131,22 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Scan Method:" VerticalAlignment="Center" Margin="0,5"/>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="{x:Static resx:Resources.ScanMethod}" VerticalAlignment="Center" Margin="0,5"/>
                             <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,5"
                               ItemsSource="{Binding AvailableScanMethods}"
                               SelectedItem="{Binding ScanMethod}"/>
 
-                            <TextBlock Grid.Row="1" Grid.Column="1" Text="Choose 'General' for standard file system scanning or 'MFT' for faster scanning using the Master File Table (Windows NTFS only)."
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Static resx:Resources.ScanMethodHint}"
                                FontStyle="Italic" Foreground="Gray" Margin="0,0,0,5" TextWrapping="Wrap"/>
                         </Grid>
 
-                        <CheckBox IsChecked="{Binding Parallel}" Content="Enable Parallel Scanning" Margin="0,10,0,0"/>
-                        <TextBlock Text="Enable to perform file comparisons in parallel for faster processing (recommended for multi-core systems)."
+                        <CheckBox IsChecked="{Binding Parallel}" Content="{x:Static resx:Resources.EnableParallelScanning}" Margin="0,10,0,0"/>
+                        <TextBlock Text="{x:Static resx:Resources.EnableParallelScanningHint}"
                            FontStyle="Italic" Foreground="Gray" Margin="20,0,0,10" TextWrapping="Wrap"/>
                     </StackPanel>
                 </GroupBox>
 
-                <GroupBox Header="Comparison Algorithms" Margin="0,0,0,15">
+                <GroupBox Header="{x:Static resx:Resources.ComparisonAlgorithms}" Margin="0,0,0,15">
                     <StackPanel Margin="10">
                         <Grid Margin="0,0,0,5">
                             <Grid.ColumnDefinitions>
@@ -155,10 +155,10 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="80"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="Enable" FontWeight="Bold" HorizontalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="Default" FontWeight="Bold" HorizontalAlignment="Center"/>
-                            <TextBlock Grid.Column="2" Text="Algorithm" FontWeight="Bold"/>
-                            <TextBlock Grid.Column="3" Text="Percent %" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock Grid.Column="0" Text="{x:Static resx:Resources.Enable}" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{x:Static resx:Resources.Default}" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock Grid.Column="2" Text="{x:Static resx:Resources.Algorithm}" FontWeight="Bold"/>
+                            <TextBlock Grid.Column="3" Text="{x:Static resx:Resources.Percent}" FontWeight="Bold" HorizontalAlignment="Center"/>
                         </Grid>
                         <Separator/>
 
@@ -187,14 +187,14 @@
                     </StackPanel>
                 </GroupBox>
 
-                <GroupBox Header="User Interaction">
+                <GroupBox Header="{x:Static resx:Resources.UserInteraction}">
                     <Grid Margin="10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="150"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Grid.Column="0" Text="Double Click Action:" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="0" Text="{x:Static resx:Resources.DoubleClickAction}" VerticalAlignment="Center"/>
                         <ComboBox Grid.Column="1"
                           ItemsSource="{Binding AvailableDoubleClickActions}"
                           SelectedItem="{Binding DoubleClickAction}"/>
@@ -212,20 +212,20 @@
 
         <DataTemplate DataType="{x:Type local:ConfirmationOptionsViewModel}">
             <StackPanel Margin="20">
-                <TextBlock Text="Confirmation Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
-                <GroupBox Header="General Confirmations" Margin="0,0,0,15">
+                <TextBlock Text="{x:Static resx:Resources.ConfirmationSettings}" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+                <GroupBox Header="{x:Static resx:Resources.GeneralConfirmations}" Margin="0,0,0,15">
                     <StackPanel Margin="10">
-                        <CheckBox IsChecked="{Binding CloseApplication}" Content="Confirm before closing application" Margin="0,5"/>
-                        <CheckBox IsChecked="{Binding CloseTab}" Content="Confirm before closing a tab" Margin="0,5"/>
-                        <CheckBox IsChecked="{Binding Copy}" Content="Confirm before copying files" Margin="0,5"/>
-                        <CheckBox IsChecked="{Binding Move}" Content="Confirm before moving files" Margin="0,5"/>
+                        <CheckBox IsChecked="{Binding CloseApplication}" Content="{x:Static resx:Resources.ConfirmCloseApplication}" Margin="0,5"/>
+                        <CheckBox IsChecked="{Binding CloseTab}" Content="{x:Static resx:Resources.ConfirmCloseTabAction}" Margin="0,5"/>
+                        <CheckBox IsChecked="{Binding Copy}" Content="{x:Static resx:Resources.ConfirmCopy}" Margin="0,5"/>
+                        <CheckBox IsChecked="{Binding Move}" Content="{x:Static resx:Resources.ConfirmMove}" Margin="0,5"/>
                     </StackPanel>
                 </GroupBox>
-                <GroupBox Header="Dangerous Actions">
+                <GroupBox Header="{x:Static resx:Resources.DangerousActions}">
                     <StackPanel Margin="10">
-                        <CheckBox IsChecked="{Binding CopyOverwrite}" Content="Confirm before overwriting files during copy" Margin="0,5"/>
-                        <CheckBox IsChecked="{Binding MoveOverwrite}" Content="Confirm before overwriting files during move" Margin="0,5"/>
-                        <CheckBox IsChecked="{Binding DeleteFile}" Content="Confirm before deleting files" Margin="0,5"/>
+                        <CheckBox IsChecked="{Binding CopyOverwrite}" Content="{x:Static resx:Resources.ConfirmCopyOverwrite}" Margin="0,5"/>
+                        <CheckBox IsChecked="{Binding MoveOverwrite}" Content="{x:Static resx:Resources.ConfirmMoveOverwrite}" Margin="0,5"/>
+                        <CheckBox IsChecked="{Binding DeleteFile}" Content="{x:Static resx:Resources.ConfirmDeleteFile}" Margin="0,5"/>
                     </StackPanel>
                 </GroupBox>
             </StackPanel>
@@ -233,28 +233,28 @@
 
         <DataTemplate DataType="{x:Type local:SessionOptionsViewModel}">
             <StackPanel Margin="20">
-                <TextBlock Text="Session Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+                <TextBlock Text="{x:Static resx:Resources.SessionSettings}" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="Default Session File:" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                    <TextBlock Text="{x:Static resx:Resources.DefaultSessionFile}" VerticalAlignment="Center" Margin="0,5,10,5"/>
                     <TextBox Text="{Binding DefaultSessionFile, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" Margin="0,5"/>
-                    <Button Grid.Column="1" Content="..." VerticalAlignment="Center" Padding="10,2" Margin="5,0" Command="{Binding BrowseSessionFileCommand}"/>
+                    <Button Grid.Column="1" Content="{x:Static resx:Resources.Browse}" VerticalAlignment="Center" Padding="10,2" Margin="5,0" Command="{Binding BrowseSessionFileCommand}"/>
                 </Grid>
-                <CheckBox IsChecked="{Binding AutoLoadDefaultSession}" Content="Auto-load default session on startup" Margin="0,10"/>
+                <CheckBox IsChecked="{Binding AutoLoadDefaultSession}" Content="{x:Static resx:Resources.AutoLoadDefaultSession}" Margin="0,10"/>
                 <CheckBox IsChecked="{Binding AutoCompareAfterSessionLoad}" 
                           IsEnabled="{Binding AutoLoadDefaultSession}" 
-                          Content="Auto-compare after session load" Margin="0,5"/>
+                          Content="{x:Static resx:Resources.AutoCompareAfterSessionLoad}" Margin="0,5"/>
             </StackPanel>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type local:HotKeysOptionsViewModel}">
             <StackPanel Margin="20">
-                <TextBlock Text="Hotkey Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,5"/>
+                <TextBlock Text="{x:Static resx:Resources.HotkeySettings}" FontSize="20" FontWeight="Bold" Margin="0,0,0,5"/>
 
-                <TextBlock Text="Click a box and press a key combination to set the hotkey. Use Backspace or the '✖' button to clear." 
+                <TextBlock Text="{x:Static resx:Resources.HotkeySettingsHint}"
                            Foreground="SlateGray" 
                            FontStyle="Italic"
                            TextWrapping="Wrap"
@@ -264,7 +264,7 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Grid Margin="0,4" 
-                                  ToolTip="Press your desired key combination (e.g., Ctrl+S).">
+                                  ToolTip="{x:Static resx:Resources.HotkeyTooltip}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="150"/>
                                     <ColumnDefinition Width="*"/>
@@ -291,8 +291,8 @@
 
         <DataTemplate DataType="{x:Type local:LogOptionsViewModel}">
             <StackPanel Margin="20">
-                <TextBlock Text="Log Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
-                <CheckBox IsChecked="{Binding IsEnabled}" Content="Enable logging" Margin="0,10"/>
+                <TextBlock Text="{x:Static resx:Resources.LogSettings}" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+                <CheckBox IsChecked="{Binding IsEnabled}" Content="{x:Static resx:Resources.EnableLogging}" Margin="0,10"/>
                 <Grid IsEnabled="{Binding IsEnabled}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
@@ -302,11 +302,11 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Log Level:" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{x:Static resx:Resources.LogLevel}" VerticalAlignment="Center" Margin="0,5,10,5"/>
                     <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,5"
                               ItemsSource="{Binding AvailableLogLevels}" 
                               SelectedItem="{Binding Level}"/>
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Retention (days):" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{x:Static resx:Resources.RetentionDays}" VerticalAlignment="Center" Margin="0,5,10,5"/>
                     <TextBox Grid.Row="1" Grid.Column="1" Margin="0,5"
                              Text="{Binding RetentionDays}"/>
                 </Grid>
@@ -315,12 +315,12 @@
 
         <DataTemplate DataType="{x:Type local:TextViewerOptionsViewModel}">
             <StackPanel Margin="20">
-                <TextBlock Text="Text Viewer Settings" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
-                <CheckBox IsChecked="{Binding ReadOnly}" Content="Default to Read Only" Margin="0,5"/>
-                <CheckBox IsChecked="{Binding LineNumber}" Content="Show Line Numbers" Margin="0,5"/>
-                <CheckBox IsChecked="{Binding SyntaxHighlight}" Content="Enable Syntax Highlighting" Margin="0,5"/>
-                <CheckBox IsChecked="{Binding WordWrap}" Content="Enable Word Wrap" Margin="0,5"/>
-                <CheckBox IsChecked="{Binding ShowStatusBar}" Content="Show Status Bar" Margin="0,5"/>
+                <TextBlock Text="{x:Static resx:Resources.TextViewerSettings}" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+                <CheckBox IsChecked="{Binding ReadOnly}" Content="{x:Static resx:Resources.DefaultToReadOnly}" Margin="0,5"/>
+                <CheckBox IsChecked="{Binding LineNumber}" Content="{x:Static resx:Resources.ShowLineNumbers}" Margin="0,5"/>
+                <CheckBox IsChecked="{Binding SyntaxHighlight}" Content="{x:Static resx:Resources.EnableSyntaxHighlighting}" Margin="0,5"/>
+                <CheckBox IsChecked="{Binding WordWrap}" Content="{x:Static resx:Resources.EnableWordWrap}" Margin="0,5"/>
+                <CheckBox IsChecked="{Binding ShowStatusBar}" Content="{x:Static resx:Resources.ShowStatusBar}" Margin="0,5"/>
 
                 <Grid Margin="0,10">
                     <Grid.ColumnDefinitions>
@@ -328,9 +328,9 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="Font:" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                    <TextBlock Text="{x:Static resx:Resources.Font}" VerticalAlignment="Center" Margin="0,5,10,5"/>
                     <TextBlock Grid.Column="1" Text="{Binding FontDisplay}" VerticalAlignment="Center"/>
-                    <Button Grid.Column="2" Content="Select Font..." Command="{Binding SelectFontCommand}" Margin="5,0"/>
+                    <Button Grid.Column="2" Content="{x:Static resx:Resources.SelectFont}" Command="{Binding SelectFontCommand}" Margin="5,0"/>
                 </Grid>
 
                 <Grid Margin="0,10">
@@ -342,25 +342,28 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Horizontal Scroll Bar:" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{x:Static resx:Resources.HorizontalScrollBar}" VerticalAlignment="Center" Margin="0,5,10,5"/>
                     <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,5"
                               ItemsSource="{Binding ScrollBarVisibilities}"
                               SelectedItem="{Binding HorizontalScrollBarVisibility}"/>
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Vertical Scroll Bar:" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{x:Static resx:Resources.VerticalScrollBar}" VerticalAlignment="Center" Margin="0,5,10,5"/>
                     <ComboBox Grid.Row="1" Grid.Column="1" Margin="0,5"
                               ItemsSource="{Binding ScrollBarVisibilities}"
                               SelectedItem="{Binding VerticalScrollBarVisibility}"/>
                 </Grid>
 
-                <Button Content="Reset to Default" Command="{Binding ResetToDefaultCommand}" HorizontalAlignment="Right" Margin="0,10,0,0"/>
+                <Button Content="{x:Static resx:Resources.ResetToDefault}" Command="{Binding ResetToDefaultCommand}" HorizontalAlignment="Right" Margin="0,10,0,0"/>
             </StackPanel>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type local:ToolsOptionsViewModel}">
             <DockPanel Margin="10">
+                <StackPanel DockPanel.Dock="Top" Margin="5">
+                    <TextBlock Text="{x:Static resx:Resources.ToolsSettings}" FontSize="20" FontWeight="Bold" Margin="0,0,0,10"/>
+                </StackPanel>
                 <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="5">
-                    <Button Content="Add" Command="{Binding AddToolCommand}" Width="80" Margin="5"/>
-                    <Button Content="Remove" Command="{Binding RemoveToolCommand}" Width="80" Margin="5"/>
+                    <Button Content="{x:Static resx:Resources.Add}" Command="{Binding AddToolCommand}" Width="80" Margin="5"/>
+                    <Button Content="{x:Static resx:Resources.Remove}" Command="{Binding RemoveToolCommand}" Width="80" Margin="5"/>
                 </StackPanel>
                 <ListBox ItemsSource="{Binding Tools}" SelectedItem="{Binding SelectedTool}" Margin="5">
                     <ListBox.ItemTemplate>
@@ -387,7 +390,7 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" Margin="5"/>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{x:Static resx:Resources.Name}" Margin="5"/>
                     <TextBox Grid.Row="0" Grid.Column="1" Margin="5">
                         <TextBox.Text>
                             <Binding Path="Name" UpdateSourceTrigger="PropertyChanged">
@@ -398,13 +401,13 @@
                         </TextBox.Text>
                     </TextBox>
 
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Type:" Margin="5"/>
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{x:Static resx:Resources.Type}" Margin="5"/>
                     <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding AvailableTypes}" SelectedItem="{Binding Type}" Margin="5"/>
 
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Handler:" Margin="5"/>
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{x:Static resx:Resources.Handler}" Margin="5"/>
                     <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Handler, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
 
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Path:" Margin="5"/>
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="{x:Static resx:Resources.Path}" Margin="5"/>
                     <Grid Grid.Row="3" Grid.Column="1">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -419,20 +422,20 @@
                                 </Binding>
                             </TextBox.Text>
                         </TextBox>
-                        <Button Grid.Column="1" Content="..." Command="{Binding BrowseCommand}" IsEnabled="{Binding IsExternal}" Margin="10,5,5,5" Padding="5,1"/>
+                        <Button Grid.Column="1" Content="{x:Static resx:Resources.Browse}" Command="{Binding BrowseCommand}" IsEnabled="{Binding IsExternal}" Margin="10,5,5,5" Padding="5,1"/>
                     </Grid>
 
-                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Diff Arguments:" Margin="5"/>
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="{x:Static resx:Resources.DiffArguments}" Margin="5"/>
                     <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding DiffArguments, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsExternal}" Margin="5"/>
 
-                    <TextBlock Grid.Row="5" Grid.Column="0" Text="View Arguments:" Margin="5"/>
+                    <TextBlock Grid.Row="5" Grid.Column="0" Text="{x:Static resx:Resources.ViewArguments}" Margin="5"/>
                     <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding ViewArguments, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsExternal}" Margin="5"/>
 
-                    <TextBlock Grid.Row="6" Grid.Column="0" Text="Supported Operations:" Margin="5"/>
+                    <TextBlock Grid.Row="6" Grid.Column="0" Text="{x:Static resx:Resources.SupportedOperations}" Margin="5"/>
                     <ListBox Grid.Row="6" Grid.Column="1" ItemsSource="{Binding AvailableOperations}" SelectionMode="Multiple" Margin="5"
                              helper:ListBoxHelper.SelectedItems="{Binding SupportedOperations, Mode=TwoWay, ValidatesOnDataErrors=True}"/>
 
-                    <TextBlock Grid.Row="7" Grid.Column="0" Text="Supported Extensions:" Margin="5"/>
+                    <TextBlock Grid.Row="7" Grid.Column="0" Text="{x:Static resx:Resources.SupportedExtensions}" Margin="5"/>
                     <TextBox Grid.Row="7" Grid.Column="1" Margin="5">
                         <TextBox.Text>
                             <Binding Path="SupportedExtensions" UpdateSourceTrigger="PropertyChanged">
@@ -443,19 +446,22 @@
                         </TextBox.Text>
                     </TextBox>
 
-                    <TextBlock Grid.Row="8" Grid.Column="0" Text="Features:" Margin="5"/>
+                    <TextBlock Grid.Row="8" Grid.Column="0" Text="{x:Static resx:Resources.Features}" Margin="5"/>
                     <TextBox Grid.Row="8" Grid.Column="1" Text="{Binding Features, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
 
-                    <CheckBox Grid.Row="9" Grid.Column="1" IsChecked="{Binding Enabled}" Content="Enabled" Margin="5"/>
+                    <CheckBox Grid.Row="9" Grid.Column="1" IsChecked="{Binding Enabled}" Content="{x:Static resx:Resources.Enabled}" Margin="5"/>
                 </Grid>
             </DockPanel>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type local:FileTypeMappingOptionsViewModel}">
             <DockPanel Margin="10">
+                <StackPanel DockPanel.Dock="Top" Margin="5">
+                    <TextBlock Text="{x:Static resx:Resources.FileTypeMappingSettings}" FontSize="20" FontWeight="Bold" Margin="0,0,0,10"/>
+                </StackPanel>
                 <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="5">
-                    <Button Content="Add" Command="{Binding AddMappingCommand}" Width="80" Margin="5"/>
-                    <Button Content="Remove" Command="{Binding RemoveMappingCommand}" Width="80" Margin="5"/>
+                    <Button Content="{x:Static resx:Resources.Add}" Command="{Binding AddMappingCommand}" Width="80" Margin="5"/>
+                    <Button Content="{x:Static resx:Resources.Remove}" Command="{Binding RemoveMappingCommand}" Width="80" Margin="5"/>
                 </StackPanel>
                 <ListBox ItemsSource="{Binding Mappings}" SelectedItem="{Binding SelectedMapping}" Margin="5">
                     <ListBox.ItemTemplate>
@@ -477,20 +483,20 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Extensions:" Margin="5"/>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{x:Static resx:Resources.Extensions}" Margin="5"/>
                     <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Extensions, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
 
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Default Diff Tool:" Margin="5"/>
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{x:Static resx:Resources.DefaultDiffTool}" Margin="5"/>
                     <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding AvailableTools}" SelectedItem="{Binding DefaultDiffTool}" Margin="5"/>
 
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Default View Tool:" Margin="5"/>
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{x:Static resx:Resources.DefaultViewTool}" Margin="5"/>
                     <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding AvailableTools}" SelectedItem="{Binding DefaultViewTool}" Margin="5"/>
 
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Preferred Diff Tools:" Margin="5"/>
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="{x:Static resx:Resources.PreferredDiffTools}" Margin="5"/>
                     <ListBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding AvailableTools}" SelectionMode="Multiple" Margin="5"
                              helper:ListBoxHelper.SelectedItems="{Binding PreferredDiffTools, Mode=TwoWay}"/>
 
-                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Preferred View Tools:" Margin="5"/>
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="{x:Static resx:Resources.PreferredViewTools}" Margin="5"/>
                     <ListBox Grid.Row="4" Grid.Column="1" ItemsSource="{Binding AvailableTools}" SelectionMode="Multiple" Margin="5"
                              helper:ListBoxHelper.SelectedItems="{Binding PreferredViewTools, Mode=TwoWay}"/>
                 </Grid>
@@ -512,7 +518,7 @@
             <DockPanel>
                 <TextBox DockPanel.Dock="Top" Margin="5" Name="FilterTextBox"
                          Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}"
-                         Tag="Filter settings..." GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
+                         Tag="{x:Static resx:Resources.FilterSettings}" GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus"/>
                 <TreeView ItemsSource="{Binding MenuItems}" x:Name="SettingsTree">
                     <TreeView.ItemContainerStyle>
                         <Style TargetType="TreeViewItem">
@@ -541,8 +547,8 @@
 
         <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" BorderBrush="LightGray" BorderThickness="0,1,0,0" Background="#F0F0F0">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="10">
-                <Button Content="Save" Width="80" Margin="5" Command="{Binding SaveConfigurationCommand}" IsEnabled="{Binding IsValid}"/>
-                <Button Content="Cancel" Width="80" Margin="5" Click="CancelButton_Click"/>
+                <Button Content="{x:Static resx:Resources.Save}" Width="80" Margin="5" Command="{Binding SaveConfigurationCommand}" IsEnabled="{Binding IsValid}"/>
+                <Button Content="{x:Static resx:Resources.Cancel}" Width="80" Margin="5" Click="CancelButton_Click"/>
             </StackPanel>
         </Border>
     </Grid>
