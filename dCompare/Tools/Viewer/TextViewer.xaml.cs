@@ -26,7 +26,7 @@ namespace dCompare.Tools.Viewer
             textEditor.TextChanged += (s, e) => _viewModel.Text = textEditor.Text;
             searchPanel = SearchPanel.Install(textEditor);
             LoadSyntaxHighlightingComboBox(syntaxHighlightComboBox);
-            toggleReadOnlyButton.Content = _viewModel.IsReadOnly ? "🔒 View" : "✏️ Edit";
+            toggleReadOnlyButton.Content = _viewModel.IsReadOnly ? Properties.Resources.View : Properties.Resources.Edit;
         }
 
         public string Text
@@ -118,7 +118,7 @@ namespace dCompare.Tools.Viewer
         {
             if (e.PropertyName == nameof(TextViewerViewModel.IsReadOnly))
             {
-                toggleReadOnlyButton.Content = _viewModel.IsReadOnly ? "🔒 View" : "✏️ Edit";
+                toggleReadOnlyButton.Content = _viewModel.IsReadOnly ? Properties.Resources.View : Properties.Resources.Edit;
             }
         }
 
@@ -183,7 +183,7 @@ namespace dCompare.Tools.Viewer
 
         private void CreateUI()
         {
-            Title = "Find and Replace";
+            Title = Properties.Resources.FindAndReplace;
             Width = 380;
             Height = 280;
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
@@ -213,7 +213,7 @@ namespace dCompare.Tools.Viewer
             mainGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
             // Find label and textbox
-            var findLabel = new Label { Content = "Find what:", VerticalAlignment = VerticalAlignment.Center };
+            var findLabel = new Label { Content = Properties.Resources.FindWhat, VerticalAlignment = VerticalAlignment.Center };
             Grid.SetRow(findLabel, 0);
             Grid.SetColumn(findLabel, 0);
             mainGrid.Children.Add(findLabel);
@@ -228,7 +228,7 @@ namespace dCompare.Tools.Viewer
             mainGrid.Children.Add(findTextBox);
 
             // Replace label and textbox
-            var replaceLabel = new Label { Content = "Replace with:", VerticalAlignment = VerticalAlignment.Center };
+            var replaceLabel = new Label { Content = Properties.Resources.ReplaceWith, VerticalAlignment = VerticalAlignment.Center };
             Grid.SetRow(replaceLabel, 2);
             Grid.SetColumn(replaceLabel, 0);
             mainGrid.Children.Add(replaceLabel);
@@ -245,7 +245,7 @@ namespace dCompare.Tools.Viewer
             // Options
             matchCaseCheckBox = new CheckBox
             {
-                Content = "Match case",
+                Content = Properties.Resources.MatchCase,
                 VerticalAlignment = VerticalAlignment.Center
             };
             Grid.SetRow(matchCaseCheckBox, 4);
@@ -255,7 +255,7 @@ namespace dCompare.Tools.Viewer
 
             replaceFirstCheckBox = new CheckBox
             {
-                Content = "Replace first occurrence only",
+                Content = Properties.Resources.ReplaceFirst,
                 VerticalAlignment = VerticalAlignment.Center
             };
             Grid.SetRow(replaceFirstCheckBox, 6);
@@ -265,7 +265,7 @@ namespace dCompare.Tools.Viewer
 
             replaceSelectionCheckBox = new CheckBox
             {
-                Content = "Replace in selection only",
+                Content = Properties.Resources.ReplaceInSelection,
                 VerticalAlignment = VerticalAlignment.Center
             };
             Grid.SetRow(replaceSelectionCheckBox, 8);
@@ -282,7 +282,7 @@ namespace dCompare.Tools.Viewer
 
             var replaceButton = new Button
             {
-                Content = "Replace All",
+                Content = Properties.Resources.ReplaceAll,
                 Width = 80,
                 Height = 23,
                 Margin = new Thickness(0, 0, 5, 0),
@@ -292,7 +292,7 @@ namespace dCompare.Tools.Viewer
 
             var cancelButton = new Button
             {
-                Content = "Cancel",
+                Content = Properties.Resources.Cancel,
                 Width = 80,
                 Height = 23,
                 IsCancel = true
@@ -342,7 +342,7 @@ namespace dCompare.Tools.Viewer
         {
             if (string.IsNullOrWhiteSpace(FindText))
             {
-                MessageBox.Show("Please enter text to find.", "Find and Replace",
+                MessageBox.Show(Properties.Resources.EnterTextToFind, Properties.Resources.FindAndReplace,
                                MessageBoxButton.OK, MessageBoxImage.Information);
                 findTextBox.Focus();
                 return;

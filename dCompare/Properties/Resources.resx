@@ -231,6 +231,496 @@
   <data name="StatusAppReady" xml:space="preserve">
     <value>Application ready</value>
   </data>
+  <data name="StatusInvalidHotkeyFormat" xml:space="preserve">
+    <value>Invalid hotkey format: {0}</value>
+  </data>
+  <data name="StatusFailedToApplyHotkeys" xml:space="preserve">
+    <value>Failed to apply hotkeys: {0}</value>
+  </data>
+  <data name="StatusSelectedTab" xml:space="preserve">
+    <value>Selected tab: {0}</value>
+  </data>
+  <data name="StatusDragOperationFailed" xml:space="preserve">
+    <value>Drag operation failed: {0}</value>
+  </data>
+  <data name="StatusMovedTab" xml:space="preserve">
+    <value>Moved tab '{0}' to position {1}</value>
+  </data>
+  <data name="StatusDropOperationFailed" xml:space="preserve">
+    <value>Drop operation failed: {0}</value>
+  </data>
+  <data name="ErrorDefaultSessionFileNotExist" xml:space="preserve">
+    <value>Default session file '{0}' does not exist. Please check the configuration or select a valid session file.</value>
+  </data>
+  <data name="ErrorLoadingConfiguration" xml:space="preserve">
+    <value>Error loading configuration: {0}</value>
+  </data>
+  <data name="StatusAddedNewTab" xml:space="preserve">
+    <value>Added new tab: {0}</value>
+  </data>
+  <data name="StatusFailedToRemoveTabSession" xml:space="preserve">
+    <value>Failed to remove tab session: {0}</value>
+  </data>
+  <data name="StatusClosedTab" xml:space="preserve">
+    <value>Closed tab: {0}</value>
+  </data>
+  <data name="StatusLoadedSession" xml:space="preserve">
+    <value>Loaded session: {0} (AutoCompare: {1})</value>
+  </data>
+  <data name="ErrorCannotLoadSession" xml:space="preserve">
+    <value>Cannot load session at this time.</value>
+  </data>
+  <data name="ErrorFailedToLoadSession" xml:space="preserve">
+    <value>Failed to load session: {0}</value>
+  </data>
+  <data name="StatusOptionsWindowOpened" xml:space="preserve">
+    <value>Options window opened</value>
+  </data>
+  <data name="ErrorOpeningOptions" xml:space="preserve">
+    <value>Error opening options: {0}</value>
+  </data>
+  <data name="StatusComparisonRefreshed" xml:space="preserve">
+    <value>Comparison refreshed</value>
+  </data>
+  <data name="ErrorNoActiveTabOrNoRefreshSupport" xml:space="preserve">
+    <value>No active tab or tab does not support refresh</value>
+  </data>
+  <data name="ErrorExecutingRefresh" xml:space="preserve">
+    <value>Error executing refresh: {0}</value>
+  </data>
+  <data name="StatusRenamedTab" xml:space="preserve">
+    <value>Renamed tab to: {0}</value>
+  </data>
+  <data name="ErrorRenamingTab" xml:space="preserve">
+    <value>Error renaming tab: {0}</value>
+  </data>
+  <data name="StatusAboutDialogOpened" xml:space="preserve">
+    <value>About dialog opened</value>
+  </data>
+  <data name="ErrorOpeningAboutDialog" xml:space="preserve">
+    <value>Error opening about dialog: {0}</value>
+  </data>
+  <data name="ErrorExitingApplication" xml:space="preserve">
+    <value>Error exiting application: {0}</value>
+  </data>
+  <data name="StatusActionExecuted" xml:space="preserve">
+    <value>{0} executed</value>
+  </data>
+  <data name="ErrorMethodNotFound" xml:space="preserve">
+    <value>{0} method not found</value>
+  </data>
+  <data name="ErrorNoActiveTabToExecuteAction" xml:space="preserve">
+    <value>No active tab to execute action</value>
+  </data>
+  <data name="ErrorExecutingAction" xml:space="preserve">
+    <value>Error executing {0}: {1}</value>
+  </data>
+  <data name="TooltipFullPaths" xml:space="preserve">
+    <value>Left: {0}
+Right: {1}</value>
+  </data>
+  <data name="ComparingTabHeader" xml:space="preserve">
+    <value>(Comparing...) {0}</value>
+  </data>
+  <data name="SelectFolderOrArchiveTitle" xml:space="preserve">
+    <value>Select Folder or Archive File</value>
+  </data>
+  <data name="ArchiveFileFilter" xml:space="preserve">
+    <value>All files (*.*)|*.*</value>
+  </data>
+  <data name="ComparisonInProgress" xml:space="preserve">
+    <value>Comparison is already in progress.</value>
+  </data>
+  <data name="EnterValidSourcePath" xml:space="preserve">
+    <value>Please enter a valid source path.</value>
+  </data>
+  <data name="EnterValidTargetPath" xml:space="preserve">
+    <value>Please enter a valid target path.</value>
+  </data>
+  <data name="ComparisonCanceled" xml:space="preserve">
+    <value>Comparison was canceled.</value>
+  </data>
+  <data name="ErrorDuringComparison" xml:space="preserve">
+    <value>An error occurred during comparison: {0}</value>
+  </data>
+  <data name="RefreshCanceled" xml:space="preserve">
+    <value>Refresh was canceled.</value>
+  </data>
+  <data name="ErrorDuringRefresh" xml:space="preserve">
+    <value>An error occurred during refresh: {0}</value>
+  </data>
+  <data name="SearchWatermark" xml:space="preserve">
+    <value>Search...</value>
+  </data>
+  <data name="InvalidToolConfiguration" xml:space="preserve">
+    <value>Invalid tool configuration.</value>
+  </data>
+  <data name="PleaseSelectItem" xml:space="preserve">
+    <value>Please select an item.</value>
+  </data>
+  <data name="Warning" xml:space="preserve">
+    <value>Warning</value>
+  </data>
+  <data name="PleaseSelectFileOrDirectory" xml:space="preserve">
+    <value>Please select at least one file or directory for the operation.</value>
+  </data>
+  <data name="ConfirmDelete" xml:space="preserve">
+    <value>Are you sure you want to delete the selected items from the directory?</value>
+  </data>
+  <data name="ConfirmOperation" xml:space="preserve">
+    <value>Confirm Operation</value>
+  </data>
+  <data name="OperationFailed" xml:space="preserve">
+    <value>Operation Failed</value>
+  </data>
+  <data name="OperationFailedDetails" xml:space="preserve">
+    <value>The operation failed and the view may not be fully refreshed. Details: {0}</value>
+  </data>
+  <data name="PleaseSelectItemToRename" xml:space="preserve">
+    <value>Please select an item to rename.</value>
+  </data>
+  <data name="SelectionRequired" xml:space="preserve">
+    <value>Selection Required</value>
+  </data>
+  <data name="InvalidPathToRename" xml:space="preserve">
+    <value>The selected item does not have a valid path to rename.</value>
+  </data>
+  <data name="EnterNewName" xml:space="preserve">
+    <value>Enter the new name for the item:</value>
+  </data>
+  <data name="Rename" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="ErrorRenamingItem" xml:space="preserve">
+    <value>Error renaming item: {0}</value>
+  </data>
+  <data name="NoValidPathsSelected" xml:space="preserve">
+    <value>No valid paths selected.</value>
+  </data>
+  <data name="NoValidFilesSelected" xml:space="preserve">
+    <value>No valid files selected.</value>
+  </data>
+  <data name="ErrorLoadingTools" xml:space="preserve">
+    <value>Error loading tools: {0}</value>
+  </data>
+  <data name="CannotLocateParentTabControl" xml:space="preserve">
+    <value>Cannot locate parent TabControl.</value>
+  </data>
+  <data name="PropertyName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="PropertyStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="PropertyRelativePath" xml:space="preserve">
+    <value>Relative Path</value>
+  </data>
+  <data name="PropertyType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="PropertyFolder" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="PropertyFile" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="PropertyLeft" xml:space="preserve">
+    <value>Left</value>
+  </data>
+  <data name="PropertyFullPath" xml:space="preserve">
+    <value>Full Path</value>
+  </data>
+  <data name="PropertySize" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="PropertyModifiedTime" xml:space="preserve">
+    <value>Modified Time</value>
+  </data>
+  <data name="PropertyRight" xml:space="preserve">
+    <value>Right</value>
+  </data>
+  <data name="FileProperties" xml:space="preserve">
+    <value>File Properties</value>
+  </data>
+  <data name="PathNotExist" xml:space="preserve">
+    <value>Path does not exist</value>
+  </data>
+  <data name="CannotOpenFileLocation" xml:space="preserve">
+    <value>Cannot open file location: {0}</value>
+  </data>
+  <data name="StatusIdentical" xml:space="preserve">
+    <value>Identical</value>
+  </data>
+  <data name="StatusModified" xml:space="preserve">
+    <value>Modified</value>
+  </data>
+  <data name="StatusLeftOnly" xml:space="preserve">
+    <value>Left only</value>
+  </data>
+  <data name="StatusRightOnly" xml:space="preserve">
+    <value>Right only</value>
+  </data>
+  <data name="StatusConflict" xml:space="preserve">
+    <value>Conflict</value>
+  </data>
+  <data name="StatusUnknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="CannotOpenDirectory" xml:space="preserve">
+    <value>Cannot open a directory.</value>
+  </data>
+  <data name="CannotCompareDirectory" xml:space="preserve">
+    <value>Cannot compare directories with a file comparison tool.</value>
+  </data>
+  <data name="InvalidOperation" xml:space="preserve">
+    <value>Invalid operation specified.</value>
+  </data>
+  <data name="NoDefaultTool" xml:space="preserve">
+    <value>No default {0} tool configured for '{1}' files.</value>
+  </data>
+  <data name="View" xml:space="preserve">
+    <value>🔒 View</value>
+  </data>
+  <data name="Diff" xml:space="preserve">
+    <value>diff</value>
+  </data>
+  <data name="ViewTabHeader" xml:space="preserve">
+    <value>View: {0}</value>
+  </data>
+  <data name="CompareTabHeader" xml:space="preserve">
+    <value>Compare: {0} - {1}</value>
+  </data>
+  <data name="ErrorOpeningFile" xml:space="preserve">
+    <value>opening file</value>
+  </data>
+  <data name="ErrorLaunchingTool" xml:space="preserve">
+    <value>launching comparison tool</value>
+  </data>
+  <data name="ErrorTool" xml:space="preserve">
+    <value>Error {0}: {1}</value>
+  </data>
+  <data name="LeftImage" xml:space="preserve">
+    <value>Left Image: </value>
+  </data>
+  <data name="RightImage" xml:space="preserve">
+    <value>Right Image: </value>
+  </data>
+  <data name="ErrorBothImagePaths" xml:space="preserve">
+    <value>Both image paths must be set to refresh the comparison.</value>
+  </data>
+  <data name="ErrorFailedToRefreshImages" xml:space="preserve">
+    <value>Failed to refresh images: {0}</value>
+  </data>
+  <data name="LeftFile" xml:space="preserve">
+    <value>Left File: </value>
+  </data>
+  <data name="RightFile" xml:space="preserve">
+    <value>Right File: </value>
+  </data>
+  <data name="SwitchMode" xml:space="preserve">
+    <value>Switch Mode</value>
+  </data>
+  <data name="FurtherActions" xml:space="preserve">
+    <value>...</value>
+  </data>
+  <data name="IsSideBySide" xml:space="preserve">
+    <value>Is Side-by-Side</value>
+  </data>
+  <data name="IgnoreUnchanged" xml:space="preserve">
+    <value>Ignore Unchanged</value>
+  </data>
+  <data name="LinesContext" xml:space="preserve">
+    <value>Lines Context</value>
+  </data>
+  <data name="TestWindow" xml:space="preserve">
+    <value>Test window</value>
+  </data>
+  <data name="ErrorBothFilePaths" xml:space="preserve">
+    <value>Both file paths must be set to refresh the comparison.</value>
+  </data>
+  <data name="ErrorFailedToRefreshComparison" xml:space="preserve">
+    <value>Failed to refresh comparison: {0}</value>
+  </data>
+  <data name="Open" xml:space="preserve">
+    <value>📂 Open</value>
+  </data>
+  <data name="ZoomIn" xml:space="preserve">
+    <value>🔎 Zoom In</value>
+  </data>
+  <data name="ZoomOut" xml:space="preserve">
+    <value>🔍 Zoom Out</value>
+  </data>
+  <data name="ImageFiles" xml:space="preserve">
+    <value>Image files (*.png;*.jpeg;*.jpg;*.bmp;*.gif)|*.png;*.jpeg;*.jpg;*.bmp;*.gif|All files (*.*)|*.*</value>
+  </data>
+  <data name="SameAsOriginal" xml:space="preserve">
+    <value>Same as original (*{0})|*{0}|All files (*.*)|*.*</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>✏️ Edit</value>
+  </data>
+  <data name="Search" xml:space="preserve">
+    <value>🔍 Search</value>
+  </data>
+  <data name="Replace" xml:space="preserve">
+    <value>🔄 Replace</value>
+  </data>
+  <data name="Undo" xml:space="preserve">
+    <value>↺ Undo</value>
+  </data>
+  <data name="Redo" xml:space="preserve">
+    <value>↻ Redo</value>
+  </data>
+  <data name="LineNumbers" xml:space="preserve">
+    <value>🔢 Line Numbers</value>
+  </data>
+  <data name="GoToLine" xml:space="preserve">
+    <value>🔽 Go to Line</value>
+  </data>
+  <data name="Words" xml:space="preserve">
+    <value>Words: {0:N0}</value>
+  </data>
+  <data name="Chars" xml:space="preserve">
+    <value>Chars: {0:N0}</value>
+  </data>
+  <data name="ReplaceError" xml:space="preserve">
+    <value>Replace Error</value>
+  </data>
+  <data name="ErrorDuringReplace" xml:space="preserve">
+    <value>Error during replace operation: {0}</value>
+  </data>
+  <data name="FindAndReplace" xml:space="preserve">
+    <value>Find and Replace</value>
+  </data>
+  <data name="FindWhat" xml:space="preserve">
+    <value>Find what:</value>
+  </data>
+  <data name="ReplaceWith" xml:space="preserve">
+    <value>Replace with:</value>
+  </data>
+  <data name="MatchCase" xml:space="preserve">
+    <value>Match case</value>
+  </data>
+  <data name="ReplaceFirst" xml:space="preserve">
+    <value>Replace first occurrence only</value>
+  </data>
+  <data name="ReplaceInSelection" xml:space="preserve">
+    <value>Replace in selection only</value>
+  </data>
+  <data name="ReplaceAll" xml:space="preserve">
+    <value>Replace All</value>
+  </data>
+  <data name="EnterTextToFind" xml:space="preserve">
+    <value>Please enter text to find.</value>
+  </data>
+  <data name="ErrorNoFilePath" xml:space="preserve">
+    <value>No file path specified.</value>
+  </data>
+  <data name="SavedTo" xml:space="preserve">
+    <value>Saved to {0}</value>
+  </data>
+  <data name="ErrorBothFilePathsNull" xml:space="preserve">
+    <value>Both file paths cannot be null or empty.</value>
+  </data>
+  <data name="ErrorUnsupportedFileType" xml:space="preserve">
+    <value>Unsupported file type for comparison.</value>
+  </data>
+  <data name="UnsupportedArchiveFormat" xml:space="preserve">
+    <value>The file '{0}' is not a supported archive format ({1}).</value>
+  </data>
+  <data name="FailedToProcessArchive" xml:space="preserve">
+    <value>Failed to process archive '{0}': {1}</value>
+  </data>
+  <data name="Start" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="Pause" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="Queued" xml:space="preserve">
+    <value>Queued</value>
+  </data>
+  <data name="Operation" xml:space="preserve">
+    <value>Operation</value>
+  </data>
+  <data name="Source" xml:space="preserve">
+    <value>Source</value>
+  </data>
+  <data name="Target" xml:space="preserve">
+    <value>Target</value>
+  </data>
+  <data name="Progress" xml:space="preserve">
+    <value>Progress</value>
+  </data>
+  <data name="Speed" xml:space="preserve">
+    <value>Speed</value>
+  </data>
+  <data name="ClearQueued" xml:space="preserve">
+    <value>Clear queued jobs</value>
+  </data>
+  <data name="Successful" xml:space="preserve">
+    <value>Successful</value>
+  </data>
+  <data name="ClearSuccessful" xml:space="preserve">
+    <value>Clear successful jobs</value>
+  </data>
+  <data name="Failed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
+  <data name="Retry" xml:space="preserve">
+    <value>Retry</value>
+  </data>
+  <data name="ClearFailed" xml:space="preserve">
+    <value>Clear failed jobs</value>
+  </data>
+  <data name="Completed" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="ErrorDeletingItems" xml:space="preserve">
+    <value>Error deleting items: {0}</value>
+  </data>
+  <data name="ErrorInvalidSourcePath" xml:space="preserve">
+    <value>Source path cannot be null or empty.</value>
+  </data>
+  <data name="ErrorInvalidNewName" xml:space="preserve">
+    <value>New name cannot be null or empty.</value>
+  </data>
+  <data name="ErrorInvalidCharactersInNewName" xml:space="preserve">
+    <value>New name contains invalid characters.</value>
+  </data>
+  <data name="ErrorCannotDetermineParentDirectory" xml:space="preserve">
+    <value>Cannot determine parent directory for '{0}'.</value>
+  </data>
+  <data name="ErrorFileOrDirectoryNotFound" xml:space="preserve">
+    <value>The specified file or directory does not exist.</value>
+  </data>
+  <data name="Untitled" xml:space="preserve">
+    <value>Untitled</value>
+  </data>
+  <data name="JsonFiles" xml:space="preserve">
+    <value>JSON files (*.json)|*.json</value>
+  </data>
+  <data name="SessionSaved" xml:space="preserve">
+    <value>Session saved to {0}</value>
+  </data>
+  <data name="ErrorSavingSession" xml:space="preserve">
+    <value>Error saving session: {0}</value>
+  </data>
+  <data name="SessionFileNotFound" xml:space="preserve">
+    <value>Session file not found: {0}</value>
+  </data>
+  <data name="Welcome" xml:space="preserve">
+    <value>Welcome</value>
+  </data>
+  <data name="SessionLoaded" xml:space="preserve">
+    <value>Session loaded from {0}</value>
+  </data>
+  <data name="ErrorLoadingSession" xml:space="preserve">
+    <value>Error loading session: {0}</value>
+  </data>
   <data name="CloseButton" xml:space="preserve">
     <value>CloseButton</value>
   </data>
@@ -244,10 +734,10 @@
     <value>_View</value>
   </data>
   <data name="SaveSessionMenu" xml:space="preserve">
-    <value>_Save Session ({0})</value>
+    <value>_Save Session</value>
   </data>
   <data name="LoadSessionMenu" xml:space="preserve">
-    <value>_Load Session ({0})</value>
+    <value>_Load Session</value>
   </data>
   <data name="ClearRecentSessionsMenu" xml:space="preserve">
     <value>Clear Recent Sessions</value>
@@ -301,7 +791,7 @@
     <value>Rename...</value>
   </data>
   <data name="DeleteMenu" xml:space="preserve">
-    <value>刪除...</value>
+    <value>_Delete...</value>
   </data>
   <data name="CopyPathnameToClipboardMenu" xml:space="preserve">
     <value>Copy Pathname to Clipboard</value>
@@ -374,5 +864,239 @@
   </data>
   <data name="DarkTheme" xml:space="preserve">
     <value>Dark</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="HotkeyWatermark" xml:space="preserve">
+    <value>Click to set a hotkey</value>
+  </data>
+  <data name="DuplicateHotkeyTooltip" xml:space="preserve">
+    <value>This hotkey is already in use.</value>
+  </data>
+  <data name="CompareSettings" xml:space="preserve">
+    <value>Compare Settings</value>
+  </data>
+  <data name="ScanOptions" xml:space="preserve">
+    <value>Scan Options</value>
+  </data>
+  <data name="ScanMethod" xml:space="preserve">
+    <value>Scan Method:</value>
+  </data>
+  <data name="ScanMethodHint" xml:space="preserve">
+    <value>Choose 'General' for standard file system scanning or 'MFT' for faster scanning using the Master File Table (Windows NTFS only).</value>
+  </data>
+  <data name="EnableParallelScanning" xml:space="preserve">
+    <value>Enable Parallel Scanning</value>
+  </data>
+  <data name="EnableParallelScanningHint" xml:space="preserve">
+    <value>Enable to perform file comparisons in parallel for faster processing (recommended for multi-core systems).</value>
+  </data>
+  <data name="ComparisonAlgorithms" xml:space="preserve">
+    <value>Comparison Algorithms</value>
+  </data>
+  <data name="Enable" xml:space="preserve">
+    <value>Enable</value>
+  </data>
+  <data name="Default" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="Algorithm" xml:space="preserve">
+    <value>Algorithm</value>
+  </data>
+  <data name="Percent" xml:space="preserve">
+    <value>Percent %</value>
+  </data>
+  <data name="UserInteraction" xml:space="preserve">
+    <value>User Interaction</value>
+  </data>
+  <data name="DoubleClickAction" xml:space="preserve">
+    <value>Double Click Action:</value>
+  </data>
+  <data name="ConfirmationSettings" xml:space="preserve">
+    <value>Confirmation Settings</value>
+  </data>
+  <data name="GeneralConfirmations" xml:space="preserve">
+    <value>General Confirmations</value>
+  </data>
+  <data name="ConfirmCloseApplication" xml:space="preserve">
+    <value>Confirm before closing application</value>
+  </data>
+  <data name="ConfirmCloseTabAction" xml:space="preserve">
+    <value>Confirm before closing a tab</value>
+  </data>
+  <data name="ConfirmCopy" xml:space="preserve">
+    <value>Confirm before copying files</value>
+  </data>
+  <data name="ConfirmMove" xml:space="preserve">
+    <value>Confirm before moving files</value>
+  </data>
+  <data name="DangerousActions" xml:space="preserve">
+    <value>Dangerous Actions</value>
+  </data>
+  <data name="ConfirmCopyOverwrite" xml:space="preserve">
+    <value>Confirm before overwriting files during copy</value>
+  </data>
+  <data name="ConfirmMoveOverwrite" xml:space="preserve">
+    <value>Confirm before overwriting files during move</value>
+  </data>
+  <data name="ConfirmDeleteFile" xml:space="preserve">
+    <value>Confirm before deleting files</value>
+  </data>
+  <data name="SessionSettings" xml:space="preserve">
+    <value>Session Settings</value>
+  </data>
+  <data name="DefaultSessionFile" xml:space="preserve">
+    <value>Default Session File:</value>
+  </data>
+  <data name="Browse" xml:space="preserve">
+    <value>...</value>
+  </data>
+  <data name="AutoLoadDefaultSession" xml:space="preserve">
+    <value>Auto-load default session on startup</value>
+  </data>
+  <data name="AutoCompareAfterSessionLoad" xml:space="preserve">
+    <value>Auto-compare after session load</value>
+  </data>
+  <data name="HotkeySettings" xml:space="preserve">
+    <value>Hotkey Settings</value>
+  </data>
+  <data name="HotkeySettingsHint" xml:space="preserve">
+    <value>Click a box and press a key combination to set the hotkey. Use Backspace or the '✖' button to clear.</value>
+  </data>
+  <data name="HotkeyTooltip" xml:space="preserve">
+    <value>Press your desired key combination (e.g., Ctrl+S).</value>
+  </data>
+  <data name="LogSettings" xml:space="preserve">
+    <value>Log Settings</value>
+  </data>
+  <data name="EnableLogging" xml:space="preserve">
+    <value>Enable logging</value>
+  </data>
+  <data name="LogLevel" xml:space="preserve">
+    <value>Log Level:</value>
+  </data>
+  <data name="RetentionDays" xml:space="preserve">
+    <value>Retention (days):</value>
+  </data>
+  <data name="TextViewerSettings" xml:space="preserve">
+    <value>Text Viewer Settings</value>
+  </data>
+  <data name="DefaultToReadOnly" xml:space="preserve">
+    <value>Default to Read Only</value>
+  </data>
+  <data name="ShowLineNumbers" xml:space="preserve">
+    <value>Show Line Numbers</value>
+  </data>
+  <data name="EnableSyntaxHighlighting" xml:space="preserve">
+    <value>Enable Syntax Highlighting</value>
+  </data>
+  <data name="EnableWordWrap" xml:space="preserve">
+    <value>Enable Word Wrap</value>
+  </data>
+  <data name="ShowStatusBar" xml:space="preserve">
+    <value>Show Status Bar</value>
+  </data>
+  <data name="Font" xml:space="preserve">
+    <value>Font:</value>
+  </data>
+  <data name="SelectFont" xml:space="preserve">
+    <value>Select Font...</value>
+  </data>
+  <data name="HorizontalScrollBar" xml:space="preserve">
+    <value>Horizontal Scroll Bar:</value>
+  </data>
+  <data name="VerticalScrollBar" xml:space="preserve">
+    <value>Vertical Scroll Bar:</value>
+  </data>
+  <data name="ResetToDefault" xml:space="preserve">
+    <value>Reset to Default</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Name:</value>
+  </data>
+  <data name="Type" xml:space="preserve">
+    <value>Type:</value>
+  </data>
+  <data name="Handler" xml:space="preserve">
+    <value>Handler:</value>
+  </data>
+  <data name="Path" xml:space="preserve">
+    <value>Path:</value>
+  </data>
+  <data name="DiffArguments" xml:space="preserve">
+    <value>Diff Arguments:</value>
+  </data>
+  <data name="ViewArguments" xml:space="preserve">
+    <value>View Arguments:</value>
+  </data>
+  <data name="SupportedOperations" xml:space="preserve">
+    <value>Supported Operations:</value>
+  </data>
+  <data name="SupportedExtensions" xml:space="preserve">
+    <value>Supported Extensions:</value>
+  </data>
+  <data name="Features" xml:space="preserve">
+    <value>Features:</value>
+  </data>
+  <data name="Enabled" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="Extensions" xml:space="preserve">
+    <value>Extensions:</value>
+  </data>
+  <data name="DefaultDiffTool" xml:space="preserve">
+    <value>Default Diff Tool:</value>
+  </data>
+  <data name="DefaultViewTool" xml:space="preserve">
+    <value>Default View Tool:</value>
+  </data>
+  <data name="PreferredDiffTools" xml:space="preserve">
+    <value>Preferred Diff Tools:</value>
+  </data>
+  <data name="PreferredViewTools" xml:space="preserve">
+    <value>Preferred View Tools:</value>
+  </data>
+  <data name="FilterSettings" xml:space="preserve">
+    <value>Filter settings...</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ToolsSettings" xml:space="preserve">
+    <value>Tools Settings</value>
+  </data>
+  <data name="FileTypeMappingSettings" xml:space="preserve">
+    <value>File Type Mapping Settings</value>
+  </data>
+  <data name="OpenOptions" xml:space="preserve">
+    <value>Open Options</value>
+  </data>
+  <data name="HeaderLeftName" xml:space="preserve">
+    <value>Left Name</value>
+  </data>
+  <data name="HeaderLeftSize" xml:space="preserve">
+    <value>Left Size</value>
+  </data>
+  <data name="HeaderLeftDate" xml:space="preserve">
+    <value>Left Date</value>
+  </data>
+  <data name="HeaderStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="HeaderRightName" xml:space="preserve">
+    <value>Right Name</value>
+  </data>
+  <data name="HeaderRightSize" xml:space="preserve">
+    <value>Right Size</value>
+  </data>
+  <data name="HeaderRightDate" xml:space="preserve">
+    <value>Right Date</value>
   </data>
 </root>

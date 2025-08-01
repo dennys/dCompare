@@ -86,7 +86,7 @@ namespace dCompare.Tools.Viewer
                 _currentFilePath = path;
 
             if (_currentFilePath == null)
-                throw new InvalidOperationException("No file path specified.");
+                throw new InvalidOperationException(Properties.Resources.ErrorNoFilePath);
 
             File.WriteAllText(_currentFilePath, Text);
         }
@@ -118,7 +118,7 @@ namespace dCompare.Tools.Viewer
             }
 
             SaveFile(_currentFilePath);
-            MessageBox.Show($"Saved to {_currentFilePath}", "Save", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(string.Format(Properties.Resources.SavedTo, _currentFilePath), Properties.Resources.Save, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         [RelayCommand]
