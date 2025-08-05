@@ -1,3 +1,6 @@
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/dennys/dCompare)
+![GitHub all releases](https://img.shields.io/github/downloads/dennys/dCompare/total)
+
 # dCompare - A Directory/File Comparison Tool
 
 <a href="docs/screenshot-main.webp">
