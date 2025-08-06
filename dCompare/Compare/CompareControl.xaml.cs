@@ -18,7 +18,7 @@ using System.Windows.Media;
 
 namespace dCompare.Compare
 {
-    public enum FileOperationType
+    public enum ComparisonActionType
     {
         CopyToLeft,
         CopyToRight,
@@ -602,7 +602,7 @@ namespace dCompare.Compare
             }
             ViewFileAsync(selectedItem);
         }
-        private async Task ProcessFileOperationsAsync(List<TreeNode> selectedNodes, string destDir, FileOperationType operation)
+        private async Task ProcessFileOperationsAsync(List<TreeNode> selectedNodes, string destDir, ComparisonActionType operation)
         {
             if (selectedNodes.Count == 0)
             {
@@ -617,7 +617,7 @@ namespace dCompare.Compare
 
             try
             {
-                if (operation == FileOperationType.DeleteLeft || operation == FileOperationType.DeleteRight)
+                if (operation == ComparisonActionType.DeleteLeft || operation == ComparisonActionType.DeleteRight)
                 {
                     var result = MessageBox.Show(Properties.Resources.ConfirmDelete, Properties.Resources.ConfirmOperation, MessageBoxButton.YesNo, MessageBoxImage.Warning);
                     if (result != MessageBoxResult.Yes) { return; }
@@ -627,23 +627,23 @@ namespace dCompare.Compare
                     //await operationAction(new List<TreeNode> { node }, destDir);
                     switch (operation)
                     {
-                        case FileOperationType.CopyToLeft:
+                        case ComparisonActionType.CopyToLeft:
                             await _fileOperationHandler.CopyToLeft(new List<TreeNode> { node }, destDir);
                             break;
-                        case FileOperationType.CopyToRight:
+                        case ComparisonActionType.CopyToRight:
                             await _fileOperationHandler.CopyToRight(new List<TreeNode> { node }, destDir);
                             break;
-                        case FileOperationType.MoveToLeft:
+                        case ComparisonActionType.MoveToLeft:
                             await _fileOperationHandler.MoveToLeft(new List<TreeNode> { node }, destDir);
                             break;
-                        case FileOperationType.MoveToRight:
+                        case ComparisonActionType.MoveToRight:
                             await _fileOperationHandler.MoveToRight(new List<TreeNode> { node }, destDir);
                             break;
-                        case FileOperationType.DeleteLeft:
+                        case ComparisonActionType.DeleteLeft:
                             var items = _fileOperationHandler.GetItemsForDeletion(new List<TreeNode> { node }, true);
                             if (items.Count > 0) await _fileOperationHandler.DeleteAsync(items);
                             break;
-                        case FileOperationType.DeleteRight:
+                        case ComparisonActionType.DeleteRight:
                             var items2 = _fileOperationHandler.GetItemsForDeletion(new List<TreeNode> { node }, false);
                             if (items2.Count > 0) await _fileOperationHandler.DeleteAsync(items2);
                             break;
@@ -686,32 +686,32 @@ namespace dCompare.Compare
         private async void ContextMenu_CopyToLeft_Click(object sender, RoutedEventArgs e)
         {
             var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
-            await ProcessFileOperationsAsync(selectedNodes, ViewModel.LeftPath?.Trim() ?? string.Empty, FileOperationType.CopyToLeft);
+            await ProcessFileOperationsAsync(selectedNodes, ViewModel.LeftPath?.Trim() ?? string.Empty, ComparisonActionType.CopyToLeft);
         }
         private async void ContextMenu_CopyToRight_Click(object sender, RoutedEventArgs e)
         {
             var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
-            await ProcessFileOperationsAsync(selectedNodes, ViewModel.RightPath?.Trim() ?? string.Empty, FileOperationType.CopyToRight);
+            await ProcessFileOperationsAsync(selectedNodes, ViewModel.RightPath?.Trim() ?? string.Empty, ComparisonActionType.CopyToRight);
         }
         private async void ContextMenu_MoveToLeft_Click(object sender, RoutedEventArgs e)
         {
             var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
-            await ProcessFileOperationsAsync(selectedNodes, ViewModel.LeftPath?.Trim() ?? string.Empty, FileOperationType.MoveToLeft);
+            await ProcessFileOperationsAsync(selectedNodes, ViewModel.LeftPath?.Trim() ?? string.Empty, ComparisonActionType.MoveToLeft);
         }
         private async void ContextMenu_MoveToRight_Click(object sender, RoutedEventArgs e)
         {
             var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
-            await ProcessFileOperationsAsync(selectedNodes, ViewModel.RightPath?.Trim() ?? string.Empty, FileOperationType.MoveToRight);
+            await ProcessFileOperationsAsync(selectedNodes, ViewModel.RightPath?.Trim() ?? string.Empty, ComparisonActionType.MoveToRight);
         }
         private async void ContextMenu_DeleteLeft_Click(object sender, RoutedEventArgs e)
         {
             var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
-            await ProcessFileOperationsAsync(selectedNodes, string.Empty, FileOperationType.DeleteLeft);
+            await ProcessFileOperationsAsync(selectedNodes, string.Empty, ComparisonActionType.DeleteLeft);
         }
         private async void ContextMenu_DeleteRight_Click(object sender, RoutedEventArgs e)
         {
             List<TreeNode> selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
-            await ProcessFileOperationsAsync(selectedNodes, string.Empty, FileOperationType.DeleteRight);
+            await ProcessFileOperationsAsync(selectedNodes, string.Empty, ComparisonActionType.DeleteRight);
         }
         private async void ContextMenu_Rename_Click(object sender, RoutedEventArgs e)
         {
