@@ -18,7 +18,7 @@ using System.Windows.Media;
 
 namespace dCompare.Compare
 {
-    public enum ComparisonActionType
+    public enum FileOperationType
     {
         CopyToLeft,
         CopyToRight,
@@ -602,7 +602,7 @@ namespace dCompare.Compare
             }
             ViewFileAsync(selectedItem);
         }
-        private async Task ProcessFileOperationsAsync(List<TreeNode> selectedNodes, string destDir, ComparisonActionType operation)
+        private async Task ProcessFileOperationsAsync(List<TreeNode> selectedNodes, string destDir, FileOperationType operation)
         {
             if (selectedNodes.Count == 0)
             {
@@ -617,7 +617,7 @@ namespace dCompare.Compare
 
             try
             {
-                if (operation == ComparisonActionType.DeleteLeft || operation == ComparisonActionType.DeleteRight)
+                if (operation == FileOperationType.DeleteLeft || operation == FileOperationType.DeleteRight)
                 {
                     var result = MessageBox.Show(Properties.Resources.ConfirmDelete, Properties.Resources.ConfirmOperation, MessageBoxButton.YesNo, MessageBoxImage.Warning);
                     if (result != MessageBoxResult.Yes) { return; }
@@ -627,23 +627,23 @@ namespace dCompare.Compare
                     //await operationAction(new List<TreeNode> { node }, destDir);
                     switch (operation)
                     {
-                        case ComparisonActionType.CopyToLeft:
+                        case FileOperationType.CopyToLeft:
                             await _fileOperationHandler.CopyToLeft(new List<TreeNode> { node }, destDir);
                             break;
-                        case ComparisonActionType.CopyToRight:
+                        case FileOperationType.CopyToRight:
                             await _fileOperationHandler.CopyToRight(new List<TreeNode> { node }, destDir);
                             break;
-                        case ComparisonActionType.MoveToLeft:
+                        case FileOperationType.MoveToLeft:
                             await _fileOperationHandler.MoveToLeft(new List<TreeNode> { node }, destDir);
                             break;
-                        case ComparisonActionType.MoveToRight:
+                        case FileOperationType.MoveToRight:
                             await _fileOperationHandler.MoveToRight(new List<TreeNode> { node }, destDir);
                             break;
-                        case ComparisonActionType.DeleteLeft:
+                        case FileOperationType.DeleteLeft:
                             var items = _fileOperationHandler.GetItemsForDeletion(new List<TreeNode> { node }, true);
                             if (items.Count > 0) await _fileOperationHandler.DeleteAsync(items);
                             break;
-                        case ComparisonActionType.DeleteRight:
+                        case FileOperationType.DeleteRight:
                             var items2 = _fileOperationHandler.GetItemsForDeletion(new List<TreeNode> { node }, false);
                             if (items2.Count > 0) await _fileOperationHandler.DeleteAsync(items2);
                             break;
@@ -686,32 +686,32 @@ namespace dCompare.Compare
         private async void ContextMenu_CopyToLeft_Click(object sender, RoutedEventArgs e)
         {
             var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
-            await ProcessFileOperationsAsync(selectedNodes, ViewModel.LeftPath?.Trim() ?? string.Empty, ComparisonActionType.CopyToLeft);
+            await ProcessFileOperationsAsync(selectedNodes, ViewModel.LeftPath?.Trim() ?? string.Empty, FileOperationType.CopyToLeft);
         }
         private async void ContextMenu_CopyToRight_Click(object sender, RoutedEventArgs e)
         {
             var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
-            await ProcessFileOperationsAsync(selectedNodes, ViewModel.RightPath?.Trim() ?? string.Empty, ComparisonActionType.CopyToRight);
+            await ProcessFileOperationsAsync(selectedNodes, ViewModel.RightPath?.Trim() ?? string.Empty, FileOperationType.CopyToRight);
         }
         private async void ContextMenu_MoveToLeft_Click(object sender, RoutedEventArgs e)
         {
             var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
-            await ProcessFileOperationsAsync(selectedNodes, ViewModel.LeftPath?.Trim() ?? string.Empty, ComparisonActionType.MoveToLeft);
+            await ProcessFileOperationsAsync(selectedNodes, ViewModel.LeftPath?.Trim() ?? string.Empty, FileOperationType.MoveToLeft);
         }
         private async void ContextMenu_MoveToRight_Click(object sender, RoutedEventArgs e)
         {
             var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
-            await ProcessFileOperationsAsync(selectedNodes, ViewModel.RightPath?.Trim() ?? string.Empty, ComparisonActionType.MoveToRight);
+            await ProcessFileOperationsAsync(selectedNodes, ViewModel.RightPath?.Trim() ?? string.Empty, FileOperationType.MoveToRight);
         }
         private async void ContextMenu_DeleteLeft_Click(object sender, RoutedEventArgs e)
         {
             var selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
-            await ProcessFileOperationsAsync(selectedNodes, string.Empty, ComparisonActionType.DeleteLeft);
+            await ProcessFileOperationsAsync(selectedNodes, string.Empty, FileOperationType.DeleteLeft);
         }
         private async void ContextMenu_DeleteRight_Click(object sender, RoutedEventArgs e)
         {
             List<TreeNode> selectedNodes = ResultListView.SelectedItems.Cast<TreeNode>().ToList();
-            await ProcessFileOperationsAsync(selectedNodes, string.Empty, ComparisonActionType.DeleteRight);
+            await ProcessFileOperationsAsync(selectedNodes, string.Empty, FileOperationType.DeleteRight);
         }
         private async void ContextMenu_Rename_Click(object sender, RoutedEventArgs e)
         {
@@ -891,11 +891,11 @@ namespace dCompare.Compare
                 if (leftCompareWithMenu == null || rightCompareWithMenu == null || leftViewWithMenu == null || rightViewWithMenu == null) return;
 
                 var config = await _configService.LoadConfigurationAsync();
-                var diffTools = _toolConfigService.GetAllToolsForOperation(config, DoubleClickActions.Compare.ToString().ToLower());
+                var diffTools = _toolConfigService.GetAllToolsForOperation(config, Operations.Diff);
                 PopulateToolMenu(leftCompareWithMenu, diffTools, ContextMenu_CompareWithViewer_Click);
                 PopulateToolMenu(rightCompareWithMenu, diffTools, ContextMenu_CompareWithViewer_Click);
 
-                var viewTools = _toolConfigService.GetAllToolsForOperation(config, DoubleClickActions.View.ToString().ToLower());
+                var viewTools = _toolConfigService.GetAllToolsForOperation(config, Operations.View);
                 PopulateToolMenu(leftViewWithMenu, viewTools, ContextMenu_ViewWithViewer_Click);
                 PopulateToolMenu(rightViewWithMenu, viewTools, ContextMenu_ViewWithViewer_Click);
             }
@@ -924,24 +924,24 @@ namespace dCompare.Compare
         }
         private async void ViewFileAsync(TreeNode selectedItem)
         {
-            await LaunchToolAsync(selectedItem, DoubleClickActions.View.ToString().ToLower());
+            await LaunchToolAsync(selectedItem, Operations.View);
         }
         private void ContextMenu_ViewWithViewer_Click(object sender, RoutedEventArgs e)
         {
             ProcessToolAction(sender, async (selectedItem, tool) =>
             {
-                await LaunchToolAsync(selectedItem, DoubleClickActions.View.ToString().ToLower(), tool);
+                await LaunchToolAsync(selectedItem, Operations.View, tool);
             });
         }
         private async void CompareFileAsync(TreeNode selectedItem)
         {
-            await LaunchToolAsync(selectedItem, DoubleClickActions.Compare.ToString().ToLower());
+            await LaunchToolAsync(selectedItem, Operations.Diff);
         }
         private void ContextMenu_CompareWithViewer_Click(object sender, RoutedEventArgs e)
         {
             ProcessToolAction(sender, async (selectedItem, tool) =>
             {
-                await LaunchToolAsync(selectedItem, DoubleClickActions.Compare.ToString().ToLower(), tool);
+                await LaunchToolAsync(selectedItem, Operations.Diff, tool);
             });
         }
         private async Task LaunchToolAsync(TreeNode selectedItem, string operation, ToolOptions? toolConfig = null)

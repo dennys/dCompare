@@ -26,7 +26,7 @@ namespace dCompare.Compare
             if (selectedItem.IsDirectory)
             {
                 MessageBox.Show(
-                    operation == DoubleClickActions.View.ToString().ToLower() ? Properties.Resources.CannotOpenDirectory : Properties.Resources.CannotCompareDirectory,
+                    operation == Operations.View ? Properties.Resources.CannotOpenDirectory : Properties.Resources.CannotCompareDirectory,
                     Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return null;
             }
@@ -40,9 +40,9 @@ namespace dCompare.Compare
             {
                 // Determine the file path(s) based on operation
                 string? path = selectedItem.LeftNode?.FullPath ?? selectedItem.RightNode?.FullPath;
-                string? leftPath = operation == DoubleClickActions.View.ToString().ToLower() ? path : (selectedItem.LeftNode?.FullPath ?? CreateTemporaryEmptyFile());
-                //string? leftPath = operation == DoubleClickActions.View.ToString().ToLower() ? path : selectedItem.LeftNode?.FullPath;
-                string? rightPath = operation == DoubleClickActions.View.ToString().ToLower() ? null : (selectedItem.RightNode?.FullPath ?? CreateTemporaryEmptyFile());
+                string? leftPath = operation == Operations.View ? path : (selectedItem.LeftNode?.FullPath ?? CreateTemporaryEmptyFile());
+                //string? leftPath = operation == Operations.View ? path : selectedItem.LeftNode?.FullPath;
+                string? rightPath = operation == Operations.View ? null : (selectedItem.RightNode?.FullPath ?? CreateTemporaryEmptyFile());
 
                 //if (string.IsNullOrEmpty(path) || string.IsNullOrEmpty(leftPath) || string.IsNullOrEmpty(rightPath))
                 //{
@@ -60,24 +60,24 @@ namespace dCompare.Compare
                     if (toolConfig == null)
                     {
                         MessageBox.Show(
-                            string.Format(Properties.Resources.NoDefaultTool, operation == DoubleClickActions.View.ToString().ToLower() ? Properties.Resources.View : Properties.Resources.Diff, extension),
+                            string.Format(Properties.Resources.NoDefaultTool, operation == Operations.View ? Properties.Resources.View : Properties.Resources.Diff, extension),
                             Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                         return null;
                     }
                 }
 
-                if (toolConfig.Type == ToolTypes.BuiltIn.ToString())
+                if (toolConfig.Type == "BuiltIn")
                 {
-                    ITool tool = operation == DoubleClickActions.View.ToString().ToLower()   // Create tool based on operation
+                    ITool tool = operation == Operations.View   // Create tool based on operation
                         ? _toolFactory.CreateTool(leftPath)
                         : _toolFactory.CreateTool(leftPath, rightPath ?? string.Empty); // Ensure rightPath is not null
 
-                    if (operation == DoubleClickActions.View.ToString().ToLower())
+                    if (operation == Operations.View)
                     {
                         tool.LoadFile(leftPath);
                     }
 
-                    string tabHeader = operation == DoubleClickActions.View.ToString().ToLower()
+                    string tabHeader = operation == Operations.View
                         ? string.Format(Properties.Resources.ViewTabHeader, Path.GetFileName(leftPath))
                         : string.Format(Properties.Resources.CompareTabHeader, Path.GetFileName(leftPath), Path.GetFileName(rightPath));
 
@@ -86,7 +86,7 @@ namespace dCompare.Compare
                 }
                 else // External
                 {
-                    string arguments = operation == DoubleClickActions.View.ToString().ToLower()
+                    string arguments = operation == Operations.View
                         ? toolConfig.ViewArguments.Replace("{file}", leftPath)
                         : toolConfig.DiffArguments.Replace("{left}", leftPath).Replace("{right}", rightPath);
 
