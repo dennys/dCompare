@@ -77,7 +77,7 @@ namespace dCompare.FileOperation
                     var transfer = new FileTransfer
                     {
                         JobId = jobId,
-                        Operation = "Delete",
+                        Operation = FileOperationTypes.Delete,
                         Source = item.Path,
                         Target = string.Empty,
                         Status = "Queued",
@@ -126,11 +126,11 @@ namespace dCompare.FileOperation
         }
 
         // Common method to handle copy or move operations
-        private async Task ExecuteTransferAsync(List<(string Source, string TargetPath, SourceType Type)> items, string operation, string errorMessage)
+        private async Task ExecuteTransferAsync(List<(string Source, string TargetPath, SourceType Type)> items, FileOperationTypes operation, string errorMessage)
         {
             if (items.Count == 0)
             {
-                MessageBox.Show(string.Format(Properties.Resources.PleaseSelectFileOrDirectory, operation.ToLower()));
+                MessageBox.Show(string.Format(Properties.Resources.PleaseSelectFileOrDirectory, operation.ToString().ToLower()));
                 return;
             }
 
@@ -174,7 +174,7 @@ namespace dCompare.FileOperation
                                 }
                             });
 
-                            OperationResult result = operation == "Copy"
+                            OperationResult result = operation == FileOperationTypes.Copy
                                 ? await _fileManager.CopyAsync(item.Source, item.TargetPath, true, progress)
                                 : await _fileManager.MoveAsync(item.Source, item.TargetPath, true, progress);
 
@@ -207,25 +207,25 @@ namespace dCompare.FileOperation
         public async Task CopyToLeft(List<TreeNode> selectedItems, string destDir)
         {
             var items = GetItemsForTransfer(selectedItems, toLeft: true, destDir);
-            await ExecuteTransferAsync(items, "Copy", "Error copying items");
+            await ExecuteTransferAsync(items, FileOperationTypes.Copy, "Error copying items");
         }
 
         public async Task CopyToRight(List<TreeNode> selectedItems, string destDir)
         {
             var items = GetItemsForTransfer(selectedItems, toLeft: false, destDir);
-            await ExecuteTransferAsync(items, "Copy", "Error copying items");
+            await ExecuteTransferAsync(items, FileOperationTypes.Copy, "Error copying items");
         }
 
         public async Task MoveToLeft(List<TreeNode> selectedItems, string destDir)
         {
             var items = GetItemsForTransfer(selectedItems, toLeft: true, destDir);
-            await ExecuteTransferAsync(items, "Move", "Error moving items");
+            await ExecuteTransferAsync(items, FileOperationTypes.Move, "Error moving items");
         }
 
         public async Task MoveToRight(List<TreeNode> selectedItems, string destDir)
         {
             var items = GetItemsForTransfer(selectedItems, toLeft: false, destDir);
-            await ExecuteTransferAsync(items, "Move", "Error moving items");
+            await ExecuteTransferAsync(items, FileOperationTypes.Move, "Error moving items");
         }
 
         /// <summary>

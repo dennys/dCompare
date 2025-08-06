@@ -10,7 +10,7 @@ namespace dCompare.FileOperation.Models
         private double _transferSpeed;
 
         public required string JobId { get; set; }
-        public required string Operation { get; set; }
+        public FileOperationTypes Operation { get; set; }
         public required string Source { get; set; }
         public required string Target { get; set; }
         public long FileSize { get; set; }

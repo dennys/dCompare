@@ -92,7 +92,7 @@ namespace dCompare.FileOperation
             if (parameter is FileTransfer transfer)
             {
                 FailedTransfers.Remove(transfer);
-                Transfer(transfer.Source, transfer.Target, true, transfer.Operation == "Copy", transfer.SourceType);
+                Transfer(transfer.Source, transfer.Target, true, transfer.Operation == FileOperationTypes.Copy, transfer.SourceType);
             }
         }
 
@@ -196,7 +196,7 @@ namespace dCompare.FileOperation
             var transfer = new FileTransfer
             {
                 JobId = jobId,
-                Operation = isCopy ? "Copy" : "Move",
+                Operation = isCopy ? FileOperationTypes.Copy : FileOperationTypes.Move,
                 Source = source,
                 Target = target,
                 Status = "Queued",

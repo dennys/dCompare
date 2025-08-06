@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using dCompare.Common;
+using Microsoft.Extensions.Configuration;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -10,7 +11,7 @@ namespace dCompare.Configuration
     /// </summary>
     public class ConfigurationService : IConfigurationService
     {
-        private const string jsonFileName = "dCompare.json";
+        private const string jsonFileName = Constant.DefaultConfigurationFile;
         private readonly string _configPath;
         private readonly IConfigurationRoot _configuration;
         private static readonly JsonSerializerOptions _serializerOptions = new()

@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using dCompare.Common;
 using dCompare.Compare;
 using dCompare.Configuration;
 using dCompare.FileOperation;
@@ -20,14 +21,14 @@ namespace dCompare
 
         public App()
         {
-            // Configuration Setup
-            IConfigurationRoot configuration = new ConfigurationBuilder()
+            // Configuration Setup
+            IConfigurationRoot configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("dCompare.json", optional: true, reloadOnChange: true)
+                .AddJsonFile(Constant.DefaultConfigurationFile, optional: true, reloadOnChange: true)
                 .Build();
 
             // Configure Culture
-            string languageCode = configuration["Options:UI:Language"] ?? "en";
+            string languageCode = configuration["Options:UI:Language"] ?? Constant.DefaultLanguageCode;
             if (!string.IsNullOrEmpty(languageCode))
             {
                 try
@@ -39,13 +40,13 @@ namespace dCompare
                 catch (CultureNotFoundException ex)
                 {
                     Log.Warning(ex, "Invalid culture code '{LanguageCode}', falling back to 'en'", languageCode);
-                    CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en");
-                    CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("en");
+                    CultureInfo.DefaultThreadCurrentCulture = new CultureInfo(Constant.DefaultLanguageCode);
+                    CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo(Constant.DefaultLanguageCode);
                 }
             }
 
-            // Configuration for the logger
-            IConfigurationRoot loggerConfiguration = new ConfigurationBuilder()
+            // Configuration for the logger
+            IConfigurationRoot loggerConfiguration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("Serilog.json", optional: true, reloadOnChange: true)
                 .Build();
