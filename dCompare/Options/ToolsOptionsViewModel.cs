@@ -63,8 +63,8 @@ namespace dCompare.Options
         private readonly ToolOptions _tool;
         public string Key { get; }
 
-        public List<string> AvailableTypes => new List<string> { ToolTypes.BuiltIn, ToolTypes.External };
-        public List<string> AvailableOperations => new List<string> { Operations.View, Operations.Diff };
+        public List<ToolTypes> AvailableTypes => Enum.GetValues(typeof(ToolTypes)).Cast<ToolTypes>().ToList();
+        public List<Operations> AvailableOperations => Enum.GetValues(typeof(Operations)).Cast<Operations>().ToList();
 
         public ToolOptionsViewModel(string key, ToolOptions tool)
         {
@@ -88,7 +88,7 @@ namespace dCompare.Options
             set { _tool.Name = value; OnPropertyChanged(); }
         }
 
-        public string Type
+        public ToolTypes Type
         {
             get => _tool.Type;
             set
@@ -125,7 +125,7 @@ namespace dCompare.Options
             set { _tool.ViewArguments = value; OnPropertyChanged(); }
         }
 
-        public List<string> SupportedOperations
+        public List<Operations> SupportedOperations
         {
             get => _tool.SupportedOperations;
             set
@@ -198,7 +198,7 @@ namespace dCompare.Options
                 }
                 if (columnName == nameof(SupportedOperations))
                 {
-                    if (SupportedOperations == null || SupportedOperations.Count == 0)
+                    if (SupportedOperations == null || !SupportedOperations.Any())
                     {
                         result = "At least one supported operation must be selected.";
                     }

@@ -5,19 +5,19 @@ namespace dCompare.FileOperation.Models
 {
     public class FileTransfer : INotifyPropertyChanged
     {
-        private string _status = string.Empty;
+        private FileOperationStatus _status;
         private double _progress;
         private double _transferSpeed;
 
         public required string JobId { get; set; }
-        public required string Operation { get; set; }
+        public FileOperationTypes Operation { get; set; }
         public required string Source { get; set; }
         public required string Target { get; set; }
         public long FileSize { get; set; }
         public DateTime StartTime { get; set; }
         public SourceType SourceType { get; set; }
 
-        public string Status
+        public FileOperationStatus Status
         {
             get => _status;
             set

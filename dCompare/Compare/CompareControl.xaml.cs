@@ -944,7 +944,7 @@ namespace dCompare.Compare
                 await LaunchToolAsync(selectedItem, Operations.Diff, tool);
             });
         }
-        private async Task LaunchToolAsync(TreeNode selectedItem, string operation, ToolOptions? toolConfig = null)
+        private async Task LaunchToolAsync(TreeNode selectedItem, Operations operation, ToolOptions? toolConfig = null)
         {
             TabItem? tab = await _toolHandler.LaunchToolAsync(selectedItem, operation, toolConfig);
             if (tab != null)

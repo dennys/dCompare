@@ -33,42 +33,40 @@ namespace dCompare.FileOperation
         public Task<OperationResult> CopyAsync(string source, string destination, bool overwrite = false, IProgress<OperationProgress>? progress = null, CancellationToken cancellationToken = default)
         {
             List<(string, string, SourceType)> items = [(source, destination, SourceType.Left)];
-            return ProcessItemsAsync(items, OperationType.Copy, overwrite, progress, cancellationToken);
+            return ProcessItemsAsync(items, FileOperationTypes.Copy, overwrite, progress, cancellationToken);
         }
 
         public Task<OperationResult> MoveAsync(string source, string destination, bool overwrite = false, IProgress<OperationProgress>? progress = null, CancellationToken cancellationToken = default)
         {
             List<(string, string, SourceType)> items = [(source, destination, SourceType.Left)];
-            return ProcessItemsAsync(items, OperationType.Move, overwrite, progress, cancellationToken);
+            return ProcessItemsAsync(items, FileOperationTypes.Move, overwrite, progress, cancellationToken);
         }
 
         public Task<OperationResult> DeleteAsync(string path, IProgress<OperationProgress>? progress = null, CancellationToken cancellationToken = default)
         {
             List<(string, string, SourceType)> items = [(path, string.Empty, SourceType.Left)];
-            return ProcessItemsAsync(items, OperationType.Delete, false, progress, cancellationToken);
+            return ProcessItemsAsync(items, FileOperationTypes.Delete, false, progress, cancellationToken);
         }
 
         public Task<OperationResult> CopyMultipleAsync(List<(string source, string target, SourceType type)> items, bool overwrite = false, IProgress<OperationProgress>? progress = null, CancellationToken cancellationToken = default)
         {
-            return ProcessItemsAsync(items, OperationType.Copy, overwrite, progress, cancellationToken);
+            return ProcessItemsAsync(items, FileOperationTypes.Copy, overwrite, progress, cancellationToken);
         }
 
         public Task<OperationResult> MoveMultipleAsync(List<(string source, string target, SourceType type)> items, bool overwrite = false, IProgress<OperationProgress>? progress = null, CancellationToken cancellationToken = default)
         {
-            return ProcessItemsAsync(items, OperationType.Move, overwrite, progress, cancellationToken);
+            return ProcessItemsAsync(items, FileOperationTypes.Move, overwrite, progress, cancellationToken);
         }
 
         public Task<OperationResult> DeleteMultipleAsync(List<string> paths, IProgress<OperationProgress>? progress = null, CancellationToken cancellationToken = default)
         {
             var items = paths.ConvertAll(p => (p, string.Empty, SourceType.Left));
-            return ProcessItemsAsync(items, OperationType.Delete, false, progress, cancellationToken);
+            return ProcessItemsAsync(items, FileOperationTypes.Delete, false, progress, cancellationToken);
         }
 
         #endregion
 
-        private enum OperationType { Copy, Move, Delete }
-
-        private async Task<OperationResult> ProcessItemsAsync(List<(string source, string target, SourceType type)> items, OperationType opType, bool overwrite, IProgress<OperationProgress>? progress, CancellationToken cancellationToken)
+        private async Task<OperationResult> ProcessItemsAsync(List<(string source, string target, SourceType type)> items, FileOperationTypes opType, bool overwrite, IProgress<OperationProgress>? progress, CancellationToken cancellationToken)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
             int successCount = 0;
@@ -100,13 +98,13 @@ namespace dCompare.FileOperation
                 {
                     switch (opType)
                     {
-                        case OperationType.Copy:
+                        case FileOperationTypes.Copy:
                             await HandleCopyAsync(source, target, overwrite, totalCount, processedCount, ReportProgress, cancellationToken);
                             break;
-                        case OperationType.Move:
+                        case FileOperationTypes.Move:
                             await HandleMoveAsync(source, target, overwrite, totalCount, processedCount, ReportProgress, cancellationToken);
                             break;
-                        case OperationType.Delete:
+                        case FileOperationTypes.Delete:
                             await HandleDeleteAsync(source, totalCount, processedCount, ReportProgress, cancellationToken);
                             break;
                     }

@@ -6,7 +6,7 @@ namespace dCompare.Configuration
 {
     public class ToolService : IToolService
     {
-        public IEnumerable<ToolOptions> GetSupportedTools(AppConfiguration config, string operation, string extension)
+        public IEnumerable<ToolOptions> GetSupportedTools(AppConfiguration config, Operations operation, string extension)
         {
             return config.Options.Tools.Values
                 .Where(tool => tool.Enabled &&
@@ -20,12 +20,12 @@ namespace dCompare.Configuration
                 .FirstOrDefault(mapping => mapping.Extensions.Contains(extension, StringComparer.OrdinalIgnoreCase));
         }
 
-        public ToolOptions? GetDefaultTool(AppConfiguration config, string operation, string extension)
+        public ToolOptions? GetDefaultTool(AppConfiguration config, Operations operation, string extension)
         {
             var fileMapping = GetFileTypeMapping(config, extension);
             if (fileMapping == null) return null;
 
-            var toolName = operation.ToLower() switch
+            var toolName = operation switch
             {
                 Operations.Diff => fileMapping.DefaultDiffTool,
                 Operations.View => fileMapping.DefaultViewTool,
@@ -35,17 +35,17 @@ namespace dCompare.Configuration
             return toolName != null && config.Options.Tools.TryGetValue(toolName, out var tool) ? tool : null;
         }
 
-        public IEnumerable<ToolOptions> GetPreferredTools(AppConfiguration config, string operation, string extension)
+        public IEnumerable<ToolOptions> GetPreferredTools(AppConfiguration config, Operations operation, string extension)
         {
             var fileMapping = GetFileTypeMapping(config, extension);
             if (fileMapping == null) yield break;
 
             List<string> preferredToolNames;
-            if (operation.ToLower() == Operations.Diff)
+            if (operation == Operations.Diff)
             {
                 preferredToolNames = fileMapping.PreferredTools.Diff;
             }
-            else if (operation.ToLower() == Operations.View)
+            else if (operation == Operations.View)
             {
                 preferredToolNames = fileMapping.PreferredTools.View;
             }
@@ -66,18 +66,18 @@ namespace dCompare.Configuration
             }
         }
 
-        public IEnumerable<ToolOptions> GetAllToolsForOperation(AppConfiguration config, string operation)
+        public IEnumerable<ToolOptions> GetAllToolsForOperation(AppConfiguration config, Operations operation)
         {
             return config.Options.Tools.Values
                 .Where(tool => tool.Enabled && tool.SupportsOperation(operation));
         }
 
-        public IEnumerable<string> GetSupportedExtensions(AppConfiguration config, string? toolName = null, string? operation = null)
+        public IEnumerable<string> GetSupportedExtensions(AppConfiguration config, string? toolName = null, Operations? operation = null)
         {
             foreach (var tool in config.Options.Tools.Values)
             {
                 if (toolName != null && tool.Name != toolName) continue;
-                if (operation != null && !tool.SupportsOperation(operation)) continue;
+                if (operation != null && !tool.SupportsOperation((Operations)operation)) continue;
                 foreach (var ext in tool.SupportedExtensions)
                 {
                     yield return ext;

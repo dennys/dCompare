@@ -21,18 +21,13 @@ namespace dCompare.Compare
             _toolFactory = new(_configService);
             _toolConfigService = new();
         }
-        public async Task<TabItem?> LaunchToolAsync(TreeNode selectedItem, string operation, ToolOptions? toolConfig = null)
+        public async Task<TabItem?> LaunchToolAsync(TreeNode selectedItem, Operations operation, ToolOptions? toolConfig = null)
         {
             if (selectedItem.IsDirectory)
             {
                 MessageBox.Show(
                     operation == Operations.View ? Properties.Resources.CannotOpenDirectory : Properties.Resources.CannotCompareDirectory,
                     Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                return null;
-            }
-            if (String.IsNullOrEmpty(operation))
-            {
-                MessageBox.Show(Properties.Resources.InvalidOperation, Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return null;
             }
 
@@ -66,7 +61,7 @@ namespace dCompare.Compare
                     }
                 }
 
-                if (toolConfig.Type == "BuiltIn")
+                if (toolConfig.Type == ToolTypes.BuiltIn)
                 {
                     ITool tool = operation == Operations.View   // Create tool based on operation
                         ? _toolFactory.CreateTool(leftPath)

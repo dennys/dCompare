@@ -7,11 +7,11 @@ namespace dCompare.Configuration
         IConfiguration GetConfiguration();
         Task<AppConfiguration> LoadConfigurationAsync();
         Task SaveConfigurationAsync(AppConfiguration config);
-        IEnumerable<ToolOptions> GetSupportedTools(string operation, string extension);
+        IEnumerable<ToolOptions> GetSupportedTools(Operations operation, string extension);
         FileTypeMappingOptions? GetFileTypeMapping(string extension);
-        ToolOptions? GetDefaultTool(string operation, string extension);
-        IEnumerable<ToolOptions> GetPreferredTools(string operation, string extension);
-        IEnumerable<ToolOptions> GetAllToolsForOperation(string operation);
-        IEnumerable<string> GetSupportedExtensions(string? toolName = null, string? operation = null);
+        ToolOptions? GetDefaultTool(Operations operation, string extension);
+        IEnumerable<ToolOptions> GetPreferredTools(Operations operation, string extension);
+        IEnumerable<ToolOptions> GetAllToolsForOperation(Operations operation);
+        IEnumerable<string> GetSupportedExtensions(string? toolName = null, Operations? operation = null);
     }
 }

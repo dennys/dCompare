@@ -98,7 +98,7 @@ namespace dCompare.Tools.Diff
         {
             if (string.IsNullOrEmpty(LeftPath) || string.IsNullOrEmpty(RightPath))
             {
-                MessageBox.Show(Properties.Resources.ErrorBothFilePaths, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Properties.Resources.ErrorBothFilePaths, Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -117,7 +117,7 @@ namespace dCompare.Tools.Diff
             }
             catch (Exception ex)
             {
-                MessageBox.Show(string.Format(Properties.Resources.ErrorFailedToRefreshComparison, ex.Message), "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(string.Format(Properties.Resources.ErrorFailedToRefreshComparison, ex.Message), Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }
