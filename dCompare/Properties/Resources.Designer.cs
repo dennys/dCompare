@@ -288,9 +288,9 @@ namespace dCompare.Properties {
         /// <summary>
         ///   查詢類似 CloseButton 的當地語系化字串。
         /// </summary>
-        public static string CloseButtonXXX {
+        public static string CloseButton {
             get {
-                return ResourceManager.GetString("CloseButtonXXX", resourceCulture);
+                return ResourceManager.GetString("CloseButton", resourceCulture);
             }
         }
         
@@ -2248,7 +2248,7 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
-        ///   查詢類似 Save 的當地語系化字串。
+        ///   查詢類似 💾 Save 的當地語系化字串。
         /// </summary>
         public static string Save {
             get {

@@ -1,15 +1,14 @@
-using dCompare.Configuration;
-using System.Collections.Generic;
+using dCompare.Common;
 
 namespace dCompare.Configuration
 {
     public interface IToolService
     {
-        IEnumerable<ToolOptions> GetSupportedTools(AppConfiguration config, Operations operation, string extension);
+        IEnumerable<ToolOptions> GetSupportedTools(AppConfiguration config, ToolOperationTypes operation, string extension);
         FileTypeMappingOptions? GetFileTypeMapping(AppConfiguration config, string extension);
-        ToolOptions? GetDefaultTool(AppConfiguration config, Operations operation, string extension);
-        IEnumerable<ToolOptions> GetPreferredTools(AppConfiguration config, Operations operation, string extension);
-        IEnumerable<ToolOptions> GetAllToolsForOperation(AppConfiguration config, Operations operation);
-        IEnumerable<string> GetSupportedExtensions(AppConfiguration config, string? toolName = null, Operations? operation = null);
+        ToolOptions? GetDefaultTool(AppConfiguration config, ToolOperationTypes operation, string extension);
+        IEnumerable<ToolOptions> GetPreferredTools(AppConfiguration config, ToolOperationTypes operation, string extension);
+        IEnumerable<ToolOptions> GetAllToolsForOperation(AppConfiguration config, ToolOperationTypes operation);
+        IEnumerable<string> GetSupportedExtensions(AppConfiguration config, string? toolName = null, ToolOperationTypes? operation = null);
     }
 }

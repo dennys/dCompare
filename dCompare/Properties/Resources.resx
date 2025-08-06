@@ -557,7 +557,7 @@ Right: {1}</value>
     <value>Same as original (*{0})|*{0}|All files (*.*)|*.*</value>
   </data>
   <data name="Save" xml:space="preserve">
-    <value>Save</value>
+    <value>💾 Save</value>
   </data>
   <data name="Edit" xml:space="preserve">
     <value>Edit</value>
@@ -720,9 +720,6 @@ Right: {1}</value>
   </data>
   <data name="ErrorLoadingSession" xml:space="preserve">
     <value>Error loading session: {0}</value>
-  </data>
-  <data name="CloseButtonXXX" xml:space="preserve">
-    <value>CloseButton</value>
   </data>
   <data name="RecentSessionsMenu" xml:space="preserve">
     <value>_Recent Sessions...</value>
@@ -1131,5 +1128,8 @@ Right: {1}</value>
   </data>
   <data name="SelectDefaultSessionFile" xml:space="preserve">
     <value>Select Default Session File</value>
+  </data>
+  <data name="CloseButton" xml:space="preserve">
+    <value>CloseButton</value>
   </data>
 </root>

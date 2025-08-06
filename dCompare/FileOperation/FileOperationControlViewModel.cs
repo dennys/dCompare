@@ -267,7 +267,7 @@ namespace dCompare.FileOperation
                         LogTransfer(transfer);
                     });
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     App.Current.Dispatcher.Invoke(() =>
                     {

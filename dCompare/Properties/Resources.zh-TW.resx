@@ -557,7 +557,7 @@
     <value>與原始檔案相同 (*{0})|*{0}|所有檔案 (*.*)|*.*</value>
   </data>
   <data name="Save" xml:space="preserve">
-    <value>儲存</value>
+    <value>💾 儲存</value>
   </data>
   <data name="Edit" xml:space="preserve">
     <value>編輯</value>
@@ -720,9 +720,6 @@
   </data>
   <data name="ErrorLoadingSession" xml:space="preserve">
     <value>載入工作階段時發生錯誤：{0}</value>
-  </data>
-  <data name="CloseButtonXXX" xml:space="preserve">
-    <value>qq</value>
   </data>
   <data name="RecentSessionsMenu" xml:space="preserve">
     <value>最近的工作階段... </value>
@@ -1131,5 +1128,8 @@
   </data>
   <data name="SelectDefaultSessionFile" xml:space="preserve">
     <value>選取預設工作階段檔案</value>
+  </data>
+  <data name="CloseButton" xml:space="preserve">
+    <value>qq</value>
   </data>
 </root>

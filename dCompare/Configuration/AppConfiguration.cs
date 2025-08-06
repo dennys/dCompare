@@ -125,7 +125,7 @@ namespace dCompare.Configuration
 
         [JsonPropertyName("SupportedOperations")]
         //[JsonConverter(typeof(JsonStringEnumConverter))]
-        public List<Operations> SupportedOperations { get; set; } = new();
+        public List<ToolOperationTypes> SupportedOperations { get; set; } = new();
 
         [JsonPropertyName("SupportedExtensions")]
         public List<string> SupportedExtensions { get; set; } = new();
@@ -136,7 +136,7 @@ namespace dCompare.Configuration
         [JsonPropertyName("Enabled")]
         public bool Enabled { get; set; } = true;
 
-        public bool SupportsOperation(Operations operation) =>
+        public bool SupportsOperation(ToolOperationTypes operation) =>
             SupportedOperations.Contains(operation);
 
         public bool SupportsExtension(string extension) =>
@@ -262,18 +262,6 @@ namespace dCompare.Configuration
         [JsonPropertyName("outputTemplate")]
         public string OutputTemplate { get; set; } =
             "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff} {Level:u3}] [T{ThreadId:D2}] {Message:lj}{NewLine}{Exception}";
-    }
-
-    public enum ToolTypes
-    {
-        BuiltIn,
-        External
-    }
-
-    public enum Operations
-    {
-        View,
-        Diff
     }
 
 }

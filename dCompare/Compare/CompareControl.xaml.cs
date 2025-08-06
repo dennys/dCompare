@@ -891,11 +891,11 @@ namespace dCompare.Compare
                 if (leftCompareWithMenu == null || rightCompareWithMenu == null || leftViewWithMenu == null || rightViewWithMenu == null) return;
 
                 var config = await _configService.LoadConfigurationAsync();
-                var diffTools = _toolConfigService.GetAllToolsForOperation(config, Operations.Diff);
+                var diffTools = _toolConfigService.GetAllToolsForOperation(config, ToolOperationTypes.Diff);
                 PopulateToolMenu(leftCompareWithMenu, diffTools, ContextMenu_CompareWithViewer_Click);
                 PopulateToolMenu(rightCompareWithMenu, diffTools, ContextMenu_CompareWithViewer_Click);
 
-                var viewTools = _toolConfigService.GetAllToolsForOperation(config, Operations.View);
+                var viewTools = _toolConfigService.GetAllToolsForOperation(config, ToolOperationTypes.View);
                 PopulateToolMenu(leftViewWithMenu, viewTools, ContextMenu_ViewWithViewer_Click);
                 PopulateToolMenu(rightViewWithMenu, viewTools, ContextMenu_ViewWithViewer_Click);
             }
@@ -924,27 +924,27 @@ namespace dCompare.Compare
         }
         private async void ViewFileAsync(TreeNode selectedItem)
         {
-            await LaunchToolAsync(selectedItem, Operations.View);
+            await LaunchToolAsync(selectedItem, ToolOperationTypes.View);
         }
         private void ContextMenu_ViewWithViewer_Click(object sender, RoutedEventArgs e)
         {
             ProcessToolAction(sender, async (selectedItem, tool) =>
             {
-                await LaunchToolAsync(selectedItem, Operations.View, tool);
+                await LaunchToolAsync(selectedItem, ToolOperationTypes.View, tool);
             });
         }
         private async void CompareFileAsync(TreeNode selectedItem)
         {
-            await LaunchToolAsync(selectedItem, Operations.Diff);
+            await LaunchToolAsync(selectedItem, ToolOperationTypes.Diff);
         }
         private void ContextMenu_CompareWithViewer_Click(object sender, RoutedEventArgs e)
         {
             ProcessToolAction(sender, async (selectedItem, tool) =>
             {
-                await LaunchToolAsync(selectedItem, Operations.Diff, tool);
+                await LaunchToolAsync(selectedItem, ToolOperationTypes.Diff, tool);
             });
         }
-        private async Task LaunchToolAsync(TreeNode selectedItem, Operations operation, ToolOptions? toolConfig = null)
+        private async Task LaunchToolAsync(TreeNode selectedItem, ToolOperationTypes operation, ToolOptions? toolConfig = null)
         {
             TabItem? tab = await _toolHandler.LaunchToolAsync(selectedItem, operation, toolConfig);
             if (tab != null)

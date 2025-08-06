@@ -1,10 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using dCompare.Common;
 using dCompare.Configuration;
-using dCompare.Infrastructure;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Windows.Input;
 
 namespace dCompare.Options
 {
@@ -64,7 +63,7 @@ namespace dCompare.Options
         public string Key { get; }
 
         public List<ToolTypes> AvailableTypes => Enum.GetValues(typeof(ToolTypes)).Cast<ToolTypes>().ToList();
-        public List<Operations> AvailableOperations => Enum.GetValues(typeof(Operations)).Cast<Operations>().ToList();
+        public List<ToolOperationTypes> AvailableOperations => Enum.GetValues(typeof(ToolOperationTypes)).Cast<ToolOperationTypes>().ToList();
 
         public ToolOptionsViewModel(string key, ToolOptions tool)
         {
@@ -125,7 +124,7 @@ namespace dCompare.Options
             set { _tool.ViewArguments = value; OnPropertyChanged(); }
         }
 
-        public List<Operations> SupportedOperations
+        public List<ToolOperationTypes> SupportedOperations
         {
             get => _tool.SupportedOperations;
             set

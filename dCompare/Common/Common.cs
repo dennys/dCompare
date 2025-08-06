@@ -24,6 +24,17 @@ namespace dCompare.Common
         Failed
     }
 
+    public enum ToolTypes
+    {
+        BuiltIn,
+        External
+    }
+
+    public enum ToolOperationTypes
+    {
+        View,
+        Diff
+    }
 
     public enum DoubleClickActions
     {
