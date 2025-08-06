@@ -1,4 +1,5 @@
-﻿using dCompare.Compare;
+﻿using dCompare.Common;
+using dCompare.Compare;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using Serilog;
@@ -33,7 +34,7 @@ namespace dCompare.Session
         {
             try
             {
-                string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "recentSessions.json");
+                string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Constant.RecentSessionsFile);
                 if (File.Exists(configPath))
                 {
                     string json = File.ReadAllText(configPath);
@@ -55,7 +56,7 @@ namespace dCompare.Session
         {
             try
             {
-                string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "recentSessions.json");
+                string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Constant.RecentSessionsFile);
                 var options = new JsonSerializerOptions { WriteIndented = true };
                 string json = JsonSerializer.Serialize(_recentSessions, options);
                 File.WriteAllText(configPath, json);

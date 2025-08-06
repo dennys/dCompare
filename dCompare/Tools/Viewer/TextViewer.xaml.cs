@@ -109,7 +109,7 @@ namespace dCompare.Tools.Viewer
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error during replace operation: {ex.Message}", "Replace Error",
+                MessageBox.Show(string.Format(Properties.Resources.ErrorDuringReplace, ex.Message), Properties.Resources.ReplaceError,
                                MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }

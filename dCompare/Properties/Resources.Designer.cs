@@ -3003,5 +3003,71 @@ namespace dCompare.Properties {
                 return ResourceManager.GetString("ZoomOut", resourceCulture);
             }
         }
+
+        public static string DuplicateHotkeys {
+            get {
+                return ResourceManager.GetString("DuplicateHotkeys", resourceCulture);
+            }
+        }
+
+        public static string DuplicateHotkeysMessage {
+            get {
+                return ResourceManager.GetString("DuplicateHotkeysMessage", resourceCulture);
+            }
+        }
+
+        public static string SettingsSaved {
+            get {
+                return ResourceManager.GetString("SettingsSaved", resourceCulture);
+            }
+        }
+
+        public static string Success {
+            get {
+                return ResourceManager.GetString("Success", resourceCulture);
+            }
+        }
+
+        public static string AddExtension {
+            get {
+                return ResourceManager.GetString("AddExtension", resourceCulture);
+            }
+        }
+
+        public static string EnterNewExtension {
+            get {
+                return ResourceManager.GetString("EnterNewExtension", resourceCulture);
+            }
+        }
+
+        public static string InvalidInput {
+            get {
+                return ResourceManager.GetString("InvalidInput", resourceCulture);
+            }
+        }
+
+        public static string ExtensionMustStartWithDot {
+            get {
+                return ResourceManager.GetString("ExtensionMustStartWithDot", resourceCulture);
+            }
+        }
+
+        public static string ExtensionAlreadyExists {
+            get {
+                return ResourceManager.GetString("ExtensionAlreadyExists", resourceCulture);
+            }
+        }
+
+        public static string SessionFilesFilter {
+            get {
+                return ResourceManager.GetString("SessionFilesFilter", resourceCulture);
+            }
+        }
+
+        public static string SelectDefaultSessionFile {
+            get {
+                return ResourceManager.GetString("SelectDefaultSessionFile", resourceCulture);
+            }
+        }
     }
 }
