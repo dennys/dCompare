@@ -26,7 +26,7 @@ namespace dCompare.Tools.Viewer
             textEditor.TextChanged += (s, e) => _viewModel.Text = textEditor.Text;
             searchPanel = SearchPanel.Install(textEditor);
             LoadSyntaxHighlightingComboBox(syntaxHighlightComboBox);
-            toggleReadOnlyButton.Content = _viewModel.IsReadOnly ? Properties.Resources.View : Properties.Resources.Edit;
+            toggleReadOnlyButton.Content = _viewModel.IsReadOnly ? "🔒" + Properties.Resources.View : "✏️ " + Properties.Resources.Edit;
         }
 
         public string Text
@@ -109,7 +109,7 @@ namespace dCompare.Tools.Viewer
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error during replace operation: {ex.Message}", "Replace Error",
+                MessageBox.Show(string.Format(Properties.Resources.ErrorDuringReplace, ex.Message), Properties.Resources.ReplaceError,
                                MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -118,7 +118,7 @@ namespace dCompare.Tools.Viewer
         {
             if (e.PropertyName == nameof(TextViewerViewModel.IsReadOnly))
             {
-                toggleReadOnlyButton.Content = _viewModel.IsReadOnly ? Properties.Resources.View : Properties.Resources.Edit;
+                toggleReadOnlyButton.Content = _viewModel.IsReadOnly ? "🔒" + Properties.Resources.View : "✏️ " + Properties.Resources.Edit;
             }
         }
 

@@ -21,9 +21,9 @@ namespace dCompare.Tools
         {
             var fileType = DetermineFileType(filePath);
 
-            if (fileType == dCompare.Tools.Models.FileType.Image)
+            if (fileType == Models.FileType.Image)
             {
-                return new Tools.Viewer.ImageViewer(filePath);
+                return new Viewer.ImageViewer(filePath);
             }
 
             // Fallback to text viewer for text and binary files
@@ -74,12 +74,12 @@ namespace dCompare.Tools
             return dCompare.Tools.Models.FileType.Unsupported;
         }
 
-        private static object CompareFiles(string leftFilePath, string rightFilePath)
-        {
-            var leftText = File.ReadAllText(leftFilePath);
-            var rightText = File.ReadAllText(rightFilePath);
-            var diffBuilder = new DiffPlex.DiffBuilder.SideBySideDiffBuilder();
-            return diffBuilder.BuildDiffModel(leftText, rightText);
-        }
+        //private static object CompareFiles(string leftFilePath, string rightFilePath)
+        //{
+        //    var leftText = File.ReadAllText(leftFilePath);
+        //    var rightText = File.ReadAllText(rightFilePath);
+        //    var diffBuilder = new DiffPlex.DiffBuilder.SideBySideDiffBuilder();
+        //    return diffBuilder.BuildDiffModel(leftText, rightText);
+        //}
     }
 }

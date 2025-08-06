@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using dCompare.Common;
 using dCompare.Configuration;
 using Microsoft.VisualBasic;
 using Microsoft.Win32;
@@ -51,7 +52,7 @@ namespace dCompare.Options
                 hotkeysVm.ValidateHotKeys();
                 if (hotkeysVm.HasDuplicateHotKeys())
                 {
-                    MessageBox.Show("There are duplicate hotkeys. Please resolve the conflicts before saving.", "Duplicate Hotkeys", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show(Properties.Resources.DuplicateHotkeysMessage, Properties.Resources.DuplicateHotkeys, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
             }
@@ -65,7 +66,7 @@ namespace dCompare.Options
             }
 
             await _configService.SaveConfigurationAsync(_appConfig);
-            MessageBox.Show("Settings saved successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(Properties.Resources.SettingsSaved, Properties.Resources.Success, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void BuildMenu()
@@ -411,7 +412,7 @@ namespace dCompare.Options
         [RelayCommand]
         private void AddExtension()
         {
-            string newExt = Interaction.InputBox("Enter new file extension (e.g., .txt):", "Add Extension", "");
+            string newExt = Interaction.InputBox(Properties.Resources.EnterNewExtension, Properties.Resources.AddExtension, "");
             if (string.IsNullOrWhiteSpace(newExt))
             {
                 return;
@@ -419,13 +420,13 @@ namespace dCompare.Options
 
             if (!newExt.StartsWith('.'))
             {
-                MessageBox.Show("Extension must start with a dot (e.g., .txt).", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Properties.Resources.ExtensionMustStartWithDot, Properties.Resources.InvalidInput, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (Extensions.Contains(newExt, StringComparer.OrdinalIgnoreCase))
             {
-                MessageBox.Show("Extension already exists.", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Properties.Resources.ExtensionAlreadyExists, Properties.Resources.InvalidInput, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -489,8 +490,8 @@ namespace dCompare.Options
         {
             var openFileDialog = new OpenFileDialog
             {
-                Filter = "Session Files (*.session)|*.session|All Files (*.*)|*.*",
-                Title = "Select Default Session File"
+                Filter = Properties.Resources.SessionFilesFilter,
+                Title = Properties.Resources.SelectDefaultSessionFile
             };
 
             if (openFileDialog.ShowDialog() == true)

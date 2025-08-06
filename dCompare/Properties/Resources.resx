@@ -479,7 +479,7 @@ Right: {1}</value>
     <value>No default {0} tool configured for '{1}' files.</value>
   </data>
   <data name="View" xml:space="preserve">
-    <value>🔒 View</value>
+    <value>View</value>
   </data>
   <data name="Diff" xml:space="preserve">
     <value>diff</value>
@@ -557,10 +557,10 @@ Right: {1}</value>
     <value>Same as original (*{0})|*{0}|All files (*.*)|*.*</value>
   </data>
   <data name="Save" xml:space="preserve">
-    <value>Save</value>
+    <value>💾 Save</value>
   </data>
   <data name="Edit" xml:space="preserve">
-    <value>✏️ Edit</value>
+    <value>Edit</value>
   </data>
   <data name="Search" xml:space="preserve">
     <value>🔍 Search</value>
@@ -720,9 +720,6 @@ Right: {1}</value>
   </data>
   <data name="ErrorLoadingSession" xml:space="preserve">
     <value>Error loading session: {0}</value>
-  </data>
-  <data name="CloseButton" xml:space="preserve">
-    <value>CloseButton</value>
   </data>
   <data name="RecentSessionsMenu" xml:space="preserve">
     <value>_Recent Sessions...</value>
@@ -1098,5 +1095,41 @@ Right: {1}</value>
   </data>
   <data name="HeaderRightDate" xml:space="preserve">
     <value>Right Date</value>
+  </data>
+  <data name="DuplicateHotkeys" xml:space="preserve">
+    <value>Duplicate Hotkeys</value>
+  </data>
+  <data name="DuplicateHotkeysMessage" xml:space="preserve">
+    <value>There are duplicate hotkeys. Please resolve the conflicts before saving.</value>
+  </data>
+  <data name="SettingsSaved" xml:space="preserve">
+    <value>Settings saved successfully!</value>
+  </data>
+  <data name="Success" xml:space="preserve">
+    <value>Success</value>
+  </data>
+  <data name="AddExtension" xml:space="preserve">
+    <value>Add Extension</value>
+  </data>
+  <data name="EnterNewExtension" xml:space="preserve">
+    <value>Enter new file extension (e.g., .txt):</value>
+  </data>
+  <data name="InvalidInput" xml:space="preserve">
+    <value>Invalid Input</value>
+  </data>
+  <data name="ExtensionMustStartWithDot" xml:space="preserve">
+    <value>Extension must start with a dot (e.g., .txt).</value>
+  </data>
+  <data name="ExtensionAlreadyExists" xml:space="preserve">
+    <value>Extension already exists.</value>
+  </data>
+  <data name="SessionFilesFilter" xml:space="preserve">
+    <value>Session Files (*.session)|*.session|All Files (*.*)|*.*</value>
+  </data>
+  <data name="SelectDefaultSessionFile" xml:space="preserve">
+    <value>Select Default Session File</value>
+  </data>
+  <data name="CloseButton" xml:space="preserve">
+    <value>CloseButton</value>
   </data>
 </root>

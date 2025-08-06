@@ -479,7 +479,7 @@
     <value>未為 '{1}' 檔案設定預設的 {0} 工具。</value>
   </data>
   <data name="View" xml:space="preserve">
-    <value>🔒 檢視</value>
+    <value>檢視</value>
   </data>
   <data name="Diff" xml:space="preserve">
     <value>比較</value>
@@ -557,10 +557,10 @@
     <value>與原始檔案相同 (*{0})|*{0}|所有檔案 (*.*)|*.*</value>
   </data>
   <data name="Save" xml:space="preserve">
-    <value>儲存</value>
+    <value>💾 儲存</value>
   </data>
   <data name="Edit" xml:space="preserve">
-    <value>✏️ 編輯</value>
+    <value>編輯</value>
   </data>
   <data name="Search" xml:space="preserve">
     <value>🔍 搜尋</value>
@@ -720,9 +720,6 @@
   </data>
   <data name="ErrorLoadingSession" xml:space="preserve">
     <value>載入工作階段時發生錯誤：{0}</value>
-  </data>
-  <data name="CloseButton" xml:space="preserve">
-    <value>qq</value>
   </data>
   <data name="RecentSessionsMenu" xml:space="preserve">
     <value>最近的工作階段... </value>
@@ -1098,5 +1095,41 @@
   </data>
   <data name="HeaderRightDate" xml:space="preserve">
     <value>右側日期</value>
+  </data>
+  <data name="DuplicateHotkeys" xml:space="preserve">
+    <value>重複的熱鍵</value>
+  </data>
+  <data name="DuplicateHotkeysMessage" xml:space="preserve">
+    <value>存在重複的熱鍵。請在儲存前解決衝突。</value>
+  </data>
+  <data name="SettingsSaved" xml:space="preserve">
+    <value>設定已成功儲存！</value>
+  </data>
+  <data name="Success" xml:space="preserve">
+    <value>成功</value>
+  </data>
+  <data name="AddExtension" xml:space="preserve">
+    <value>新增副檔名</value>
+  </data>
+  <data name="EnterNewExtension" xml:space="preserve">
+    <value>輸入新的副檔名（例如：.txt）：</value>
+  </data>
+  <data name="InvalidInput" xml:space="preserve">
+    <value>無效輸入</value>
+  </data>
+  <data name="ExtensionMustStartWithDot" xml:space="preserve">
+    <value>副檔名必須以點開頭（例如：.txt）。</value>
+  </data>
+  <data name="ExtensionAlreadyExists" xml:space="preserve">
+    <value>副檔名已存在。</value>
+  </data>
+  <data name="SessionFilesFilter" xml:space="preserve">
+    <value>工作階段檔案 (*.session)|*.session|所有檔案 (*.*)|*.*</value>
+  </data>
+  <data name="SelectDefaultSessionFile" xml:space="preserve">
+    <value>選取預設工作階段檔案</value>
+  </data>
+  <data name="CloseButton" xml:space="preserve">
+    <value>qq</value>
   </data>
 </root>

@@ -115,6 +115,15 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Add Extension 的當地語系化字串。
+        /// </summary>
+        public static string AddExtension {
+            get {
+                return ResourceManager.GetString("AddExtension", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Add _Tab 的當地語系化字串。
         /// </summary>
         public static string AddTab {
@@ -691,6 +700,24 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Duplicate Hotkeys 的當地語系化字串。
+        /// </summary>
+        public static string DuplicateHotkeys {
+            get {
+                return ResourceManager.GetString("DuplicateHotkeys", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 There are duplicate hotkeys. Please resolve the conflicts before saving. 的當地語系化字串。
+        /// </summary>
+        public static string DuplicateHotkeysMessage {
+            get {
+                return ResourceManager.GetString("DuplicateHotkeysMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 This hotkey is already in use. 的當地語系化字串。
         /// </summary>
         public static string DuplicateHotkeyTooltip {
@@ -700,7 +727,7 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
-        ///   查詢類似 ✏️ Edit 的當地語系化字串。
+        ///   查詢類似 Edit 的當地語系化字串。
         /// </summary>
         public static string Edit {
             get {
@@ -786,6 +813,15 @@ namespace dCompare.Properties {
         public static string English {
             get {
                 return ResourceManager.GetString("English", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Enter new file extension (e.g., .txt): 的當地語系化字串。
+        /// </summary>
+        public static string EnterNewExtension {
+            get {
+                return ResourceManager.GetString("EnterNewExtension", resourceCulture);
             }
         }
         
@@ -1195,6 +1231,24 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Extension already exists. 的當地語系化字串。
+        /// </summary>
+        public static string ExtensionAlreadyExists {
+            get {
+                return ResourceManager.GetString("ExtensionAlreadyExists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Extension must start with a dot (e.g., .txt). 的當地語系化字串。
+        /// </summary>
+        public static string ExtensionMustStartWithDot {
+            get {
+                return ResourceManager.GetString("ExtensionMustStartWithDot", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Extensions: 的當地語系化字串。
         /// </summary>
         public static string Extensions {
@@ -1488,6 +1542,15 @@ namespace dCompare.Properties {
         public static string ImageFiles {
             get {
                 return ResourceManager.GetString("ImageFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Invalid Input 的當地語系化字串。
+        /// </summary>
+        public static string InvalidInput {
+            get {
+                return ResourceManager.GetString("InvalidInput", resourceCulture);
             }
         }
         
@@ -2185,7 +2248,7 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
-        ///   查詢類似 Save 的當地語系化字串。
+        ///   查詢類似 💾 Save 的當地語系化字串。
         /// </summary>
         public static string Save {
             get {
@@ -2257,6 +2320,15 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Select Default Session File 的當地語系化字串。
+        /// </summary>
+        public static string SelectDefaultSessionFile {
+            get {
+                return ResourceManager.GetString("SelectDefaultSessionFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Select Folder or Archive File 的當地語系化字串。
         /// </summary>
         public static string SelectFolderOrArchiveTitle {
@@ -2302,6 +2374,15 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Session Files (*.session)|*.session|All Files (*.*)|*.* 的當地語系化字串。
+        /// </summary>
+        public static string SessionFilesFilter {
+            get {
+                return ResourceManager.GetString("SessionFilesFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Session loaded from {0} 的當地語系化字串。
         /// </summary>
         public static string SessionLoaded {
@@ -2334,6 +2415,15 @@ namespace dCompare.Properties {
         public static string Settings {
             get {
                 return ResourceManager.GetString("Settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Settings saved successfully! 的當地語系化字串。
+        /// </summary>
+        public static string SettingsSaved {
+            get {
+                return ResourceManager.GetString("SettingsSaved", resourceCulture);
             }
         }
         
@@ -2698,6 +2788,15 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Success 的當地語系化字串。
+        /// </summary>
+        public static string Success {
+            get {
+                return ResourceManager.GetString("Success", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Successful 的當地語系化字串。
         /// </summary>
         public static string Successful {
@@ -2897,7 +2996,7 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
-        ///   查詢類似 🔒 View 的當地語系化字串。
+        ///   查詢類似 View 的當地語系化字串。
         /// </summary>
         public static string View {
             get {
