@@ -80,7 +80,7 @@ namespace dCompare.FileOperation
                         Operation = FileOperationTypes.Delete,
                         Source = item.Path,
                         Target = string.Empty,
-                        Status = "Queued",
+                        Status = FileOperationStatus.Queued,
                         FileSize = 0,
                         SourceType = item.Type,
                         StartTime = DateTime.Now
@@ -95,7 +95,7 @@ namespace dCompare.FileOperation
                             var progress = new Progress<OperationProgress>(p =>
                             {
                                 transfer.Progress = p.Percentage / 100.0;
-                                transfer.Status = $"Deleting ({p.Percentage:P0})";
+                                transfer.Status = FileOperationStatus.Transferring;
                             });
 
                             OperationResult result = await _fileManager.DeleteAsync(item.Path, progress);
@@ -152,7 +152,7 @@ namespace dCompare.FileOperation
                         Operation = operation,
                         Source = item.Source,
                         Target = item.TargetPath,
-                        Status = "Queued",
+                        Status = FileOperationStatus.Queued,
                         FileSize = Directory.Exists(item.Source) ? 0 : new FileInfo(item.Source).Length,
                         SourceType = item.Type,
                         StartTime = DateTime.Now
@@ -167,7 +167,7 @@ namespace dCompare.FileOperation
                             var progress = new Progress<OperationProgress>(p =>
                             {
                                 transfer.Progress = p.Percentage / 100.0;
-                                transfer.Status = $"Transferring";
+                                transfer.Status = FileOperationStatus.Transferring;
                                 if (p.Percentage > 0)
                                 {
                                     transfer.TransferSpeed = (transfer.FileSize * (p.Percentage / 100.0) / 1024.0) / (DateTime.Now - transfer.StartTime).TotalSeconds;

@@ -12,4 +12,13 @@ namespace dCompare.Common
         Move,
         Delete
     }
+
+    public enum FileOperationStatus
+    {
+        Queued,
+        Completed,
+        Cancelled,
+        Transferring,
+        Failed
+    }
 }

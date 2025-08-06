@@ -9,6 +9,7 @@ using System.Windows.Controls;
 
 namespace dCompare.Compare
 {
+    public enum ToolTypes { BuiltIn, External }
     public class ToolHandler
     {
         private readonly IConfigurationService _configService;
@@ -66,7 +67,7 @@ namespace dCompare.Compare
                     }
                 }
 
-                if (toolConfig.Type == "BuiltIn")
+                if (toolConfig.Type == ToolTypes.BuiltIn.ToString())
                 {
                     ITool tool = operation == Operations.View   // Create tool based on operation
                         ? _toolFactory.CreateTool(leftPath)

@@ -5,7 +5,7 @@ namespace dCompare.FileOperation.Models
 {
     public class FileTransfer : INotifyPropertyChanged
     {
-        private string _status = string.Empty;
+        private FileOperationStatus _status;
         private double _progress;
         private double _transferSpeed;
 
@@ -17,7 +17,7 @@ namespace dCompare.FileOperation.Models
         public DateTime StartTime { get; set; }
         public SourceType SourceType { get; set; }
 
-        public string Status
+        public FileOperationStatus Status
         {
             get => _status;
             set
