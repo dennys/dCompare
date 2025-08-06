@@ -26,7 +26,7 @@ namespace dCompare.Tools.Viewer
             textEditor.TextChanged += (s, e) => _viewModel.Text = textEditor.Text;
             searchPanel = SearchPanel.Install(textEditor);
             LoadSyntaxHighlightingComboBox(syntaxHighlightComboBox);
-            toggleReadOnlyButton.Content = _viewModel.IsReadOnly ? Properties.Resources.View : Properties.Resources.Edit;
+            toggleReadOnlyButton.Content = _viewModel.IsReadOnly ? "🔒" + Properties.Resources.View : "✏️ " + Properties.Resources.Edit;
         }
 
         public string Text
@@ -118,7 +118,7 @@ namespace dCompare.Tools.Viewer
         {
             if (e.PropertyName == nameof(TextViewerViewModel.IsReadOnly))
             {
-                toggleReadOnlyButton.Content = _viewModel.IsReadOnly ? Properties.Resources.View : Properties.Resources.Edit;
+                toggleReadOnlyButton.Content = _viewModel.IsReadOnly ? "🔒" + Properties.Resources.View : "✏️ " + Properties.Resources.Edit;
             }
         }
 

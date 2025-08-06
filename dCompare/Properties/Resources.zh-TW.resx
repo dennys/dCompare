@@ -479,7 +479,7 @@
     <value>未為 '{1}' 檔案設定預設的 {0} 工具。</value>
   </data>
   <data name="View" xml:space="preserve">
-    <value>🔒 檢視</value>
+    <value>檢視</value>
   </data>
   <data name="Diff" xml:space="preserve">
     <value>比較</value>
@@ -560,7 +560,7 @@
     <value>儲存</value>
   </data>
   <data name="Edit" xml:space="preserve">
-    <value>✏️ 編輯</value>
+    <value>編輯</value>
   </data>
   <data name="Search" xml:space="preserve">
     <value>🔍 搜尋</value>

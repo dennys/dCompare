@@ -479,7 +479,7 @@
     <value>未为 '{1}' 档案设定默认的 {0} 工具。</value>
   </data>
   <data name="View" xml:space="preserve">
-    <value>🔒 检视</value>
+    <value>检视</value>
   </data>
   <data name="Diff" xml:space="preserve">
     <value>比较</value>
@@ -560,7 +560,7 @@
     <value>储存</value>
   </data>
   <data name="Edit" xml:space="preserve">
-    <value>✏️ 编辑</value>
+    <value>编辑</value>
   </data>
   <data name="Search" xml:space="preserve">
     <value>🔍 搜寻</value>
