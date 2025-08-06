@@ -721,7 +721,7 @@ Right: {1}</value>
   <data name="ErrorLoadingSession" xml:space="preserve">
     <value>Error loading session: {0}</value>
   </data>
-  <data name="CloseButton" xml:space="preserve">
+  <data name="CloseButtonXXX" xml:space="preserve">
     <value>CloseButton</value>
   </data>
   <data name="RecentSessionsMenu" xml:space="preserve">

@@ -721,7 +721,7 @@
   <data name="ErrorLoadingSession" xml:space="preserve">
     <value>载入工作阶段时发生错误：{0}</value>
   </data>
-  <data name="CloseButton" xml:space="preserve">
+  <data name="CloseButtonXXX" xml:space="preserve">
     <value>qq</value>
   </data>
   <data name="RecentSessionsMenu" xml:space="preserve">
@@ -1098,5 +1098,38 @@
   </data>
   <data name="HeaderRightDate" xml:space="preserve">
     <value>右侧日期</value>
+  </data>
+  <data name="DuplicateHotkeys" xml:space="preserve">
+    <value>重复的热键</value>
+  </data>
+  <data name="DuplicateHotkeysMessage" xml:space="preserve">
+    <value>存在重复的热键。请在保存前解决冲突。</value>
+  </data>
+  <data name="SettingsSaved" xml:space="preserve">
+    <value>设置已成功保存！</value>
+  </data>
+  <data name="Success" xml:space="preserve">
+    <value>成功</value>
+  </data>
+  <data name="AddExtension" xml:space="preserve">
+    <value>添加扩展名</value>
+  </data>
+  <data name="EnterNewExtension" xml:space="preserve">
+    <value>输入新的文件扩展名（例如：.txt）：</value>
+  </data>
+  <data name="InvalidInput" xml:space="preserve">
+    <value>无效输入</value>
+  </data>
+  <data name="ExtensionMustStartWithDot" xml:space="preserve">
+    <value>扩展名必须以点开头（例如：.txt）。</value>
+  </data>
+  <data name="ExtensionAlreadyExists" xml:space="preserve">
+    <value>扩展名已存在。</value>
+  </data>
+  <data name="SessionFilesFilter" xml:space="preserve">
+    <value>会话文件 (*.session)|*.session|所有文件 (*.*)|*.*</value>
+  </data>
+  <data name="SelectDefaultSessionFile" xml:space="preserve">
+    <value>选择默认会话文件</value>
   </data>
 </root>
