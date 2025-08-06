@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using dCompare.Common;
+using System.Text.Json.Serialization;
 
 namespace dCompare.Configuration
 {
@@ -107,7 +108,8 @@ namespace dCompare.Configuration
         public string Name { get; set; } = string.Empty;
 
         [JsonPropertyName("Type")]
-        public string Type { get; set; } = ToolTypes.BuiltIn;
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public ToolTypes Type { get; set; } = ToolTypes.BuiltIn;
 
         [JsonPropertyName("Handler")]
         public string Handler { get; set; } = string.Empty;
@@ -122,7 +124,8 @@ namespace dCompare.Configuration
         public string ViewArguments { get; set; } = string.Empty;
 
         [JsonPropertyName("SupportedOperations")]
-        public List<string> SupportedOperations { get; set; } = new();
+        //[JsonConverter(typeof(JsonStringEnumConverter))]
+        public List<ToolOperationTypes> SupportedOperations { get; set; } = new();
 
         [JsonPropertyName("SupportedExtensions")]
         public List<string> SupportedExtensions { get; set; } = new();
@@ -133,8 +136,8 @@ namespace dCompare.Configuration
         [JsonPropertyName("Enabled")]
         public bool Enabled { get; set; } = true;
 
-        public bool SupportsOperation(string operation) =>
-            SupportedOperations.Contains(operation, StringComparer.OrdinalIgnoreCase);
+        public bool SupportsOperation(ToolOperationTypes operation) =>
+            SupportedOperations.Contains(operation);
 
         public bool SupportsExtension(string extension) =>
             SupportedExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase);
@@ -261,22 +264,4 @@ namespace dCompare.Configuration
             "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff} {Level:u3}] [T{ThreadId:D2}] {Message:lj}{NewLine}{Exception}";
     }
 
-    // Enums for better type safety
-    public static class ToolTypes
-    {
-        public const string BuiltIn = "BuiltIn";
-        public const string External = "External";
-    }
-
-    public static class Operations
-    {
-        public const string View = "view";
-        public const string Diff = "diff";
-    }
-
-    public enum DoubleClickActions
-    {
-        View,
-        Compare
-    }
 }
