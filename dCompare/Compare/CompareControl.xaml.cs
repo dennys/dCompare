@@ -891,11 +891,11 @@ namespace dCompare.Compare
                 if (leftCompareWithMenu == null || rightCompareWithMenu == null || leftViewWithMenu == null || rightViewWithMenu == null) return;
 
                 var config = await _configService.LoadConfigurationAsync();
-                var diffTools = _toolConfigService.GetAllToolsForOperation(config, Operations.Diff);
+                var diffTools = _toolConfigService.GetAllToolsForOperation(config, DoubleClickActions.Compare.ToString().ToLower());
                 PopulateToolMenu(leftCompareWithMenu, diffTools, ContextMenu_CompareWithViewer_Click);
                 PopulateToolMenu(rightCompareWithMenu, diffTools, ContextMenu_CompareWithViewer_Click);
 
-                var viewTools = _toolConfigService.GetAllToolsForOperation(config, Operations.View);
+                var viewTools = _toolConfigService.GetAllToolsForOperation(config, DoubleClickActions.View.ToString().ToLower());
                 PopulateToolMenu(leftViewWithMenu, viewTools, ContextMenu_ViewWithViewer_Click);
                 PopulateToolMenu(rightViewWithMenu, viewTools, ContextMenu_ViewWithViewer_Click);
             }
@@ -924,24 +924,24 @@ namespace dCompare.Compare
         }
         private async void ViewFileAsync(TreeNode selectedItem)
         {
-            await LaunchToolAsync(selectedItem, Operations.View);
+            await LaunchToolAsync(selectedItem, DoubleClickActions.View.ToString().ToLower());
         }
         private void ContextMenu_ViewWithViewer_Click(object sender, RoutedEventArgs e)
         {
             ProcessToolAction(sender, async (selectedItem, tool) =>
             {
-                await LaunchToolAsync(selectedItem, Operations.View, tool);
+                await LaunchToolAsync(selectedItem, DoubleClickActions.View.ToString().ToLower(), tool);
             });
         }
         private async void CompareFileAsync(TreeNode selectedItem)
         {
-            await LaunchToolAsync(selectedItem, Operations.Diff);
+            await LaunchToolAsync(selectedItem, DoubleClickActions.Compare.ToString().ToLower());
         }
         private void ContextMenu_CompareWithViewer_Click(object sender, RoutedEventArgs e)
         {
             ProcessToolAction(sender, async (selectedItem, tool) =>
             {
-                await LaunchToolAsync(selectedItem, Operations.Diff, tool);
+                await LaunchToolAsync(selectedItem, DoubleClickActions.Compare.ToString().ToLower(), tool);
             });
         }
         private async Task LaunchToolAsync(TreeNode selectedItem, string operation, ToolOptions? toolConfig = null)

@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using dCompare.Common;
+using System.Text.Json.Serialization;
 
 namespace dCompare.Configuration
 {
@@ -107,7 +108,7 @@ namespace dCompare.Configuration
         public string Name { get; set; } = string.Empty;
 
         [JsonPropertyName("Type")]
-        public string Type { get; set; } = ToolTypes.BuiltIn;
+        public string Type { get; set; } = ToolTypes.BuiltIn.ToString();
 
         [JsonPropertyName("Handler")]
         public string Handler { get; set; } = string.Empty;
@@ -251,7 +252,7 @@ namespace dCompare.Configuration
     public class SerilogSinkArgs
     {
         [JsonPropertyName("path")]
-        public string Path { get; set; } = "logs/dCompare.log";
+        public string Path { get; set; } = Constant.DefaultLogFile;
 
         [JsonPropertyName("rollingInterval")]
         public string RollingInterval { get; set; } = "Day";
@@ -259,24 +260,5 @@ namespace dCompare.Configuration
         [JsonPropertyName("outputTemplate")]
         public string OutputTemplate { get; set; } =
             "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff} {Level:u3}] [T{ThreadId:D2}] {Message:lj}{NewLine}{Exception}";
-    }
-
-    // Enums for better type safety
-    public static class ToolTypes
-    {
-        public const string BuiltIn = "BuiltIn";
-        public const string External = "External";
-    }
-
-    public static class Operations
-    {
-        public const string View = "view";
-        public const string Diff = "diff";
-    }
-
-    public enum DoubleClickActions
-    {
-        View,
-        Compare
     }
 }

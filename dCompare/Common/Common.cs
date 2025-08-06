@@ -4,6 +4,7 @@ namespace dCompare.Common
     {
         public const string DefaultConfigurationFile = "dCompare.json"; // default configuration json file
         public const string RecentSessionsFile = "recentSessions.json";
+        public const string DefaultLogFile = "logs/dCompare.log";
         public const string DefaultLanguageCode = "en"; // default language code
         public const string FileDateTimeFormat = "yyyy/MM/dd HH:mm";
     }
@@ -21,5 +22,17 @@ namespace dCompare.Common
         Cancelled,
         Transferring,
         Failed
+    }
+
+    public enum ToolTypes
+    {
+        BuiltIn,
+        External
+    }
+
+    public enum DoubleClickActions
+    {
+        View,
+        Compare
     }
 }
