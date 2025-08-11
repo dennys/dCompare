@@ -1,4 +1,5 @@
 ﻿using dCompare.Common;
+using dCompare.Tools.Models;
 using System.Text.Json.Serialization;
 
 namespace dCompare.Configuration
@@ -32,7 +33,8 @@ namespace dCompare.Configuration
         public Dictionary<string, ToolOptions> Tools { get; set; } = new();
 
         [JsonPropertyName("FileTypeMapping")]
-        public Dictionary<string, FileTypeMappingOptions> FileTypeMapping { get; set; } = new();
+        [JsonConverter(typeof(FileTypeMappingConverter))]
+        public Dictionary<FileType, FileTypeMappingOptions> FileTypeMapping { get; set; } = new();
     }
 
     public class FontOptions

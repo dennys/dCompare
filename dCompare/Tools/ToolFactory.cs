@@ -3,6 +3,7 @@ using dCompare.Common;
 using dCompare.Compare;
 using dCompare.Configuration;
 using dCompare.FileOperation;
+using dCompare.Tools.Models;
 using Microsoft.Extensions.Logging;
 using System.IO;
 
@@ -21,7 +22,7 @@ namespace dCompare.Tools
         {
             var fileType = DetermineFileType(_configurationService.LoadConfigurationAsync().Result, filePath);
 
-            if (fileType == "Image")
+            if (fileType == FileType.Image)
             {
                 return new Viewer.ImageViewer(filePath);
             }
@@ -40,11 +41,11 @@ namespace dCompare.Tools
 
             switch (fileType)
             {
-                case "Text":
+                case FileType.Text:
                     return new Diff.TextDiffPlex(leftFilePath, rightFilePath);
-                case "Image":
+                case FileType.Image:
                     return new Diff.ImageDiff(leftFilePath, rightFilePath);
-                case "Archive":
+                case FileType.Archive:
                     return new CompareControl(
                         Ioc.Default.GetRequiredService<IConfigurationService>(),
                         Ioc.Default.GetRequiredService<IFileManager>(),
@@ -57,9 +58,9 @@ namespace dCompare.Tools
             }
         }
 
-        public string DetermineFileType(AppConfiguration config, string filePath)
+        public FileType DetermineFileType(AppConfiguration config, string filePath)
         {
-            if (string.IsNullOrEmpty(filePath)) return "Unsupported";
+            if (string.IsNullOrEmpty(filePath)) return FileType.Unsupported;
 
             string extension = Path.GetExtension(filePath).ToLowerInvariant();
 
@@ -71,7 +72,7 @@ namespace dCompare.Tools
                 }
             }
 
-            return "Unsupported";
+            return FileType.Unsupported;
         }
     }
 }

@@ -888,7 +888,7 @@ namespace dCompare.Compare
                 if (filePath == null) return;
 
                 var fileType = _toolFactory.DetermineFileType(config, filePath);
-                if (fileType == null) return;
+                if (fileType == Tools.Models.FileType.Unsupported) return;
 
                 var fileTypeMapping = config.Options.FileTypeMapping.GetValueOrDefault(fileType);
                 if (fileTypeMapping == null) return;
