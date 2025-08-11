@@ -15,7 +15,6 @@ namespace dCompare.Options
         public virtual bool IsValid => true;
 
         [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(RemoveMappingCommand))]
         private FileTypeMappingViewModel? _selectedMapping;
 
         public FileTypeMappingOptionsViewModel(AppConfiguration config)
