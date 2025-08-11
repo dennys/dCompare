@@ -1,5 +1,6 @@
 using dCompare.Configuration;
 using dCompare.Options;
+using dCompare.Properties;
 using Microsoft.Win32; // For OpenFileDialog mocking
 using Moq; // For mocking OpenFileDialog
 using System.Collections.Generic;
@@ -34,7 +35,7 @@ namespace dCompare.Tests.Options
         {
             var model = new HotKeysOptions { AddTab = "Ctrl+N", Compare = "Ctrl+R" };
             var viewModel = new HotKeysOptionsViewModel(model);
-            var addTabVm = viewModel.HotKeyItems.FirstOrDefault(h => h.Name == "Add Tab");
+            var addTabVm = viewModel.HotKeyItems.FirstOrDefault(h => h.Name == Resources.AddTab);
             Assert.NotNull(addTabVm);
             addTabVm.Combination = "Ctrl+T";
             Assert.Equal("Ctrl+N", model.AddTab);
