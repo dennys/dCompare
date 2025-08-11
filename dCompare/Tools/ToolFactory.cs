@@ -6,6 +6,7 @@ using dCompare.FileOperation;
 using dCompare.Tools.Models;
 using Microsoft.Extensions.Logging;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace dCompare.Tools
 {
@@ -18,9 +19,10 @@ namespace dCompare.Tools
             _configurationService = configurationService;
         }
 
-        public ITool CreateTool(string filePath)
+        public async Task<ITool> CreateToolAsync(string filePath)
         {
-            var fileType = DetermineFileType(_configurationService.LoadConfigurationAsync().Result, filePath);
+            var config = await _configurationService.LoadConfigurationAsync();
+            var fileType = DetermineFileType(config, filePath);
 
             if (fileType == FileType.Image)
             {
@@ -31,9 +33,10 @@ namespace dCompare.Tools
             return new Tools.Viewer.TextViewer(_configurationService);
         }
 
-        public ITool CreateTool(string leftFilePath, string rightFilePath)
+        public async Task<ITool> CreateToolAsync(string leftFilePath, string rightFilePath)
         {
-            var fileType = DetermineFileType(_configurationService.LoadConfigurationAsync().Result, leftFilePath ?? rightFilePath);
+            var config = await _configurationService.LoadConfigurationAsync();
+            var fileType = DetermineFileType(config, leftFilePath ?? rightFilePath);
             if (string.IsNullOrEmpty(leftFilePath) || string.IsNullOrEmpty(rightFilePath))
             {
                 throw new ArgumentException(Properties.Resources.ErrorBothFilePathsNull);

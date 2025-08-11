@@ -65,8 +65,8 @@ namespace dCompare.Compare
                 if (toolConfig.Type == ToolTypes.BuiltIn)
                 {
                     ITool tool = operation == ToolOperationTypes.View   // Create tool based on operation
-                        ? _toolFactory.CreateTool(leftPath)
-                        : _toolFactory.CreateTool(leftPath, rightPath ?? string.Empty); // Ensure rightPath is not null
+                        ? await _toolFactory.CreateToolAsync(leftPath)
+                        : await _toolFactory.CreateToolAsync(leftPath, rightPath ?? string.Empty); // Ensure rightPath is not null
 
                     if (operation == ToolOperationTypes.View)
                     {
