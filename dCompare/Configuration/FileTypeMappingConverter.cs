@@ -32,9 +32,11 @@ namespace dCompare.Configuration
                 var propertyName = reader.GetString();
                 if (!Enum.TryParse(propertyName, true, out FileType fileType))
                 {
-                    // You might want to handle this case more gracefully,
-                    // e.g., by logging a warning and skipping the invalid entry.
-                    throw new JsonException($"Unable to convert '{propertyName}' to FileType enum.");
+                    // The key is not a valid FileType enum member.
+                    // Skip the corresponding value to avoid a crash.
+                    reader.Read(); // Move to the start of the value
+                    reader.Skip(); // Skip the entire value
+                    continue; // Move to the next property
                 }
 
                 reader.Read();
