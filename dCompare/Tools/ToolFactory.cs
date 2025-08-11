@@ -19,9 +19,9 @@ namespace dCompare.Tools
 
         public ITool CreateTool(string filePath)
         {
-            var fileType = DetermineFileType(filePath);
+            var fileType = DetermineFileType(_configurationService.LoadConfigurationAsync().Result, filePath);
 
-            if (fileType == Models.FileType.Image)
+            if (fileType == "Image")
             {
                 return new Viewer.ImageViewer(filePath);
             }
@@ -32,54 +32,46 @@ namespace dCompare.Tools
 
         public ITool CreateTool(string leftFilePath, string rightFilePath)
         {
-            var fileType = DetermineFileType(leftFilePath ?? rightFilePath);
+            var fileType = DetermineFileType(_configurationService.LoadConfigurationAsync().Result, leftFilePath ?? rightFilePath);
             if (string.IsNullOrEmpty(leftFilePath) || string.IsNullOrEmpty(rightFilePath))
             {
                 throw new ArgumentException(Properties.Resources.ErrorBothFilePathsNull);
             }
 
-            return fileType switch
+            switch (fileType)
             {
-                //Models.FileType.Text => new Diff.TextDiff(leftFilePath, rightFilePath, CompareFiles(leftFilePath, rightFilePath)),
-                Models.FileType.Text => new Diff.TextDiffPlex(leftFilePath, rightFilePath),
-                Models.FileType.Image => new Diff.ImageDiff(leftFilePath, rightFilePath),
-                Models.FileType.Archive => new CompareControl(
-                    Ioc.Default.GetRequiredService<IConfigurationService>(),
-                    Ioc.Default.GetRequiredService<IFileManager>(),
-                    Ioc.Default.GetRequiredService<ILogger<CompareControl>>(),
-                    leftFilePath, rightFilePath),
-                _ => throw new NotSupportedException(Properties.Resources.ErrorUnsupportedFileType)
-            };
+                case "Text":
+                    return new Diff.TextDiffPlex(leftFilePath, rightFilePath);
+                case "Image":
+                    return new Diff.ImageDiff(leftFilePath, rightFilePath);
+                case "Archive":
+                    return new CompareControl(
+                        Ioc.Default.GetRequiredService<IConfigurationService>(),
+                        Ioc.Default.GetRequiredService<IFileManager>(),
+                        Ioc.Default.GetRequiredService<ILogger<CompareControl>>(),
+                        leftFilePath, rightFilePath);
+                default:
+                    // Fallback or throw exception for unsupported file types
+                    // For example, fallback to a default text diff tool
+                    return new Diff.TextDiffPlex(leftFilePath, rightFilePath);
+            }
         }
 
-        private static Models.FileType DetermineFileType(string filePath)
+        public string DetermineFileType(AppConfiguration config, string filePath)
         {
+            if (string.IsNullOrEmpty(filePath)) return "Unsupported";
+
             string extension = Path.GetExtension(filePath).ToLowerInvariant();
 
-            if (FileExtensions.IsTextFile(extension))
+            foreach (var mapping in config.Options.FileTypeMapping)
             {
-                return dCompare.Tools.Models.FileType.Text;
+                if (mapping.Value.Extensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
+                {
+                    return mapping.Key;
+                }
             }
 
-            if (FileExtensions.IsImageFile(extension))
-            {
-                return dCompare.Tools.Models.FileType.Image;
-            }
-
-            if (FileExtensions.IsArchiveFile(extension))
-            {
-                return dCompare.Tools.Models.FileType.Archive;
-            }
-
-            return dCompare.Tools.Models.FileType.Unsupported;
+            return "Unsupported";
         }
-
-        //private static object CompareFiles(string leftFilePath, string rightFilePath)
-        //{
-        //    var leftText = File.ReadAllText(leftFilePath);
-        //    var rightText = File.ReadAllText(rightFilePath);
-        //    var diffBuilder = new DiffPlex.DiffBuilder.SideBySideDiffBuilder();
-        //    return diffBuilder.BuildDiffModel(leftText, rightText);
-        //}
     }
 }

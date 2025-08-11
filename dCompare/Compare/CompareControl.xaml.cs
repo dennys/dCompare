@@ -106,7 +106,6 @@ namespace dCompare.Compare
                 MessageBox.Show(string.Format(Properties.Resources.ErrorLoadingConfiguration, ex.Message), Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 ((CompareControlViewModel)DataContext).SelectedAlgorithm = ComparisonAlgorithm.ModifiedDateAndSize;
             }
-            await PopulateCompareWithMenusAsync();
         }
 
         private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -531,7 +530,7 @@ namespace dCompare.Compare
         #endregion Path suggestion
 
         #region ConextMenuOperations
-        private void ListView_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        private async void ListView_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             DependencyObject obj = (DependencyObject)e.OriginalSource;
             while (obj != null && obj is not ListViewItem)
@@ -539,13 +538,15 @@ namespace dCompare.Compare
                 obj = VisualTreeHelper.GetParent(obj);
             }
 
-            if (obj is ListViewItem listViewItem)
+            if (obj is ListViewItem listViewItem && listViewItem.Content is TreeNode treeNode)
             {
                 // Only add to selection if not already selected to preserve multi-selection
                 if (!ResultListView.SelectedItems.Contains(listViewItem.Content))
                 {
                     ResultListView.SelectedItems.Add(listViewItem.Content);
                 }
+
+                await PopulateMenusForNodeAsync(treeNode);
 
                 GridView gridView = (GridView)ResultListView.View;
                 Point clickPoint = e.GetPosition(ResultListView);
@@ -874,11 +875,24 @@ namespace dCompare.Compare
                 }
             }
         }
-        private async Task PopulateCompareWithMenusAsync()
+        private async Task PopulateMenusForNodeAsync(TreeNode node)
         {
+            // TODO, need to inject it
+            ToolFactory _toolFactory = new ToolFactory(_configService);
             ToolConfigService _toolConfigService = new();
+
             try
             {
+                var config = await _configService.LoadConfigurationAsync();
+                var filePath = node.LeftNode?.FullPath ?? node.RightNode?.FullPath;
+                if (filePath == null) return;
+
+                var fileType = _toolFactory.DetermineFileType(config, filePath);
+                if (fileType == null) return;
+
+                var fileTypeMapping = config.Options.FileTypeMapping.GetValueOrDefault(fileType);
+                if (fileTypeMapping == null) return;
+
                 if (FindResource("LeftContextMenu") is not ContextMenu leftContextMenu ||
                     FindResource("RightContextMenu") is not ContextMenu rightContextMenu)
                     return;
@@ -890,18 +904,25 @@ namespace dCompare.Compare
 
                 if (leftCompareWithMenu == null || rightCompareWithMenu == null || leftViewWithMenu == null || rightViewWithMenu == null) return;
 
-                var config = await _configService.LoadConfigurationAsync();
-                var diffTools = _toolConfigService.GetAllToolsForOperation(config, ToolOperationTypes.Diff);
+                var diffToolNames = fileTypeMapping.PreferredTools.Diff;
+                var viewToolNames = fileTypeMapping.PreferredTools.View;
+
+                var diffTools = config.Options.Tools
+                                      .Where(t => diffToolNames.Contains(t.Key))
+                                      .Select(t => t.Value);
+
+                var viewTools = config.Options.Tools
+                                      .Where(t => viewToolNames.Contains(t.Key))
+                                      .Select(t => t.Value);
+
                 PopulateToolMenu(leftCompareWithMenu, diffTools, ContextMenu_CompareWithViewer_Click);
                 PopulateToolMenu(rightCompareWithMenu, diffTools, ContextMenu_CompareWithViewer_Click);
-
-                var viewTools = _toolConfigService.GetAllToolsForOperation(config, ToolOperationTypes.View);
                 PopulateToolMenu(leftViewWithMenu, viewTools, ContextMenu_ViewWithViewer_Click);
                 PopulateToolMenu(rightViewWithMenu, viewTools, ContextMenu_ViewWithViewer_Click);
             }
             catch (Exception ex)
             {
-                _logger.LogError("Failed to populate Compare With menus: {Message}", ex.Message);
+                _logger.LogError("Failed to populate dynamic menus: {Message}", ex.Message);
                 MessageBox.Show(string.Format(Properties.Resources.ErrorLoadingTools, ex.Message), Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
