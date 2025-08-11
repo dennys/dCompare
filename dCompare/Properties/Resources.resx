@@ -820,9 +820,6 @@ Right: {1}</value>
   <data name="CompareWith" xml:space="preserve">
     <value>Compare with</value>
   </data>
-  <data name="WinMerge" xml:space="preserve">
-    <value>WinMerge</value>
-  </data>
   <data name="Filter" xml:space="preserve">
     <value>Filter</value>
   </data>

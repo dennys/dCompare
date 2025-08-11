@@ -820,9 +820,6 @@
   <data name="CompareWith" xml:space="preserve">
     <value>比较档案内容(其他工具)</value>
   </data>
-  <data name="WinMerge" xml:space="preserve">
-    <value>WinMerge</value>
-  </data>
   <data name="Filter" xml:space="preserve">
     <value>筛选</value>
   </data>

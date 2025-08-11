@@ -51,12 +51,55 @@ namespace dCompare.Configuration
             {
                 var jsonString = await File.ReadAllTextAsync(_configPath);
                 var config = JsonSerializer.Deserialize<AppConfiguration>(jsonString, _serializerOptions);
+                if (config != null)
+                {
+                    ValidateConfiguration(config);
+                }
                 return config ?? new AppConfiguration();
+            }
+            catch (JsonException ex)
+            {
+                throw new InvalidDataException($"Error in configuration file at path: {ex.Path}. {ex.Message}", ex);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error reading or deserializing configuration file: {ex.Message}");
-                return new AppConfiguration();
+                throw new InvalidDataException($"Error reading or deserializing configuration file: {ex.Message}", ex);
+            }
+        }
+
+        private void ValidateConfiguration(AppConfiguration config)
+        {
+            if (config.Options == null) return;
+
+            var toolNames = new HashSet<string>(config.Options.Tools.Keys);
+
+            foreach (var mapping in config.Options.FileTypeMapping.Values)
+            {
+                if (!string.IsNullOrEmpty(mapping.DefaultDiffTool) && !toolNames.Contains(mapping.DefaultDiffTool))
+                {
+                    throw new InvalidDataException($"The diff tool '{mapping.DefaultDiffTool}' set as the default for extensions '{string.Join(", ", mapping.Extensions)}' is not a defined tool.");
+                }
+
+                if (!string.IsNullOrEmpty(mapping.DefaultViewTool) && !toolNames.Contains(mapping.DefaultViewTool))
+                {
+                    throw new InvalidDataException($"The view tool '{mapping.DefaultViewTool}' set as the default for extensions '{string.Join(", ", mapping.Extensions)}' is not a defined tool.");
+                }
+
+                foreach (var toolName in mapping.PreferredTools.Diff)
+                {
+                    if (!toolNames.Contains(toolName))
+                    {
+                        throw new InvalidDataException($"The preferred diff tool '{toolName}' for extensions '{string.Join(", ", mapping.Extensions)}' is not a defined tool.");
+                    }
+                }
+
+                foreach (var toolName in mapping.PreferredTools.View)
+                {
+                    if (!toolNames.Contains(toolName))
+                    {
+                        throw new InvalidDataException($"The preferred view tool '{toolName}' for extensions '{string.Join(", ", mapping.Extensions)}' is not a defined tool.");
+                    }
+                }
             }
         }
 

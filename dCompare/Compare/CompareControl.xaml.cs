@@ -915,8 +915,7 @@ namespace dCompare.Compare
                 var item = new MenuItem
                 {
                     Header = tool.Name,
-                    Tag = tool,
-                    InputGestureText = tool.Name
+                    Tag = tool
                 };
                 item.Click += clickHandler;
                 parentMenu.Items.Add(item);

@@ -3068,15 +3068,6 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
-        ///   查詢類似 WinMerge 的當地語系化字串。
-        /// </summary>
-        public static string WinMerge {
-            get {
-                return ResourceManager.GetString("WinMerge", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   查詢類似 Words: {0:N0} 的當地語系化字串。
         /// </summary>
         public static string Words {
