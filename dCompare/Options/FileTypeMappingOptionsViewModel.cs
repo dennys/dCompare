@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using dCompare.Configuration;
+using dCompare.Tools.Models;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 
@@ -29,29 +30,34 @@ namespace dCompare.Options
             }
         }
 
-        [RelayCommand]
-        private void AddMapping()
-        {
-            var newMappingName = "NewMapping" + (Mappings.Count + 1);
-            var newMapping = new FileTypeMappingOptions();
-            _config.Options.FileTypeMapping.Add(newMappingName, newMapping);
-            var newMappingViewModel = new FileTypeMappingViewModel(newMappingName, newMapping, _config.Options.Tools.Values.ToList());
-            Mappings.Add(newMappingViewModel);
-            SelectedMapping = newMappingViewModel;
-        }
+        //[RelayCommand]
+        //private void AddMapping()
+        //{
+        //    // TODO: Adding a new FileType mapping from the UI is complex because FileType is an enum.
+        //    // This requires a more sophisticated UI to allow the user to define a new file type name
+        //    // and potentially select it from a list of non-used enum values.
+        //    // For now, adding is disabled. Mappings should be edited in dCompare.json.
+        //    var newMappingName = "NewMapping" + (Mappings.Count + 1);
+        //    var newMapping = new FileTypeMappingOptions();
+        //    //_config.Options.FileTypeMapping.Add(newMappingName, newMapping);
+        //    //var newMappingViewModel = new FileTypeMappingViewModel(newMappingName, newMapping, _config.Options.Tools.Values.ToList());
+        //    //Mappings.Add(newMappingViewModel);
+        //    //SelectedMapping = newMappingViewModel;
+        //}
 
-        [RelayCommand(CanExecute = nameof(CanRemoveMapping))]
-        private void RemoveMapping()
-        {
-            if (SelectedMapping == null) return;
+        //[RelayCommand(CanExecute = nameof(CanRemoveMapping))]
+        //private void RemoveMapping()
+        //{
+        //    // TODO: Removing is disabled as adding is disabled.
+        //    if (SelectedMapping == null) return;
 
-            _config.Options.FileTypeMapping.Remove(SelectedMapping.Key);
-            Mappings.Remove(SelectedMapping);
-            if (Mappings.Any())
-            {
-                SelectedMapping = Mappings.First();
-            }
-        }
+        //    //_config.Options.FileTypeMapping.Remove(SelectedMapping.Key);
+        //    //Mappings.Remove(SelectedMapping);
+        //    //if (Mappings.Any())
+        //    //{
+        //    //    SelectedMapping = Mappings.First();
+        //    //}
+        //}
 
         private bool CanRemoveMapping()
         {
@@ -67,13 +73,13 @@ namespace dCompare.Options
     public partial class FileTypeMappingViewModel : ObservableObject, IDataErrorInfo
     {
         private readonly FileTypeMappingOptions _mapping;
-        public string Key { get; }
+        public FileType Key { get; }
 
         public virtual bool IsValid => true;
 
         public List<string> AvailableTools { get; }
 
-        public FileTypeMappingViewModel(string key, FileTypeMappingOptions mapping, List<ToolOptions> availableTools)
+        public FileTypeMappingViewModel(FileType key, FileTypeMappingOptions mapping, List<ToolOptions> availableTools)
         {
             Key = key;
             _mapping = mapping;
