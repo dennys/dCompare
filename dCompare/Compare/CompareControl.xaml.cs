@@ -882,6 +882,21 @@ namespace dCompare.Compare
             ToolFactory _toolFactory = new(_configService, logger);
             ToolConfigService _toolConfigService = new();
 
+            if (FindResource("LeftContextMenu") is not ContextMenu leftContextMenu ||
+                FindResource("RightContextMenu") is not ContextMenu rightContextMenu)
+                return;
+
+            MenuItem? leftCompareWithMenu = FindMenuByName(leftContextMenu, "LeftCompareWithMenu");
+            MenuItem? rightCompareWithMenu = FindMenuByName(rightContextMenu, "RightCompareWithMenu");
+            MenuItem? leftViewWithMenu = FindMenuByName(leftContextMenu, "LeftViewWithMenu");
+            MenuItem? rightViewWithMenu = FindMenuByName(rightContextMenu, "RightViewWithMenu");
+
+            // Clear previous items to avoid showing stale menus
+            leftCompareWithMenu?.Items.Clear();
+            rightCompareWithMenu?.Items.Clear();
+            leftViewWithMenu?.Items.Clear();
+            rightViewWithMenu?.Items.Clear();
+
             try
             {
                 var config = await _configService.LoadConfigurationAsync();
@@ -893,15 +908,6 @@ namespace dCompare.Compare
 
                 var fileTypeMapping = config.Options.FileTypeMapping.GetValueOrDefault(fileType);
                 if (fileTypeMapping == null) return;
-
-                if (FindResource("LeftContextMenu") is not ContextMenu leftContextMenu ||
-                    FindResource("RightContextMenu") is not ContextMenu rightContextMenu)
-                    return;
-
-                MenuItem? leftCompareWithMenu = FindMenuByName(leftContextMenu, "LeftCompareWithMenu");
-                MenuItem? rightCompareWithMenu = FindMenuByName(rightContextMenu, "RightCompareWithMenu");
-                MenuItem? leftViewWithMenu = FindMenuByName(leftContextMenu, "LeftViewWithMenu");
-                MenuItem? rightViewWithMenu = FindMenuByName(rightContextMenu, "RightViewWithMenu");
 
                 if (leftCompareWithMenu == null || rightCompareWithMenu == null || leftViewWithMenu == null || rightViewWithMenu == null) return;
 
