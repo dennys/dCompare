@@ -13,7 +13,10 @@ namespace dCompare.Tools.Viewer
         private const double MaxZoom = 10.0;
 
         [ObservableProperty]
-        private ImageSource? _imageSource;
+        private ImageSource? _leftImageSource;
+
+        [ObservableProperty]
+        private ImageSource? _rightImageSource;
 
         [ObservableProperty]
         private Stretch _imageStretch = Stretch.Uniform;
@@ -21,7 +24,14 @@ namespace dCompare.Tools.Viewer
         [ObservableProperty]
         private double _zoomFactor = 1.0;
 
-        private string? _currentFilePath;
+        [ObservableProperty]
+        private bool _isDiffView;
+
+        [ObservableProperty]
+        private string _leftPath = string.Empty;
+
+        [ObservableProperty]
+        private string _rightPath = string.Empty;
 
         public IRelayCommand OpenImageCommand { get; }
         public IRelayCommand SaveImageCommand { get; }
@@ -36,17 +46,44 @@ namespace dCompare.Tools.Viewer
             ZoomOutCommand = new RelayCommand(ZoomOut);
         }
 
-        public void LoadFile(string filePath)
+        public void LoadFile(string filePath, string? rightFilePath = null)
         {
+            LeftPath = filePath;
+            LeftImageSource = LoadImage(filePath);
+
+            if (rightFilePath != null)
+            {
+                RightPath = rightFilePath;
+                RightImageSource = LoadImage(rightFilePath);
+                IsDiffView = true;
+            }
+            else
+            {
+                IsDiffView = false;
+            }
+            (SaveImageCommand as RelayCommand)?.NotifyCanExecuteChanged();
+        }
+
+        private static BitmapImage? LoadImage(string path)
+        {
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+            {
+                return null;
+            }
+
             try
             {
-                _currentFilePath = filePath;
-                ImageSource = new BitmapImage(new Uri(filePath));
-                (SaveImageCommand as RelayCommand)?.NotifyCanExecuteChanged();
+                BitmapImage bitmap = new();
+                bitmap.BeginInit();
+                bitmap.UriSource = new System.Uri(path);
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.EndInit();
+                return bitmap;
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error loading image: {ex.Message}");
+                return null;
             }
         }
 
@@ -55,8 +92,8 @@ namespace dCompare.Tools.Viewer
             var openFileDialog = new OpenFileDialog
             {
                 Filter = Properties.Resources.ImageFiles,
-                InitialDirectory = !string.IsNullOrEmpty(_currentFilePath)
-                    ? Path.GetDirectoryName(_currentFilePath)
+                InitialDirectory = !string.IsNullOrEmpty(LeftPath)
+                    ? Path.GetDirectoryName(LeftPath)
                     : Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
             };
 
@@ -68,18 +105,18 @@ namespace dCompare.Tools.Viewer
 
         private bool CanSaveImage()
         {
-            return !string.IsNullOrEmpty(_currentFilePath) && ImageSource is not null;
+            return !string.IsNullOrEmpty(LeftPath) && LeftImageSource is not null;
         }
 
         private void SaveImage()
         {
-            if (string.IsNullOrEmpty(_currentFilePath))
+            if (string.IsNullOrEmpty(LeftPath))
                 return;
 
-            var defaultExt = Path.GetExtension(_currentFilePath)?.ToLower();
+            var defaultExt = Path.GetExtension(LeftPath)?.ToLower();
             var saveFileDialog = new SaveFileDialog
             {
-                FileName = Path.GetFileName(_currentFilePath),
+                FileName = Path.GetFileName(LeftPath),
                 DefaultExt = defaultExt,
                 Filter = string.Format(Properties.Resources.SameAsOriginal, defaultExt)
             };
@@ -88,9 +125,9 @@ namespace dCompare.Tools.Viewer
             {
                 try
                 {
-                    string ext = Path.GetExtension(_currentFilePath)?.ToLower() ?? ".png";
+                    string ext = Path.GetExtension(LeftPath)?.ToLower() ?? ".png";
                     BitmapEncoder? encoder = GetEncoderByExtension(ext);
-                    if (encoder == null || ImageSource is not BitmapSource bitmapSource)
+                    if (encoder == null || LeftImageSource is not BitmapSource bitmapSource)
                         return;
 
                     encoder.Frames.Add(BitmapFrame.Create(bitmapSource));
