@@ -19,9 +19,11 @@ namespace dCompare.Compare
         public ToolHandler()
         {
             _configService = Ioc.Default.GetRequiredService<IConfigurationService>();
-            _toolFactory = new(_configService);
+            var logger = Ioc.Default.GetRequiredService<Microsoft.Extensions.Logging.ILogger<ToolFactory>>();
+            _toolFactory = new(_configService, logger);
             _toolConfigService = new();
         }
+
         public async Task<TabItem?> LaunchToolAsync(TreeNode selectedItem, ToolOperationTypes operation, ToolOptions? toolConfig = null)
         {
             if (selectedItem.IsDirectory)
@@ -64,9 +66,14 @@ namespace dCompare.Compare
 
                 if (toolConfig.Type == ToolTypes.BuiltIn)
                 {
-                    ITool tool = operation == ToolOperationTypes.View   // Create tool based on operation
-                        ? _toolFactory.CreateTool(leftPath)
-                        : _toolFactory.CreateTool(leftPath, rightPath ?? string.Empty); // Ensure rightPath is not null
+                    ITool? tool = operation == ToolOperationTypes.View   // Create tool based on operation
+                        ? await _toolFactory.CreateToolAsync(leftPath)
+                        : await _toolFactory.CreateToolAsync(leftPath, rightPath ?? string.Empty); // Ensure rightPath is not null
+
+                    if (tool == null)
+                    {
+                        return null; // Tool creation failed, error already shown.
+                    }
 
                     if (operation == ToolOperationTypes.View)
                     {
