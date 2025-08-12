@@ -8,12 +8,22 @@ namespace dCompare.Tools.Viewer
     {
         private readonly ImageViewerViewModel _viewModel;
 
-        public ImageViewer(string filePath, string? rightFilePath = null)
+        public ImageViewer(string filePath)
         {
             InitializeComponent();
             _viewModel = new ImageViewerViewModel();
             DataContext = _viewModel;
-            _viewModel.LoadFile(filePath, rightFilePath);
+            _viewModel.LoadFile(filePath);
+
+            PreviewMouseWheel += OnPreviewMouseWheel;
+        }
+
+        public ImageViewer(string leftFilePath, string rightFilePath)
+        {
+            InitializeComponent();
+            _viewModel = new ImageViewerViewModel();
+            DataContext = _viewModel;
+            _viewModel.LoadFile(leftFilePath, rightFilePath);
 
             PreviewMouseWheel += OnPreviewMouseWheel;
         }
