@@ -67,7 +67,7 @@ namespace dCompare.Configuration
             }
         }
 
-        private void ValidateConfiguration(AppConfiguration config)
+        private static void ValidateConfiguration(AppConfiguration config)
         {
             if (config.Options == null) return;
 
