@@ -435,21 +435,10 @@
                     <ListBox Grid.Row="6" Grid.Column="1" ItemsSource="{Binding AvailableOperations}" SelectionMode="Multiple" Margin="5"
                              helper:ListBoxHelper.SelectedItems="{Binding SupportedOperations, Mode=TwoWay, ValidatesOnDataErrors=True}"/>
 
-                    <TextBlock Grid.Row="7" Grid.Column="0" Text="{x:Static resx:Resources.SupportedExtensions}" Margin="5"/>
-                    <TextBox Grid.Row="7" Grid.Column="1" Margin="5">
-                        <TextBox.Text>
-                            <Binding Path="SupportedExtensions" UpdateSourceTrigger="PropertyChanged">
-                                <Binding.ValidationRules>
-                                    <DataErrorValidationRule/>
-                                </Binding.ValidationRules>
-                            </Binding>
-                        </TextBox.Text>
-                    </TextBox>
+                    <TextBlock Grid.Row="7" Grid.Column="0" Text="{x:Static resx:Resources.Features}" Margin="5"/>
+                    <TextBox Grid.Row="7" Grid.Column="1" Text="{Binding Features, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
 
-                    <TextBlock Grid.Row="8" Grid.Column="0" Text="{x:Static resx:Resources.Features}" Margin="5"/>
-                    <TextBox Grid.Row="8" Grid.Column="1" Text="{Binding Features, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
-
-                    <CheckBox Grid.Row="9" Grid.Column="1" IsChecked="{Binding Enabled}" Content="{x:Static resx:Resources.Enabled}" Margin="5"/>
+                    <CheckBox Grid.Row="8" Grid.Column="1" IsChecked="{Binding Enabled}" Content="{x:Static resx:Resources.Enabled}" Margin="5"/>
                 </Grid>
             </DockPanel>
         </DataTemplate>

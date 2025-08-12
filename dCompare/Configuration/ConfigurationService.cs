@@ -208,22 +208,6 @@ namespace dCompare.Configuration
                 .Where(tool => tool.Enabled && tool.SupportsOperation(operation))
                 ?? Enumerable.Empty<ToolOptions>();
         }
-        public IEnumerable<string> GetSupportedExtensions(string? toolName = null, ToolOperationTypes? operation = null)
-        {
-            var tools = _configuration.GetSection("Tools").Get<Dictionary<string, ToolOptions>>();
-            if (tools == null) yield break;
-
-            foreach (var tool in tools.Values)
-            {
-                if (toolName != null && tool.Name != toolName) continue;
-                if (operation != null && !tool.SupportsOperation((ToolOperationTypes)operation)) continue;
-                foreach (var ext in tool.SupportedExtensions)
-                {
-                    yield return ext;
-                }
-            }
-        }
-
         public IConfiguration GetConfiguration()
         {
             return _configuration;

@@ -13,6 +13,5 @@ namespace dCompare.Configuration
         ToolOptions? GetDefaultTool(ToolOperationTypes operation, string extension);
         IEnumerable<ToolOptions> GetPreferredTools(ToolOperationTypes operation, string extension);
         IEnumerable<ToolOptions> GetAllToolsForOperation(ToolOperationTypes operation);
-        IEnumerable<string> GetSupportedExtensions(string? toolName = null, ToolOperationTypes? operation = null);
     }
 }

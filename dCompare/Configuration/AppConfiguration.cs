@@ -127,9 +127,6 @@ namespace dCompare.Configuration
         //[JsonConverter(typeof(JsonStringEnumConverter))]
         public List<ToolOperationTypes> SupportedOperations { get; set; } = new();
 
-        [JsonPropertyName("SupportedExtensions")]
-        public List<string> SupportedExtensions { get; set; } = new();
-
         [JsonPropertyName("Features")]
         public List<string> Features { get; set; } = new();
 
@@ -138,9 +135,6 @@ namespace dCompare.Configuration
 
         public bool SupportsOperation(ToolOperationTypes operation) =>
             SupportedOperations.Contains(operation);
-
-        public bool SupportsExtension(string extension) =>
-            SupportedExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase);
     }
 
     public class FileTypeMappingOptions
