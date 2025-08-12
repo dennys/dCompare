@@ -33,6 +33,9 @@ namespace dCompare.Tools.Viewer
         [ObservableProperty]
         private string _rightPath = string.Empty;
 
+        [ObservableProperty]
+        private string? _errorMessage;
+
         public IRelayCommand OpenImageCommand { get; }
         public IRelayCommand SaveImageCommand { get; }
         public IRelayCommand ZoomInCommand { get; }
@@ -50,19 +53,38 @@ namespace dCompare.Tools.Viewer
 
         public void LoadFile(string filePath, string? rightFilePath = null)
         {
+            ErrorMessage = null;
             LeftPath = filePath;
-            LeftImageSource = LoadImage(filePath);
+            RightPath = rightFilePath ?? string.Empty;
+            IsDiffView = rightFilePath != null;
 
-            if (rightFilePath != null)
+            try
             {
-                RightPath = rightFilePath;
-                RightImageSource = LoadImage(rightFilePath);
-                IsDiffView = true;
+                LeftImageSource = LoadImage(LeftPath);
+            }
+            catch (Exception ex)
+            {
+                LeftImageSource = null;
+                ErrorMessage = $"Error loading left image: {ex.Message}";
+            }
+
+            if (IsDiffView)
+            {
+                try
+                {
+                    RightImageSource = LoadImage(RightPath);
+                }
+                catch (Exception ex)
+                {
+                    RightImageSource = null;
+                    ErrorMessage = $"{ErrorMessage}\nError loading right image: {ex.Message}".Trim();
+                }
             }
             else
             {
-                IsDiffView = false;
+                RightImageSource = null;
             }
+
             (SaveImageCommand as RelayCommand)?.NotifyCanExecuteChanged();
         }
 
@@ -71,27 +93,30 @@ namespace dCompare.Tools.Viewer
             LoadFile(LeftPath, IsDiffView ? RightPath : null);
         }
 
-        private static BitmapImage? LoadImage(string path)
+        private static BitmapImage LoadImage(string path)
         {
-            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+            if (string.IsNullOrEmpty(path))
             {
-                return null;
+                throw new ArgumentNullException(nameof(path), "Image path cannot be null or empty.");
             }
 
-            try
+            if (!File.Exists(path))
             {
-                BitmapImage bitmap = new();
+                throw new FileNotFoundException("Image file not found.", path);
+            }
+
+            // To bypass WPF image caching, we must load the image into a memory stream.
+            // Loading from URI or even a direct FileStream can still use the cache.
+            var bitmap = new BitmapImage();
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
+            {
                 bitmap.BeginInit();
-                bitmap.UriSource = new System.Uri(path);
                 bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.StreamSource = stream;
                 bitmap.EndInit();
-                return bitmap;
             }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error loading image: {ex.Message}");
-                return null;
-            }
+            bitmap.Freeze(); // Recommended for performance and thread safety
+            return bitmap;
         }
 
         private void OpenImage()

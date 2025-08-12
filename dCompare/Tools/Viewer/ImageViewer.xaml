@@ -11,6 +11,7 @@
     <UserControl.Resources>
         <infra:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <infra:InvertedBooleanToVisibilityConverter x:Key="InvertedBooleanToVisibilityConverter"/>
+        <infra:StringNullOrEmptyToVisibilityConverter x:Key="StringNullOrEmptyToVisibilityConverter"/>
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -41,6 +42,10 @@
                     <ScaleTransform ScaleX="{Binding ZoomFactor}" ScaleY="{Binding ZoomFactor}" />
                 </Grid.LayoutTransform>
 
+                <TextBlock Text="{Binding ErrorMessage}" Foreground="Red" FontWeight="Bold"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap"
+                           Visibility="{Binding ErrorMessage, Converter={StaticResource StringNullOrEmptyToVisibilityConverter}}"/>
+
                 <!-- Layout for Diff View -->
                 <Grid Visibility="{Binding IsDiffView, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <Grid.ColumnDefinitions>
@@ -55,7 +60,9 @@
                 <!-- Layout for Single View -->
                 <Image Source="{Binding LeftImageSource}" Stretch="Uniform" Margin="5"
                        HorizontalAlignment="Center" VerticalAlignment="Center"
-                       Visibility="{Binding IsDiffView, Converter={StaticResource InvertedBooleanToVisibilityConverter}}"/>
+                       Visibility="{Binding IsDiffView, Converter={StaticResource InvertedBooleanToVisibilityConverter}}"
+                       MaxWidth="{Binding Path=ActualWidth, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
+                       MaxHeight="{Binding Path=ActualHeight, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"/>
 
             </Grid>
         </ScrollViewer>
