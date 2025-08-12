@@ -33,12 +33,14 @@ namespace dCompare.Tools.Viewer
         [ObservableProperty]
         private string _rightPath = string.Empty;
 
+        public IRelayCommand OpenImageCommand { get; }
         public IRelayCommand SaveImageCommand { get; }
         public IRelayCommand ZoomInCommand { get; }
         public IRelayCommand ZoomOutCommand { get; }
 
         public ImageViewerViewModel()
         {
+            OpenImageCommand = new RelayCommand(OpenImage);
             SaveImageCommand = new RelayCommand(SaveImage, CanSaveImage);
             ZoomInCommand = new RelayCommand(ZoomIn);
             ZoomOutCommand = new RelayCommand(ZoomOut);
@@ -82,6 +84,22 @@ namespace dCompare.Tools.Viewer
             {
                 System.Diagnostics.Debug.WriteLine($"Error loading image: {ex.Message}");
                 return null;
+            }
+        }
+
+        private void OpenImage()
+        {
+            var openFileDialog = new OpenFileDialog
+            {
+                Filter = Properties.Resources.ImageFiles,
+                InitialDirectory = !string.IsNullOrEmpty(LeftPath)
+                    ? Path.GetDirectoryName(LeftPath)
+                    : Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                LoadFile(openFileDialog.FileName);
             }
         }
 
