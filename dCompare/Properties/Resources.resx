@@ -1033,9 +1033,6 @@ Right: {1}</value>
   <data name="SupportedOperations" xml:space="preserve">
     <value>Supported Operations:</value>
   </data>
-  <data name="SupportedExtensions" xml:space="preserve">
-    <value>Supported Extensions:</value>
-  </data>
   <data name="Features" xml:space="preserve">
     <value>Features:</value>
   </data>

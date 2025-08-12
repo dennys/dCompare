@@ -1033,9 +1033,6 @@
   <data name="SupportedOperations" xml:space="preserve">
     <value>支援的操作：</value>
   </data>
-  <data name="SupportedExtensions" xml:space="preserve">
-    <value>支援的后缀名：</value>
-  </data>
   <data name="Features" xml:space="preserve">
     <value>功能：</value>
   </data>

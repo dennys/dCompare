@@ -121,14 +121,6 @@ namespace dCompare.Configuration
         /// <param name="operation">The operation to check (e.g., "view" or "diff").</param>
         /// <param name="extension">The file extension to check (e.g., ".txt" or ".png").</param>
         /// <returns>An enumerable of supported ToolConfiguration objects.</returns>
-        public IEnumerable<ToolOptions> GetSupportedTools(ToolOperationTypes operation, string extension)
-        {
-            return _configuration.GetSection("Tools").Get<Dictionary<string, ToolOptions>>()?.Values
-                .Where(tool => tool.Enabled &&
-                              tool.SupportsOperation(operation) &&
-                              tool.SupportsExtension(extension)) ?? Enumerable.Empty<ToolOptions>();
-        }
-
         /// <summary>
         /// Gets the file type mapping for the given extension.
         /// </summary>
@@ -168,39 +160,6 @@ namespace dCompare.Configuration
         /// <param name="operation">The operation to check (e.g., "view" or "diff").</param>
         /// <param name="extension">The file extension to check (e.g., ".txt" or ".png").</param>
         /// <returns>An enumerable of preferred ToolConfiguration objects in priority order.</returns>
-        public IEnumerable<ToolOptions> GetPreferredTools(ToolOperationTypes operation, string extension)
-        {
-            var fileMapping = GetFileTypeMapping(extension);
-            if (fileMapping == null) yield break;
-
-            List<string> preferredToolNames;
-            if (operation == ToolOperationTypes.Diff)
-            {
-                preferredToolNames = fileMapping.PreferredTools.Diff;
-            }
-            else if (operation == ToolOperationTypes.View)
-            {
-                preferredToolNames = fileMapping.PreferredTools.View;
-            }
-            else
-            {
-                preferredToolNames = Array.Empty<string>().ToList();
-            }
-
-            var tools = _configuration.GetSection("Tools").Get<Dictionary<string, ToolOptions>>();
-            if (tools == null) yield break;
-
-            foreach (var toolName in preferredToolNames)
-            {
-                if (tools.TryGetValue(toolName, out var tool) &&
-                    tool.Enabled &&
-                    tool.SupportsOperation(operation) &&
-                    tool.SupportsExtension(extension))
-                {
-                    yield return tool;
-                }
-            }
-        }
         public IEnumerable<ToolOptions> GetAllToolsForOperation(ToolOperationTypes operation)
         {
             var tools = _configuration.GetSection("Tools").Get<Dictionary<string, ToolOptions>>();

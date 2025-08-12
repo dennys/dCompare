@@ -134,12 +134,6 @@ namespace dCompare.Options
             }
         }
 
-        public string SupportedExtensions
-        {
-            get => string.Join(",", _tool.SupportedExtensions);
-            set { _tool.SupportedExtensions = value.Split(',').ToList(); OnPropertyChanged(); }
-        }
-
         public string Features
         {
             get => string.Join(",", _tool.Features);
@@ -174,25 +168,6 @@ namespace dCompare.Options
                     if (string.IsNullOrWhiteSpace(Name))
                     {
                         result = "Name cannot be empty.";
-                    }
-                }
-                if (columnName == nameof(SupportedExtensions))
-                {
-                    if (string.IsNullOrWhiteSpace(SupportedExtensions))
-                    {
-                        result = "Supported Extensions cannot be empty.";
-                    }
-                    else
-                    {
-                        var extensions = SupportedExtensions.Split(',');
-                        foreach (var ext in extensions)
-                        {
-                            if (!ext.StartsWith("."))
-                            {
-                                result = "All extensions must start with a dot.";
-                                break;
-                            }
-                        }
                     }
                 }
                 if (columnName == nameof(SupportedOperations))
