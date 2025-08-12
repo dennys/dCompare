@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
 using dCompare.Configuration;
+using dCompare.Properties;
 using Microsoft.Extensions.Logging;
 using System.IO;
 using System.Reflection;
@@ -67,10 +68,10 @@ namespace dCompare.Tools
             {
                 if (string.IsNullOrEmpty(handler))
                 {
-                    throw new ToolCreationException("Tool handler is not specified in the configuration.");
+                    throw new ToolCreationException(Resources.ErrorToolHandlerNotSpecified);
                 }
 
-                Type type = Type.GetType(handler) ?? throw new ToolCreationException($"Tool type '{handler}' not found. Check the handler string in the configuration.");
+                Type type = Type.GetType(handler) ?? throw new ToolCreationException(string.Format(Resources.ErrorToolTypeNotFound, handler));
                 ConstructorInfo[] constructors = type.GetConstructors();
                 Ioc serviceProvider = Ioc.Default;
 
@@ -119,17 +120,17 @@ namespace dCompare.Tools
                         else
                         {
                             constructorArgs[i] = serviceProvider.GetService(paramInfo.ParameterType)
-                                ?? throw new ToolCreationException($"Could not resolve service for type {paramInfo.ParameterType.FullName} for constructor of {handler}");
+                                ?? throw new ToolCreationException(string.Format(Resources.ErrorCouldNotResolveServiceForTool, paramInfo.ParameterType.FullName, handler));
                         }
                     }
                     return (ITool)constructor.Invoke(constructorArgs);
                 }
 
-                throw new ToolCreationException($"No suitable constructor found for tool '{handler}'.");
+                throw new ToolCreationException(string.Format(Resources.ErrorNoSuitableConstructorForTool, handler));
             }
             catch (Exception ex) when (ex is not ToolCreationException)
             {
-                throw new ToolCreationException($"An unexpected error occurred while creating tool '{handler}'.", ex);
+                throw new ToolCreationException(string.Format(Resources.ErrorUnexpectedErrorCreatingTool, handler), ex);
             }
         }
 

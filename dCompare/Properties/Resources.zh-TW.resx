@@ -1129,4 +1129,19 @@
   <data name="CloseButton" xml:space="preserve">
     <value>qq</value>
   </data>
+  <data name="ErrorToolHandlerNotSpecified" xml:space="preserve">
+    <value>未在組態中指定工具處理常式。</value>
+  </data>
+  <data name="ErrorToolTypeNotFound" xml:space="preserve">
+    <value>找不到工具類型 '{0}'。請檢查組態中的處理常式字串。</value>
+  </data>
+  <data name="ErrorCouldNotResolveServiceForTool" xml:space="preserve">
+    <value>無法解析用於 {1} 建構函式的 {0} 類型服務。</value>
+  </data>
+  <data name="ErrorNoSuitableConstructorForTool" xml:space="preserve">
+    <value>找不到適用於工具 '{0}' 的建構函式。</value>
+  </data>
+  <data name="ErrorUnexpectedErrorCreatingTool" xml:space="preserve">
+    <value>建立工具 '{0}' 時發生未預期的錯誤。</value>
+  </data>
 </root>

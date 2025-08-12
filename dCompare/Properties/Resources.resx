@@ -1129,4 +1129,19 @@ Right: {1}</value>
   <data name="CloseButton" xml:space="preserve">
     <value>CloseButton</value>
   </data>
+  <data name="ErrorToolHandlerNotSpecified" xml:space="preserve">
+    <value>Tool handler is not specified in the configuration.</value>
+  </data>
+  <data name="ErrorToolTypeNotFound" xml:space="preserve">
+    <value>Tool type '{0}' not found. Check the handler string in the configuration.</value>
+  </data>
+  <data name="ErrorCouldNotResolveServiceForTool" xml:space="preserve">
+    <value>Could not resolve service for type {0} for constructor of {1}</value>
+  </data>
+  <data name="ErrorNoSuitableConstructorForTool" xml:space="preserve">
+    <value>No suitable constructor found for tool '{0}'.</value>
+  </data>
+  <data name="ErrorUnexpectedErrorCreatingTool" xml:space="preserve">
+    <value>An unexpected error occurred while creating tool '{0}'.</value>
+  </data>
 </root>
