@@ -24,6 +24,7 @@
             <Button Content="{x:Static p:Resources.Open}" Command="{Binding OpenImageCommand}" Margin="2"
                     Visibility="{Binding IsDiffView, Converter={StaticResource InvertedBooleanToVisibilityConverter}}"/>
             <Button Content="Refresh" Command="{Binding RefreshCommand}" Margin="2"/>
+            <Button Content="{x:Static p:Resources.Save}" Command="{Binding SaveImageCommand}" Margin="2"/>
             <Button Content="{x:Static p:Resources.ZoomIn}" Command="{Binding ZoomInCommand}" Margin="2"/>
             <Button Content="{x:Static p:Resources.ZoomOut}" Command="{Binding ZoomOutCommand}" Margin="2"/>
         </ToolBar>
