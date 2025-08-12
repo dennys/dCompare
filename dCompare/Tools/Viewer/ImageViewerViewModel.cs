@@ -37,6 +37,7 @@ namespace dCompare.Tools.Viewer
         public IRelayCommand SaveImageCommand { get; }
         public IRelayCommand ZoomInCommand { get; }
         public IRelayCommand ZoomOutCommand { get; }
+        public IRelayCommand RefreshCommand { get; }
 
         public ImageViewerViewModel()
         {
@@ -44,6 +45,7 @@ namespace dCompare.Tools.Viewer
             SaveImageCommand = new RelayCommand(SaveImage, CanSaveImage);
             ZoomInCommand = new RelayCommand(ZoomIn);
             ZoomOutCommand = new RelayCommand(ZoomOut);
+            RefreshCommand = new RelayCommand(Refresh);
         }
 
         public void LoadFile(string filePath, string? rightFilePath = null)
@@ -62,6 +64,11 @@ namespace dCompare.Tools.Viewer
                 IsDiffView = false;
             }
             (SaveImageCommand as RelayCommand)?.NotifyCanExecuteChanged();
+        }
+
+        private void Refresh()
+        {
+            LoadFile(LeftPath, IsDiffView ? RightPath : null);
         }
 
         private static BitmapImage? LoadImage(string path)
