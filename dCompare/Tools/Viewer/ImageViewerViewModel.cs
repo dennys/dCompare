@@ -13,7 +13,10 @@ namespace dCompare.Tools.Viewer
         private const double MaxZoom = 10.0;
 
         [ObservableProperty]
-        private ImageSource? _imageSource;
+        private ImageSource? _leftImageSource;
+
+        [ObservableProperty]
+        private ImageSource? _rightImageSource;
 
         [ObservableProperty]
         private Stretch _imageStretch = Stretch.Uniform;
@@ -21,12 +24,23 @@ namespace dCompare.Tools.Viewer
         [ObservableProperty]
         private double _zoomFactor = 1.0;
 
-        private string? _currentFilePath;
+        [ObservableProperty]
+        private bool _isDiffView;
+
+        [ObservableProperty]
+        private string _leftPath = string.Empty;
+
+        [ObservableProperty]
+        private string _rightPath = string.Empty;
+
+        [ObservableProperty]
+        private string? _errorMessage;
 
         public IRelayCommand OpenImageCommand { get; }
         public IRelayCommand SaveImageCommand { get; }
         public IRelayCommand ZoomInCommand { get; }
         public IRelayCommand ZoomOutCommand { get; }
+        public IRelayCommand RefreshCommand { get; }
 
         public ImageViewerViewModel()
         {
@@ -34,20 +48,75 @@ namespace dCompare.Tools.Viewer
             SaveImageCommand = new RelayCommand(SaveImage, CanSaveImage);
             ZoomInCommand = new RelayCommand(ZoomIn);
             ZoomOutCommand = new RelayCommand(ZoomOut);
+            RefreshCommand = new RelayCommand(Refresh);
         }
 
-        public void LoadFile(string filePath)
+        public void LoadFile(string filePath, string? rightFilePath = null)
         {
+            ErrorMessage = null;
+            LeftPath = filePath;
+            RightPath = rightFilePath ?? string.Empty;
+            IsDiffView = rightFilePath != null;
+
             try
             {
-                _currentFilePath = filePath;
-                ImageSource = new BitmapImage(new Uri(filePath));
-                (SaveImageCommand as RelayCommand)?.NotifyCanExecuteChanged();
+                LeftImageSource = LoadImage(LeftPath);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error loading image: {ex.Message}");
+                LeftImageSource = null;
+                ErrorMessage = $"Error loading left image: {ex.Message}";
             }
+
+            if (IsDiffView)
+            {
+                try
+                {
+                    RightImageSource = LoadImage(RightPath);
+                }
+                catch (Exception ex)
+                {
+                    RightImageSource = null;
+                    ErrorMessage = $"{ErrorMessage}\nError loading right image: {ex.Message}".Trim();
+                }
+            }
+            else
+            {
+                RightImageSource = null;
+            }
+
+            (SaveImageCommand as RelayCommand)?.NotifyCanExecuteChanged();
+        }
+
+        private void Refresh()
+        {
+            LoadFile(LeftPath, IsDiffView ? RightPath : null);
+        }
+
+        private static BitmapImage LoadImage(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                throw new ArgumentNullException(nameof(path), "Image path cannot be null or empty.");
+            }
+
+            if (!File.Exists(path))
+            {
+                throw new FileNotFoundException("Image file not found.", path);
+            }
+
+            // To bypass WPF image caching, we must load the image into a memory stream.
+            // Loading from URI or even a direct FileStream can still use the cache.
+            var bitmap = new BitmapImage();
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
+            {
+                bitmap.BeginInit();
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.StreamSource = stream;
+                bitmap.EndInit();
+            }
+            bitmap.Freeze(); // Recommended for performance and thread safety
+            return bitmap;
         }
 
         private void OpenImage()
@@ -55,8 +124,8 @@ namespace dCompare.Tools.Viewer
             var openFileDialog = new OpenFileDialog
             {
                 Filter = Properties.Resources.ImageFiles,
-                InitialDirectory = !string.IsNullOrEmpty(_currentFilePath)
-                    ? Path.GetDirectoryName(_currentFilePath)
+                InitialDirectory = !string.IsNullOrEmpty(LeftPath)
+                    ? Path.GetDirectoryName(LeftPath)
                     : Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
             };
 
@@ -68,18 +137,18 @@ namespace dCompare.Tools.Viewer
 
         private bool CanSaveImage()
         {
-            return !string.IsNullOrEmpty(_currentFilePath) && ImageSource is not null;
+            return !string.IsNullOrEmpty(LeftPath) && LeftImageSource is not null;
         }
 
         private void SaveImage()
         {
-            if (string.IsNullOrEmpty(_currentFilePath))
+            if (string.IsNullOrEmpty(LeftPath))
                 return;
 
-            var defaultExt = Path.GetExtension(_currentFilePath)?.ToLower();
+            var defaultExt = Path.GetExtension(LeftPath)?.ToLower();
             var saveFileDialog = new SaveFileDialog
             {
-                FileName = Path.GetFileName(_currentFilePath),
+                FileName = Path.GetFileName(LeftPath),
                 DefaultExt = defaultExt,
                 Filter = string.Format(Properties.Resources.SameAsOriginal, defaultExt)
             };
@@ -88,9 +157,9 @@ namespace dCompare.Tools.Viewer
             {
                 try
                 {
-                    string ext = Path.GetExtension(_currentFilePath)?.ToLower() ?? ".png";
+                    string ext = Path.GetExtension(LeftPath)?.ToLower() ?? ".png";
                     BitmapEncoder? encoder = GetEncoderByExtension(ext);
-                    if (encoder == null || ImageSource is not BitmapSource bitmapSource)
+                    if (encoder == null || LeftImageSource is not BitmapSource bitmapSource)
                         return;
 
                     encoder.Frames.Add(BitmapFrame.Create(bitmapSource));
