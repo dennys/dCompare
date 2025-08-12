@@ -19,7 +19,6 @@
         </Grid.RowDefinitions>
 
         <ToolBar Grid.Row="0">
-            <Button Content="{x:Static p:Resources.Open}" Command="{Binding OpenImageCommand}" Margin="2"/>
             <Button Content="{x:Static p:Resources.ZoomIn}" Command="{Binding ZoomInCommand}" Margin="2"/>
             <Button Content="{x:Static p:Resources.ZoomOut}" Command="{Binding ZoomOutCommand}" Margin="2"/>
         </ToolBar>
@@ -32,21 +31,22 @@
             <TextBlock Text="{Binding RightPath}"/>
         </StackPanel>
 
-        <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-            <Grid>
+        <ScrollViewer x:Name="ScrollViewer" Grid.Row="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+            <Grid MaxWidth="{Binding ActualWidth, ElementName=ScrollViewer}">
                 <Grid.LayoutTransform>
                     <ScaleTransform ScaleX="{Binding ZoomFactor}" ScaleY="{Binding ZoomFactor}" />
                 </Grid.LayoutTransform>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
                     <Image Grid.Column="0" Source="{Binding LeftImageSource}" Stretch="Uniform" Margin="5"/>
 
-                    <Image Grid.Column="1" Source="{Binding RightImageSource}" Stretch="Uniform" Margin="5"
-                           Visibility="{Binding IsDiffView, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    <Grid Grid.Column="1" Visibility="{Binding IsDiffView, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <Image Source="{Binding RightImageSource}" Stretch="Uniform" Margin="5"/>
+                    </Grid>
                 </Grid>
             </Grid>
         </ScrollViewer>
