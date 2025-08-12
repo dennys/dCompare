@@ -1129,4 +1129,19 @@
   <data name="CloseButton" xml:space="preserve">
     <value>qq</value>
   </data>
+  <data name="ErrorToolHandlerNotSpecified" xml:space="preserve">
+    <value>未在配置中指定工具处理程序。</value>
+  </data>
+  <data name="ErrorToolTypeNotFound" xml:space="preserve">
+    <value>找不到工具类型 '{0}'。请检查配置中的处理程序字符串。</value>
+  </data>
+  <data name="ErrorCouldNotResolveServiceForTool" xml:space="preserve">
+    <value>无法解析用于 {1} 构造函数的 {0} 类型服务。</value>
+  </data>
+  <data name="ErrorNoSuitableConstructorForTool" xml:space="preserve">
+    <value>找不到适用于工具 '{0}' 的构造函数。</value>
+  </data>
+  <data name="ErrorUnexpectedErrorCreatingTool" xml:space="preserve">
+    <value>创建工具 '{0}' 时发生意外错误。</value>
+  </data>
 </root>

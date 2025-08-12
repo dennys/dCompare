@@ -925,6 +925,15 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Could not resolve service for type {0} for constructor of {1} 的當地語系化字串。
+        /// </summary>
+        public static string ErrorCouldNotResolveServiceForTool {
+            get {
+                return ResourceManager.GetString("ErrorCouldNotResolveServiceForTool", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Default session file &apos;{0}&apos; does not exist. Please check the configuration or select a valid session file. 的當地語系化字串。
         /// </summary>
         public static string ErrorDefaultSessionFileNotExist {
@@ -1132,6 +1141,15 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 No suitable constructor found for tool &apos;{0}&apos;. 的當地語系化字串。
+        /// </summary>
+        public static string ErrorNoSuitableConstructorForTool {
+            get {
+                return ResourceManager.GetString("ErrorNoSuitableConstructorForTool", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Error opening about dialog: {0} 的當地語系化字串。
         /// </summary>
         public static string ErrorOpeningAboutDialog {
@@ -1200,6 +1218,33 @@ namespace dCompare.Properties {
         public static string ErrorTool {
             get {
                 return ResourceManager.GetString("ErrorTool", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Tool handler is not specified in the configuration. 的當地語系化字串。
+        /// </summary>
+        public static string ErrorToolHandlerNotSpecified {
+            get {
+                return ResourceManager.GetString("ErrorToolHandlerNotSpecified", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Tool type &apos;{0}&apos; not found. Check the handler string in the configuration. 的當地語系化字串。
+        /// </summary>
+        public static string ErrorToolTypeNotFound {
+            get {
+                return ResourceManager.GetString("ErrorToolTypeNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 An unexpected error occurred while creating tool &apos;{0}&apos;. 的當地語系化字串。
+        /// </summary>
+        public static string ErrorUnexpectedErrorCreatingTool {
+            get {
+                return ResourceManager.GetString("ErrorUnexpectedErrorCreatingTool", resourceCulture);
             }
         }
         
