@@ -1142,6 +1142,84 @@
     <value>找不到适用于工具 '{0}' 的构造函数。</value>
   </data>
   <data name="ErrorUnexpectedErrorCreatingTool" xml:space="preserve">
-    <value>创建工具 '{0}' 时发生意外错误。</value>
+    <value>建立工具 '{0}' 时发生未预期的错误。</value>
+  </data>
+  <data name="ImageViewer" xml:space="preserve">
+    <value>图片检视器</value>
+  </data>
+  <data name="ShowExifData" xml:space="preserve">
+    <value>显示 EXIF</value>
+  </data>
+  <data name="Camera" xml:space="preserve">
+    <value>相机:</value>
+  </data>
+  <data name="Lens" xml:space="preserve">
+    <value>镜头:</value>
+  </data>
+  <data name="Aperture" xml:space="preserve">
+    <value>光圈:</value>
+  </data>
+  <data name="ShutterSpeed" xml:space="preserve">
+    <value>快门速度:</value>
+  </data>
+  <data name="ISO" xml:space="preserve">
+    <value>ISO:</value>
+  </data>
+  <data name="Left" xml:space="preserve">
+    <value>左侧</value>
+  </data>
+  <data name="Right" xml:space="preserve">
+    <value>右侧</value>
+  </data>
+  <data name="ShowDiff" xml:space="preserve">
+    <value>显示差异</value>
+  </data>
+  <data name="HideDiff" xml:space="preserve">
+    <value>隐藏差异</value>
+  </data>
+  <data name="ShowDiffDisabledTooltip" xml:space="preserve">
+    <value>图片尺寸不同，无法使用差异比对功能。</value>
+  </data>
+  <data name="BlockSize" xml:space="preserve">
+    <value>区块大小:</value>
+  </data>
+  <data name="Threshold" xml:space="preserve">
+    <value>阈值:</value>
+  </data>
+  <data name="ImageViewerSettingsTitle" xml:space="preserve">
+    <value>图片检视器设定</value>
+  </data>
+  <data name="ImageViewerSettingsDescription" xml:space="preserve">
+    <value>这些设定仅适用于内置的图片检视器。</value>
+  </data>
+  <data name="ShowDiffByDefault" xml:space="preserve">
+    <value>比较两张图片时默认显示差异</value>
+  </data>
+  <data name="DefaultBlockSize" xml:space="preserve">
+    <value>默认区块大小：</value>
+  </data>
+  <data name="DefaultThreshold" xml:space="preserve">
+    <value>默认阈值：</value>
+  </data>
+  <data name="EXIFSettings" xml:space="preserve">
+    <value>EXIF 设定</value>
+  </data>
+  <data name="EXIFSettingsDescription" xml:space="preserve">
+    <value>选取要在检视器中显示的 EXIF 资料栏位。</value>
+  </data>
+  <data name="CameraModel" xml:space="preserve">
+    <value>相机型号</value>
+  </data>
+  <data name="LensModel" xml:space="preserve">
+    <value>镜头型号</value>
+  </data>
+  <data name="EXIFAperture" xml:space="preserve">
+    <value>光圈</value>
+  </data>
+  <data name="EXIFShutterSpeed" xml:space="preserve">
+    <value>快门速度</value>
+  </data>
+  <data name="EXIFISO" xml:space="preserve">
+    <value>ISO</value>
   </data>
 </root>

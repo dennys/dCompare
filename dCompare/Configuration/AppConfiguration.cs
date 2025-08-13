@@ -28,6 +28,10 @@ namespace dCompare.Configuration
 
         [JsonPropertyName("TextViewer")]
         public TextViewerOptions TextViewer { get; set; } = new();
+
+        [JsonPropertyName("ImageViewer")]
+        public ImageViewerOptions ImageViewer { get; set; } = new();
+
         [JsonPropertyName("Tools")]
         public Dictionary<string, ToolOptions> Tools { get; set; } = new();
 
@@ -69,6 +73,33 @@ namespace dCompare.Configuration
 
         [JsonPropertyName("ShowStatusBar")]
         public bool ShowStatusBar { get; set; } = true;
+    }
+
+    public class ImageViewerOptions
+    {
+        [JsonPropertyName("ShowDiffByDefault")]
+        public bool ShowDiffByDefault { get; set; } = false;
+
+        [JsonPropertyName("DefaultBlockSize")]
+        public int DefaultBlockSize { get; set; } = 16;
+
+        [JsonPropertyName("DefaultThreshold")]
+        public int DefaultThreshold { get; set; } = 30;
+
+        [JsonPropertyName("ShowExifCamera")]
+        public bool ShowExifCamera { get; set; } = true;
+
+        [JsonPropertyName("ShowExifLens")]
+        public bool ShowExifLens { get; set; } = true;
+
+        [JsonPropertyName("ShowExifShutterSpeed")]
+        public bool ShowExifShutterSpeed { get; set; } = true;
+
+        [JsonPropertyName("ShowExifAperture")]
+        public bool ShowExifAperture { get; set; } = true;
+
+        [JsonPropertyName("ShowExifIso")]
+        public bool ShowExifIso { get; set; } = true;
     }
 
     public class UIOptions

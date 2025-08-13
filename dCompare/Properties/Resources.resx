@@ -1144,4 +1144,82 @@ Right: {1}</value>
   <data name="ErrorUnexpectedErrorCreatingTool" xml:space="preserve">
     <value>An unexpected error occurred while creating tool '{0}'.</value>
   </data>
+  <data name="ImageViewer" xml:space="preserve">
+    <value>Image Viewer</value>
+  </data>
+  <data name="ShowExifData" xml:space="preserve">
+    <value>Show EXIF</value>
+  </data>
+  <data name="Camera" xml:space="preserve">
+    <value>Camera:</value>
+  </data>
+  <data name="Lens" xml:space="preserve">
+    <value>Lens:</value>
+  </data>
+  <data name="Aperture" xml:space="preserve">
+    <value>Aperture:</value>
+  </data>
+  <data name="ShutterSpeed" xml:space="preserve">
+    <value>Shutter Speed:</value>
+  </data>
+  <data name="ISO" xml:space="preserve">
+    <value>ISO:</value>
+  </data>
+  <data name="Left" xml:space="preserve">
+    <value>Left</value>
+  </data>
+  <data name="Right" xml:space="preserve">
+    <value>Right</value>
+  </data>
+  <data name="ShowDiff" xml:space="preserve">
+    <value>Show Diff</value>
+  </data>
+  <data name="HideDiff" xml:space="preserve">
+    <value>Hide Diff</value>
+  </data>
+  <data name="ShowDiffDisabledTooltip" xml:space="preserve">
+    <value>Images must have the same dimensions to use the diff feature.</value>
+  </data>
+  <data name="BlockSize" xml:space="preserve">
+    <value>Block Size:</value>
+  </data>
+  <data name="Threshold" xml:space="preserve">
+    <value>Threshold:</value>
+  </data>
+  <data name="ImageViewerSettingsTitle" xml:space="preserve">
+    <value>Image Viewer Settings</value>
+  </data>
+  <data name="ImageViewerSettingsDescription" xml:space="preserve">
+    <value>These settings apply only to the built-in image viewer.</value>
+  </data>
+  <data name="ShowDiffByDefault" xml:space="preserve">
+    <value>Show differences by default when comparing two images</value>
+  </data>
+  <data name="DefaultBlockSize" xml:space="preserve">
+    <value>Default Block Size:</value>
+  </data>
+  <data name="DefaultThreshold" xml:space="preserve">
+    <value>Default Threshold:</value>
+  </data>
+  <data name="EXIFSettings" xml:space="preserve">
+    <value>EXIF Settings</value>
+  </data>
+  <data name="EXIFSettingsDescription" xml:space="preserve">
+    <value>Select which EXIF data fields to display in the viewer.</value>
+  </data>
+  <data name="CameraModel" xml:space="preserve">
+    <value>Camera Model</value>
+  </data>
+  <data name="LensModel" xml:space="preserve">
+    <value>Lens Model</value>
+  </data>
+  <data name="EXIFAperture" xml:space="preserve">
+    <value>Aperture</value>
+  </data>
+  <data name="EXIFShutterSpeed" xml:space="preserve">
+    <value>Shutter Speed</value>
+  </data>
+  <data name="EXIFISO" xml:space="preserve">
+    <value>ISO</value>
+  </data>
 </root>
