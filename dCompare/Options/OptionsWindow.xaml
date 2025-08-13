@@ -313,9 +313,49 @@
             </StackPanel>
         </DataTemplate>
 
+        <DataTemplate DataType="{x:Type local:ImageViewerOptionsViewModel}">
+            <StackPanel Margin="20">
+                <TextBlock Text="{x:Static resx:Resources.ImageViewerSettingsTitle}" FontSize="20" FontWeight="Bold" Margin="0,0,0,5"/>
+                <TextBlock Text="{x:Static resx:Resources.ImageViewerSettingsDescription}" Foreground="SlateGray" FontStyle="Italic" TextWrapping="Wrap" Margin="0,0,0,20"/>
+
+                <GroupBox Header="{x:Static resx:Resources.CompareSettings}" Margin="0,0,0,15">
+                    <StackPanel Margin="10">
+                        <CheckBox IsChecked="{Binding ShowDiffByDefault}" Content="{x:Static resx:Resources.ShowDiffByDefault}" Margin="0,5"/>
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="{x:Static resx:Resources.DefaultBlockSize}" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding DefaultBlockSize}" Width="60" HorizontalAlignment="Left"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="{x:Static resx:Resources.DefaultThreshold}" VerticalAlignment="Center" Margin="0,5,10,5"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding DefaultThreshold}" Width="60" HorizontalAlignment="Left"/>
+                        </Grid>
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Header="{x:Static resx:Resources.EXIFSettings}" Margin="0,0,0,15">
+                    <StackPanel Margin="10">
+                        <TextBlock Text="{x:Static resx:Resources.EXIFSettingsDescription}" Margin="0,0,0,10"/>
+                        <CheckBox IsChecked="{Binding ShowExifCamera}" Content="{x:Static resx:Resources.CameraModel}" Margin="0,2"/>
+                        <CheckBox IsChecked="{Binding ShowExifLens}" Content="{x:Static resx:Resources.LensModel}" Margin="0,2"/>
+                        <CheckBox IsChecked="{Binding ShowExifAperture}" Content="{x:Static resx:Resources.EXIFAperture}" Margin="0,2"/>
+                        <CheckBox IsChecked="{Binding ShowExifShutterSpeed}" Content="{x:Static resx:Resources.EXIFShutterSpeed}" Margin="0,2"/>
+                        <CheckBox IsChecked="{Binding ShowExifIso}" Content="{x:Static resx:Resources.EXIFISO}" Margin="0,2"/>
+                    </StackPanel>
+                </GroupBox>
+
+            </StackPanel>
+        </DataTemplate>
+
         <DataTemplate DataType="{x:Type local:TextViewerOptionsViewModel}">
             <StackPanel Margin="20">
-                <TextBlock Text="{x:Static resx:Resources.TextViewerSettings}" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+                <TextBlock Text="{x:Static resx:Resources.TextViewerSettings}" FontSize="20" FontWeight="Bold" Margin="0,0,0,5"/>
+                <TextBlock Text="These settings apply only to the built-in text viewer." Foreground="SlateGray" FontStyle="Italic" TextWrapping="Wrap" Margin="0,0,0,20"/>
                 <CheckBox IsChecked="{Binding ReadOnly}" Content="{x:Static resx:Resources.DefaultToReadOnly}" Margin="0,5"/>
                 <CheckBox IsChecked="{Binding LineNumber}" Content="{x:Static resx:Resources.ShowLineNumbers}" Margin="0,5"/>
                 <CheckBox IsChecked="{Binding SyntaxHighlight}" Content="{x:Static resx:Resources.EnableSyntaxHighlighting}" Margin="0,5"/>

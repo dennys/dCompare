@@ -81,12 +81,14 @@ namespace dCompare.Options
             var confirmationNode = new SettingsMenuItem(Properties.Resources.Confirmation, new ConfirmationOptionsViewModel(_appConfig.Options.Confirmation), this);
             var hotkeysNode = new SettingsMenuItem(Properties.Resources.HotKeys, new HotKeysOptionsViewModel(_appConfig.Options.HotKeys), this);
             var textViewerNode = new SettingsMenuItem(Properties.Resources.TextViewer, new TextViewerOptionsViewModel(_appConfig.Options.TextViewer), this);
+            var imageViewerNode = new SettingsMenuItem(Properties.Resources.ImageViewer, new ImageViewerOptionsViewModel(_appConfig.Options.ImageViewer), this);
             var toolsNode = new SettingsMenuItem(Properties.Resources.Tools, new ToolsOptionsViewModel(_appConfig), this);
             var fileTypeMappingNode = new SettingsMenuItem(Properties.Resources.FileTypeMapping, new FileTypeMappingOptionsViewModel(_appConfig), this);
 
             optionsNode.Children.Add(uiNode);
             optionsNode.Children.Add(compareNode);
             optionsNode.Children.Add(textViewerNode);
+            optionsNode.Children.Add(imageViewerNode);
             optionsNode.Children.Add(toolsNode);
             optionsNode.Children.Add(fileTypeMappingNode);
             optionsNode.Children.Add(confirmationNode);

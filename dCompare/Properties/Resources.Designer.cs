@@ -151,6 +151,15 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Aperture: 的當地語系化字串。
+        /// </summary>
+        public static string Aperture {
+            get {
+                return ResourceManager.GetString("Aperture", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 dCompare 的當地語系化字串。
         /// </summary>
         public static string AppTitle {
@@ -187,11 +196,38 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Block Size: 的當地語系化字串。
+        /// </summary>
+        public static string BlockSize {
+            get {
+                return ResourceManager.GetString("BlockSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 ... 的當地語系化字串。
         /// </summary>
         public static string Browse {
             get {
                 return ResourceManager.GetString("Browse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Camera: 的當地語系化字串。
+        /// </summary>
+        public static string Camera {
+            get {
+                return ResourceManager.GetString("Camera", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Camera Model 的當地語系化字串。
+        /// </summary>
+        public static string CameraModel {
+            get {
+                return ResourceManager.GetString("CameraModel", resourceCulture);
             }
         }
         
@@ -628,6 +664,15 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Default Block Size: 的當地語系化字串。
+        /// </summary>
+        public static string DefaultBlockSize {
+            get {
+                return ResourceManager.GetString("DefaultBlockSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Default Diff Tool: 的當地語系化字串。
         /// </summary>
         public static string DefaultDiffTool {
@@ -642,6 +687,15 @@ namespace dCompare.Properties {
         public static string DefaultSessionFile {
             get {
                 return ResourceManager.GetString("DefaultSessionFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Default Threshold: 的當地語系化字串。
+        /// </summary>
+        public static string DefaultThreshold {
+            get {
+                return ResourceManager.GetString("DefaultThreshold", resourceCulture);
             }
         }
         
@@ -1258,6 +1312,51 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Aperture 的當地語系化字串。
+        /// </summary>
+        public static string EXIFAperture {
+            get {
+                return ResourceManager.GetString("EXIFAperture", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 ISO 的當地語系化字串。
+        /// </summary>
+        public static string EXIFISO {
+            get {
+                return ResourceManager.GetString("EXIFISO", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 EXIF Settings 的當地語系化字串。
+        /// </summary>
+        public static string EXIFSettings {
+            get {
+                return ResourceManager.GetString("EXIFSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Select which EXIF data fields to display in the viewer. 的當地語系化字串。
+        /// </summary>
+        public static string EXIFSettingsDescription {
+            get {
+                return ResourceManager.GetString("EXIFSettingsDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Shutter Speed 的當地語系化字串。
+        /// </summary>
+        public static string EXIFShutterSpeed {
+            get {
+                return ResourceManager.GetString("EXIFShutterSpeed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 E_xit 的當地語系化字串。
         /// </summary>
         public static string Exit {
@@ -1519,6 +1618,15 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Hide Diff 的當地語系化字串。
+        /// </summary>
+        public static string HideDiff {
+            get {
+                return ResourceManager.GetString("HideDiff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Horizontal Scroll Bar: 的當地語系化字串。
         /// </summary>
         public static string HorizontalScrollBar {
@@ -1591,6 +1699,33 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Image Viewer 的當地語系化字串。
+        /// </summary>
+        public static string ImageViewer {
+            get {
+                return ResourceManager.GetString("ImageViewer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 These settings apply only to the built-in image viewer. 的當地語系化字串。
+        /// </summary>
+        public static string ImageViewerSettingsDescription {
+            get {
+                return ResourceManager.GetString("ImageViewerSettingsDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Image Viewer Settings 的當地語系化字串。
+        /// </summary>
+        public static string ImageViewerSettingsTitle {
+            get {
+                return ResourceManager.GetString("ImageViewerSettingsTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Invalid Input 的當地語系化字串。
         /// </summary>
         public static string InvalidInput {
@@ -1627,6 +1762,15 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 ISO: 的當地語系化字串。
+        /// </summary>
+        public static string ISO {
+            get {
+                return ResourceManager.GetString("ISO", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Is Side-by-Side 的當地語系化字串。
         /// </summary>
         public static string IsSideBySide {
@@ -1654,6 +1798,15 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Left 的當地語系化字串。
+        /// </summary>
+        public static string Left {
+            get {
+                return ResourceManager.GetString("Left", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Left File:  的當地語系化字串。
         /// </summary>
         public static string LeftFile {
@@ -1677,6 +1830,24 @@ namespace dCompare.Properties {
         public static string LeftPath {
             get {
                 return ResourceManager.GetString("LeftPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Lens: 的當地語系化字串。
+        /// </summary>
+        public static string Lens {
+            get {
+                return ResourceManager.GetString("Lens", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Lens Model 的當地語系化字串。
+        /// </summary>
+        public static string LensModel {
+            get {
+                return ResourceManager.GetString("LensModel", resourceCulture);
             }
         }
         
@@ -2257,6 +2428,15 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Right 的當地語系化字串。
+        /// </summary>
+        public static string Right {
+            get {
+                return ResourceManager.GetString("Right", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Right File:  的當地語系化字串。
         /// </summary>
         public static string RightFile {
@@ -2482,11 +2662,47 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Show Diff 的當地語系化字串。
+        /// </summary>
+        public static string ShowDiff {
+            get {
+                return ResourceManager.GetString("ShowDiff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Show differences by default when comparing two images 的當地語系化字串。
+        /// </summary>
+        public static string ShowDiffByDefault {
+            get {
+                return ResourceManager.GetString("ShowDiffByDefault", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Images must have the same dimensions to use the diff feature. 的當地語系化字串。
+        /// </summary>
+        public static string ShowDiffDisabledTooltip {
+            get {
+                return ResourceManager.GetString("ShowDiffDisabledTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Show Different Items 的當地語系化字串。
         /// </summary>
         public static string ShowDifferentMenu {
             get {
                 return ResourceManager.GetString("ShowDifferentMenu", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Show EXIF 的當地語系化字串。
+        /// </summary>
+        public static string ShowExifData {
+            get {
+                return ResourceManager.GetString("ShowExifData", resourceCulture);
             }
         }
         
@@ -2532,6 +2748,15 @@ namespace dCompare.Properties {
         public static string ShowStatusBar {
             get {
                 return ResourceManager.GetString("ShowStatusBar", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Shutter Speed: 的當地語系化字串。
+        /// </summary>
+        public static string ShutterSpeed {
+            get {
+                return ResourceManager.GetString("ShutterSpeed", resourceCulture);
             }
         }
         
@@ -2928,6 +3153,15 @@ namespace dCompare.Properties {
         public static string Theme {
             get {
                 return ResourceManager.GetString("Theme", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Threshold: 的當地語系化字串。
+        /// </summary>
+        public static string Threshold {
+            get {
+                return ResourceManager.GetString("Threshold", resourceCulture);
             }
         }
         

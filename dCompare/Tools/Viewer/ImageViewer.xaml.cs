@@ -1,4 +1,3 @@
-using dCompare.Common;
 using System.Windows.Controls;
 using System.Windows.Input;
 
@@ -8,22 +7,22 @@ namespace dCompare.Tools.Viewer
     {
         private readonly ImageViewerViewModel _viewModel;
 
-        public ImageViewer(string filePath)
+        public ImageViewer(string filePath, Configuration.IConfigurationService configService)
         {
             InitializeComponent();
-            _viewModel = new ImageViewerViewModel();
+            _viewModel = new ImageViewerViewModel(configService);
             DataContext = _viewModel;
-            _viewModel.LoadFile(filePath);
+            _ = _viewModel.LoadFileAsync(filePath);
 
             PreviewMouseWheel += OnPreviewMouseWheel;
         }
 
-        public ImageViewer(string leftFilePath, string rightFilePath)
+        public ImageViewer(string leftFilePath, string rightFilePath, Configuration.IConfigurationService configService)
         {
             InitializeComponent();
-            _viewModel = new ImageViewerViewModel();
+            _viewModel = new ImageViewerViewModel(configService);
             DataContext = _viewModel;
-            _viewModel.LoadFile(leftFilePath, rightFilePath);
+            _ = _viewModel.LoadFileAsync(leftFilePath, rightFilePath);
 
             PreviewMouseWheel += OnPreviewMouseWheel;
         }
@@ -46,7 +45,7 @@ namespace dCompare.Tools.Viewer
 
         public void LoadFile(string filePath)
         {
-            _viewModel.LoadFile(filePath);
+            _ = _viewModel.LoadFileAsync(filePath);
         }
 
         public UserControl GetControl()
