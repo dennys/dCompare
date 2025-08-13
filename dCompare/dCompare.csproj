@@ -10,6 +10,7 @@
     <Platforms>AnyCPU;x64</Platforms>
     <SatelliteResourceLanguages>en;zh-TW;zh-CN</SatelliteResourceLanguages>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -37,6 +38,7 @@
     <PackageReference Include="System.IO.Abstractions.TestingHelpers" Version="22.0.14" />
     <PackageReference Include="System.IO.Hashing" Version="9.0.6" />
     <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
+    <PackageReference Include="MetadataExtractor" Version="2.8.1" />
   </ItemGroup>
 
   <ItemGroup>

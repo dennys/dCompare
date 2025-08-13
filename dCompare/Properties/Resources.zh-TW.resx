@@ -1144,4 +1144,82 @@
   <data name="ErrorUnexpectedErrorCreatingTool" xml:space="preserve">
     <value>建立工具 '{0}' 時發生未預期的錯誤。</value>
   </data>
+  <data name="ImageViewer" xml:space="preserve">
+    <value>圖片檢視器</value>
+  </data>
+  <data name="ShowExifData" xml:space="preserve">
+    <value>顯示 EXIF</value>
+  </data>
+  <data name="Camera" xml:space="preserve">
+    <value>相機:</value>
+  </data>
+  <data name="Lens" xml:space="preserve">
+    <value>鏡頭:</value>
+  </data>
+  <data name="Aperture" xml:space="preserve">
+    <value>光圈:</value>
+  </data>
+  <data name="ShutterSpeed" xml:space="preserve">
+    <value>快門速度:</value>
+  </data>
+  <data name="ISO" xml:space="preserve">
+    <value>ISO:</value>
+  </data>
+  <data name="Left" xml:space="preserve">
+    <value>左側</value>
+  </data>
+  <data name="Right" xml:space="preserve">
+    <value>右側</value>
+  </data>
+  <data name="ShowDiff" xml:space="preserve">
+    <value>顯示差異</value>
+  </data>
+  <data name="HideDiff" xml:space="preserve">
+    <value>隱藏差異</value>
+  </data>
+  <data name="ShowDiffDisabledTooltip" xml:space="preserve">
+    <value>圖片尺寸不同，無法使用差異比對功能。</value>
+  </data>
+  <data name="BlockSize" xml:space="preserve">
+    <value>區塊大小:</value>
+  </data>
+  <data name="Threshold" xml:space="preserve">
+    <value>閾值:</value>
+  </data>
+  <data name="ImageViewerSettingsTitle" xml:space="preserve">
+    <value>圖片檢視器設定</value>
+  </data>
+  <data name="ImageViewerSettingsDescription" xml:space="preserve">
+    <value>這些設定僅適用於內建的圖片檢視器。</value>
+  </data>
+  <data name="ShowDiffByDefault" xml:space="preserve">
+    <value>比較兩張圖片時預設顯示差異</value>
+  </data>
+  <data name="DefaultBlockSize" xml:space="preserve">
+    <value>預設區塊大小：</value>
+  </data>
+  <data name="DefaultThreshold" xml:space="preserve">
+    <value>預設閾值：</value>
+  </data>
+  <data name="EXIFSettings" xml:space="preserve">
+    <value>EXIF 設定</value>
+  </data>
+  <data name="EXIFSettingsDescription" xml:space="preserve">
+    <value>選取要在檢視器中顯示的 EXIF 資料欄位。</value>
+  </data>
+  <data name="CameraModel" xml:space="preserve">
+    <value>相機型號</value>
+  </data>
+  <data name="LensModel" xml:space="preserve">
+    <value>鏡頭型號</value>
+  </data>
+  <data name="EXIFAperture" xml:space="preserve">
+    <value>光圈</value>
+  </data>
+  <data name="EXIFShutterSpeed" xml:space="preserve">
+    <value>快門速度</value>
+  </data>
+  <data name="EXIFISO" xml:space="preserve">
+    <value>ISO</value>
+  </data>
 </root>
