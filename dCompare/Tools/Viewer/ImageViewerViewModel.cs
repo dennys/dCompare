@@ -189,7 +189,6 @@ namespace dCompare.Tools.Viewer
                 await ShowDiffCommand.ExecuteAsync(null);
             }
         }
-
         private async Task ToggleDiffVisibility()
         {
             if (IsComparingDiffs) return;
@@ -208,13 +207,28 @@ namespace dCompare.Tools.Viewer
 
             try
             {
-                var result = await Task.Run(() =>
-                    ImageComparison.CompareImages(LeftImageSource, RightImageSource, BlockSize, Threshold)
-                );
+                var comparer = ImageComparerFactory.CreateImageSharpComparer();
+                var options = new ImageComparisonOptions
+                {
+                    BlockSize = BlockSize,
+                    Threshold = Threshold,
+                    MergeAdjacent = true,
+                    Algorithm = ImageComparisonAlgorithm.EuclideanDistance
+                };
+
+                var result = await comparer.CompareImagesAsync(
+                    new BitmapImageSource((BitmapSource)LeftImageSource),
+                    new BitmapImageSource((BitmapSource)RightImageSource),
+                    options);
 
                 foreach (var region in result.DifferenceRegions)
                 {
-                    DifferenceRectangles.Add(region);
+                    // Convert SixLabors.ImageSharp.Rectangle to System.Drawing.Rectangle
+                    DifferenceRectangles.Add(new System.Drawing.Rectangle(
+                        region.X,
+                        region.Y,
+                        region.Width,
+                        region.Height));
                 }
                 IsDiffResultVisible = DifferenceRectangles.Any();
             }
