@@ -3,7 +3,6 @@ using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using System.IO;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace dCompare.Compare
@@ -24,14 +23,9 @@ namespace dCompare.Compare
         Image<Rgba32> GetImage();
     }
 
-    public class FileImageSource : IImageSource
+    public class FileImageSource(string path) : IImageSource
     {
-        private readonly string _path;
-
-        public FileImageSource(string path)
-        {
-            _path = path ?? throw new ArgumentNullException(nameof(path));
-        }
+        private readonly string _path = path ?? throw new ArgumentNullException(nameof(path));
 
         public Image<Rgba32> GetImage()
         {
@@ -41,14 +35,9 @@ namespace dCompare.Compare
         }
     }
 
-    public class StreamImageSource : IImageSource
+    public class StreamImageSource(Stream stream) : IImageSource
     {
-        private readonly Stream _stream;
-
-        public StreamImageSource(Stream stream)
-        {
-            _stream = stream ?? throw new ArgumentNullException(nameof(stream));
-        }
+        private readonly Stream _stream = stream ?? throw new ArgumentNullException(nameof(stream));
 
         public Image<Rgba32> GetImage()
         {
@@ -56,14 +45,9 @@ namespace dCompare.Compare
         }
     }
 
-    public class ImageSourceImageSource : IImageSource
+    public class ImageSourceImageSource(Image<Rgba32> image) : IImageSource
     {
-        private readonly Image<Rgba32> _image;
-
-        public ImageSourceImageSource(Image<Rgba32> image)
-        {
-            _image = image ?? throw new ArgumentNullException(nameof(image));
-        }
+        private readonly Image<Rgba32> _image = image ?? throw new ArgumentNullException(nameof(image));
 
         public Image<Rgba32> GetImage()
         {
@@ -71,19 +55,14 @@ namespace dCompare.Compare
         }
     }
 
-    public class BitmapImageSource : IImageSource
+    public class BitmapImageSource(BitmapSource bitmapSource) : IImageSource
     {
-        private readonly BitmapSource _bitmapSource;
-
-        public BitmapImageSource(BitmapSource bitmapSource)
-        {
-            _bitmapSource = bitmapSource ?? throw new ArgumentNullException(nameof(bitmapSource));
-        }
+        private readonly BitmapSource _bitmapSource = bitmapSource ?? throw new ArgumentNullException(nameof(bitmapSource));
 
         public Image<Rgba32> GetImage()
         {
-            using var stream = new MemoryStream();
-            var encoder = new PngBitmapEncoder();
+            using MemoryStream stream = new();
+            PngBitmapEncoder encoder = new();
             encoder.Frames.Add(BitmapFrame.Create(_bitmapSource));
             encoder.Save(stream);
             stream.Position = 0;
@@ -157,8 +136,8 @@ namespace dCompare.Compare
             if (source1 == null || source2 == null)
                 throw new ArgumentNullException("Image sources cannot be null");
 
-            using var image1 = source1.GetImage();
-            using var image2 = source2.GetImage();
+            using Image<Rgba32> image1 = source1.GetImage();
+            using Image<Rgba32> image2 = source2.GetImage();
 
             return CompareImagesInternal(image1, image2, options ?? new ImageComparisonOptions());
         }
@@ -178,7 +157,7 @@ namespace dCompare.Compare
             return CompareImages(new StreamImageSource(stream1), new StreamImageSource(stream2), options);
         }
 
-        private IImageComparisonResult CompareImagesInternal(Image<Rgba32> image1, Image<Rgba32> image2, IImageComparisonOptions options)
+        private static ImageComparisonResult CompareImagesInternal(Image<Rgba32> image1, Image<Rgba32> image2, IImageComparisonOptions options)
         {
             ValidateParameters(image1, image2, options);
 
@@ -200,7 +179,7 @@ namespace dCompare.Compare
             return new ImageComparisonResult(differenceBlocks, differenceRegions, lazyMask, similarityPercentage, totalBlocks);
         }
 
-        private (List<(int X, int Y)> differences, int totalBlocks) FindDifferenceBlocks(
+        private static (List<(int X, int Y)> differences, int totalBlocks) FindDifferenceBlocks(
             Image<Rgba32> image1, Image<Rgba32> image2, IImageComparisonOptions options)
         {
             var differences = new List<(int X, int Y)>();
@@ -245,7 +224,7 @@ namespace dCompare.Compare
             return (differences, totalBlocks);
         }
 
-        private bool IsBlockDifferent(ReadOnlySpan<Rgba32> span1, ReadOnlySpan<Rgba32> span2,
+        private static bool IsBlockDifferent(ReadOnlySpan<Rgba32> span1, ReadOnlySpan<Rgba32> span2,
             int imageWidth, int imageHeight, int blockX, int blockY, int blockSize, int threshold, ImageComparisonAlgorithm algorithm)
         {
             double totalDifference = 0;
@@ -271,7 +250,7 @@ namespace dCompare.Compare
             return averageDifference > threshold;
         }
 
-        private bool IsBlockDifferentSafe(Image<Rgba32> image1, Image<Rgba32> image2,
+        private static bool IsBlockDifferentSafe(Image<Rgba32> image1, Image<Rgba32> image2,
             int blockX, int blockY, int blockSize, int threshold, ImageComparisonAlgorithm algorithm)
         {
             double totalDifference = 0;
@@ -296,7 +275,7 @@ namespace dCompare.Compare
             return averageDifference > threshold;
         }
 
-        private double CalculatePixelDifference(Rgba32 pixel1, Rgba32 pixel2, ImageComparisonAlgorithm algorithm)
+        private static double CalculatePixelDifference(Rgba32 pixel1, Rgba32 pixel2, ImageComparisonAlgorithm algorithm)
         {
             return algorithm switch
             {
@@ -307,7 +286,7 @@ namespace dCompare.Compare
             };
         }
 
-        private double CalculateEuclideanDistance(Rgba32 pixel1, Rgba32 pixel2)
+        private static double CalculateEuclideanDistance(Rgba32 pixel1, Rgba32 pixel2)
         {
             int dr = pixel1.R - pixel2.R;
             int dg = pixel1.G - pixel2.G;
@@ -315,12 +294,12 @@ namespace dCompare.Compare
             return Math.Sqrt(dr * dr + dg * dg + db * db);
         }
 
-        private double CalculateManhattanDistance(Rgba32 pixel1, Rgba32 pixel2)
+        private static double CalculateManhattanDistance(Rgba32 pixel1, Rgba32 pixel2)
         {
             return Math.Abs(pixel1.R - pixel2.R) + Math.Abs(pixel1.G - pixel2.G) + Math.Abs(pixel1.B - pixel2.B);
         }
 
-        private double CalculatePerceptualDifference(Rgba32 pixel1, Rgba32 pixel2)
+        private static double CalculatePerceptualDifference(Rgba32 pixel1, Rgba32 pixel2)
         {
             int dr = pixel1.R - pixel2.R;
             int dg = pixel1.G - pixel2.G;
@@ -328,13 +307,13 @@ namespace dCompare.Compare
             return Math.Sqrt(0.299 * dr * dr + 0.587 * dg * dg + 0.114 * db * db);
         }
 
-        private List<Rectangle> MergeAdjacentBlocks(List<(int X, int Y)> blocks, int blockSize)
+        private static List<Rectangle> MergeAdjacentBlocks(List<(int X, int Y)> blocks, int blockSize)
         {
             if (blocks.Count == 0) return new List<Rectangle>();
 
             var blockRects = blocks.Select(block => new Rectangle(block.X, block.Y, blockSize, blockSize)).ToList();
-            var merged = new List<Rectangle>();
-            var processed = new HashSet<int>();
+            List<Rectangle> merged = new();
+            HashSet<int> processed = new();
 
             for (int i = 0; i < blockRects.Count; i++)
             {
@@ -367,18 +346,18 @@ namespace dCompare.Compare
             return merged;
         }
 
-        private bool AreRectanglesAdjacent(Rectangle rect1, Rectangle rect2)
+        private static bool AreRectanglesAdjacent(Rectangle rect1, Rectangle rect2)
         {
             var inflatedRect1 = new Rectangle(rect1.X - 1, rect1.Y - 1, rect1.Width + 2, rect1.Height + 2);
             return inflatedRect1.IntersectsWith(rect2);
         }
 
-        private List<Rectangle> ConvertBlocksToRegions(List<(int X, int Y)> blocks, int blockSize)
+        private static List<Rectangle> ConvertBlocksToRegions(List<(int X, int Y)> blocks, int blockSize)
         {
             return blocks.Select(block => new Rectangle(block.X, block.Y, blockSize, blockSize)).ToList();
         }
 
-        private Image<Rgba32> GenerateMaskImage(int width, int height, IReadOnlyList<Rectangle> differenceRegions)
+        private static Image<Rgba32> GenerateMaskImage(int width, int height, IReadOnlyList<Rectangle> differenceRegions)
         {
             var maskImage = new Image<Rgba32>(width, height);
 
@@ -397,7 +376,7 @@ namespace dCompare.Compare
             return maskImage;
         }
 
-        private void ValidateParameters(Image<Rgba32> image1, Image<Rgba32> image2, IImageComparisonOptions options)
+        private static void ValidateParameters(Image<Rgba32> image1, Image<Rgba32> image2, IImageComparisonOptions options)
         {
             if (image1 == null || image2 == null)
                 throw new ArgumentNullException("Images cannot be null");
