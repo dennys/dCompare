@@ -1,5 +1,6 @@
 ﻿using dCompare.Common;
 using System.Text.Json.Serialization;
+using System.Windows.Controls;
 
 namespace dCompare.Configuration
 {
@@ -66,10 +67,12 @@ namespace dCompare.Configuration
         public bool WordWrap { get; set; } = false;
 
         [JsonPropertyName("HorizontalScrollBarVisibility")]
-        public string HorizontalScrollBarVisibility { get; set; } = "Auto";
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public ScrollBarVisibility HorizontalScrollBarVisibility { get; set; } = ScrollBarVisibility.Auto;
 
         [JsonPropertyName("VerticalScrollBarVisibility")]
-        public string VerticalScrollBarVisibility { get; set; } = "Auto";
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public ScrollBarVisibility VerticalScrollBarVisibility { get; set; } = ScrollBarVisibility.Auto;
 
         [JsonPropertyName("ShowStatusBar")]
         public bool ShowStatusBar { get; set; } = true;
