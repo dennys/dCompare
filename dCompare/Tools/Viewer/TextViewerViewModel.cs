@@ -63,8 +63,8 @@ namespace dCompare.Tools.Viewer
             FontFamily = settings.Font.FontFamily;
             FontSize = settings.Font.FontSize;
             SyntaxHighlight = settings.SyntaxHighlight;
-            HorizontalScrollBarVisibility = Enum.TryParse<ScrollBarVisibility>(settings.HorizontalScrollBarVisibility, out var h) ? h : HorizontalScrollBarVisibility;
-            VerticalScrollBarVisibility = Enum.TryParse<ScrollBarVisibility>(settings.VerticalScrollBarVisibility, out var v) ? v : VerticalScrollBarVisibility;
+            HorizontalScrollBarVisibility = settings.HorizontalScrollBarVisibility;
+            VerticalScrollBarVisibility = settings.VerticalScrollBarVisibility;
             ShowStatusBar = settings.ShowStatusBar;
         }
 

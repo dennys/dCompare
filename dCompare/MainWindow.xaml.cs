@@ -130,8 +130,10 @@ namespace dCompare
         {
             if (sender is TextBlock textBlock)
             {
-                TabItem? tabItem = FindAncestor<TabItem>(textBlock);
-                if (tabItem != null)
+                var tabItem = FindAncestor<TabItem>(textBlock);
+
+                // To prevent other TextBlocks from interfering, check if this TextBlock is the tab header.
+                if (tabItem != null && tabItem.Template.FindName("TabTitle", tabItem) == textBlock)
                 {
                     _draggedTab = tabItem;
                     _dragStartPoint = e.GetPosition(null);
@@ -139,12 +141,17 @@ namespace dCompare
             }
         }
 
+        private void TabControl_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            _draggedTab = null;
+        }
+
         private void TabItem_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
             if (sender is TextBlock textBlock)
             {
                 var tabItem = FindAncestor<TabItem>(textBlock);
-                if (tabItem != null && tabControl != null)
+                if (tabItem != null && tabControl != null && tabItem.Template.FindName("TabTitle", tabItem) == textBlock)
                 {
                     tabControl.SelectedItem = tabItem;
                     _viewModel.StatusMessage = string.Format(Properties.Resources.StatusSelectedTab, tabItem.Header);
@@ -156,8 +163,8 @@ namespace dCompare
         {
             if (sender is TextBlock textBlock)
             {
-                TabItem? tabItem = FindAncestor<TabItem>(textBlock);
-                if (tabItem != null && tabControl != null)
+                var tabItem = FindAncestor<TabItem>(textBlock);
+                if (tabItem != null && tabControl != null && tabItem.Template.FindName("TabTitle", tabItem) == textBlock)
                 {
                     tabControl.SelectedItem = tabItem;
                     _viewModel.StatusMessage = string.Format(Properties.Resources.StatusSelectedTab, tabItem.Header);
