@@ -3,6 +3,8 @@ using CommunityToolkit.Mvvm.Input;
 using dCompare.Configuration;
 using dCompare.Infrastructure;
 using System.Drawing;
+using System.Linq;
+using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
 
@@ -52,14 +54,14 @@ namespace dCompare.Options
         private bool _showStatusBar;
 
         [ObservableProperty]
-        private string _horizontalScrollBarVisibility;
+        private ScrollBarVisibility _horizontalScrollBarVisibility;
 
         [ObservableProperty]
-        private string _verticalScrollBarVisibility;
+        private ScrollBarVisibility _verticalScrollBarVisibility;
 
         public string FontDisplay => $"{FontFamily}, {FontSize}pt";
 
-        public List<string> ScrollBarVisibilities { get; } = new List<string> { "Auto", "Visible", "Hidden" };
+        public List<ScrollBarVisibility> ScrollBarVisibilities { get; } = Enum.GetValues(typeof(ScrollBarVisibility)).Cast<ScrollBarVisibility>().ToList();
 
         [RelayCommand]
         private void SelectFont()

@@ -333,7 +333,8 @@
                         Grid.Row="0"
                         Style="{StaticResource ChromeTabControlStyle}"
                         ItemContainerStyle="{StaticResource ChromeTabStyle}"
-                        PreviewMouseMove="TabControl_PreviewMouseMove">
+                        PreviewMouseMove="TabControl_PreviewMouseMove"
+                        PreviewMouseLeftButtonUp="TabControl_PreviewMouseLeftButtonUp">
                 <TabItem Header="Welcome">
                     <!-- <compare:UcCompareControl/> -->
                 </TabItem>
