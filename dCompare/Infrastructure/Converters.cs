@@ -5,6 +5,23 @@ using System.Windows.Media;
 
 namespace dCompare.Infrastructure
 {
+    public class BooleanToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            if (value is bool booleanValue)
+            {
+                return booleanValue ? Visibility.Visible : Visibility.Collapsed;
+            }
+            return Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class StringNullOrEmptyToVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -50,33 +67,19 @@ namespace dCompare.Infrastructure
             throw new NotImplementedException();
         }
     }
-    public class BooleanToVisibilityConverter : IValueConverter
+
+    public class InvertedBooleanToVisibilityConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            // Handle null or non-boolean values
-            if (value == null)
+            if (value is bool booleanValue)
             {
-                return Visibility.Collapsed; // Null values hide the control
+                return booleanValue ? Visibility.Collapsed : Visibility.Visible;
             }
-
-            // Handle int? specifically for ComparisonPercentage
-            if (value is int?)
-            {
-                return value != null ? Visibility.Visible : Visibility.Collapsed;
-            }
-
-            // Handle boolean values
-            if (value is bool boolValue)
-            {
-                return boolValue ? Visibility.Visible : Visibility.Collapsed;
-            }
-
-            // Default case for unexpected types
-            return Visibility.Collapsed;
+            return Visibility.Visible;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             throw new NotImplementedException();
         }

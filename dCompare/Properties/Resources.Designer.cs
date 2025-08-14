@@ -106,6 +106,24 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Add 的當地語系化字串。
+        /// </summary>
+        public static string Add {
+            get {
+                return ResourceManager.GetString("Add", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Add Extension 的當地語系化字串。
+        /// </summary>
+        public static string AddExtension {
+            get {
+                return ResourceManager.GetString("AddExtension", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Add _Tab 的當地語系化字串。
         /// </summary>
         public static string AddTab {
@@ -124,6 +142,24 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Algorithm 的當地語系化字串。
+        /// </summary>
+        public static string Algorithm {
+            get {
+                return ResourceManager.GetString("Algorithm", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Aperture: 的當地語系化字串。
+        /// </summary>
+        public static string Aperture {
+            get {
+                return ResourceManager.GetString("Aperture", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 dCompare 的當地語系化字串。
         /// </summary>
         public static string AppTitle {
@@ -133,11 +169,155 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 All files (*.*)|*.* 的當地語系化字串。
+        /// </summary>
+        public static string ArchiveFileFilter {
+            get {
+                return ResourceManager.GetString("ArchiveFileFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Auto-compare after session load 的當地語系化字串。
+        /// </summary>
+        public static string AutoCompareAfterSessionLoad {
+            get {
+                return ResourceManager.GetString("AutoCompareAfterSessionLoad", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Auto-load default session on startup 的當地語系化字串。
+        /// </summary>
+        public static string AutoLoadDefaultSession {
+            get {
+                return ResourceManager.GetString("AutoLoadDefaultSession", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Block Size: 的當地語系化字串。
+        /// </summary>
+        public static string BlockSize {
+            get {
+                return ResourceManager.GetString("BlockSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 ... 的當地語系化字串。
+        /// </summary>
+        public static string Browse {
+            get {
+                return ResourceManager.GetString("Browse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Camera: 的當地語系化字串。
+        /// </summary>
+        public static string Camera {
+            get {
+                return ResourceManager.GetString("Camera", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Camera Model 的當地語系化字串。
+        /// </summary>
+        public static string CameraModel {
+            get {
+                return ResourceManager.GetString("CameraModel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Cancel 的當地語系化字串。
+        /// </summary>
+        public static string Cancel {
+            get {
+                return ResourceManager.GetString("Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Cannot compare directories with a file comparison tool. 的當地語系化字串。
+        /// </summary>
+        public static string CannotCompareDirectory {
+            get {
+                return ResourceManager.GetString("CannotCompareDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Cannot locate parent TabControl. 的當地語系化字串。
+        /// </summary>
+        public static string CannotLocateParentTabControl {
+            get {
+                return ResourceManager.GetString("CannotLocateParentTabControl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Cannot open a directory. 的當地語系化字串。
+        /// </summary>
+        public static string CannotOpenDirectory {
+            get {
+                return ResourceManager.GetString("CannotOpenDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Cannot open file location: {0} 的當地語系化字串。
+        /// </summary>
+        public static string CannotOpenFileLocation {
+            get {
+                return ResourceManager.GetString("CannotOpenFileLocation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Chars: {0:N0} 的當地語系化字串。
+        /// </summary>
+        public static string Chars {
+            get {
+                return ResourceManager.GetString("Chars", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Clear failed jobs 的當地語系化字串。
+        /// </summary>
+        public static string ClearFailed {
+            get {
+                return ResourceManager.GetString("ClearFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Clear queued jobs 的當地語系化字串。
+        /// </summary>
+        public static string ClearQueued {
+            get {
+                return ResourceManager.GetString("ClearQueued", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Clear Recent Sessions 的當地語系化字串。
         /// </summary>
         public static string ClearRecentSessionsMenu {
             get {
                 return ResourceManager.GetString("ClearRecentSessionsMenu", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Clear successful jobs 的當地語系化字串。
+        /// </summary>
+        public static string ClearSuccessful {
+            get {
+                return ResourceManager.GetString("ClearSuccessful", resourceCulture);
             }
         }
         
@@ -187,6 +367,15 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Compare 的當地語系化字串。
+        /// </summary>
+        public static string Compare {
+            get {
+                return ResourceManager.GetString("Compare", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Compare Contents... 的當地語系化字串。
         /// </summary>
         public static string CompareContentsMenu {
@@ -205,11 +394,101 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Compare Settings 的當地語系化字串。
+        /// </summary>
+        public static string CompareSettings {
+            get {
+                return ResourceManager.GetString("CompareSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Compare: {0} - {1} 的當地語系化字串。
+        /// </summary>
+        public static string CompareTabHeader {
+            get {
+                return ResourceManager.GetString("CompareTabHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Compare with 的當地語系化字串。
         /// </summary>
         public static string CompareWith {
             get {
                 return ResourceManager.GetString("CompareWith", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 (Comparing...) {0} 的當地語系化字串。
+        /// </summary>
+        public static string ComparingTabHeader {
+            get {
+                return ResourceManager.GetString("ComparingTabHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Comparison Algorithms 的當地語系化字串。
+        /// </summary>
+        public static string ComparisonAlgorithms {
+            get {
+                return ResourceManager.GetString("ComparisonAlgorithms", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Comparison was canceled. 的當地語系化字串。
+        /// </summary>
+        public static string ComparisonCanceled {
+            get {
+                return ResourceManager.GetString("ComparisonCanceled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Comparison is already in progress. 的當地語系化字串。
+        /// </summary>
+        public static string ComparisonInProgress {
+            get {
+                return ResourceManager.GetString("ComparisonInProgress", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Completed 的當地語系化字串。
+        /// </summary>
+        public static string Completed {
+            get {
+                return ResourceManager.GetString("Completed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Confirmation 的當地語系化字串。
+        /// </summary>
+        public static string Confirmation {
+            get {
+                return ResourceManager.GetString("Confirmation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Confirmation Settings 的當地語系化字串。
+        /// </summary>
+        public static string ConfirmationSettings {
+            get {
+                return ResourceManager.GetString("ConfirmationSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Confirm before closing application 的當地語系化字串。
+        /// </summary>
+        public static string ConfirmCloseApplication {
+            get {
+                return ResourceManager.GetString("ConfirmCloseApplication", resourceCulture);
             }
         }
         
@@ -223,11 +502,56 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Confirm before closing a tab 的當地語系化字串。
+        /// </summary>
+        public static string ConfirmCloseTabAction {
+            get {
+                return ResourceManager.GetString("ConfirmCloseTabAction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Confirm Close 的當地語系化字串。
         /// </summary>
         public static string ConfirmCloseTitle {
             get {
                 return ResourceManager.GetString("ConfirmCloseTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Confirm before copying files 的當地語系化字串。
+        /// </summary>
+        public static string ConfirmCopy {
+            get {
+                return ResourceManager.GetString("ConfirmCopy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Confirm before overwriting files during copy 的當地語系化字串。
+        /// </summary>
+        public static string ConfirmCopyOverwrite {
+            get {
+                return ResourceManager.GetString("ConfirmCopyOverwrite", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Are you sure you want to delete the selected items from the directory? 的當地語系化字串。
+        /// </summary>
+        public static string ConfirmDelete {
+            get {
+                return ResourceManager.GetString("ConfirmDelete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Confirm before deleting files 的當地語系化字串。
+        /// </summary>
+        public static string ConfirmDeleteFile {
+            get {
+                return ResourceManager.GetString("ConfirmDeleteFile", resourceCulture);
             }
         }
         
@@ -246,6 +570,33 @@ namespace dCompare.Properties {
         public static string ConfirmExitTitle {
             get {
                 return ResourceManager.GetString("ConfirmExitTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Confirm before moving files 的當地語系化字串。
+        /// </summary>
+        public static string ConfirmMove {
+            get {
+                return ResourceManager.GetString("ConfirmMove", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Confirm before overwriting files during move 的當地語系化字串。
+        /// </summary>
+        public static string ConfirmMoveOverwrite {
+            get {
+                return ResourceManager.GetString("ConfirmMoveOverwrite", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Confirm Operation 的當地語系化字串。
+        /// </summary>
+        public static string ConfirmOperation {
+            get {
+                return ResourceManager.GetString("ConfirmOperation", resourceCulture);
             }
         }
         
@@ -286,11 +637,155 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
-        ///   查詢類似 刪除... 的當地語系化字串。
+        ///   查詢類似 Dangerous Actions 的當地語系化字串。
+        /// </summary>
+        public static string DangerousActions {
+            get {
+                return ResourceManager.GetString("DangerousActions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Dark 的當地語系化字串。
+        /// </summary>
+        public static string DarkTheme {
+            get {
+                return ResourceManager.GetString("DarkTheme", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Default 的當地語系化字串。
+        /// </summary>
+        public static string Default {
+            get {
+                return ResourceManager.GetString("Default", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Default Block Size: 的當地語系化字串。
+        /// </summary>
+        public static string DefaultBlockSize {
+            get {
+                return ResourceManager.GetString("DefaultBlockSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Default Diff Tool: 的當地語系化字串。
+        /// </summary>
+        public static string DefaultDiffTool {
+            get {
+                return ResourceManager.GetString("DefaultDiffTool", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Default Session File: 的當地語系化字串。
+        /// </summary>
+        public static string DefaultSessionFile {
+            get {
+                return ResourceManager.GetString("DefaultSessionFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Default Threshold: 的當地語系化字串。
+        /// </summary>
+        public static string DefaultThreshold {
+            get {
+                return ResourceManager.GetString("DefaultThreshold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Default to Read Only 的當地語系化字串。
+        /// </summary>
+        public static string DefaultToReadOnly {
+            get {
+                return ResourceManager.GetString("DefaultToReadOnly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Default View Tool: 的當地語系化字串。
+        /// </summary>
+        public static string DefaultViewTool {
+            get {
+                return ResourceManager.GetString("DefaultViewTool", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 _Delete... 的當地語系化字串。
         /// </summary>
         public static string DeleteMenu {
             get {
                 return ResourceManager.GetString("DeleteMenu", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 diff 的當地語系化字串。
+        /// </summary>
+        public static string Diff {
+            get {
+                return ResourceManager.GetString("Diff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Diff Arguments: 的當地語系化字串。
+        /// </summary>
+        public static string DiffArguments {
+            get {
+                return ResourceManager.GetString("DiffArguments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Double Click Action: 的當地語系化字串。
+        /// </summary>
+        public static string DoubleClickAction {
+            get {
+                return ResourceManager.GetString("DoubleClickAction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Duplicate Hotkeys 的當地語系化字串。
+        /// </summary>
+        public static string DuplicateHotkeys {
+            get {
+                return ResourceManager.GetString("DuplicateHotkeys", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 There are duplicate hotkeys. Please resolve the conflicts before saving. 的當地語系化字串。
+        /// </summary>
+        public static string DuplicateHotkeysMessage {
+            get {
+                return ResourceManager.GetString("DuplicateHotkeysMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 This hotkey is already in use. 的當地語系化字串。
+        /// </summary>
+        public static string DuplicateHotkeyTooltip {
+            get {
+                return ResourceManager.GetString("DuplicateHotkeyTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Edit 的當地語系化字串。
+        /// </summary>
+        public static string Edit {
+            get {
+                return ResourceManager.GetString("Edit", resourceCulture);
             }
         }
         
@@ -304,11 +799,119 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Enable 的當地語系化字串。
+        /// </summary>
+        public static string Enable {
+            get {
+                return ResourceManager.GetString("Enable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Enabled 的當地語系化字串。
+        /// </summary>
+        public static string Enabled {
+            get {
+                return ResourceManager.GetString("Enabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Enable logging 的當地語系化字串。
+        /// </summary>
+        public static string EnableLogging {
+            get {
+                return ResourceManager.GetString("EnableLogging", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Enable Parallel Scanning 的當地語系化字串。
+        /// </summary>
+        public static string EnableParallelScanning {
+            get {
+                return ResourceManager.GetString("EnableParallelScanning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Enable to perform file comparisons in parallel for faster processing (recommended for multi-core systems). 的當地語系化字串。
+        /// </summary>
+        public static string EnableParallelScanningHint {
+            get {
+                return ResourceManager.GetString("EnableParallelScanningHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Enable Syntax Highlighting 的當地語系化字串。
+        /// </summary>
+        public static string EnableSyntaxHighlighting {
+            get {
+                return ResourceManager.GetString("EnableSyntaxHighlighting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Enable Word Wrap 的當地語系化字串。
+        /// </summary>
+        public static string EnableWordWrap {
+            get {
+                return ResourceManager.GetString("EnableWordWrap", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 English 的當地語系化字串。
         /// </summary>
         public static string English {
             get {
                 return ResourceManager.GetString("English", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Enter new file extension (e.g., .txt): 的當地語系化字串。
+        /// </summary>
+        public static string EnterNewExtension {
+            get {
+                return ResourceManager.GetString("EnterNewExtension", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Enter the new name for the item: 的當地語系化字串。
+        /// </summary>
+        public static string EnterNewName {
+            get {
+                return ResourceManager.GetString("EnterNewName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Please enter text to find. 的當地語系化字串。
+        /// </summary>
+        public static string EnterTextToFind {
+            get {
+                return ResourceManager.GetString("EnterTextToFind", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Please enter a valid source path. 的當地語系化字串。
+        /// </summary>
+        public static string EnterValidSourcePath {
+            get {
+                return ResourceManager.GetString("EnterValidSourcePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Please enter a valid target path. 的當地語系化字串。
+        /// </summary>
+        public static string EnterValidTargetPath {
+            get {
+                return ResourceManager.GetString("EnterValidTargetPath", resourceCulture);
             }
         }
         
@@ -322,6 +925,51 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Both file paths must be set to refresh the comparison. 的當地語系化字串。
+        /// </summary>
+        public static string ErrorBothFilePaths {
+            get {
+                return ResourceManager.GetString("ErrorBothFilePaths", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Both file paths cannot be null or empty. 的當地語系化字串。
+        /// </summary>
+        public static string ErrorBothFilePathsNull {
+            get {
+                return ResourceManager.GetString("ErrorBothFilePathsNull", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Both image paths must be set to refresh the comparison. 的當地語系化字串。
+        /// </summary>
+        public static string ErrorBothImagePaths {
+            get {
+                return ResourceManager.GetString("ErrorBothImagePaths", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Cannot determine parent directory for &apos;{0}&apos;. 的當地語系化字串。
+        /// </summary>
+        public static string ErrorCannotDetermineParentDirectory {
+            get {
+                return ResourceManager.GetString("ErrorCannotDetermineParentDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Cannot load session at this time. 的當地語系化字串。
+        /// </summary>
+        public static string ErrorCannotLoadSession {
+            get {
+                return ResourceManager.GetString("ErrorCannotLoadSession", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Error closing tab: {0} 的當地語系化字串。
         /// </summary>
         public static string ErrorCloseTab {
@@ -331,11 +979,380 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Could not resolve service for type {0} for constructor of {1} 的當地語系化字串。
+        /// </summary>
+        public static string ErrorCouldNotResolveServiceForTool {
+            get {
+                return ResourceManager.GetString("ErrorCouldNotResolveServiceForTool", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Default session file &apos;{0}&apos; does not exist. Please check the configuration or select a valid session file. 的當地語系化字串。
+        /// </summary>
+        public static string ErrorDefaultSessionFileNotExist {
+            get {
+                return ResourceManager.GetString("ErrorDefaultSessionFileNotExist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Error deleting items: {0} 的當地語系化字串。
+        /// </summary>
+        public static string ErrorDeletingItems {
+            get {
+                return ResourceManager.GetString("ErrorDeletingItems", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 An error occurred during comparison: {0} 的當地語系化字串。
+        /// </summary>
+        public static string ErrorDuringComparison {
+            get {
+                return ResourceManager.GetString("ErrorDuringComparison", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 An error occurred during refresh: {0} 的當地語系化字串。
+        /// </summary>
+        public static string ErrorDuringRefresh {
+            get {
+                return ResourceManager.GetString("ErrorDuringRefresh", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Error during replace operation: {0} 的當地語系化字串。
+        /// </summary>
+        public static string ErrorDuringReplace {
+            get {
+                return ResourceManager.GetString("ErrorDuringReplace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Error executing {0}: {1} 的當地語系化字串。
+        /// </summary>
+        public static string ErrorExecutingAction {
+            get {
+                return ResourceManager.GetString("ErrorExecutingAction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Error executing refresh: {0} 的當地語系化字串。
+        /// </summary>
+        public static string ErrorExecutingRefresh {
+            get {
+                return ResourceManager.GetString("ErrorExecutingRefresh", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Error exiting application: {0} 的當地語系化字串。
+        /// </summary>
+        public static string ErrorExitingApplication {
+            get {
+                return ResourceManager.GetString("ErrorExitingApplication", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Failed to load session: {0} 的當地語系化字串。
+        /// </summary>
+        public static string ErrorFailedToLoadSession {
+            get {
+                return ResourceManager.GetString("ErrorFailedToLoadSession", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Failed to refresh comparison: {0} 的當地語系化字串。
+        /// </summary>
+        public static string ErrorFailedToRefreshComparison {
+            get {
+                return ResourceManager.GetString("ErrorFailedToRefreshComparison", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Failed to refresh images: {0} 的當地語系化字串。
+        /// </summary>
+        public static string ErrorFailedToRefreshImages {
+            get {
+                return ResourceManager.GetString("ErrorFailedToRefreshImages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 The specified file or directory does not exist. 的當地語系化字串。
+        /// </summary>
+        public static string ErrorFileOrDirectoryNotFound {
+            get {
+                return ResourceManager.GetString("ErrorFileOrDirectoryNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 New name contains invalid characters. 的當地語系化字串。
+        /// </summary>
+        public static string ErrorInvalidCharactersInNewName {
+            get {
+                return ResourceManager.GetString("ErrorInvalidCharactersInNewName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 New name cannot be null or empty. 的當地語系化字串。
+        /// </summary>
+        public static string ErrorInvalidNewName {
+            get {
+                return ResourceManager.GetString("ErrorInvalidNewName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Source path cannot be null or empty. 的當地語系化字串。
+        /// </summary>
+        public static string ErrorInvalidSourcePath {
+            get {
+                return ResourceManager.GetString("ErrorInvalidSourcePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 launching comparison tool 的當地語系化字串。
+        /// </summary>
+        public static string ErrorLaunchingTool {
+            get {
+                return ResourceManager.GetString("ErrorLaunchingTool", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Error loading configuration: {0} 的當地語系化字串。
+        /// </summary>
+        public static string ErrorLoadingConfiguration {
+            get {
+                return ResourceManager.GetString("ErrorLoadingConfiguration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Error loading session: {0} 的當地語系化字串。
+        /// </summary>
+        public static string ErrorLoadingSession {
+            get {
+                return ResourceManager.GetString("ErrorLoadingSession", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Error loading tools: {0} 的當地語系化字串。
+        /// </summary>
+        public static string ErrorLoadingTools {
+            get {
+                return ResourceManager.GetString("ErrorLoadingTools", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 {0} method not found 的當地語系化字串。
+        /// </summary>
+        public static string ErrorMethodNotFound {
+            get {
+                return ResourceManager.GetString("ErrorMethodNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 No active tab or tab does not support refresh 的當地語系化字串。
+        /// </summary>
+        public static string ErrorNoActiveTabOrNoRefreshSupport {
+            get {
+                return ResourceManager.GetString("ErrorNoActiveTabOrNoRefreshSupport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 No active tab to execute action 的當地語系化字串。
+        /// </summary>
+        public static string ErrorNoActiveTabToExecuteAction {
+            get {
+                return ResourceManager.GetString("ErrorNoActiveTabToExecuteAction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 No file path specified. 的當地語系化字串。
+        /// </summary>
+        public static string ErrorNoFilePath {
+            get {
+                return ResourceManager.GetString("ErrorNoFilePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 No suitable constructor found for tool &apos;{0}&apos;. 的當地語系化字串。
+        /// </summary>
+        public static string ErrorNoSuitableConstructorForTool {
+            get {
+                return ResourceManager.GetString("ErrorNoSuitableConstructorForTool", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Error opening about dialog: {0} 的當地語系化字串。
+        /// </summary>
+        public static string ErrorOpeningAboutDialog {
+            get {
+                return ResourceManager.GetString("ErrorOpeningAboutDialog", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 opening file 的當地語系化字串。
+        /// </summary>
+        public static string ErrorOpeningFile {
+            get {
+                return ResourceManager.GetString("ErrorOpeningFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Error opening options: {0} 的當地語系化字串。
+        /// </summary>
+        public static string ErrorOpeningOptions {
+            get {
+                return ResourceManager.GetString("ErrorOpeningOptions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Error renaming item: {0} 的當地語系化字串。
+        /// </summary>
+        public static string ErrorRenamingItem {
+            get {
+                return ResourceManager.GetString("ErrorRenamingItem", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Error renaming tab: {0} 的當地語系化字串。
+        /// </summary>
+        public static string ErrorRenamingTab {
+            get {
+                return ResourceManager.GetString("ErrorRenamingTab", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Error saving session: {0} 的當地語系化字串。
+        /// </summary>
+        public static string ErrorSavingSession {
+            get {
+                return ResourceManager.GetString("ErrorSavingSession", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Error 的當地語系化字串。
         /// </summary>
         public static string ErrorTitle {
             get {
                 return ResourceManager.GetString("ErrorTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Error {0}: {1} 的當地語系化字串。
+        /// </summary>
+        public static string ErrorTool {
+            get {
+                return ResourceManager.GetString("ErrorTool", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Tool handler is not specified in the configuration. 的當地語系化字串。
+        /// </summary>
+        public static string ErrorToolHandlerNotSpecified {
+            get {
+                return ResourceManager.GetString("ErrorToolHandlerNotSpecified", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Tool type &apos;{0}&apos; not found. Check the handler string in the configuration. 的當地語系化字串。
+        /// </summary>
+        public static string ErrorToolTypeNotFound {
+            get {
+                return ResourceManager.GetString("ErrorToolTypeNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 An unexpected error occurred while creating tool &apos;{0}&apos;. 的當地語系化字串。
+        /// </summary>
+        public static string ErrorUnexpectedErrorCreatingTool {
+            get {
+                return ResourceManager.GetString("ErrorUnexpectedErrorCreatingTool", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Unsupported file type for comparison. 的當地語系化字串。
+        /// </summary>
+        public static string ErrorUnsupportedFileType {
+            get {
+                return ResourceManager.GetString("ErrorUnsupportedFileType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Aperture 的當地語系化字串。
+        /// </summary>
+        public static string EXIFAperture {
+            get {
+                return ResourceManager.GetString("EXIFAperture", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 ISO 的當地語系化字串。
+        /// </summary>
+        public static string EXIFISO {
+            get {
+                return ResourceManager.GetString("EXIFISO", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 EXIF Settings 的當地語系化字串。
+        /// </summary>
+        public static string EXIFSettings {
+            get {
+                return ResourceManager.GetString("EXIFSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Select which EXIF data fields to display in the viewer. 的當地語系化字串。
+        /// </summary>
+        public static string EXIFSettingsDescription {
+            get {
+                return ResourceManager.GetString("EXIFSettingsDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Shutter Speed 的當地語系化字串。
+        /// </summary>
+        public static string EXIFShutterSpeed {
+            get {
+                return ResourceManager.GetString("EXIFShutterSpeed", resourceCulture);
             }
         }
         
@@ -358,11 +1375,92 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Extension already exists. 的當地語系化字串。
+        /// </summary>
+        public static string ExtensionAlreadyExists {
+            get {
+                return ResourceManager.GetString("ExtensionAlreadyExists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Extension must start with a dot (e.g., .txt). 的當地語系化字串。
+        /// </summary>
+        public static string ExtensionMustStartWithDot {
+            get {
+                return ResourceManager.GetString("ExtensionMustStartWithDot", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Extensions: 的當地語系化字串。
+        /// </summary>
+        public static string Extensions {
+            get {
+                return ResourceManager.GetString("Extensions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Failed 的當地語系化字串。
+        /// </summary>
+        public static string Failed {
+            get {
+                return ResourceManager.GetString("Failed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Failed to process archive &apos;{0}&apos;: {1} 的當地語系化字串。
+        /// </summary>
+        public static string FailedToProcessArchive {
+            get {
+                return ResourceManager.GetString("FailedToProcessArchive", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Features: 的當地語系化字串。
+        /// </summary>
+        public static string Features {
+            get {
+                return ResourceManager.GetString("Features", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 _File 的當地語系化字串。
         /// </summary>
         public static string FileMenu {
             get {
                 return ResourceManager.GetString("FileMenu", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 File Properties 的當地語系化字串。
+        /// </summary>
+        public static string FileProperties {
+            get {
+                return ResourceManager.GetString("FileProperties", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 FileTypeMapping 的當地語系化字串。
+        /// </summary>
+        public static string FileTypeMapping {
+            get {
+                return ResourceManager.GetString("FileTypeMapping", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 File Type Mapping Settings 的當地語系化字串。
+        /// </summary>
+        public static string FileTypeMappingSettings {
+            get {
+                return ResourceManager.GetString("FileTypeMappingSettings", resourceCulture);
             }
         }
         
@@ -376,11 +1474,317 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Filter settings... 的當地語系化字串。
+        /// </summary>
+        public static string FilterSettings {
+            get {
+                return ResourceManager.GetString("FilterSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Find and Replace 的當地語系化字串。
+        /// </summary>
+        public static string FindAndReplace {
+            get {
+                return ResourceManager.GetString("FindAndReplace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Find what: 的當地語系化字串。
+        /// </summary>
+        public static string FindWhat {
+            get {
+                return ResourceManager.GetString("FindWhat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Font: 的當地語系化字串。
+        /// </summary>
+        public static string Font {
+            get {
+                return ResourceManager.GetString("Font", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 ... 的當地語系化字串。
+        /// </summary>
+        public static string FurtherActions {
+            get {
+                return ResourceManager.GetString("FurtherActions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 General Confirmations 的當地語系化字串。
+        /// </summary>
+        public static string GeneralConfirmations {
+            get {
+                return ResourceManager.GetString("GeneralConfirmations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 🔽 Go to Line 的當地語系化字串。
+        /// </summary>
+        public static string GoToLine {
+            get {
+                return ResourceManager.GetString("GoToLine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Handler: 的當地語系化字串。
+        /// </summary>
+        public static string Handler {
+            get {
+                return ResourceManager.GetString("Handler", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Left Date 的當地語系化字串。
+        /// </summary>
+        public static string HeaderLeftDate {
+            get {
+                return ResourceManager.GetString("HeaderLeftDate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Left Name 的當地語系化字串。
+        /// </summary>
+        public static string HeaderLeftName {
+            get {
+                return ResourceManager.GetString("HeaderLeftName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Left Size 的當地語系化字串。
+        /// </summary>
+        public static string HeaderLeftSize {
+            get {
+                return ResourceManager.GetString("HeaderLeftSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Right Date 的當地語系化字串。
+        /// </summary>
+        public static string HeaderRightDate {
+            get {
+                return ResourceManager.GetString("HeaderRightDate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Right Name 的當地語系化字串。
+        /// </summary>
+        public static string HeaderRightName {
+            get {
+                return ResourceManager.GetString("HeaderRightName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Right Size 的當地語系化字串。
+        /// </summary>
+        public static string HeaderRightSize {
+            get {
+                return ResourceManager.GetString("HeaderRightSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Status 的當地語系化字串。
+        /// </summary>
+        public static string HeaderStatus {
+            get {
+                return ResourceManager.GetString("HeaderStatus", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 _Help 的當地語系化字串。
         /// </summary>
         public static string HelpMenu {
             get {
                 return ResourceManager.GetString("HelpMenu", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Hide Diff 的當地語系化字串。
+        /// </summary>
+        public static string HideDiff {
+            get {
+                return ResourceManager.GetString("HideDiff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Horizontal Scroll Bar: 的當地語系化字串。
+        /// </summary>
+        public static string HorizontalScrollBar {
+            get {
+                return ResourceManager.GetString("HorizontalScrollBar", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 HotKeys 的當地語系化字串。
+        /// </summary>
+        public static string HotKeys {
+            get {
+                return ResourceManager.GetString("HotKeys", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Hotkey Settings 的當地語系化字串。
+        /// </summary>
+        public static string HotkeySettings {
+            get {
+                return ResourceManager.GetString("HotkeySettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Click a box and press a key combination to set the hotkey. Use Backspace or the &apos;✖&apos; button to clear. 的當地語系化字串。
+        /// </summary>
+        public static string HotkeySettingsHint {
+            get {
+                return ResourceManager.GetString("HotkeySettingsHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Press your desired key combination (e.g., Ctrl+S). 的當地語系化字串。
+        /// </summary>
+        public static string HotkeyTooltip {
+            get {
+                return ResourceManager.GetString("HotkeyTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Click to set a hotkey 的當地語系化字串。
+        /// </summary>
+        public static string HotkeyWatermark {
+            get {
+                return ResourceManager.GetString("HotkeyWatermark", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Ignore Unchanged 的當地語系化字串。
+        /// </summary>
+        public static string IgnoreUnchanged {
+            get {
+                return ResourceManager.GetString("IgnoreUnchanged", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Image files (*.png;*.jpeg;*.jpg;*.bmp;*.gif)|*.png;*.jpeg;*.jpg;*.bmp;*.gif|All files (*.*)|*.* 的當地語系化字串。
+        /// </summary>
+        public static string ImageFiles {
+            get {
+                return ResourceManager.GetString("ImageFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Image Viewer 的當地語系化字串。
+        /// </summary>
+        public static string ImageViewer {
+            get {
+                return ResourceManager.GetString("ImageViewer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 These settings apply only to the built-in image viewer. 的當地語系化字串。
+        /// </summary>
+        public static string ImageViewerSettingsDescription {
+            get {
+                return ResourceManager.GetString("ImageViewerSettingsDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Image Viewer Settings 的當地語系化字串。
+        /// </summary>
+        public static string ImageViewerSettingsTitle {
+            get {
+                return ResourceManager.GetString("ImageViewerSettingsTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Invalid Input 的當地語系化字串。
+        /// </summary>
+        public static string InvalidInput {
+            get {
+                return ResourceManager.GetString("InvalidInput", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Invalid operation specified. 的當地語系化字串。
+        /// </summary>
+        public static string InvalidOperation {
+            get {
+                return ResourceManager.GetString("InvalidOperation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 The selected item does not have a valid path to rename. 的當地語系化字串。
+        /// </summary>
+        public static string InvalidPathToRename {
+            get {
+                return ResourceManager.GetString("InvalidPathToRename", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Invalid tool configuration. 的當地語系化字串。
+        /// </summary>
+        public static string InvalidToolConfiguration {
+            get {
+                return ResourceManager.GetString("InvalidToolConfiguration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 ISO: 的當地語系化字串。
+        /// </summary>
+        public static string ISO {
+            get {
+                return ResourceManager.GetString("ISO", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Is Side-by-Side 的當地語系化字串。
+        /// </summary>
+        public static string IsSideBySide {
+            get {
+                return ResourceManager.GetString("IsSideBySide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 JSON files (*.json)|*.json 的當地語系化字串。
+        /// </summary>
+        public static string JsonFiles {
+            get {
+                return ResourceManager.GetString("JsonFiles", resourceCulture);
             }
         }
         
@@ -394,6 +1798,33 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Left 的當地語系化字串。
+        /// </summary>
+        public static string Left {
+            get {
+                return ResourceManager.GetString("Left", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Left File:  的當地語系化字串。
+        /// </summary>
+        public static string LeftFile {
+            get {
+                return ResourceManager.GetString("LeftFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Left Image:  的當地語系化字串。
+        /// </summary>
+        public static string LeftImage {
+            get {
+                return ResourceManager.GetString("LeftImage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Left Path 的當地語系化字串。
         /// </summary>
         public static string LeftPath {
@@ -403,11 +1834,83 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
-        ///   查詢類似 _Load Session ({0}) 的當地語系化字串。
+        ///   查詢類似 Lens: 的當地語系化字串。
+        /// </summary>
+        public static string Lens {
+            get {
+                return ResourceManager.GetString("Lens", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Lens Model 的當地語系化字串。
+        /// </summary>
+        public static string LensModel {
+            get {
+                return ResourceManager.GetString("LensModel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Light 的當地語系化字串。
+        /// </summary>
+        public static string LightTheme {
+            get {
+                return ResourceManager.GetString("LightTheme", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 🔢 Line Numbers 的當地語系化字串。
+        /// </summary>
+        public static string LineNumbers {
+            get {
+                return ResourceManager.GetString("LineNumbers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Lines Context 的當地語系化字串。
+        /// </summary>
+        public static string LinesContext {
+            get {
+                return ResourceManager.GetString("LinesContext", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 _Load Session 的當地語系化字串。
         /// </summary>
         public static string LoadSessionMenu {
             get {
                 return ResourceManager.GetString("LoadSessionMenu", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Log Level: 的當地語系化字串。
+        /// </summary>
+        public static string LogLevel {
+            get {
+                return ResourceManager.GetString("LogLevel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Log Settings 的當地語系化字串。
+        /// </summary>
+        public static string LogSettings {
+            get {
+                return ResourceManager.GetString("LogSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Match case 的當地語系化字串。
+        /// </summary>
+        public static string MatchCase {
+            get {
+                return ResourceManager.GetString("MatchCase", resourceCulture);
             }
         }
         
@@ -430,11 +1933,92 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Name: 的當地語系化字串。
+        /// </summary>
+        public static string Name {
+            get {
+                return ResourceManager.GetString("Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 No default {0} tool configured for &apos;{1}&apos; files. 的當地語系化字串。
+        /// </summary>
+        public static string NoDefaultTool {
+            get {
+                return ResourceManager.GetString("NoDefaultTool", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 No valid files selected. 的當地語系化字串。
+        /// </summary>
+        public static string NoValidFilesSelected {
+            get {
+                return ResourceManager.GetString("NoValidFilesSelected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 No valid paths selected. 的當地語系化字串。
+        /// </summary>
+        public static string NoValidPathsSelected {
+            get {
+                return ResourceManager.GetString("NoValidPathsSelected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 📂 Open 的當地語系化字串。
+        /// </summary>
+        public static string Open {
+            get {
+                return ResourceManager.GetString("Open", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Open File Location 的當地語系化字串。
         /// </summary>
         public static string OpenFileLocationMenu {
             get {
                 return ResourceManager.GetString("OpenFileLocationMenu", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Open Options 的當地語系化字串。
+        /// </summary>
+        public static string OpenOptions {
+            get {
+                return ResourceManager.GetString("OpenOptions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Operation 的當地語系化字串。
+        /// </summary>
+        public static string Operation {
+            get {
+                return ResourceManager.GetString("Operation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Operation Failed 的當地語系化字串。
+        /// </summary>
+        public static string OperationFailed {
+            get {
+                return ResourceManager.GetString("OperationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 The operation failed and the view may not be fully refreshed. Details: {0} 的當地語系化字串。
+        /// </summary>
+        public static string OperationFailedDetails {
+            get {
+                return ResourceManager.GetString("OperationFailedDetails", resourceCulture);
             }
         }
         
@@ -457,6 +2041,96 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Path: 的當地語系化字串。
+        /// </summary>
+        public static string Path {
+            get {
+                return ResourceManager.GetString("Path", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Path does not exist 的當地語系化字串。
+        /// </summary>
+        public static string PathNotExist {
+            get {
+                return ResourceManager.GetString("PathNotExist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Pause 的當地語系化字串。
+        /// </summary>
+        public static string Pause {
+            get {
+                return ResourceManager.GetString("Pause", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Percent % 的當地語系化字串。
+        /// </summary>
+        public static string Percent {
+            get {
+                return ResourceManager.GetString("Percent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Please select at least one file or directory for the operation. 的當地語系化字串。
+        /// </summary>
+        public static string PleaseSelectFileOrDirectory {
+            get {
+                return ResourceManager.GetString("PleaseSelectFileOrDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Please select an item. 的當地語系化字串。
+        /// </summary>
+        public static string PleaseSelectItem {
+            get {
+                return ResourceManager.GetString("PleaseSelectItem", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Please select an item to rename. 的當地語系化字串。
+        /// </summary>
+        public static string PleaseSelectItemToRename {
+            get {
+                return ResourceManager.GetString("PleaseSelectItemToRename", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Preferred Diff Tools: 的當地語系化字串。
+        /// </summary>
+        public static string PreferredDiffTools {
+            get {
+                return ResourceManager.GetString("PreferredDiffTools", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Preferred View Tools: 的當地語系化字串。
+        /// </summary>
+        public static string PreferredViewTools {
+            get {
+                return ResourceManager.GetString("PreferredViewTools", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Progress 的當地語系化字串。
+        /// </summary>
+        public static string Progress {
+            get {
+                return ResourceManager.GetString("Progress", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Properties 的當地語系化字串。
         /// </summary>
         public static string PropertiesMenu {
@@ -466,11 +2140,155 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 File 的當地語系化字串。
+        /// </summary>
+        public static string PropertyFile {
+            get {
+                return ResourceManager.GetString("PropertyFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Folder 的當地語系化字串。
+        /// </summary>
+        public static string PropertyFolder {
+            get {
+                return ResourceManager.GetString("PropertyFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Full Path 的當地語系化字串。
+        /// </summary>
+        public static string PropertyFullPath {
+            get {
+                return ResourceManager.GetString("PropertyFullPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Left 的當地語系化字串。
+        /// </summary>
+        public static string PropertyLeft {
+            get {
+                return ResourceManager.GetString("PropertyLeft", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Modified Time 的當地語系化字串。
+        /// </summary>
+        public static string PropertyModifiedTime {
+            get {
+                return ResourceManager.GetString("PropertyModifiedTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Name 的當地語系化字串。
+        /// </summary>
+        public static string PropertyName {
+            get {
+                return ResourceManager.GetString("PropertyName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Relative Path 的當地語系化字串。
+        /// </summary>
+        public static string PropertyRelativePath {
+            get {
+                return ResourceManager.GetString("PropertyRelativePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Right 的當地語系化字串。
+        /// </summary>
+        public static string PropertyRight {
+            get {
+                return ResourceManager.GetString("PropertyRight", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Size 的當地語系化字串。
+        /// </summary>
+        public static string PropertySize {
+            get {
+                return ResourceManager.GetString("PropertySize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Status 的當地語系化字串。
+        /// </summary>
+        public static string PropertyStatus {
+            get {
+                return ResourceManager.GetString("PropertyStatus", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Type 的當地語系化字串。
+        /// </summary>
+        public static string PropertyType {
+            get {
+                return ResourceManager.GetString("PropertyType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Queued 的當地語系化字串。
+        /// </summary>
+        public static string Queued {
+            get {
+                return ResourceManager.GetString("Queued", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 _Recent Sessions... 的當地語系化字串。
         /// </summary>
         public static string RecentSessionsMenu {
             get {
                 return ResourceManager.GetString("RecentSessionsMenu", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 ↻ Redo 的當地語系化字串。
+        /// </summary>
+        public static string Redo {
+            get {
+                return ResourceManager.GetString("Redo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Refresh was canceled. 的當地語系化字串。
+        /// </summary>
+        public static string RefreshCanceled {
+            get {
+                return ResourceManager.GetString("RefreshCanceled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Remove 的當地語系化字串。
+        /// </summary>
+        public static string Remove {
+            get {
+                return ResourceManager.GetString("Remove", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Rename 的當地語系化字串。
+        /// </summary>
+        public static string Rename {
+            get {
+                return ResourceManager.GetString("Rename", resourceCulture);
             }
         }
         
@@ -520,11 +2338,119 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 🔄 Replace 的當地語系化字串。
+        /// </summary>
+        public static string Replace {
+            get {
+                return ResourceManager.GetString("Replace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Replace All 的當地語系化字串。
+        /// </summary>
+        public static string ReplaceAll {
+            get {
+                return ResourceManager.GetString("ReplaceAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Replace Error 的當地語系化字串。
+        /// </summary>
+        public static string ReplaceError {
+            get {
+                return ResourceManager.GetString("ReplaceError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Replace first occurrence only 的當地語系化字串。
+        /// </summary>
+        public static string ReplaceFirst {
+            get {
+                return ResourceManager.GetString("ReplaceFirst", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Replace in selection only 的當地語系化字串。
+        /// </summary>
+        public static string ReplaceInSelection {
+            get {
+                return ResourceManager.GetString("ReplaceInSelection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Replace with: 的當地語系化字串。
+        /// </summary>
+        public static string ReplaceWith {
+            get {
+                return ResourceManager.GetString("ReplaceWith", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Reset to Default 的當地語系化字串。
+        /// </summary>
+        public static string ResetToDefault {
+            get {
+                return ResourceManager.GetString("ResetToDefault", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Changes will take effect after restarting the application. 的當地語系化字串。
         /// </summary>
         public static string RestartRequiredHint {
             get {
                 return ResourceManager.GetString("RestartRequiredHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Retention (days): 的當地語系化字串。
+        /// </summary>
+        public static string RetentionDays {
+            get {
+                return ResourceManager.GetString("RetentionDays", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Retry 的當地語系化字串。
+        /// </summary>
+        public static string Retry {
+            get {
+                return ResourceManager.GetString("Retry", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Right 的當地語系化字串。
+        /// </summary>
+        public static string Right {
+            get {
+                return ResourceManager.GetString("Right", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Right File:  的當地語系化字串。
+        /// </summary>
+        public static string RightFile {
+            get {
+                return ResourceManager.GetString("RightFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Right Image:  的當地語系化字串。
+        /// </summary>
+        public static string RightImage {
+            get {
+                return ResourceManager.GetString("RightImage", resourceCulture);
             }
         }
         
@@ -538,11 +2464,191 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
-        ///   查詢類似 _Save Session ({0}) 的當地語系化字串。
+        ///   查詢類似 Same as original (*{0})|*{0}|All files (*.*)|*.* 的當地語系化字串。
+        /// </summary>
+        public static string SameAsOriginal {
+            get {
+                return ResourceManager.GetString("SameAsOriginal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 💾 Save 的當地語系化字串。
+        /// </summary>
+        public static string Save {
+            get {
+                return ResourceManager.GetString("Save", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Saved to {0} 的當地語系化字串。
+        /// </summary>
+        public static string SavedTo {
+            get {
+                return ResourceManager.GetString("SavedTo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 _Save Session 的當地語系化字串。
         /// </summary>
         public static string SaveSessionMenu {
             get {
                 return ResourceManager.GetString("SaveSessionMenu", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Scan Method: 的當地語系化字串。
+        /// </summary>
+        public static string ScanMethod {
+            get {
+                return ResourceManager.GetString("ScanMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Choose &apos;General&apos; for standard file system scanning or &apos;MFT&apos; for faster scanning using the Master File Table (Windows NTFS only). 的當地語系化字串。
+        /// </summary>
+        public static string ScanMethodHint {
+            get {
+                return ResourceManager.GetString("ScanMethodHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Scan Options 的當地語系化字串。
+        /// </summary>
+        public static string ScanOptions {
+            get {
+                return ResourceManager.GetString("ScanOptions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 🔍 Search 的當地語系化字串。
+        /// </summary>
+        public static string Search {
+            get {
+                return ResourceManager.GetString("Search", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Search... 的當地語系化字串。
+        /// </summary>
+        public static string SearchWatermark {
+            get {
+                return ResourceManager.GetString("SearchWatermark", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Select Default Session File 的當地語系化字串。
+        /// </summary>
+        public static string SelectDefaultSessionFile {
+            get {
+                return ResourceManager.GetString("SelectDefaultSessionFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Select Folder or Archive File 的當地語系化字串。
+        /// </summary>
+        public static string SelectFolderOrArchiveTitle {
+            get {
+                return ResourceManager.GetString("SelectFolderOrArchiveTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Select Font... 的當地語系化字串。
+        /// </summary>
+        public static string SelectFont {
+            get {
+                return ResourceManager.GetString("SelectFont", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Selection Required 的當地語系化字串。
+        /// </summary>
+        public static string SelectionRequired {
+            get {
+                return ResourceManager.GetString("SelectionRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Session 的當地語系化字串。
+        /// </summary>
+        public static string Session {
+            get {
+                return ResourceManager.GetString("Session", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Session file not found: {0} 的當地語系化字串。
+        /// </summary>
+        public static string SessionFileNotFound {
+            get {
+                return ResourceManager.GetString("SessionFileNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Session Files (*.session)|*.session|All Files (*.*)|*.* 的當地語系化字串。
+        /// </summary>
+        public static string SessionFilesFilter {
+            get {
+                return ResourceManager.GetString("SessionFilesFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Session loaded from {0} 的當地語系化字串。
+        /// </summary>
+        public static string SessionLoaded {
+            get {
+                return ResourceManager.GetString("SessionLoaded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Session saved to {0} 的當地語系化字串。
+        /// </summary>
+        public static string SessionSaved {
+            get {
+                return ResourceManager.GetString("SessionSaved", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Session Settings 的當地語系化字串。
+        /// </summary>
+        public static string SessionSettings {
+            get {
+                return ResourceManager.GetString("SessionSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Settings 的當地語系化字串。
+        /// </summary>
+        public static string Settings {
+            get {
+                return ResourceManager.GetString("Settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Settings saved successfully! 的當地語系化字串。
+        /// </summary>
+        public static string SettingsSaved {
+            get {
+                return ResourceManager.GetString("SettingsSaved", resourceCulture);
             }
         }
         
@@ -556,11 +2662,47 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Show Diff 的當地語系化字串。
+        /// </summary>
+        public static string ShowDiff {
+            get {
+                return ResourceManager.GetString("ShowDiff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Show differences by default when comparing two images 的當地語系化字串。
+        /// </summary>
+        public static string ShowDiffByDefault {
+            get {
+                return ResourceManager.GetString("ShowDiffByDefault", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Images must have the same dimensions to use the diff feature. 的當地語系化字串。
+        /// </summary>
+        public static string ShowDiffDisabledTooltip {
+            get {
+                return ResourceManager.GetString("ShowDiffDisabledTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Show Different Items 的當地語系化字串。
         /// </summary>
         public static string ShowDifferentMenu {
             get {
                 return ResourceManager.GetString("ShowDifferentMenu", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Show EXIF 的當地語系化字串。
+        /// </summary>
+        public static string ShowExifData {
+            get {
+                return ResourceManager.GetString("ShowExifData", resourceCulture);
             }
         }
         
@@ -583,11 +2725,92 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Show Line Numbers 的當地語系化字串。
+        /// </summary>
+        public static string ShowLineNumbers {
+            get {
+                return ResourceManager.GetString("ShowLineNumbers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Show Right Unique Items 的當地語系化字串。
         /// </summary>
         public static string ShowRightUniqueMenu {
             get {
                 return ResourceManager.GetString("ShowRightUniqueMenu", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Show Status Bar 的當地語系化字串。
+        /// </summary>
+        public static string ShowStatusBar {
+            get {
+                return ResourceManager.GetString("ShowStatusBar", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Shutter Speed: 的當地語系化字串。
+        /// </summary>
+        public static string ShutterSpeed {
+            get {
+                return ResourceManager.GetString("ShutterSpeed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Source 的當地語系化字串。
+        /// </summary>
+        public static string Source {
+            get {
+                return ResourceManager.GetString("Source", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Speed 的當地語系化字串。
+        /// </summary>
+        public static string Speed {
+            get {
+                return ResourceManager.GetString("Speed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Start 的當地語系化字串。
+        /// </summary>
+        public static string Start {
+            get {
+                return ResourceManager.GetString("Start", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 About dialog opened 的當地語系化字串。
+        /// </summary>
+        public static string StatusAboutDialogOpened {
+            get {
+                return ResourceManager.GetString("StatusAboutDialogOpened", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 {0} executed 的當地語系化字串。
+        /// </summary>
+        public static string StatusActionExecuted {
+            get {
+                return ResourceManager.GetString("StatusActionExecuted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Added new tab: {0} 的當地語系化字串。
+        /// </summary>
+        public static string StatusAddedNewTab {
+            get {
+                return ResourceManager.GetString("StatusAddedNewTab", resourceCulture);
             }
         }
         
@@ -612,9 +2835,36 @@ namespace dCompare.Properties {
         /// <summary>
         ///   查詢類似 Closed tab: {0} 的當地語系化字串。
         /// </summary>
+        public static string StatusClosedTab {
+            get {
+                return ResourceManager.GetString("StatusClosedTab", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Closed tab: {0} 的當地語系化字串。
+        /// </summary>
         public static string StatusCloseTab {
             get {
                 return ResourceManager.GetString("StatusCloseTab", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Comparison refreshed 的當地語系化字串。
+        /// </summary>
+        public static string StatusComparisonRefreshed {
+            get {
+                return ResourceManager.GetString("StatusComparisonRefreshed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Conflict 的當地語系化字串。
+        /// </summary>
+        public static string StatusConflict {
+            get {
+                return ResourceManager.GetString("StatusConflict", resourceCulture);
             }
         }
         
@@ -628,11 +2878,101 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Drag operation failed: {0} 的當地語系化字串。
+        /// </summary>
+        public static string StatusDragOperationFailed {
+            get {
+                return ResourceManager.GetString("StatusDragOperationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Drop operation failed: {0} 的當地語系化字串。
         /// </summary>
         public static string StatusDropFailed {
             get {
                 return ResourceManager.GetString("StatusDropFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Drop operation failed: {0} 的當地語系化字串。
+        /// </summary>
+        public static string StatusDropOperationFailed {
+            get {
+                return ResourceManager.GetString("StatusDropOperationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Failed to apply hotkeys: {0} 的當地語系化字串。
+        /// </summary>
+        public static string StatusFailedToApplyHotkeys {
+            get {
+                return ResourceManager.GetString("StatusFailedToApplyHotkeys", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Failed to remove tab session: {0} 的當地語系化字串。
+        /// </summary>
+        public static string StatusFailedToRemoveTabSession {
+            get {
+                return ResourceManager.GetString("StatusFailedToRemoveTabSession", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Identical 的當地語系化字串。
+        /// </summary>
+        public static string StatusIdentical {
+            get {
+                return ResourceManager.GetString("StatusIdentical", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Invalid hotkey format: {0} 的當地語系化字串。
+        /// </summary>
+        public static string StatusInvalidHotkeyFormat {
+            get {
+                return ResourceManager.GetString("StatusInvalidHotkeyFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Left only 的當地語系化字串。
+        /// </summary>
+        public static string StatusLeftOnly {
+            get {
+                return ResourceManager.GetString("StatusLeftOnly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Loaded session: {0} (AutoCompare: {1}) 的當地語系化字串。
+        /// </summary>
+        public static string StatusLoadedSession {
+            get {
+                return ResourceManager.GetString("StatusLoadedSession", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Modified 的當地語系化字串。
+        /// </summary>
+        public static string StatusModified {
+            get {
+                return ResourceManager.GetString("StatusModified", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Moved tab &apos;{0}&apos; to position {1} 的當地語系化字串。
+        /// </summary>
+        public static string StatusMovedTab {
+            get {
+                return ResourceManager.GetString("StatusMovedTab", resourceCulture);
             }
         }
         
@@ -655,11 +2995,29 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Options window opened 的當地語系化字串。
+        /// </summary>
+        public static string StatusOptionsWindowOpened {
+            get {
+                return ResourceManager.GetString("StatusOptionsWindowOpened", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Ready 的當地語系化字串。
         /// </summary>
         public static string StatusReady {
             get {
                 return ResourceManager.GetString("StatusReady", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Renamed tab to: {0} 的當地語系化字串。
+        /// </summary>
+        public static string StatusRenamedTab {
+            get {
+                return ResourceManager.GetString("StatusRenamedTab", resourceCulture);
             }
         }
         
@@ -673,11 +3031,119 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Right only 的當地語系化字串。
+        /// </summary>
+        public static string StatusRightOnly {
+            get {
+                return ResourceManager.GetString("StatusRightOnly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Selected tab: {0} 的當地語系化字串。
+        /// </summary>
+        public static string StatusSelectedTab {
+            get {
+                return ResourceManager.GetString("StatusSelectedTab", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Unknown 的當地語系化字串。
+        /// </summary>
+        public static string StatusUnknown {
+            get {
+                return ResourceManager.GetString("StatusUnknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Success 的當地語系化字串。
+        /// </summary>
+        public static string Success {
+            get {
+                return ResourceManager.GetString("Success", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Successful 的當地語系化字串。
+        /// </summary>
+        public static string Successful {
+            get {
+                return ResourceManager.GetString("Successful", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Supported Extensions: 的當地語系化字串。
+        /// </summary>
+        public static string SupportedExtensions {
+            get {
+                return ResourceManager.GetString("SupportedExtensions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Supported Operations: 的當地語系化字串。
+        /// </summary>
+        public static string SupportedOperations {
+            get {
+                return ResourceManager.GetString("SupportedOperations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Switch Mode 的當地語系化字串。
+        /// </summary>
+        public static string SwitchMode {
+            get {
+                return ResourceManager.GetString("SwitchMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Tabs: {0} 的當地語系化字串。
         /// </summary>
         public static string TabCount {
             get {
                 return ResourceManager.GetString("TabCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Target 的當地語系化字串。
+        /// </summary>
+        public static string Target {
+            get {
+                return ResourceManager.GetString("Target", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Test window 的當地語系化字串。
+        /// </summary>
+        public static string TestWindow {
+            get {
+                return ResourceManager.GetString("TestWindow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 TextViewer 的當地語系化字串。
+        /// </summary>
+        public static string TextViewer {
+            get {
+                return ResourceManager.GetString("TextViewer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Text Viewer Settings 的當地語系化字串。
+        /// </summary>
+        public static string TextViewerSettings {
+            get {
+                return ResourceManager.GetString("TextViewerSettings", resourceCulture);
             }
         }
         
@@ -691,6 +3157,43 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Threshold: 的當地語系化字串。
+        /// </summary>
+        public static string Threshold {
+            get {
+                return ResourceManager.GetString("Threshold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Tools 的當地語系化字串。
+        /// </summary>
+        public static string Tools {
+            get {
+                return ResourceManager.GetString("Tools", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Tools Settings 的當地語系化字串。
+        /// </summary>
+        public static string ToolsSettings {
+            get {
+                return ResourceManager.GetString("ToolsSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Left: {0}
+        ///Right: {1} 的當地語系化字串。
+        /// </summary>
+        public static string TooltipFullPaths {
+            get {
+                return ResourceManager.GetString("TooltipFullPaths", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Traditional Chinese 的當地語系化字串。
         /// </summary>
         public static string TraditionalChinese {
@@ -700,11 +3203,92 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Type: 的當地語系化字串。
+        /// </summary>
+        public static string Type {
+            get {
+                return ResourceManager.GetString("Type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 UI 的當地語系化字串。
+        /// </summary>
+        public static string UI {
+            get {
+                return ResourceManager.GetString("UI", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 UI Settings 的當地語系化字串。
         /// </summary>
         public static string UISettings {
             get {
                 return ResourceManager.GetString("UISettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 ↺ Undo 的當地語系化字串。
+        /// </summary>
+        public static string Undo {
+            get {
+                return ResourceManager.GetString("Undo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 The file &apos;{0}&apos; is not a supported archive format ({1}). 的當地語系化字串。
+        /// </summary>
+        public static string UnsupportedArchiveFormat {
+            get {
+                return ResourceManager.GetString("UnsupportedArchiveFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Untitled 的當地語系化字串。
+        /// </summary>
+        public static string Untitled {
+            get {
+                return ResourceManager.GetString("Untitled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 User Interaction 的當地語系化字串。
+        /// </summary>
+        public static string UserInteraction {
+            get {
+                return ResourceManager.GetString("UserInteraction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Vertical Scroll Bar: 的當地語系化字串。
+        /// </summary>
+        public static string VerticalScrollBar {
+            get {
+                return ResourceManager.GetString("VerticalScrollBar", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 View 的當地語系化字串。
+        /// </summary>
+        public static string View {
+            get {
+                return ResourceManager.GetString("View", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 View Arguments: 的當地語系化字串。
+        /// </summary>
+        public static string ViewArguments {
+            get {
+                return ResourceManager.GetString("ViewArguments", resourceCulture);
             }
         }
         
@@ -727,6 +3311,15 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 View: {0} 的當地語系化字串。
+        /// </summary>
+        public static string ViewTabHeader {
+            get {
+                return ResourceManager.GetString("ViewTabHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 View with 的當地語系化字串。
         /// </summary>
         public static string ViewWith {
@@ -736,11 +3329,47 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
-        ///   查詢類似 WinMerge 的當地語系化字串。
+        ///   查詢類似 Warning 的當地語系化字串。
         /// </summary>
-        public static string WinMerge {
+        public static string Warning {
             get {
-                return ResourceManager.GetString("WinMerge", resourceCulture);
+                return ResourceManager.GetString("Warning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Welcome 的當地語系化字串。
+        /// </summary>
+        public static string Welcome {
+            get {
+                return ResourceManager.GetString("Welcome", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Words: {0:N0} 的當地語系化字串。
+        /// </summary>
+        public static string Words {
+            get {
+                return ResourceManager.GetString("Words", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 🔎 Zoom In 的當地語系化字串。
+        /// </summary>
+        public static string ZoomIn {
+            get {
+                return ResourceManager.GetString("ZoomIn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 🔍 Zoom Out 的當地語系化字串。
+        /// </summary>
+        public static string ZoomOut {
+            get {
+                return ResourceManager.GetString("ZoomOut", resourceCulture);
             }
         }
     }

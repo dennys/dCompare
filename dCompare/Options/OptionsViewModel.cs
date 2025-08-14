@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using dCompare.Common;
 using dCompare.Configuration;
 using Microsoft.VisualBasic;
 using Microsoft.Win32;
@@ -10,7 +11,7 @@ namespace dCompare.Options
 {
     public partial class SettingsViewModel : ObservableObject
     {
-        private readonly ConfigurationService _configService;
+        private readonly IConfigurationService _configService;
         private AppConfiguration _appConfig;
 
         [ObservableProperty]
@@ -21,7 +22,7 @@ namespace dCompare.Options
 
         public ObservableCollection<SettingsMenuItem> MenuItems { get; } = new();
 
-        public SettingsViewModel(ConfigurationService configService)
+        public SettingsViewModel(IConfigurationService configService)
         {
             _configService = configService;
             LoadConfigurationAsync();
@@ -51,7 +52,7 @@ namespace dCompare.Options
                 hotkeysVm.ValidateHotKeys();
                 if (hotkeysVm.HasDuplicateHotKeys())
                 {
-                    MessageBox.Show("There are duplicate hotkeys. Please resolve the conflicts before saving.", "Duplicate Hotkeys", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show(Properties.Resources.DuplicateHotkeysMessage, Properties.Resources.DuplicateHotkeys, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
             }
@@ -65,7 +66,7 @@ namespace dCompare.Options
             }
 
             await _configService.SaveConfigurationAsync(_appConfig);
-            MessageBox.Show("Settings saved successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(Properties.Resources.SettingsSaved, Properties.Resources.Success, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void BuildMenu()
@@ -73,19 +74,21 @@ namespace dCompare.Options
             MenuItems.Clear();
             var optionsNode = new SettingsMenuItem(Properties.Resources.OptionsMenu, null, this);
 
-            var uiNode = new SettingsMenuItem("UI", new UIOptionsViewModel(_appConfig.Options.UI), this);
-            var compareNode = new SettingsMenuItem("Compare", new CompareOptionsViewModel(_appConfig.Options.Compare), this);
+            var uiNode = new SettingsMenuItem(Properties.Resources.UI, new UIOptionsViewModel(_appConfig.Options.UI), this);
+            var compareNode = new SettingsMenuItem(Properties.Resources.Compare, new CompareOptionsViewModel(_appConfig.Options.Compare), this);
 
-            var sessionNode = new SettingsMenuItem("Session", new SessionOptionsViewModel(_appConfig.Options.Session), this);
-            var confirmationNode = new SettingsMenuItem("Confirmation", new ConfirmationOptionsViewModel(_appConfig.Options.Confirmation), this);
-            var hotkeysNode = new SettingsMenuItem("HotKeys", new HotKeysOptionsViewModel(_appConfig.Options.HotKeys), this);
-            var textViewerNode = new SettingsMenuItem("TextViewer", new TextViewerOptionsViewModel(_appConfig.Options.TextViewer), this);
-            var toolsNode = new SettingsMenuItem("Tools", new ToolsOptionsViewModel(_appConfig), this);
-            var fileTypeMappingNode = new SettingsMenuItem("FileTypeMapping", new FileTypeMappingOptionsViewModel(_appConfig), this);
+            var sessionNode = new SettingsMenuItem(Properties.Resources.Session, new SessionOptionsViewModel(_appConfig.Options.Session), this);
+            var confirmationNode = new SettingsMenuItem(Properties.Resources.Confirmation, new ConfirmationOptionsViewModel(_appConfig.Options.Confirmation), this);
+            var hotkeysNode = new SettingsMenuItem(Properties.Resources.HotKeys, new HotKeysOptionsViewModel(_appConfig.Options.HotKeys), this);
+            var textViewerNode = new SettingsMenuItem(Properties.Resources.TextViewer, new TextViewerOptionsViewModel(_appConfig.Options.TextViewer), this);
+            var imageViewerNode = new SettingsMenuItem(Properties.Resources.ImageViewer, new ImageViewerOptionsViewModel(_appConfig.Options.ImageViewer), this);
+            var toolsNode = new SettingsMenuItem(Properties.Resources.Tools, new ToolsOptionsViewModel(_appConfig), this);
+            var fileTypeMappingNode = new SettingsMenuItem(Properties.Resources.FileTypeMapping, new FileTypeMappingOptionsViewModel(_appConfig), this);
 
             optionsNode.Children.Add(uiNode);
             optionsNode.Children.Add(compareNode);
             optionsNode.Children.Add(textViewerNode);
+            optionsNode.Children.Add(imageViewerNode);
             optionsNode.Children.Add(toolsNode);
             optionsNode.Children.Add(fileTypeMappingNode);
             optionsNode.Children.Add(confirmationNode);
@@ -187,12 +190,16 @@ namespace dCompare.Options
         public virtual bool IsValid => true;
         public UIOptionsViewModel(UIOptions model) { _model = model; }
         public UIOptionsViewModel() : this(new UIOptions()) { }
-        public static List<string> AvailableThemes => ["Light", "Dark"];
+        public static List<KeyValuePair<string, string>> AvailableThemes =>
+        [
+            new KeyValuePair<string, string>(Properties.Resources.LightTheme, "Light"),
+            new KeyValuePair<string, string>(Properties.Resources.DarkTheme, "Dark")
+        ];
         public static List<KeyValuePair<string, string>> AvailableLanguages =>
         [
-            new KeyValuePair<string, string>("English", "en"),
-            new KeyValuePair<string, string>("繁體中文", "zh_TW"),
-            new KeyValuePair<string, string>("简体中文", "zh_CN")
+            new KeyValuePair<string, string>(Properties.Resources.English, "en"),
+            new KeyValuePair<string, string>("繁體中文", "zh-TW"),
+            new KeyValuePair<string, string>("简体中文", "zh-CN")
         ];
 
         public string Theme { get => _model.Theme; set { _model.Theme = value; OnPropertyChanged(); } }
@@ -407,7 +414,7 @@ namespace dCompare.Options
         [RelayCommand]
         private void AddExtension()
         {
-            string newExt = Interaction.InputBox("Enter new file extension (e.g., .txt):", "Add Extension", "");
+            string newExt = Interaction.InputBox(Properties.Resources.EnterNewExtension, Properties.Resources.AddExtension, "");
             if (string.IsNullOrWhiteSpace(newExt))
             {
                 return;
@@ -415,13 +422,13 @@ namespace dCompare.Options
 
             if (!newExt.StartsWith('.'))
             {
-                MessageBox.Show("Extension must start with a dot (e.g., .txt).", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Properties.Resources.ExtensionMustStartWithDot, Properties.Resources.InvalidInput, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (Extensions.Contains(newExt, StringComparer.OrdinalIgnoreCase))
             {
-                MessageBox.Show("Extension already exists.", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Properties.Resources.ExtensionAlreadyExists, Properties.Resources.InvalidInput, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -485,8 +492,8 @@ namespace dCompare.Options
         {
             var openFileDialog = new OpenFileDialog
             {
-                Filter = "Session Files (*.session)|*.session|All Files (*.*)|*.*",
-                Title = "Select Default Session File"
+                Filter = Properties.Resources.SessionFilesFilter,
+                Title = Properties.Resources.SelectDefaultSessionFile
             };
 
             if (openFileDialog.ShowDialog() == true)
@@ -532,22 +539,22 @@ namespace dCompare.Options
         public HotKeysOptionsViewModel(HotKeysOptions model)
         {
             _model = model;
-            HotKeyItems.Add(new HotKeyItemViewModel("Add Tab", _model.AddTab, this));
-            HotKeyItems.Add(new HotKeyItemViewModel("Close Tab", _model.CloseTab, this));
-            HotKeyItems.Add(new HotKeyItemViewModel("Compare", _model.Compare, this));
-            HotKeyItems.Add(new HotKeyItemViewModel("Save Session", _model.SaveSession, this));
-            HotKeyItems.Add(new HotKeyItemViewModel("Load Session", _model.LoadSession, this));
-            HotKeyItems.Add(new HotKeyItemViewModel("Open Options", _model.OpenOptions, this));
+            HotKeyItems.Add(new HotKeyItemViewModel(Properties.Resources.AddTab, _model.AddTab, this));
+            HotKeyItems.Add(new HotKeyItemViewModel(Properties.Resources.CloseTab, _model.CloseTab, this));
+            HotKeyItems.Add(new HotKeyItemViewModel(Properties.Resources.Compare, _model.Compare, this));
+            HotKeyItems.Add(new HotKeyItemViewModel(Properties.Resources.SaveSessionMenu, _model.SaveSession, this));
+            HotKeyItems.Add(new HotKeyItemViewModel(Properties.Resources.LoadSessionMenu, _model.LoadSession, this));
+            HotKeyItems.Add(new HotKeyItemViewModel(Properties.Resources.OpenOptions, _model.OpenOptions, this));
         }
 
         public void UpdateModel()
         {
-            _model.AddTab = HotKeyItems.FirstOrDefault(i => i.Name == "Add Tab")?.Combination ?? _model.AddTab;
-            _model.CloseTab = HotKeyItems.FirstOrDefault(i => i.Name == "Close Tab")?.Combination ?? _model.CloseTab;
-            _model.Compare = HotKeyItems.FirstOrDefault(i => i.Name == "Compare")?.Combination ?? _model.Compare;
-            _model.SaveSession = HotKeyItems.FirstOrDefault(i => i.Name == "Save Session")?.Combination ?? _model.SaveSession;
-            _model.LoadSession = HotKeyItems.FirstOrDefault(i => i.Name == "Load Session")?.Combination ?? _model.LoadSession;
-            _model.OpenOptions = HotKeyItems.FirstOrDefault(i => i.Name == "Open Options")?.Combination ?? _model.OpenOptions;
+            _model.AddTab = HotKeyItems.FirstOrDefault(i => i.Name == Properties.Resources.AddTab)?.Combination ?? _model.AddTab;
+            _model.CloseTab = HotKeyItems.FirstOrDefault(i => i.Name == Properties.Resources.CloseTab)?.Combination ?? _model.CloseTab;
+            _model.Compare = HotKeyItems.FirstOrDefault(i => i.Name == Properties.Resources.Compare)?.Combination ?? _model.Compare;
+            _model.SaveSession = HotKeyItems.FirstOrDefault(i => i.Name == Properties.Resources.SaveSessionMenu)?.Combination ?? _model.SaveSession;
+            _model.LoadSession = HotKeyItems.FirstOrDefault(i => i.Name == Properties.Resources.LoadSessionMenu)?.Combination ?? _model.LoadSession;
+            _model.OpenOptions = HotKeyItems.FirstOrDefault(i => i.Name == Properties.Resources.OpenOptions)?.Combination ?? _model.OpenOptions;
         }
 
         public void ValidateHotKeys()

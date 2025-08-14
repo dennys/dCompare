@@ -1,4 +1,5 @@
-﻿using dCompare.Compare.Models;
+﻿using dCompare.Common;
+using dCompare.Compare.Models;
 using dCompare.DirTreeSystem.Models;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -102,7 +103,7 @@ namespace dCompare.Compare
 
         private bool MatchesSearch(TreeNode node)
         {
-            if (string.IsNullOrEmpty(_searchFilterText) || _searchFilterText == "Search...")
+            if (string.IsNullOrEmpty(_searchFilterText) || _searchFilterText == Properties.Resources.SearchWatermark)
             {
                 return true;
             }
@@ -205,7 +206,7 @@ namespace dCompare.Compare
             {
                 node.LeftName = item.Left.Name;
                 node.LeftSize = FileSystemNode.FormatSize(item.Left.Size);
-                node.LeftDate = item.Left.ModifiedTime.ToString("yyyy/MM/dd HH:mm");
+                node.LeftDate = item.Left.ModifiedTime.ToString(Constant.FileDateTimeFormat);
             }
             else
             {
@@ -218,7 +219,7 @@ namespace dCompare.Compare
             {
                 node.RightName = item.Right.Name;
                 node.RightSize = FileSystemNode.FormatSize(item.Right.Size);
-                node.RightDate = item.Right.ModifiedTime.ToString("yyyy/MM/dd HH:mm");
+                node.RightDate = item.Right.ModifiedTime.ToString(Constant.FileDateTimeFormat);
             }
             else
             {

@@ -77,10 +77,10 @@ namespace dCompare.FileOperation
                     var transfer = new FileTransfer
                     {
                         JobId = jobId,
-                        Operation = "Delete",
+                        Operation = FileOperationTypes.Delete,
                         Source = item.Path,
                         Target = string.Empty,
-                        Status = "Queued",
+                        Status = FileOperationStatus.Queued,
                         FileSize = 0,
                         SourceType = item.Type,
                         StartTime = DateTime.Now
@@ -95,7 +95,7 @@ namespace dCompare.FileOperation
                             var progress = new Progress<OperationProgress>(p =>
                             {
                                 transfer.Progress = p.Percentage / 100.0;
-                                transfer.Status = $"Deleting ({p.Percentage:P0})";
+                                transfer.Status = FileOperationStatus.Transferring;
                             });
 
                             OperationResult result = await _fileManager.DeleteAsync(item.Path, progress);
@@ -121,16 +121,16 @@ namespace dCompare.FileOperation
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error deleting items: {ex.Message}");
+                throw new Exception(string.Format(Properties.Resources.ErrorDeletingItems, ex.Message));
             }
         }
 
         // Common method to handle copy or move operations
-        private async Task ExecuteTransferAsync(List<(string Source, string TargetPath, SourceType Type)> items, string operation, string errorMessage)
+        private async Task ExecuteTransferAsync(List<(string Source, string TargetPath, SourceType Type)> items, FileOperationTypes operation, string errorMessage)
         {
             if (items.Count == 0)
             {
-                MessageBox.Show($"請選擇至少一個文件或目錄進行{operation.ToLower()}");
+                MessageBox.Show(string.Format(Properties.Resources.PleaseSelectFileOrDirectory, operation.ToString().ToLower()));
                 return;
             }
 
@@ -152,7 +152,7 @@ namespace dCompare.FileOperation
                         Operation = operation,
                         Source = item.Source,
                         Target = item.TargetPath,
-                        Status = "Queued",
+                        Status = FileOperationStatus.Queued,
                         FileSize = Directory.Exists(item.Source) ? 0 : new FileInfo(item.Source).Length,
                         SourceType = item.Type,
                         StartTime = DateTime.Now
@@ -167,14 +167,14 @@ namespace dCompare.FileOperation
                             var progress = new Progress<OperationProgress>(p =>
                             {
                                 transfer.Progress = p.Percentage / 100.0;
-                                transfer.Status = $"Transferring";
+                                transfer.Status = FileOperationStatus.Transferring;
                                 if (p.Percentage > 0)
                                 {
                                     transfer.TransferSpeed = (transfer.FileSize * (p.Percentage / 100.0) / 1024.0) / (DateTime.Now - transfer.StartTime).TotalSeconds;
                                 }
                             });
 
-                            OperationResult result = operation == "Copy"
+                            OperationResult result = operation == FileOperationTypes.Copy
                                 ? await _fileManager.CopyAsync(item.Source, item.TargetPath, true, progress)
                                 : await _fileManager.MoveAsync(item.Source, item.TargetPath, true, progress);
 
@@ -207,25 +207,25 @@ namespace dCompare.FileOperation
         public async Task CopyToLeft(List<TreeNode> selectedItems, string destDir)
         {
             var items = GetItemsForTransfer(selectedItems, toLeft: true, destDir);
-            await ExecuteTransferAsync(items, "Copy", "Error copying items");
+            await ExecuteTransferAsync(items, FileOperationTypes.Copy, "Error copying items");
         }
 
         public async Task CopyToRight(List<TreeNode> selectedItems, string destDir)
         {
             var items = GetItemsForTransfer(selectedItems, toLeft: false, destDir);
-            await ExecuteTransferAsync(items, "Copy", "Error copying items");
+            await ExecuteTransferAsync(items, FileOperationTypes.Copy, "Error copying items");
         }
 
         public async Task MoveToLeft(List<TreeNode> selectedItems, string destDir)
         {
             var items = GetItemsForTransfer(selectedItems, toLeft: true, destDir);
-            await ExecuteTransferAsync(items, "Move", "Error moving items");
+            await ExecuteTransferAsync(items, FileOperationTypes.Move, "Error moving items");
         }
 
         public async Task MoveToRight(List<TreeNode> selectedItems, string destDir)
         {
             var items = GetItemsForTransfer(selectedItems, toLeft: false, destDir);
-            await ExecuteTransferAsync(items, "Move", "Error moving items");
+            await ExecuteTransferAsync(items, FileOperationTypes.Move, "Error moving items");
         }
 
         /// <summary>
@@ -237,18 +237,18 @@ namespace dCompare.FileOperation
         public string RenameFileOrDirectory(string sourcePath, string newName)
         {
             if (string.IsNullOrWhiteSpace(sourcePath))
-                throw new ArgumentException("Source path cannot be null or empty.", nameof(sourcePath));
+                throw new ArgumentException(Properties.Resources.ErrorInvalidSourcePath, nameof(sourcePath));
 
             if (string.IsNullOrWhiteSpace(newName))
-                throw new ArgumentException("New name cannot be null or empty.", nameof(newName));
+                throw new ArgumentException(Properties.Resources.ErrorInvalidNewName, nameof(newName));
 
             if (newName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
-                throw new ArgumentException("New name contains invalid characters.", nameof(newName));
+                throw new ArgumentException(Properties.Resources.ErrorInvalidCharactersInNewName, nameof(newName));
 
             string? parentDir = Path.GetDirectoryName(sourcePath);
             if (string.IsNullOrEmpty(parentDir))
             {
-                throw new InvalidOperationException($"Cannot determine parent directory for '{sourcePath}'.");
+                throw new InvalidOperationException(string.Format(Properties.Resources.ErrorCannotDetermineParentDirectory, sourcePath));
             }
 
             string newPath = Path.Combine(parentDir, newName);
@@ -263,7 +263,7 @@ namespace dCompare.FileOperation
             }
             else
             {
-                throw new FileNotFoundException("The specified file or directory does not exist.", sourcePath);
+                throw new FileNotFoundException(Properties.Resources.ErrorFileOrDirectoryNotFound, sourcePath);
             }
 
             return newPath;
@@ -272,36 +272,36 @@ namespace dCompare.FileOperation
         public static void ShowPropertiesDialog(TreeNode node)
         {
             StringBuilder properties = new();
-            properties.AppendLine($"名稱: {node.Name}");
-            properties.AppendLine($"狀態: {GetStatusText(node.Status)}");
-            properties.AppendLine($"相對路徑: {node.RelativePath}");
-            properties.AppendLine($"類型: {(node.IsDirectory ? "資料夾" : "檔案")}");
+            properties.AppendLine($"{Properties.Resources.PropertyName}: {node.Name}");
+            properties.AppendLine($"{Properties.Resources.PropertyStatus}: {GetStatusText(node.Status)}");
+            properties.AppendLine($"{Properties.Resources.PropertyRelativePath}: {node.RelativePath}");
+            properties.AppendLine($"{Properties.Resources.PropertyType}: {(node.IsDirectory ? Properties.Resources.PropertyFolder : Properties.Resources.PropertyFile)}");
 
             if (node.LeftNode != null)
             {
                 properties.AppendLine();
-                properties.AppendLine("左側:");
-                properties.AppendLine($"  完整路徑: {node.LeftNode.FullPath}");
+                properties.AppendLine(Properties.Resources.PropertyLeft + ":");
+                properties.AppendLine($"  {Properties.Resources.PropertyFullPath}: {node.LeftNode.FullPath}");
                 if (!node.LeftNode.IsDirectory)
                 {
-                    properties.AppendLine($"  大小: {node.LeftSize}");
+                    properties.AppendLine($"  {Properties.Resources.PropertySize}: {node.LeftSize}");
                 }
-                properties.AppendLine($"  修改時間: {node.LeftDate}");
+                properties.AppendLine($"  {Properties.Resources.PropertyModifiedTime}: {node.LeftDate}");
             }
 
             if (node.RightNode != null)
             {
                 properties.AppendLine();
-                properties.AppendLine("右側:");
-                properties.AppendLine($"  完整路徑: {node.RightNode.FullPath}");
+                properties.AppendLine(Properties.Resources.PropertyRight + ":");
+                properties.AppendLine($"  {Properties.Resources.PropertyFullPath}: {node.RightNode.FullPath}");
                 if (!node.RightNode.IsDirectory)
                 {
-                    properties.AppendLine($"  大小: {node.RightSize}");
+                    properties.AppendLine($"  {Properties.Resources.PropertySize}: {node.RightSize}");
                 }
-                properties.AppendLine($"  修改時間: {node.RightDate}");
+                properties.AppendLine($"  {Properties.Resources.PropertyModifiedTime}: {node.RightDate}");
             }
 
-            MessageBox.Show(properties.ToString(), "檔案屬性", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(properties.ToString(), Properties.Resources.FileProperties, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         public static void OpenFileLocation(string filePath)
@@ -318,12 +318,12 @@ namespace dCompare.FileOperation
                 }
                 else
                 {
-                    MessageBox.Show("路徑不存在");
+                    MessageBox.Show(Properties.Resources.PathNotExist);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"無法開啟檔案位置: {ex.Message}");
+                MessageBox.Show(string.Format(Properties.Resources.CannotOpenFileLocation, ex.Message));
             }
         }
 
@@ -331,12 +331,12 @@ namespace dCompare.FileOperation
         {
             return status switch
             {
-                ComparisonStatus.Identical => "相同",
-                ComparisonStatus.Modified => "已修改",
-                ComparisonStatus.LeftOnly => "僅存於左側",
-                ComparisonStatus.RightOnly => "僅存於右側",
-                ComparisonStatus.Conflict => "衝突",
-                _ => "未知"
+                ComparisonStatus.Identical => Properties.Resources.StatusIdentical,
+                ComparisonStatus.Modified => Properties.Resources.StatusModified,
+                ComparisonStatus.LeftOnly => Properties.Resources.StatusLeftOnly,
+                ComparisonStatus.RightOnly => Properties.Resources.StatusRightOnly,
+                ComparisonStatus.Conflict => Properties.Resources.StatusConflict,
+                _ => Properties.Resources.StatusUnknown
             };
         }
     }

@@ -65,7 +65,6 @@ Not implemented
   - Feature: Allow comparisons and operations with cloud storage services (e.g., Google Drive, Dropbox, OneDrive).
 - **JSON-Specific Comparison**: Implement specialized comparison for JSON files to highlight structural differences.
 - **File Explorer Integration**: Associate dCompare with Windows File Explorer for quick access to comparisons.
-
 - **Scheduled Comparisons**:
   - Feature: Allow users to schedule recurring directory comparisons (e.g., nightly backups).
 
@@ -73,6 +72,34 @@ Not implemented
 
 - **Text Selection**: Partial text selection with the mouse is not supported in the text comparison view.
 - **Image Comparison**: No pixel-level difference highlighting in the image comparison view.
+
+## Viewing Files with Notepad++
+
+This application allows you to open files using **Notepad++**, with customizable launch behavior via the **View Arguments** field in the UI.
+
+### 🛠️ Customizing Notepad++ Behavior
+
+In the UI, locate the **View Arguments** field under the Notepad++ configuration. You can use the following options to control how Notepad++ opens files:
+
+- `-multiInst`: Opens each file in a **new Notepad++ window**.
+- `-nosession`: Prevents Notepad++ from restoring the previous session, ensuring a **clean start** with only the selected file.
+
+#### 💡 Example
+
+  ```text
+  -multiInst -nosession "{file}"
+  ```
+
+This combination opens the file in a new instance of Notepad++ without loading any previously opened files.
+
+You can adjust these arguments based on your preference:
+
+- Remove `-multiInst` to open files as tabs in the **same window**.
+- Remove `-nosession` to allow Notepad++ to **restore your last session**.
+
+🖼️ *(See screenshot below for reference)*
+
+This gives you full control over how Notepad++ behaves when viewing files from the application.
 
 ## Development
 
@@ -97,6 +124,7 @@ Not implemented
 - **[CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet)**:  See <https://learn.microsoft.com/zh-tw/dotnet/communitytoolkit/mvvm/>
 - **[AvalonEdit](https://github.com/icsharpcode/AvalonEdit)**: Used for text file viewer/editor.
 - **[DiffPlex](https://github.com/mmanela/diffplex)**: Used for text file comparison.
+- **[SharpCompress](https://github.com/adamhathcock/sharpcompress)**: User for archive file view and comparison.
 - **[Serilog](https://github.com/serilog/serilog)**: Used for logging application events and debugging.
 
 Not used yet
@@ -105,6 +133,23 @@ Not used yet
 - **[MetadataExtractor](https://github.com/drewnoakes/metadata-extractor-dotnet)**:
 - **[Google APIs client Library for .NET](https://github.com/googleapis/google-api-dotnet-client)**:
 - **[jsondiffpatch.net](https://github.com/wbish/jsondiffpatch.net)**:
+
+### C# Compression Library Comparison
+
+  | Library             | License     | Supported Formats             | Compression Support | Encryption Support   | Requires Native DLL | Cross-Platform | 7z Support        | Notes                                                                 |
+  |---------------------|-------------|-------------------------------|----------------------|-----------------------|----------------------|----------------|-------------------|-----------------------------------------------------------------------|
+  | **System.IO.Compression** | .NET Built-in | ZIP, GZip                  | ✅ (limited)         | ❌                   | ❌                   | ✅              | ❌                | Built-in, simple API, ZIP-only                                       |
+  | **SharpCompress**   | MIT         | ZIP, 7z, RAR, TAR, GZ, etc.   | ✅ (basic)           | ❌                   | ❌                   | ✅              | ✅ (extract only) | Pure .NET, good for extraction, no 7z compression                    |
+  | **SharpSevenZip**   | LGPL-3.0    | 7z, ZIP, RAR, CAB, etc.       | ✅                   | ✅ (AES)             | ✅ (`7z.dll`)        | ❌ (Windows only) | ✅ (full)         | Full 7z support, including SFX, encryption, compression method control |
+  | **SharpZipLib**     | MIT         | ZIP, GZip, BZip2, Tar         | ✅                   | ✅ (ZIP AES)         | ❌                   | ✅              | ❌                | Mature and stable, good ZIP support, no 7z                           |
+  | **DotNetZip-2025**  | Apache-2.0  | ZIP, GZip, BZip2              | ✅                   | ✅ (WinZip AES)      | ❌                   | ✅              | ❌                | Modernized DotNetZip fork, easy to use, ZIP-focused                  |
+
+## 🧠 Summary
+
+- ✅ **Only SharpSevenZip supports full 7z compression and encryption**, but it requires `7z.dll` and is Windows-only.
+- ✅ **SharpCompress can extract 7z**, but cannot create 7z archives.
+- ❌ **System.IO.Compression, SharpZipLib, and DotNetZip-2025 do not support 7z at all**.
+- ✅ **SharpCompress, SharpZipLib, and DotNetZip-2025 are cross-platform**, making them suitable for Linux/macOS environments.
 
 ### File Copy Method Comparison (by ChatGPT)
 

@@ -5,12 +5,24 @@ namespace dCompare.Tools.Viewer
 {
     public partial class ImageViewer : UserControl, ITool
     {
-        public ImageViewer(string filePath)
+        private readonly ImageViewerViewModel _viewModel;
+
+        public ImageViewer(string filePath, Configuration.IConfigurationService configService)
         {
             InitializeComponent();
-            var viewModel = new ImageViewerViewModel();
-            DataContext = viewModel;
-            viewModel.LoadFile(filePath);
+            _viewModel = new ImageViewerViewModel(configService);
+            DataContext = _viewModel;
+            _ = _viewModel.LoadFileAsync(filePath);
+
+            PreviewMouseWheel += OnPreviewMouseWheel;
+        }
+
+        public ImageViewer(string leftFilePath, string rightFilePath, Configuration.IConfigurationService configService)
+        {
+            InitializeComponent();
+            _viewModel = new ImageViewerViewModel(configService);
+            DataContext = _viewModel;
+            _ = _viewModel.LoadFileAsync(leftFilePath, rightFilePath);
 
             PreviewMouseWheel += OnPreviewMouseWheel;
         }
@@ -19,15 +31,13 @@ namespace dCompare.Tools.Viewer
         {
             if (Keyboard.Modifiers == ModifierKeys.Control)
             {
-                if (DataContext is not ImageViewerViewModel viewModel) return;
-
                 if (e.Delta > 0)
                 {
-                    viewModel.ZoomIn();
+                    _viewModel.ZoomIn();
                 }
                 else
                 {
-                    viewModel.ZoomOut();
+                    _viewModel.ZoomOut();
                 }
                 e.Handled = true;
             }
@@ -35,7 +45,7 @@ namespace dCompare.Tools.Viewer
 
         public void LoadFile(string filePath)
         {
-            (DataContext as ImageViewerViewModel)?.LoadFile(filePath);
+            _ = _viewModel.LoadFileAsync(filePath);
         }
 
         public UserControl GetControl()
