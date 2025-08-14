@@ -92,7 +92,8 @@ namespace dCompare.FileOperation.Tests
 
             // Verify it's a cancellation-related Win32Exception
             // The error message should indicate the operation was aborted
-            Assert.Contains("¤¤¤î", exception.Message); // Contains "aborted" in Chinese
+            //Assert.Contains("¤¤¤î", exception.Message); // Contains "aborted" in Chinese
+            Assert.Equal(1235, exception.NativeErrorCode);
         }
 
         [Fact]
