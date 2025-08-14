@@ -92,7 +92,7 @@ namespace dCompare.FileOperation
             if (parameter is FileTransfer transfer)
             {
                 FailedTransfers.Remove(transfer);
-                Transfer(transfer.Source, transfer.Target, true, transfer.Operation == "Copy", transfer.SourceType);
+                Transfer(transfer.Source, transfer.Target, true, transfer.Operation == FileOperationTypes.Copy, transfer.SourceType);
             }
         }
 
@@ -159,7 +159,7 @@ namespace dCompare.FileOperation
             {
                 var transfer = message.Transfer;
                 QueuedTransfers.Remove(transfer);
-                transfer.Status = message.Success ? "Completed" : $"Failed: {message.Message}";
+                transfer.Status = message.Success ? FileOperationStatus.Completed : FileOperationStatus.Failed;
                 transfer.Progress = message.Success ? 1.0 : transfer.Progress;
                 if (message.Success)
                 {
@@ -196,10 +196,10 @@ namespace dCompare.FileOperation
             var transfer = new FileTransfer
             {
                 JobId = jobId,
-                Operation = isCopy ? "Copy" : "Move",
+                Operation = isCopy ? FileOperationTypes.Copy : FileOperationTypes.Move,
                 Source = source,
                 Target = target,
-                Status = "Queued",
+                Status = FileOperationStatus.Queued,
                 FileSize = GetItemSize(source),
                 SourceType = sourceType
             };
@@ -215,7 +215,7 @@ namespace dCompare.FileOperation
                         App.Current.Dispatcher.Invoke(() =>
                         {
                             transfer.Progress = p.Percentage / 100.0;
-                            transfer.Status = isCopy ? "Copying" : "Moving";
+                            transfer.Status = FileOperationStatus.Transferring;
                             if (p.Percentage > 0)
                             {
                                 transfer.TransferSpeed = (transfer.FileSize * (p.Percentage / 100.0) / 1024.0) / (DateTime.Now - transfer.StartTime).TotalSeconds;
@@ -245,7 +245,7 @@ namespace dCompare.FileOperation
                         App.Current.Dispatcher.Invoke(() =>
                         {
                             QueuedTransfers.Remove(transfer);
-                            transfer.Status = "Completed";
+                            transfer.Status = FileOperationStatus.Completed;
                             transfer.Progress = 1.0;
                             SuccessfulTransfers.Add(transfer);
                             LogTransfer(transfer);
@@ -262,17 +262,17 @@ namespace dCompare.FileOperation
                     App.Current.Dispatcher.Invoke(() =>
                     {
                         QueuedTransfers.Remove(transfer);
-                        transfer.Status = "Cancelled";
+                        transfer.Status = FileOperationStatus.Cancelled;
                         FailedTransfers.Add(transfer);
                         LogTransfer(transfer);
                     });
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     App.Current.Dispatcher.Invoke(() =>
                     {
                         QueuedTransfers.Remove(transfer);
-                        transfer.Status = $"Failed: {ex.Message}";
+                        transfer.Status = FileOperationStatus.Failed;
                         FailedTransfers.Add(transfer);
                         LogTransfer(transfer);
                     });
@@ -284,7 +284,7 @@ namespace dCompare.FileOperation
         private static void LogTransfer(FileTransfer transfer)
         {
             string logPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "FileOperationLog.txt");
-            string logEntry = $"{DateTime.Now}: {transfer.Operation} - {transfer.Source} to {transfer.Target} - {transfer.Status}\n";
+            string logEntry = $"{DateTime.Now}: {transfer.Operation} - {transfer.Source} to {transfer.Target} - {transfer.Status.ToString()}\n";
             File.AppendAllText(logPath, logEntry);
         }
 

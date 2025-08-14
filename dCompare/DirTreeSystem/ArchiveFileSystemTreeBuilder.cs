@@ -13,7 +13,7 @@ namespace dCompare.DirTreeSystem
 
             if (!File.Exists(path) || !FileExtensions.IsArchiveFile(path))
             {
-                throw new ArgumentException($"The file '{path}' is not a supported archive format ({string.Join(", ", FileExtensions.ArchiveExtensions)}).");
+                throw new ArgumentException(string.Format(Properties.Resources.UnsupportedArchiveFormat, path, string.Join(", ", FileExtensions.ArchiveExtensions)));
             }
 
             FileSystemNode root = new()
@@ -77,7 +77,7 @@ namespace dCompare.DirTreeSystem
             }
             catch (Exception ex)
             {
-                throw new IOException($"Failed to process archive '{path}': {ex.Message}", ex);
+                throw new IOException(string.Format(Properties.Resources.FailedToProcessArchive, path, ex.Message), ex);
             }
 
             return root;

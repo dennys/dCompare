@@ -113,7 +113,7 @@ namespace dCompare
                     catch (System.IO.FileNotFoundException)
                     {
                         _userInteractionService.ShowError(
-                            $"Default session file '{config.Options.Session.DefaultSessionFile}' does not exist. Please check the configuration or select a valid session file.",
+                            string.Format(Properties.Resources.ErrorDefaultSessionFileNotExist, config.Options.Session.DefaultSessionFile),
                             Properties.Resources.ErrorTitle);
                         StatusMessage = Properties.Resources.StatusAppReady;
                     }
@@ -126,7 +126,7 @@ namespace dCompare
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading configuration");
-                _userInteractionService.ShowError($"Error loading configuration: {ex.Message}", Properties.Resources.ErrorTitle);
+                _userInteractionService.ShowError(string.Format(Properties.Resources.ErrorLoadingConfiguration, ex.Message), Properties.Resources.ErrorTitle);
             }
             _logger.LogInformation("MainWindowViewModel created and initialized.");
         }
@@ -151,11 +151,11 @@ namespace dCompare
                 TabControl.SelectedItem = newTab;
                 _sessionManager.TabIdMap[newTab.Header.ToString()!] = tabId;
 
-                StatusMessage = $"Added new tab: Tab {_sessionManager.TabCounter}";
+                StatusMessage = string.Format(Properties.Resources.StatusAddedNewTab, $"Tab {_sessionManager.TabCounter}");
             }
             catch (Exception ex)
             {
-                _userInteractionService.ShowError($"{Properties.Resources.ErrorAddTab}: {ex.Message}", Properties.Resources.ErrorTitle);
+                _userInteractionService.ShowError(string.Format(Properties.Resources.ErrorAddTab, ex.Message), Properties.Resources.ErrorTitle);
             }
         }
         private bool CanAddTab() => TabControl == null || TabControl.Items.Count < 20; // TabControl needs to be checked or it will alreays return flase
@@ -200,7 +200,7 @@ namespace dCompare
                 catch (Exception ex)
                 {
                     _logger.LogWarning(ex, "Failed to remove tab session");
-                    StatusMessage = $"Failed to remove tab session: {ex.Message}";
+                    StatusMessage = string.Format(Properties.Resources.StatusFailedToRemoveTabSession, ex.Message);
                 }
 
                 if (TabControl.Items.Count > 0)
@@ -209,11 +209,11 @@ namespace dCompare
                     TabControl.SelectedIndex = newSelectedIndex;
                 }
 
-                StatusMessage = $"Closed tab: {tabToClose.Header}";
+                StatusMessage = string.Format(Properties.Resources.StatusClosedTab, tabToClose.Header);
             }
             catch (Exception ex)
             {
-                _userInteractionService.ShowError($"{Properties.Resources.ErrorCloseTab}: {ex.Message}", Properties.Resources.ErrorTitle);
+                _userInteractionService.ShowError(string.Format(Properties.Resources.ErrorCloseTab, ex.Message), Properties.Resources.ErrorTitle);
             }
         }
 
@@ -245,17 +245,17 @@ namespace dCompare
                     string filePath = parameters.filePath ?? string.Empty;
                     bool autoCompare = parameters.autoCompare;
                     _sessionManager.LoadSession(filePath, autoCompare, UpdateStatus, ExecuteUcCompareMethod);
-                    StatusMessage = $"Loaded session: {filePath} (AutoCompare: {autoCompare})";
+                    StatusMessage = string.Format(Properties.Resources.StatusLoadedSession, filePath, autoCompare);
                 }
                 else
                 {
-                    _userInteractionService.ShowError("Cannot load session at this time.", Properties.Resources.ErrorTitle);
+                    _userInteractionService.ShowError(Properties.Resources.ErrorCannotLoadSession, Properties.Resources.ErrorTitle);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to load session: {FilePath}, AutoCompare: {AutoCompare}", parameters.filePath, parameters.autoCompare);
-                _userInteractionService.ShowError($"Failed to load session: {ex.Message}", Properties.Resources.ErrorTitle);
+                _userInteractionService.ShowError(string.Format(Properties.Resources.ErrorFailedToLoadSession, ex.Message), Properties.Resources.ErrorTitle);
             }
         }
 
@@ -275,11 +275,11 @@ namespace dCompare
             {
                 var optionsWindow = new OptionsWindow();
                 optionsWindow.ShowDialog();
-                StatusMessage = "Options window opened";
+                StatusMessage = Properties.Resources.StatusOptionsWindowOpened;
             }
             catch (Exception ex)
             {
-                _userInteractionService.ShowError($"Error opening options: {ex.Message}", Properties.Resources.ErrorTitle);
+                _userInteractionService.ShowError(string.Format(Properties.Resources.ErrorOpeningOptions, ex.Message), Properties.Resources.ErrorTitle);
             }
         }
 
@@ -291,16 +291,16 @@ namespace dCompare
                 if (TabControl?.SelectedItem is TabItem selectedTab && selectedTab.Content is IRefreshable refreshable)
                 {
                     refreshable.Refresh();
-                    StatusMessage = "Comparison refreshed";
+                    StatusMessage = Properties.Resources.StatusComparisonRefreshed;
                 }
                 else
                 {
-                    _userInteractionService.ShowError("No active tab or tab does not support refresh", Properties.Resources.ErrorTitle);
+                    _userInteractionService.ShowError(Properties.Resources.ErrorNoActiveTabOrNoRefreshSupport, Properties.Resources.ErrorTitle);
                 }
             }
             catch (Exception ex)
             {
-                _userInteractionService.ShowError($"Error executing refresh: {ex.Message}", Properties.Resources.ErrorTitle);
+                _userInteractionService.ShowError(string.Format(Properties.Resources.ErrorExecutingRefresh, ex.Message), Properties.Resources.ErrorTitle);
             }
         }
 
@@ -354,13 +354,13 @@ namespace dCompare
                             _sessionManager.TabIdMap.Remove(oldName);
                             _sessionManager.TabIdMap[newName] = tabId;
                         }
-                        StatusMessage = $"Renamed tab to: {newName}";
+                        StatusMessage = string.Format(Properties.Resources.StatusRenamedTab, newName);
                     }
                 }
             }
             catch (Exception ex)
             {
-                _userInteractionService.ShowError($"Error renaming tab: {ex.Message}", Properties.Resources.ErrorTitle);
+                _userInteractionService.ShowError(string.Format(Properties.Resources.ErrorRenamingTab, ex.Message), Properties.Resources.ErrorTitle);
             }
         }
 
@@ -386,11 +386,11 @@ namespace dCompare
                     "Ctrl+S: Save Session\n" +
                     "Ctrl+O: Load Session",
                     "About dCompare");
-                StatusMessage = "About dialog opened";
+                StatusMessage = Properties.Resources.StatusAboutDialogOpened;
             }
             catch (Exception ex)
             {
-                _userInteractionService.ShowError($"Error opening about dialog: {ex.Message}", Properties.Resources.ErrorTitle);
+                _userInteractionService.ShowError(string.Format(Properties.Resources.ErrorOpeningAboutDialog, ex.Message), Properties.Resources.ErrorTitle);
             }
         }
 
@@ -403,7 +403,7 @@ namespace dCompare
             }
             catch (Exception ex)
             {
-                _userInteractionService.ShowError($"Error exiting application: {ex.Message}", Properties.Resources.ErrorTitle);
+                _userInteractionService.ShowError(string.Format(Properties.Resources.ErrorExitingApplication, ex.Message), Properties.Resources.ErrorTitle);
             }
         }
 
@@ -417,21 +417,21 @@ namespace dCompare
                     if (methodInfo != null)
                     {
                         methodInfo.Invoke(ucCompare, new object[] { ucCompare, new RoutedEventArgs() });
-                        StatusMessage = $"{methodName.Replace("_Click", "")} executed";
+                        StatusMessage = string.Format(Properties.Resources.StatusActionExecuted, methodName.Replace("_Click", ""));
                     }
                     else
                     {
-                        _userInteractionService.ShowError($"{methodName} method not found", Properties.Resources.ErrorTitle);
+                        _userInteractionService.ShowError(string.Format(Properties.Resources.ErrorMethodNotFound, methodName), Properties.Resources.ErrorTitle);
                     }
                 }
                 else
                 {
-                    _userInteractionService.ShowError("No active tab to execute action", Properties.Resources.ErrorTitle);
+                    _userInteractionService.ShowError(Properties.Resources.ErrorNoActiveTabToExecuteAction, Properties.Resources.ErrorTitle);
                 }
             }
             catch (Exception ex)
             {
-                _userInteractionService.ShowError($"Error executing {methodName}: {ex.Message}", Properties.Resources.ErrorTitle);
+                _userInteractionService.ShowError(string.Format(Properties.Resources.ErrorExecutingAction, methodName, ex.Message), Properties.Resources.ErrorTitle);
             }
         }
 

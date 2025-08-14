@@ -103,10 +103,9 @@ namespace dCompare.Compare
             catch (Exception ex)
             {
                 _logger.LogError("Failed to load configuration: {Message}", ex.Message);
-                MessageBox.Show($"Error loading configuration: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(string.Format(Properties.Resources.ErrorLoadingConfiguration, ex.Message), Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 ((CompareControlViewModel)DataContext).SelectedAlgorithm = ComparisonAlgorithm.ModifiedDateAndSize;
             }
-            await PopulateCompareWithMenusAsync();
         }
 
         private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -131,7 +130,7 @@ namespace dCompare.Compare
             string leftPath = ViewModel.LeftPath.Trim();
             string rightPath = ViewModel.RightPath.Trim();
 
-            FullPathsTooltip = $"Left: {leftPath}\nRight: {rightPath}";
+            FullPathsTooltip = string.Format(Properties.Resources.TooltipFullPaths, leftPath, rightPath);
             OnPropertyChanged(nameof(FullPathsTooltip));
 
             string leftName = !string.IsNullOrEmpty(leftPath) ? Path.GetFileName(leftPath) : string.Empty;
@@ -157,7 +156,7 @@ namespace dCompare.Compare
 
             if (WpfTreeHelperExtensions.FindParent<TabItem>(this) is TabItem tabItem)
             {
-                tabItem.Header = ((CompareControlViewModel)DataContext).IsComparing ? $"(Comparing...) {baseHeader}" : baseHeader;
+                tabItem.Header = ((CompareControlViewModel)DataContext).IsComparing ? string.Format(Properties.Resources.ComparingTabHeader, baseHeader) : baseHeader;
             }
         }
 
@@ -174,8 +173,8 @@ namespace dCompare.Compare
         {
             var openFileDialog = new OpenFileDialog
             {
-                Title = "Select Folder or Archive File",
-                Filter = "Archive files (*.zip, *.rar, *.7z, *.tar)|*.zip;*.rar;*.7z;*.tar|All files (*.*)|*.*",
+                Title = Properties.Resources.SelectFolderOrArchiveTitle,
+                Filter = Properties.Resources.ArchiveFileFilter,
                 ValidateNames = false,
                 CheckFileExists = false,
                 CheckPathExists = true,
@@ -210,7 +209,7 @@ namespace dCompare.Compare
         public async void Refresh()
         {
             var viewModel = (CompareControlViewModel)DataContext;
-            if (viewModel.IsComparing) { MessageBox.Show("Comparison is already in progress."); return; }
+            if (viewModel.IsComparing) { MessageBox.Show(Properties.Resources.ComparisonInProgress); return; }
 
             _treeNodes.Clear();
             _cancellationTokenSource = new CancellationTokenSource();
@@ -221,13 +220,13 @@ namespace dCompare.Compare
 
             if ((!Directory.Exists(leftDir) && !File.Exists(leftDir)) && !string.IsNullOrEmpty(leftDir))
             {
-                MessageBox.Show("Please enter a valid source path.");
+                MessageBox.Show(Properties.Resources.EnterValidSourcePath);
                 return;
             }
 
             if ((!Directory.Exists(rightDir) && !File.Exists(rightDir)) && !string.IsNullOrEmpty(rightDir))
             {
-                MessageBox.Show("Please enter a valid target path.");
+                MessageBox.Show(Properties.Resources.EnterValidTargetPath);
                 return;
             }
 
@@ -251,11 +250,11 @@ namespace dCompare.Compare
             catch (OperationCanceledException)
             {
                 _treeNodes.Clear();
-                MessageBox.Show("Comparison was canceled.");
+                MessageBox.Show(Properties.Resources.ComparisonCanceled);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"An error occurred during comparison: {ex.Message}");
+                MessageBox.Show(string.Format(Properties.Resources.ErrorDuringComparison, ex.Message));
             }
             finally
             {
@@ -299,7 +298,7 @@ namespace dCompare.Compare
         public async Task RefreshNodeAsync(TreeNode nodeToRefresh, HashSet<string> previouslyExpandedPaths = null)
         {
             var viewModel = (CompareControlViewModel)DataContext;
-            if (viewModel.IsComparing) { MessageBox.Show("Comparison is already in progress."); return; }
+            if (viewModel.IsComparing) { MessageBox.Show(Properties.Resources.ComparisonInProgress); return; }
 
             viewModel.IsComparing = true;
             _cancellationTokenSource = new CancellationTokenSource();
@@ -329,11 +328,11 @@ namespace dCompare.Compare
             }
             catch (OperationCanceledException)
             {
-                MessageBox.Show("Refresh was canceled.");
+                MessageBox.Show(Properties.Resources.RefreshCanceled);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"An error occurred during refresh: {ex.Message}");
+                MessageBox.Show(string.Format(Properties.Resources.ErrorDuringRefresh, ex.Message));
             }
             finally
             {
@@ -394,7 +393,7 @@ namespace dCompare.Compare
                 bool matchesFilter = filter == null || filter(node);
                 if (!matchesFilter) return false;
 
-                if (string.IsNullOrEmpty(ViewModel.SearchText) || ViewModel.SearchText == "Search...")
+                if (string.IsNullOrEmpty(ViewModel.SearchText) || ViewModel.SearchText == Properties.Resources.SearchWatermark)
                 {
                     return true;
                 }
@@ -420,13 +419,13 @@ namespace dCompare.Compare
         {
             if (sender is not MenuItem menuItem || menuItem.Tag is not ToolOptions tool)
             {
-                MessageBox.Show("Invalid tool configuration.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Properties.Resources.InvalidToolConfiguration, Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
             if (ResultListView.SelectedItem is not TreeNode selectedItem)
             {
-                MessageBox.Show("Please select an item.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Properties.Resources.PleaseSelectItem, Properties.Resources.Warning, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -531,7 +530,7 @@ namespace dCompare.Compare
         #endregion Path suggestion
 
         #region ConextMenuOperations
-        private void ListView_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        private async void ListView_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             DependencyObject obj = (DependencyObject)e.OriginalSource;
             while (obj != null && obj is not ListViewItem)
@@ -539,13 +538,15 @@ namespace dCompare.Compare
                 obj = VisualTreeHelper.GetParent(obj);
             }
 
-            if (obj is ListViewItem listViewItem)
+            if (obj is ListViewItem listViewItem && listViewItem.Content is TreeNode treeNode)
             {
                 // Only add to selection if not already selected to preserve multi-selection
                 if (!ResultListView.SelectedItems.Contains(listViewItem.Content))
                 {
                     ResultListView.SelectedItems.Add(listViewItem.Content);
                 }
+
+                await PopulateMenusForNodeAsync(treeNode);
 
                 GridView gridView = (GridView)ResultListView.View;
                 Point clickPoint = e.GetPosition(ResultListView);
@@ -588,7 +589,7 @@ namespace dCompare.Compare
         {
             if (ResultListView.SelectedItem is not TreeNode selectedItem)
             {
-                MessageBox.Show("Please select an item.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Properties.Resources.PleaseSelectItem, Properties.Resources.Warning, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             CompareFileAsync(selectedItem);
@@ -597,7 +598,7 @@ namespace dCompare.Compare
         {
             if (ResultListView.SelectedItem is not TreeNode selectedItem)
             {
-                MessageBox.Show("Please select an item.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Properties.Resources.PleaseSelectItem, Properties.Resources.Warning, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             ViewFileAsync(selectedItem);
@@ -606,7 +607,7 @@ namespace dCompare.Compare
         {
             if (selectedNodes.Count == 0)
             {
-                MessageBox.Show("Please select at least one file or directory for the operation.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Properties.Resources.PleaseSelectFileOrDirectory, Properties.Resources.Warning, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -619,7 +620,7 @@ namespace dCompare.Compare
             {
                 if (operation == FileOperationType.DeleteLeft || operation == FileOperationType.DeleteRight)
                 {
-                    var result = MessageBox.Show("Are you sure you want to delete the selected items from the directory?", "Confirm Operation", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                    var result = MessageBox.Show(Properties.Resources.ConfirmDelete, Properties.Resources.ConfirmOperation, MessageBoxButton.YesNo, MessageBoxImage.Warning);
                     if (result != MessageBoxResult.Yes) { return; }
                 }
                 foreach (var node in selectedNodes)
@@ -680,7 +681,7 @@ namespace dCompare.Compare
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"The operation failed and the view may not be fully refreshed. Details: {ex.Message}", "Operation Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(string.Format(Properties.Resources.OperationFailedDetails, ex.Message), Properties.Resources.OperationFailed, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         private async void ContextMenu_CopyToLeft_Click(object sender, RoutedEventArgs e)
@@ -717,7 +718,7 @@ namespace dCompare.Compare
         {
             if (ResultListView.SelectedItem is not TreeNode selectedItem)
             {
-                MessageBox.Show("Please select an item to rename.", "Selection Required", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(Properties.Resources.PleaseSelectItemToRename, Properties.Resources.SelectionRequired, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -728,12 +729,12 @@ namespace dCompare.Compare
             string? sourcePath = isLeft ? selectedItem.LeftNode?.FullPath : selectedItem.RightNode?.FullPath;
             if (string.IsNullOrEmpty(sourcePath))
             {
-                MessageBox.Show("The selected item does not have a valid path to rename.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Properties.Resources.InvalidPathToRename, Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
             string currentName = Path.GetFileName(sourcePath);
-            string newName = Interaction.InputBox("Enter the new name for the item:", "Rename", currentName);
+            string newName = Interaction.InputBox(Properties.Resources.EnterNewName, Properties.Resources.Rename, currentName);
 
             if (string.IsNullOrWhiteSpace(newName) || newName == currentName)
             {
@@ -770,14 +771,14 @@ namespace dCompare.Compare
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error renaming item: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(string.Format(Properties.Resources.ErrorRenamingItem, ex.Message), Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         private void ContextMenu_Properties_Click(object sender, RoutedEventArgs e)
         {
             if (ResultListView.SelectedItem is not TreeNode selectedItem)
             {
-                MessageBox.Show("Please select an item.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Properties.Resources.PleaseSelectItem, Properties.Resources.Warning, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             FileOperationHandler.ShowPropertiesDialog(selectedItem);
@@ -812,7 +813,7 @@ namespace dCompare.Compare
             }
             else
             {
-                MessageBox.Show("No valid paths selected.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Properties.Resources.NoValidPathsSelected, Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         private void ContextMenu_CopyFilenames_Click(object sender, RoutedEventArgs e)
@@ -831,7 +832,7 @@ namespace dCompare.Compare
             }
             else
             {
-                MessageBox.Show("No valid files selected.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Properties.Resources.NoValidFilesSelected, Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         #endregion
@@ -874,35 +875,62 @@ namespace dCompare.Compare
                 }
             }
         }
-        private async Task PopulateCompareWithMenusAsync()
+        private async Task PopulateMenusForNodeAsync(TreeNode node)
         {
+            // TODO, need to inject it
+            ILogger<ToolFactory> logger = CommunityToolkit.Mvvm.DependencyInjection.Ioc.Default.GetRequiredService<ILogger<ToolFactory>>();
+            ToolFactory _toolFactory = new(_configService, logger);
             ToolConfigService _toolConfigService = new();
+
+            if (FindResource("LeftContextMenu") is not ContextMenu leftContextMenu ||
+                FindResource("RightContextMenu") is not ContextMenu rightContextMenu)
+                return;
+
+            MenuItem? leftCompareWithMenu = FindMenuByName(leftContextMenu, "LeftCompareWithMenu");
+            MenuItem? rightCompareWithMenu = FindMenuByName(rightContextMenu, "RightCompareWithMenu");
+            MenuItem? leftViewWithMenu = FindMenuByName(leftContextMenu, "LeftViewWithMenu");
+            MenuItem? rightViewWithMenu = FindMenuByName(rightContextMenu, "RightViewWithMenu");
+
+            // Clear previous items to avoid showing stale menus
+            leftCompareWithMenu?.Items.Clear();
+            rightCompareWithMenu?.Items.Clear();
+            leftViewWithMenu?.Items.Clear();
+            rightViewWithMenu?.Items.Clear();
+
             try
             {
-                if (FindResource("LeftContextMenu") is not ContextMenu leftContextMenu ||
-                    FindResource("RightContextMenu") is not ContextMenu rightContextMenu)
-                    return;
+                var config = await _configService.LoadConfigurationAsync();
+                string filePath = node.LeftNode?.FullPath ?? node.RightNode?.FullPath;
+                if (filePath == null) return;
 
-                var leftCompareWithMenu = FindMenuByName(leftContextMenu, "LeftCompareWithMenu");
-                var rightCompareWithMenu = FindMenuByName(rightContextMenu, "RightCompareWithMenu");
-                var leftViewWithMenu = FindMenuByName(leftContextMenu, "LeftViewWithMenu");
-                var rightViewWithMenu = FindMenuByName(rightContextMenu, "RightViewWithMenu");
+                string fileType = _toolFactory.DetermineFileType(config, filePath);
+                if (fileType == null) return;
+
+                var fileTypeMapping = config.Options.FileTypeMapping.GetValueOrDefault(fileType);
+                if (fileTypeMapping == null) return;
 
                 if (leftCompareWithMenu == null || rightCompareWithMenu == null || leftViewWithMenu == null || rightViewWithMenu == null) return;
 
-                var config = await _configService.LoadConfigurationAsync();
-                var diffTools = _toolConfigService.GetAllToolsForOperation(config, Operations.Diff);
+                var diffToolNames = fileTypeMapping.PreferredTools.Diff;
+                var viewToolNames = fileTypeMapping.PreferredTools.View;
+
+                var diffTools = config.Options.Tools
+                                      .Where(t => diffToolNames.Contains(t.Key))
+                                      .Select(t => t.Value);
+
+                var viewTools = config.Options.Tools
+                                      .Where(t => viewToolNames.Contains(t.Key))
+                                      .Select(t => t.Value);
+
                 PopulateToolMenu(leftCompareWithMenu, diffTools, ContextMenu_CompareWithViewer_Click);
                 PopulateToolMenu(rightCompareWithMenu, diffTools, ContextMenu_CompareWithViewer_Click);
-
-                var viewTools = _toolConfigService.GetAllToolsForOperation(config, Operations.View);
                 PopulateToolMenu(leftViewWithMenu, viewTools, ContextMenu_ViewWithViewer_Click);
                 PopulateToolMenu(rightViewWithMenu, viewTools, ContextMenu_ViewWithViewer_Click);
             }
             catch (Exception ex)
             {
-                _logger.LogError("Failed to populate Compare With menus: {Message}", ex.Message);
-                MessageBox.Show($"Error loading tools: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                _logger.LogError("Failed to populate dynamic menus: {Message}", ex.Message);
+                MessageBox.Show(string.Format(Properties.Resources.ErrorLoadingTools, ex.Message), Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         private static MenuItem? FindMenuByName(ContextMenu menu, string name) =>
@@ -915,8 +943,7 @@ namespace dCompare.Compare
                 var item = new MenuItem
                 {
                     Header = tool.Name,
-                    Tag = tool,
-                    InputGestureText = tool.Name
+                    Tag = tool
                 };
                 item.Click += clickHandler;
                 parentMenu.Items.Add(item);
@@ -924,34 +951,34 @@ namespace dCompare.Compare
         }
         private async void ViewFileAsync(TreeNode selectedItem)
         {
-            await LaunchToolAsync(selectedItem, Operations.View);
+            await LaunchToolAsync(selectedItem, ToolOperationTypes.View);
         }
         private void ContextMenu_ViewWithViewer_Click(object sender, RoutedEventArgs e)
         {
             ProcessToolAction(sender, async (selectedItem, tool) =>
             {
-                await LaunchToolAsync(selectedItem, Operations.View, tool);
+                await LaunchToolAsync(selectedItem, ToolOperationTypes.View, tool);
             });
         }
         private async void CompareFileAsync(TreeNode selectedItem)
         {
-            await LaunchToolAsync(selectedItem, Operations.Diff);
+            await LaunchToolAsync(selectedItem, ToolOperationTypes.Diff);
         }
         private void ContextMenu_CompareWithViewer_Click(object sender, RoutedEventArgs e)
         {
             ProcessToolAction(sender, async (selectedItem, tool) =>
             {
-                await LaunchToolAsync(selectedItem, Operations.Diff, tool);
+                await LaunchToolAsync(selectedItem, ToolOperationTypes.Diff, tool);
             });
         }
-        private async Task LaunchToolAsync(TreeNode selectedItem, string operation, ToolOptions? toolConfig = null)
+        private async Task LaunchToolAsync(TreeNode selectedItem, ToolOperationTypes operation, ToolOptions? toolConfig = null)
         {
             TabItem? tab = await _toolHandler.LaunchToolAsync(selectedItem, operation, toolConfig);
             if (tab != null)
             {
                 if (WpfTreeHelperExtensions.FindParent<TabControl>(this) is not TabControl tabControl)
                 {
-                    MessageBox.Show("Cannot locate parent TabControl.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(Properties.Resources.CannotLocateParentTabControl, Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
                 tabControl.Items.Add(tab);

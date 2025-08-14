@@ -231,8 +231,495 @@
   <data name="StatusAppReady" xml:space="preserve">
     <value>應用程式準備就緒</value>
   </data>
-  <data name="CloseButton" xml:space="preserve">
-    <value>qq</value>
+  <data name="StatusInvalidHotkeyFormat" xml:space="preserve">
+    <value>無效的熱鍵格式：{0}</value>
+  </data>
+  <data name="StatusFailedToApplyHotkeys" xml:space="preserve">
+    <value>應用熱鍵失敗：{0}</value>
+  </data>
+  <data name="StatusSelectedTab" xml:space="preserve">
+    <value>已選擇索引標籤：{0}</value>
+  </data>
+  <data name="StatusDragOperationFailed" xml:space="preserve">
+    <value>拖曳操作失敗：{0}</value>
+  </data>
+  <data name="StatusMovedTab" xml:space="preserve">
+    <value>已將索引標籤 '{0}' 移動到位置 {1}</value>
+  </data>
+  <data name="StatusDropOperationFailed" xml:space="preserve">
+    <value>放置操作失敗：{0}</value>
+  </data>
+  <data name="ErrorDefaultSessionFileNotExist" xml:space="preserve">
+    <value>預設工作階段檔案 '{0}' 不存在。請檢查組態或選取有效的工作階段檔案。</value>
+  </data>
+  <data name="ErrorLoadingConfiguration" xml:space="preserve">
+    <value>載入組態時發生錯誤：{0}</value>
+  </data>
+  <data name="StatusAddedNewTab" xml:space="preserve">
+    <value>已新增索引標籤：{0}</value>
+  </data>
+  <data name="StatusFailedToRemoveTabSession" xml:space="preserve">
+    <value>移除索引標籤工作階段失敗：{0}</value>
+  </data>
+  <data name="StatusClosedTab" xml:space="preserve">
+    <value>已關閉索引標籤：{0}</value>
+  </data>
+  <data name="StatusLoadedSession" xml:space="preserve">
+    <value>已載入工作階段：{0} (自動比較：{1})</value>
+  </data>
+  <data name="ErrorCannotLoadSession" xml:space="preserve">
+    <value>目前無法載入工作階段。</value>
+  </data>
+  <data name="ErrorFailedToLoadSession" xml:space="preserve">
+    <value>載入工作階段失敗：{0}</value>
+  </data>
+  <data name="StatusOptionsWindowOpened" xml:space="preserve">
+    <value>選項視窗已開啟</value>
+  </data>
+  <data name="ErrorOpeningOptions" xml:space="preserve">
+    <value>開啟選項時發生錯誤：{0}</value>
+  </data>
+  <data name="StatusComparisonRefreshed" xml:space="preserve">
+    <value>比較已重新整理</value>
+  </data>
+  <data name="ErrorNoActiveTabOrNoRefreshSupport" xml:space="preserve">
+    <value>沒有使用中的索引標籤或索引標籤不支援重新整理</value>
+  </data>
+  <data name="ErrorExecutingRefresh" xml:space="preserve">
+    <value>執行重新整理時發生錯誤：{0}</value>
+  </data>
+  <data name="StatusRenamedTab" xml:space="preserve">
+    <value>已將索引標籤重新命名為：{0}</value>
+  </data>
+  <data name="ErrorRenamingTab" xml:space="preserve">
+    <value>重新命名索引標籤時發生錯誤：{0}</value>
+  </data>
+  <data name="StatusAboutDialogOpened" xml:space="preserve">
+    <value>「關於」對話方塊已開啟</value>
+  </data>
+  <data name="ErrorOpeningAboutDialog" xml:space="preserve">
+    <value>開啟「關於」對話方塊時發生錯誤：{0}</value>
+  </data>
+  <data name="ErrorExitingApplication" xml:space="preserve">
+    <value>結束應用程式時發生錯誤：{0}</value>
+  </data>
+  <data name="StatusActionExecuted" xml:space="preserve">
+    <value>已執行 {0}</value>
+  </data>
+  <data name="ErrorMethodNotFound" xml:space="preserve">
+    <value>找不到 {0} 方法</value>
+  </data>
+  <data name="ErrorNoActiveTabToExecuteAction" xml:space="preserve">
+    <value>沒有使用中的索引標籤可執行動作</value>
+  </data>
+  <data name="ErrorExecutingAction" xml:space="preserve">
+    <value>執行 {0} 時發生錯誤：{1}</value>
+  </data>
+  <data name="TooltipFullPaths" xml:space="preserve">
+    <value>左：{0}
+右：{1}</value>
+  </data>
+  <data name="ComparingTabHeader" xml:space="preserve">
+    <value>(比較中...) {0}</value>
+  </data>
+  <data name="SelectFolderOrArchiveTitle" xml:space="preserve">
+    <value>選取資料夾或封存檔案</value>
+  </data>
+  <data name="ArchiveFileFilter" xml:space="preserve">
+    <value>所有檔案 (*.*)|*.*</value>
+  </data>
+  <data name="ComparisonInProgress" xml:space="preserve">
+    <value>比較已在進行中。</value>
+  </data>
+  <data name="EnterValidSourcePath" xml:space="preserve">
+    <value>請輸入有效的來源路徑。</value>
+  </data>
+  <data name="EnterValidTargetPath" xml:space="preserve">
+    <value>請輸入有效的目標路徑。</value>
+  </data>
+  <data name="ComparisonCanceled" xml:space="preserve">
+    <value>比較已取消。</value>
+  </data>
+  <data name="ErrorDuringComparison" xml:space="preserve">
+    <value>比較期間發生錯誤：{0}</value>
+  </data>
+  <data name="RefreshCanceled" xml:space="preserve">
+    <value>重新整理已取消。</value>
+  </data>
+  <data name="ErrorDuringRefresh" xml:space="preserve">
+    <value>重新整理期間發生錯誤：{0}</value>
+  </data>
+  <data name="SearchWatermark" xml:space="preserve">
+    <value>搜尋...</value>
+  </data>
+  <data name="InvalidToolConfiguration" xml:space="preserve">
+    <value>無效的工具組態。</value>
+  </data>
+  <data name="PleaseSelectItem" xml:space="preserve">
+    <value>請選取一個項目。</value>
+  </data>
+  <data name="Warning" xml:space="preserve">
+    <value>警告</value>
+  </data>
+  <data name="PleaseSelectFileOrDirectory" xml:space="preserve">
+    <value>請至少為作業選取一個檔案或目錄。</value>
+  </data>
+  <data name="ConfirmDelete" xml:space="preserve">
+    <value>您確定要從目錄中刪除選取的項目嗎？</value>
+  </data>
+  <data name="ConfirmOperation" xml:space="preserve">
+    <value>確認作業</value>
+  </data>
+  <data name="OperationFailed" xml:space="preserve">
+    <value>作業失敗</value>
+  </data>
+  <data name="OperationFailedDetails" xml:space="preserve">
+    <value>作業失敗，檢視可能未完全重新整理。詳細資料：{0}</value>
+  </data>
+  <data name="PleaseSelectItemToRename" xml:space="preserve">
+    <value>請選取要重新命名的項目。</value>
+  </data>
+  <data name="SelectionRequired" xml:space="preserve">
+    <value>需要選取</value>
+  </data>
+  <data name="InvalidPathToRename" xml:space="preserve">
+    <value>選取的項目沒有有效的路徑可重新命名。</value>
+  </data>
+  <data name="EnterNewName" xml:space="preserve">
+    <value>輸入項目的新名稱：</value>
+  </data>
+  <data name="Rename" xml:space="preserve">
+    <value>重新命名</value>
+  </data>
+  <data name="ErrorRenamingItem" xml:space="preserve">
+    <value>重新命名項目時發生錯誤：{0}</value>
+  </data>
+  <data name="NoValidPathsSelected" xml:space="preserve">
+    <value>未選取有效的路徑。</value>
+  </data>
+  <data name="NoValidFilesSelected" xml:space="preserve">
+    <value>未選取有效的檔案。</value>
+  </data>
+  <data name="ErrorLoadingTools" xml:space="preserve">
+    <value>載入工具時發生錯誤：{0}</value>
+  </data>
+  <data name="CannotLocateParentTabControl" xml:space="preserve">
+    <value>找不到父索引標籤控制項。</value>
+  </data>
+  <data name="PropertyName" xml:space="preserve">
+    <value>名稱</value>
+  </data>
+  <data name="PropertyStatus" xml:space="preserve">
+    <value>狀態</value>
+  </data>
+  <data name="PropertyRelativePath" xml:space="preserve">
+    <value>相對路徑</value>
+  </data>
+  <data name="PropertyType" xml:space="preserve">
+    <value>類型</value>
+  </data>
+  <data name="PropertyFolder" xml:space="preserve">
+    <value>資料夾</value>
+  </data>
+  <data name="PropertyFile" xml:space="preserve">
+    <value>檔案</value>
+  </data>
+  <data name="PropertyLeft" xml:space="preserve">
+    <value>左側</value>
+  </data>
+  <data name="PropertyFullPath" xml:space="preserve">
+    <value>完整路徑</value>
+  </data>
+  <data name="PropertySize" xml:space="preserve">
+    <value>大小</value>
+  </data>
+  <data name="PropertyModifiedTime" xml:space="preserve">
+    <value>修改時間</value>
+  </data>
+  <data name="PropertyRight" xml:space="preserve">
+    <value>右側</value>
+  </data>
+  <data name="FileProperties" xml:space="preserve">
+    <value>檔案屬性</value>
+  </data>
+  <data name="PathNotExist" xml:space="preserve">
+    <value>路徑不存在</value>
+  </data>
+  <data name="CannotOpenFileLocation" xml:space="preserve">
+    <value>無法開啟檔案位置：{0}</value>
+  </data>
+  <data name="StatusIdentical" xml:space="preserve">
+    <value>相同</value>
+  </data>
+  <data name="StatusModified" xml:space="preserve">
+    <value>已修改</value>
+  </data>
+  <data name="StatusLeftOnly" xml:space="preserve">
+    <value>僅存於左側</value>
+  </data>
+  <data name="StatusRightOnly" xml:space="preserve">
+    <value>僅存於右側</value>
+  </data>
+  <data name="StatusConflict" xml:space="preserve">
+    <value>衝突</value>
+  </data>
+  <data name="StatusUnknown" xml:space="preserve">
+    <value>未知</value>
+  </data>
+  <data name="CannotOpenDirectory" xml:space="preserve">
+    <value>無法開啟目錄。</value>
+  </data>
+  <data name="CannotCompareDirectory" xml:space="preserve">
+    <value>無法使用檔案比較工具比較目錄。</value>
+  </data>
+  <data name="InvalidOperation" xml:space="preserve">
+    <value>指定了無效的操作。</value>
+  </data>
+  <data name="NoDefaultTool" xml:space="preserve">
+    <value>未為 '{1}' 檔案設定預設的 {0} 工具。</value>
+  </data>
+  <data name="View" xml:space="preserve">
+    <value>檢視</value>
+  </data>
+  <data name="Diff" xml:space="preserve">
+    <value>比較</value>
+  </data>
+  <data name="ViewTabHeader" xml:space="preserve">
+    <value>檢視：{0}</value>
+  </data>
+  <data name="CompareTabHeader" xml:space="preserve">
+    <value>比較：{0} - {1}</value>
+  </data>
+  <data name="ErrorOpeningFile" xml:space="preserve">
+    <value>開啟檔案</value>
+  </data>
+  <data name="ErrorLaunchingTool" xml:space="preserve">
+    <value>啟動比較工具</value>
+  </data>
+  <data name="ErrorTool" xml:space="preserve">
+    <value>錯誤 {0}：{1}</value>
+  </data>
+  <data name="LeftImage" xml:space="preserve">
+    <value>左側圖片：</value>
+  </data>
+  <data name="RightImage" xml:space="preserve">
+    <value>右側圖片：</value>
+  </data>
+  <data name="ErrorBothImagePaths" xml:space="preserve">
+    <value>必須設定兩個圖片路徑才能重新整理比較。</value>
+  </data>
+  <data name="ErrorFailedToRefreshImages" xml:space="preserve">
+    <value>重新整理圖片失敗：{0}</value>
+  </data>
+  <data name="LeftFile" xml:space="preserve">
+    <value>左側檔案：</value>
+  </data>
+  <data name="RightFile" xml:space="preserve">
+    <value>右側檔案：</value>
+  </data>
+  <data name="SwitchMode" xml:space="preserve">
+    <value>切換模式</value>
+  </data>
+  <data name="FurtherActions" xml:space="preserve">
+    <value>...</value>
+  </data>
+  <data name="IsSideBySide" xml:space="preserve">
+    <value>並排顯示</value>
+  </data>
+  <data name="IgnoreUnchanged" xml:space="preserve">
+    <value>忽略未變更</value>
+  </data>
+  <data name="LinesContext" xml:space="preserve">
+    <value>行上下文</value>
+  </data>
+  <data name="TestWindow" xml:space="preserve">
+    <value>測試視窗</value>
+  </data>
+  <data name="ErrorBothFilePaths" xml:space="preserve">
+    <value>必須設定兩個檔案路徑才能重新整理比較。</value>
+  </data>
+  <data name="ErrorFailedToRefreshComparison" xml:space="preserve">
+    <value>重新整理比較失敗：{0}</value>
+  </data>
+  <data name="Open" xml:space="preserve">
+    <value>📂 開啟</value>
+  </data>
+  <data name="ZoomIn" xml:space="preserve">
+    <value>🔎 放大</value>
+  </data>
+  <data name="ZoomOut" xml:space="preserve">
+    <value>🔍 縮小</value>
+  </data>
+  <data name="ImageFiles" xml:space="preserve">
+    <value>圖片檔案 (*.png;*.jpeg;*.jpg;*.bmp;*.gif)|*.png;*.jpeg;*.jpg;*.bmp;*.gif|所有檔案 (*.*)|*.*</value>
+  </data>
+  <data name="SameAsOriginal" xml:space="preserve">
+    <value>與原始檔案相同 (*{0})|*{0}|所有檔案 (*.*)|*.*</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>💾 儲存</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>編輯</value>
+  </data>
+  <data name="Search" xml:space="preserve">
+    <value>🔍 搜尋</value>
+  </data>
+  <data name="Replace" xml:space="preserve">
+    <value>🔄 取代</value>
+  </data>
+  <data name="Undo" xml:space="preserve">
+    <value>↺ 復原</value>
+  </data>
+  <data name="Redo" xml:space="preserve">
+    <value>↻ 重做</value>
+  </data>
+  <data name="LineNumbers" xml:space="preserve">
+    <value>🔢 行號</value>
+  </data>
+  <data name="GoToLine" xml:space="preserve">
+    <value>🔽 跳至行</value>
+  </data>
+  <data name="Words" xml:space="preserve">
+    <value>字數：{0:N0}</value>
+  </data>
+  <data name="Chars" xml:space="preserve">
+    <value>字元數：{0:N0}</value>
+  </data>
+  <data name="ReplaceError" xml:space="preserve">
+    <value>取代錯誤</value>
+  </data>
+  <data name="ErrorDuringReplace" xml:space="preserve">
+    <value>取代作業期間發生錯誤：{0}</value>
+  </data>
+  <data name="FindAndReplace" xml:space="preserve">
+    <value>尋找與取代</value>
+  </data>
+  <data name="FindWhat" xml:space="preserve">
+    <value>尋找目標：</value>
+  </data>
+  <data name="ReplaceWith" xml:space="preserve">
+    <value>取代為：</value>
+  </data>
+  <data name="MatchCase" xml:space="preserve">
+    <value>大小寫須相符</value>
+  </data>
+  <data name="ReplaceFirst" xml:space="preserve">
+    <value>僅取代第一個符合項目</value>
+  </data>
+  <data name="ReplaceInSelection" xml:space="preserve">
+    <value>僅在選取範圍內取代</value>
+  </data>
+  <data name="ReplaceAll" xml:space="preserve">
+    <value>全部取代</value>
+  </data>
+  <data name="EnterTextToFind" xml:space="preserve">
+    <value>請輸入要尋找的文字。</value>
+  </data>
+  <data name="ErrorNoFilePath" xml:space="preserve">
+    <value>未指定檔案路徑。</value>
+  </data>
+  <data name="SavedTo" xml:space="preserve">
+    <value>已儲存至 {0}</value>
+  </data>
+  <data name="ErrorBothFilePathsNull" xml:space="preserve">
+    <value>兩個檔案路徑都不可為 null 或空白。</value>
+  </data>
+  <data name="ErrorUnsupportedFileType" xml:space="preserve">
+    <value>不支援用於比較的檔案類型。</value>
+  </data>
+  <data name="UnsupportedArchiveFormat" xml:space="preserve">
+    <value>檔案 '{0}' 不是支援的封存格式 ({1})。</value>
+  </data>
+  <data name="FailedToProcessArchive" xml:space="preserve">
+    <value>處理封存 '{0}' 失敗：{1}</value>
+  </data>
+  <data name="Start" xml:space="preserve">
+    <value>開始</value>
+  </data>
+  <data name="Pause" xml:space="preserve">
+    <value>暫停</value>
+  </data>
+  <data name="Queued" xml:space="preserve">
+    <value>已排入佇列</value>
+  </data>
+  <data name="Operation" xml:space="preserve">
+    <value>作業</value>
+  </data>
+  <data name="Source" xml:space="preserve">
+    <value>來源</value>
+  </data>
+  <data name="Target" xml:space="preserve">
+    <value>目標</value>
+  </data>
+  <data name="Progress" xml:space="preserve">
+    <value>進度</value>
+  </data>
+  <data name="Speed" xml:space="preserve">
+    <value>速度</value>
+  </data>
+  <data name="ClearQueued" xml:space="preserve">
+    <value>清除已排入佇列</value>
+  </data>
+  <data name="Successful" xml:space="preserve">
+    <value>成功</value>
+  </data>
+  <data name="ClearSuccessful" xml:space="preserve">
+    <value>清除成功工作</value>
+  </data>
+  <data name="Failed" xml:space="preserve">
+    <value>失敗</value>
+  </data>
+  <data name="Retry" xml:space="preserve">
+    <value>重試</value>
+  </data>
+  <data name="ClearFailed" xml:space="preserve">
+    <value>清除失敗工作</value>
+  </data>
+  <data name="Completed" xml:space="preserve">
+    <value>已完成</value>
+  </data>
+  <data name="ErrorDeletingItems" xml:space="preserve">
+    <value>刪除項目時發生錯誤：{0}</value>
+  </data>
+  <data name="ErrorInvalidSourcePath" xml:space="preserve">
+    <value>來源路徑不可為 null 或空白。</value>
+  </data>
+  <data name="ErrorInvalidNewName" xml:space="preserve">
+    <value>新名稱不可為 null 或空白。</value>
+  </data>
+  <data name="ErrorInvalidCharactersInNewName" xml:space="preserve">
+    <value>新名稱包含無效字元。</value>
+  </data>
+  <data name="ErrorCannotDetermineParentDirectory" xml:space="preserve">
+    <value>無法判斷 '{0}' 的父目錄。</value>
+  </data>
+  <data name="ErrorFileOrDirectoryNotFound" xml:space="preserve">
+    <value>指定的檔案或目錄不存在。</value>
+  </data>
+  <data name="Untitled" xml:space="preserve">
+    <value>未命名</value>
+  </data>
+  <data name="JsonFiles" xml:space="preserve">
+    <value>JSON 檔案 (*.json)|*.json</value>
+  </data>
+  <data name="SessionSaved" xml:space="preserve">
+    <value>工作階段已儲存至 {0}</value>
+  </data>
+  <data name="ErrorSavingSession" xml:space="preserve">
+    <value>儲存工作階段時發生錯誤：{0}</value>
+  </data>
+  <data name="SessionFileNotFound" xml:space="preserve">
+    <value>找不到工作階段檔案：{0}</value>
+  </data>
+  <data name="Welcome" xml:space="preserve">
+    <value>歡迎</value>
+  </data>
+  <data name="SessionLoaded" xml:space="preserve">
+    <value>已從 {0} 載入工作階段</value>
+  </data>
+  <data name="ErrorLoadingSession" xml:space="preserve">
+    <value>載入工作階段時發生錯誤：{0}</value>
   </data>
   <data name="RecentSessionsMenu" xml:space="preserve">
     <value>最近的工作階段... </value>
@@ -244,10 +731,10 @@
     <value>檢視(_V)</value>
   </data>
   <data name="SaveSessionMenu" xml:space="preserve">
-    <value>儲存工作階段 ({0})</value>
+    <value>儲存工作階段</value>
   </data>
   <data name="LoadSessionMenu" xml:space="preserve">
-    <value>載入工作階段 ({0})</value>
+    <value>載入工作階段</value>
   </data>
   <data name="ClearRecentSessionsMenu" xml:space="preserve">
     <value>清除最近的工作階段</value>
@@ -333,9 +820,6 @@
   <data name="CompareWith" xml:space="preserve">
     <value>比較檔案內容(其他工具)</value>
   </data>
-  <data name="WinMerge" xml:space="preserve">
-    <value>WinMerge</value>
-  </data>
   <data name="Filter" xml:space="preserve">
     <value>篩選</value>
   </data>
@@ -344,5 +828,398 @@
   </data>
   <data name="ViewWith" xml:space="preserve">
     <value>查看方式</value>
+  </data>
+  <data name="UI" xml:space="preserve">
+    <value>使用者介面</value>
+  </data>
+  <data name="Compare" xml:space="preserve">
+    <value>比較</value>
+  </data>
+  <data name="Session" xml:space="preserve">
+    <value>工作階段</value>
+  </data>
+  <data name="Confirmation" xml:space="preserve">
+    <value>確認</value>
+  </data>
+  <data name="HotKeys" xml:space="preserve">
+    <value>快速鍵</value>
+  </data>
+  <data name="TextViewer" xml:space="preserve">
+    <value>文字檢視器</value>
+  </data>
+  <data name="Tools" xml:space="preserve">
+    <value>工具</value>
+  </data>
+  <data name="FileTypeMapping" xml:space="preserve">
+    <value>檔案類型對應</value>
+  </data>
+  <data name="LightTheme" xml:space="preserve">
+    <value>淺色主題</value>
+  </data>
+  <data name="DarkTheme" xml:space="preserve">
+    <value>深色主題</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="HotkeyWatermark" xml:space="preserve">
+    <value>點擊設定快速鍵</value>
+  </data>
+  <data name="DuplicateHotkeyTooltip" xml:space="preserve">
+    <value>此快速鍵已被使用。</value>
+  </data>
+  <data name="CompareSettings" xml:space="preserve">
+    <value>比較設定</value>
+  </data>
+  <data name="ScanOptions" xml:space="preserve">
+    <value>掃描選項</value>
+  </data>
+  <data name="ScanMethod" xml:space="preserve">
+    <value>掃描方式：</value>
+  </data>
+  <data name="ScanMethodHint" xml:space="preserve">
+    <value>選擇「一般」進行標準檔案系統掃描，或選擇「MFT」以使用主檔案表進行更快的掃描（僅限Windows NTFS）。</value>
+  </data>
+  <data name="EnableParallelScanning" xml:space="preserve">
+    <value>啟用平行掃描</value>
+  </data>
+  <data name="EnableParallelScanningHint" xml:space="preserve">
+    <value>啟用後可平行執行檔案比較，以加快處理速度（建議多核心系統使用）。</value>
+  </data>
+  <data name="ComparisonAlgorithms" xml:space="preserve">
+    <value>比較演算法</value>
+  </data>
+  <data name="Enable" xml:space="preserve">
+    <value>啟用</value>
+  </data>
+  <data name="Default" xml:space="preserve">
+    <value>預設</value>
+  </data>
+  <data name="Algorithm" xml:space="preserve">
+    <value>演算法</value>
+  </data>
+  <data name="Percent" xml:space="preserve">
+    <value>百分比 %</value>
+  </data>
+  <data name="UserInteraction" xml:space="preserve">
+    <value>使用者互動</value>
+  </data>
+  <data name="DoubleClickAction" xml:space="preserve">
+    <value>雙擊動作：</value>
+  </data>
+  <data name="ConfirmationSettings" xml:space="preserve">
+    <value>確認設定</value>
+  </data>
+  <data name="GeneralConfirmations" xml:space="preserve">
+    <value>一般確認</value>
+  </data>
+  <data name="ConfirmCloseApplication" xml:space="preserve">
+    <value>關閉應用程式前確認</value>
+  </data>
+  <data name="ConfirmCloseTabAction" xml:space="preserve">
+    <value>關閉標籤頁前確認</value>
+  </data>
+  <data name="ConfirmCopy" xml:space="preserve">
+    <value>複製檔案前確認</value>
+  </data>
+  <data name="ConfirmMove" xml:space="preserve">
+    <value>移動檔案前確認</value>
+  </data>
+  <data name="DangerousActions" xml:space="preserve">
+    <value>危險動作</value>
+  </data>
+  <data name="ConfirmCopyOverwrite" xml:space="preserve">
+    <value>複製時覆蓋檔案前確認</value>
+  </data>
+  <data name="ConfirmMoveOverwrite" xml:space="preserve">
+    <value>移動時覆蓋檔案前確認</value>
+  </data>
+  <data name="ConfirmDeleteFile" xml:space="preserve">
+    <value>刪除檔案前確認</value>
+  </data>
+  <data name="SessionSettings" xml:space="preserve">
+    <value>工作階段設定</value>
+  </data>
+  <data name="DefaultSessionFile" xml:space="preserve">
+    <value>預設工作階段檔案：</value>
+  </data>
+  <data name="Browse" xml:space="preserve">
+    <value>...</value>
+  </data>
+  <data name="AutoLoadDefaultSession" xml:space="preserve">
+    <value>啟動時自動載入預設工作階段</value>
+  </data>
+  <data name="AutoCompareAfterSessionLoad" xml:space="preserve">
+    <value>載入工作階段後自動比較</value>
+  </data>
+  <data name="HotkeySettings" xml:space="preserve">
+    <value>快速鍵設定</value>
+  </data>
+  <data name="HotkeySettingsHint" xml:space="preserve">
+    <value>點擊方塊並按下組合鍵以設定快速鍵。使用退格鍵或「✖」按鈕清除。</value>
+  </data>
+  <data name="HotkeyTooltip" xml:space="preserve">
+    <value>按下您想要的組合鍵（例如，Ctrl+S）。</value>
+  </data>
+  <data name="LogSettings" xml:space="preserve">
+    <value>日誌設定</value>
+  </data>
+  <data name="EnableLogging" xml:space="preserve">
+    <value>啟用日誌記錄</value>
+  </data>
+  <data name="LogLevel" xml:space="preserve">
+    <value>日誌級別：</value>
+  </data>
+  <data name="RetentionDays" xml:space="preserve">
+    <value>保留天數：</value>
+  </data>
+  <data name="TextViewerSettings" xml:space="preserve">
+    <value>文字檢視器設定</value>
+  </data>
+  <data name="DefaultToReadOnly" xml:space="preserve">
+    <value>預設為唯讀</value>
+  </data>
+  <data name="ShowLineNumbers" xml:space="preserve">
+    <value>顯示行號</value>
+  </data>
+  <data name="EnableSyntaxHighlighting" xml:space="preserve">
+    <value>啟用語法高亮</value>
+  </data>
+  <data name="EnableWordWrap" xml:space="preserve">
+    <value>啟用自動換行</value>
+  </data>
+  <data name="ShowStatusBar" xml:space="preserve">
+    <value>顯示狀態列</value>
+  </data>
+  <data name="Font" xml:space="preserve">
+    <value>字型：</value>
+  </data>
+  <data name="SelectFont" xml:space="preserve">
+    <value>選擇字型...</value>
+  </data>
+  <data name="HorizontalScrollBar" xml:space="preserve">
+    <value>水平捲軸：</value>
+  </data>
+  <data name="VerticalScrollBar" xml:space="preserve">
+    <value>垂直捲軸：</value>
+  </data>
+  <data name="ResetToDefault" xml:space="preserve">
+    <value>重設為預設值</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>新增</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>移除</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>名稱：</value>
+  </data>
+  <data name="Type" xml:space="preserve">
+    <value>類型：</value>
+  </data>
+  <data name="Handler" xml:space="preserve">
+    <value>處理程式：</value>
+  </data>
+  <data name="Path" xml:space="preserve">
+    <value>路徑：</value>
+  </data>
+  <data name="DiffArguments" xml:space="preserve">
+    <value>差異比較參數：</value>
+  </data>
+  <data name="ViewArguments" xml:space="preserve">
+    <value>檢視參數：</value>
+  </data>
+  <data name="SupportedOperations" xml:space="preserve">
+    <value>支援的操作：</value>
+  </data>
+  <data name="SupportedExtensions" xml:space="preserve">
+    <value>支援的副檔名：</value>
+  </data>
+  <data name="Features" xml:space="preserve">
+    <value>功能：</value>
+  </data>
+  <data name="Enabled" xml:space="preserve">
+    <value>已啟用</value>
+  </data>
+  <data name="Extensions" xml:space="preserve">
+    <value>副檔名：</value>
+  </data>
+  <data name="DefaultDiffTool" xml:space="preserve">
+    <value>預設差異比較工具：</value>
+  </data>
+  <data name="DefaultViewTool" xml:space="preserve">
+    <value>預設檢視工具：</value>
+  </data>
+  <data name="PreferredDiffTools" xml:space="preserve">
+    <value>偏好的差異比較工具：</value>
+  </data>
+  <data name="PreferredViewTools" xml:space="preserve">
+    <value>偏好的檢視工具：</value>
+  </data>
+  <data name="FilterSettings" xml:space="preserve">
+    <value>篩選設定...</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="ToolsSettings" xml:space="preserve">
+    <value>工具設定</value>
+  </data>
+  <data name="FileTypeMappingSettings" xml:space="preserve">
+    <value>檔案類型對應設定</value>
+  </data>
+  <data name="OpenOptions" xml:space="preserve">
+    <value>開啟選項</value>
+  </data>
+  <data name="HeaderLeftName" xml:space="preserve">
+    <value>左側檔案名稱</value>
+  </data>
+  <data name="HeaderLeftSize" xml:space="preserve">
+    <value>左側大小</value>
+  </data>
+  <data name="HeaderLeftDate" xml:space="preserve">
+    <value>左側日期</value>
+  </data>
+  <data name="HeaderStatus" xml:space="preserve">
+    <value>結果</value>
+  </data>
+  <data name="HeaderRightName" xml:space="preserve">
+    <value>右側檔案名稱</value>
+  </data>
+  <data name="HeaderRightSize" xml:space="preserve">
+    <value>右側大小</value>
+  </data>
+  <data name="HeaderRightDate" xml:space="preserve">
+    <value>右側日期</value>
+  </data>
+  <data name="DuplicateHotkeys" xml:space="preserve">
+    <value>重複的熱鍵</value>
+  </data>
+  <data name="DuplicateHotkeysMessage" xml:space="preserve">
+    <value>存在重複的熱鍵。請在儲存前解決衝突。</value>
+  </data>
+  <data name="SettingsSaved" xml:space="preserve">
+    <value>設定已成功儲存！</value>
+  </data>
+  <data name="Success" xml:space="preserve">
+    <value>成功</value>
+  </data>
+  <data name="AddExtension" xml:space="preserve">
+    <value>新增副檔名</value>
+  </data>
+  <data name="EnterNewExtension" xml:space="preserve">
+    <value>輸入新的副檔名（例如：.txt）：</value>
+  </data>
+  <data name="InvalidInput" xml:space="preserve">
+    <value>無效輸入</value>
+  </data>
+  <data name="ExtensionMustStartWithDot" xml:space="preserve">
+    <value>副檔名必須以點開頭（例如：.txt）。</value>
+  </data>
+  <data name="ExtensionAlreadyExists" xml:space="preserve">
+    <value>副檔名已存在。</value>
+  </data>
+  <data name="SessionFilesFilter" xml:space="preserve">
+    <value>工作階段檔案 (*.session)|*.session|所有檔案 (*.*)|*.*</value>
+  </data>
+  <data name="SelectDefaultSessionFile" xml:space="preserve">
+    <value>選取預設工作階段檔案</value>
+  </data>
+  <data name="CloseButton" xml:space="preserve">
+    <value>qq</value>
+  </data>
+  <data name="ErrorToolHandlerNotSpecified" xml:space="preserve">
+    <value>未在組態中指定工具處理常式。</value>
+  </data>
+  <data name="ErrorToolTypeNotFound" xml:space="preserve">
+    <value>找不到工具類型 '{0}'。請檢查組態中的處理常式字串。</value>
+  </data>
+  <data name="ErrorCouldNotResolveServiceForTool" xml:space="preserve">
+    <value>無法解析用於 {1} 建構函式的 {0} 類型服務。</value>
+  </data>
+  <data name="ErrorNoSuitableConstructorForTool" xml:space="preserve">
+    <value>找不到適用於工具 '{0}' 的建構函式。</value>
+  </data>
+  <data name="ErrorUnexpectedErrorCreatingTool" xml:space="preserve">
+    <value>建立工具 '{0}' 時發生未預期的錯誤。</value>
+  </data>
+  <data name="ImageViewer" xml:space="preserve">
+    <value>圖片檢視器</value>
+  </data>
+  <data name="ShowExifData" xml:space="preserve">
+    <value>顯示 EXIF</value>
+  </data>
+  <data name="Camera" xml:space="preserve">
+    <value>相機:</value>
+  </data>
+  <data name="Lens" xml:space="preserve">
+    <value>鏡頭:</value>
+  </data>
+  <data name="Aperture" xml:space="preserve">
+    <value>光圈:</value>
+  </data>
+  <data name="ShutterSpeed" xml:space="preserve">
+    <value>快門速度:</value>
+  </data>
+  <data name="ISO" xml:space="preserve">
+    <value>ISO:</value>
+  </data>
+  <data name="Left" xml:space="preserve">
+    <value>左側</value>
+  </data>
+  <data name="Right" xml:space="preserve">
+    <value>右側</value>
+  </data>
+  <data name="ShowDiff" xml:space="preserve">
+    <value>顯示差異</value>
+  </data>
+  <data name="HideDiff" xml:space="preserve">
+    <value>隱藏差異</value>
+  </data>
+  <data name="ShowDiffDisabledTooltip" xml:space="preserve">
+    <value>圖片尺寸不同，無法使用差異比對功能。</value>
+  </data>
+  <data name="BlockSize" xml:space="preserve">
+    <value>區塊大小:</value>
+  </data>
+  <data name="Threshold" xml:space="preserve">
+    <value>閾值:</value>
+  </data>
+  <data name="ImageViewerSettingsTitle" xml:space="preserve">
+    <value>圖片檢視器設定</value>
+  </data>
+  <data name="ImageViewerSettingsDescription" xml:space="preserve">
+    <value>這些設定僅適用於內建的圖片檢視器。</value>
+  </data>
+  <data name="ShowDiffByDefault" xml:space="preserve">
+    <value>比較兩張圖片時預設顯示差異</value>
+  </data>
+  <data name="DefaultBlockSize" xml:space="preserve">
+    <value>預設區塊大小：</value>
+  </data>
+  <data name="DefaultThreshold" xml:space="preserve">
+    <value>預設閾值：</value>
+  </data>
+  <data name="EXIFSettings" xml:space="preserve">
+    <value>EXIF 設定</value>
+  </data>
+  <data name="EXIFSettingsDescription" xml:space="preserve">
+    <value>選取要在檢視器中顯示的 EXIF 資料欄位。</value>
+  </data>
+  <data name="CameraModel" xml:space="preserve">
+    <value>相機型號</value>
+  </data>
+  <data name="LensModel" xml:space="preserve">
+    <value>鏡頭型號</value>
+  </data>
+  <data name="EXIFAperture" xml:space="preserve">
+    <value>光圈</value>
+  </data>
+  <data name="EXIFShutterSpeed" xml:space="preserve">
+    <value>快門速度</value>
+  </data>
+  <data name="EXIFISO" xml:space="preserve">
+    <value>ISO</value>
   </data>
 </root>

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using dCompare.Common;
+using Microsoft.Extensions.Configuration;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -10,7 +11,7 @@ namespace dCompare.Configuration
     /// </summary>
     public class ConfigurationService : IConfigurationService
     {
-        private const string jsonFileName = "dCompare.json";
+        private const string jsonFileName = Constant.DefaultConfigurationFile;
         private readonly string _configPath;
         private readonly IConfigurationRoot _configuration;
         private static readonly JsonSerializerOptions _serializerOptions = new()
@@ -50,12 +51,55 @@ namespace dCompare.Configuration
             {
                 var jsonString = await File.ReadAllTextAsync(_configPath);
                 var config = JsonSerializer.Deserialize<AppConfiguration>(jsonString, _serializerOptions);
+                if (config != null)
+                {
+                    ValidateConfiguration(config);
+                }
                 return config ?? new AppConfiguration();
+            }
+            catch (JsonException ex)
+            {
+                throw new InvalidDataException($"Error in configuration file at path: {ex.Path}. {ex.Message}", ex);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error reading or deserializing configuration file: {ex.Message}");
-                return new AppConfiguration();
+                throw new InvalidDataException($"Error reading or deserializing configuration file: {ex.Message}", ex);
+            }
+        }
+
+        private static void ValidateConfiguration(AppConfiguration config)
+        {
+            if (config.Options == null) return;
+
+            var toolNames = new HashSet<string>(config.Options.Tools.Keys);
+
+            foreach (var mapping in config.Options.FileTypeMapping.Values)
+            {
+                if (!string.IsNullOrEmpty(mapping.DefaultDiffTool) && !toolNames.Contains(mapping.DefaultDiffTool))
+                {
+                    throw new InvalidDataException($"The diff tool '{mapping.DefaultDiffTool}' set as the default for extensions '{string.Join(", ", mapping.Extensions)}' is not a defined tool.");
+                }
+
+                if (!string.IsNullOrEmpty(mapping.DefaultViewTool) && !toolNames.Contains(mapping.DefaultViewTool))
+                {
+                    throw new InvalidDataException($"The view tool '{mapping.DefaultViewTool}' set as the default for extensions '{string.Join(", ", mapping.Extensions)}' is not a defined tool.");
+                }
+
+                foreach (var toolName in mapping.PreferredTools.Diff)
+                {
+                    if (!toolNames.Contains(toolName))
+                    {
+                        throw new InvalidDataException($"The preferred diff tool '{toolName}' for extensions '{string.Join(", ", mapping.Extensions)}' is not a defined tool.");
+                    }
+                }
+
+                foreach (var toolName in mapping.PreferredTools.View)
+                {
+                    if (!toolNames.Contains(toolName))
+                    {
+                        throw new InvalidDataException($"The preferred view tool '{toolName}' for extensions '{string.Join(", ", mapping.Extensions)}' is not a defined tool.");
+                    }
+                }
             }
         }
 
@@ -77,7 +121,7 @@ namespace dCompare.Configuration
         /// <param name="operation">The operation to check (e.g., "view" or "diff").</param>
         /// <param name="extension">The file extension to check (e.g., ".txt" or ".png").</param>
         /// <returns>An enumerable of supported ToolConfiguration objects.</returns>
-        public IEnumerable<ToolOptions> GetSupportedTools(string operation, string extension)
+        public IEnumerable<ToolOptions> GetSupportedTools(ToolOperationTypes operation, string extension)
         {
             return _configuration.GetSection("Tools").Get<Dictionary<string, ToolOptions>>()?.Values
                 .Where(tool => tool.Enabled &&
@@ -102,15 +146,15 @@ namespace dCompare.Configuration
         /// <param name="operation">The operation to check (e.g., "view" or "diff").</param>
         /// <param name="extension">The file extension to check (e.g., ".txt" or ".png").</param>
         /// <returns>The default ToolConfiguration, or null if not found.</returns>
-        public ToolOptions? GetDefaultTool(string operation, string extension)
+        public ToolOptions? GetDefaultTool(ToolOperationTypes operation, string extension)
         {
             var fileMapping = GetFileTypeMapping(extension);
             if (fileMapping == null) return null;
 
-            var toolName = operation.ToLower() switch
+            var toolName = operation switch
             {
-                Operations.Diff => fileMapping.DefaultDiffTool,
-                Operations.View => fileMapping.DefaultViewTool,
+                ToolOperationTypes.Diff => fileMapping.DefaultDiffTool,
+                ToolOperationTypes.View => fileMapping.DefaultViewTool,
                 _ => null
             };
 
@@ -124,17 +168,17 @@ namespace dCompare.Configuration
         /// <param name="operation">The operation to check (e.g., "view" or "diff").</param>
         /// <param name="extension">The file extension to check (e.g., ".txt" or ".png").</param>
         /// <returns>An enumerable of preferred ToolConfiguration objects in priority order.</returns>
-        public IEnumerable<ToolOptions> GetPreferredTools(string operation, string extension)
+        public IEnumerable<ToolOptions> GetPreferredTools(ToolOperationTypes operation, string extension)
         {
             var fileMapping = GetFileTypeMapping(extension);
             if (fileMapping == null) yield break;
 
             List<string> preferredToolNames;
-            if (operation.ToLower() == Operations.Diff)
+            if (operation == ToolOperationTypes.Diff)
             {
                 preferredToolNames = fileMapping.PreferredTools.Diff;
             }
-            else if (operation.ToLower() == Operations.View)
+            else if (operation == ToolOperationTypes.View)
             {
                 preferredToolNames = fileMapping.PreferredTools.View;
             }
@@ -157,14 +201,14 @@ namespace dCompare.Configuration
                 }
             }
         }
-        public IEnumerable<ToolOptions> GetAllToolsForOperation(string operation)
+        public IEnumerable<ToolOptions> GetAllToolsForOperation(ToolOperationTypes operation)
         {
             var tools = _configuration.GetSection("Tools").Get<Dictionary<string, ToolOptions>>();
             return tools?.Values
                 .Where(tool => tool.Enabled && tool.SupportsOperation(operation))
                 ?? Enumerable.Empty<ToolOptions>();
         }
-        public IEnumerable<string> GetSupportedExtensions(string? toolName = null, string? operation = null)
+        public IEnumerable<string> GetSupportedExtensions(string? toolName = null, ToolOperationTypes? operation = null)
         {
             var tools = _configuration.GetSection("Tools").Get<Dictionary<string, ToolOptions>>();
             if (tools == null) yield break;
@@ -172,12 +216,17 @@ namespace dCompare.Configuration
             foreach (var tool in tools.Values)
             {
                 if (toolName != null && tool.Name != toolName) continue;
-                if (operation != null && !tool.SupportsOperation(operation)) continue;
+                if (operation != null && !tool.SupportsOperation((ToolOperationTypes)operation)) continue;
                 foreach (var ext in tool.SupportedExtensions)
                 {
                     yield return ext;
                 }
             }
+        }
+
+        public IConfiguration GetConfiguration()
+        {
+            return _configuration;
         }
     }
 }
