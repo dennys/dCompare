@@ -8,6 +8,8 @@ namespace dCompare.FileOperation
         void WhoAmI();
         void Pause();
         void Resume();
+        // Stops every batch this manager is running, whichever caller started it.
+        void Cancel();
         Task<OperationResult> CopyAsync(string source, string destination, bool overwrite = false, IProgress<OperationProgress>? progress = null, CancellationToken cancellationToken = default);
         Task<OperationResult> MoveAsync(string source, string destination, bool overwrite = false, IProgress<OperationProgress>? progress = null, CancellationToken cancellationToken = default);
         Task<OperationResult> DeleteAsync(string path, IProgress<OperationProgress>? progress = null, CancellationToken cancellationToken = default);

@@ -4,7 +4,6 @@ using CommunityToolkit.Mvvm.Messaging;
 using dCompare.Common;
 using dCompare.FileOperation.Messages;
 using dCompare.FileOperation.Models;
-using dCompare.FileOperation.Strategies;
 using Serilog;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -16,8 +15,9 @@ namespace dCompare.FileOperation
         IRecipient<QueueTransferMessage>,
         IRecipient<CompleteTransferMessage>
     {
-        private readonly FileManager _fileManager;
-        private CancellationTokenSource _cancellationTokenSource;
+        // The DI singleton CompareControl transfers through as well, which is what makes the Pause and
+        // Cancel buttons below act on transfers started from the results list.
+        private readonly IFileManager _fileManager;
         private bool _isPaused;
 
         [ObservableProperty]
@@ -32,10 +32,9 @@ namespace dCompare.FileOperation
         [ObservableProperty]
         private string? _filterText;
 
-        public FileOperationControlViewModel()
+        public FileOperationControlViewModel(IFileManager? fileManager = null)
         {
-            _fileManager = new FileManager(new Kernel32FileCopyStrategy());
-            _cancellationTokenSource = new CancellationTokenSource();
+            _fileManager = fileManager ?? new FileManager();
 
             // Register for messages
             WeakReferenceMessenger.Default.Register<QueueTransferMessage>(this);
@@ -53,6 +52,7 @@ namespace dCompare.FileOperation
         private void OnStart()
         {
             _isPaused = false;
+            _fileManager.Resume();
         }
 
         private bool CanStart() => _isPaused;
@@ -61,6 +61,7 @@ namespace dCompare.FileOperation
         private void OnPause()
         {
             _isPaused = true;
+            _fileManager.Pause();
         }
 
         private bool CanPause() => !_isPaused;
@@ -68,8 +69,7 @@ namespace dCompare.FileOperation
         [RelayCommand(CanExecute = nameof(CanCancel))]
         private void OnCancel()
         {
-            _cancellationTokenSource.Cancel();
-            _cancellationTokenSource = new CancellationTokenSource();
+            _fileManager.Cancel();
         }
 
         private bool CanCancel() => QueuedTransfers.Any();
@@ -77,10 +77,11 @@ namespace dCompare.FileOperation
         [RelayCommand(CanExecute = nameof(CanCancelTransfer))]
         private void OnCancelTransfer(object parameter)
         {
+            // shortcut: the manager owns one stop request for all queued work, so right-clicking one row
+            // cancels the whole queue. Upgrade when each transfer gets its own token.
             if (parameter is FileTransfer)
             {
-                _cancellationTokenSource.Cancel();
-                _cancellationTokenSource = new CancellationTokenSource();
+                _fileManager.Cancel();
             }
         }
 
@@ -159,7 +160,9 @@ namespace dCompare.FileOperation
             {
                 var transfer = message.Transfer;
                 QueuedTransfers.Remove(transfer);
-                transfer.Status = message.Success ? FileOperationStatus.Completed : FileOperationStatus.Failed;
+                transfer.Status = message.Success
+                    ? FileOperationStatus.Completed
+                    : message.Cancelled ? FileOperationStatus.Cancelled : FileOperationStatus.Failed;
                 transfer.Progress = message.Success ? 1.0 : transfer.Progress;
                 if (message.Success)
                 {
@@ -223,21 +226,16 @@ namespace dCompare.FileOperation
                         });
                     });
 
-                    while (_isPaused && !_cancellationTokenSource.Token.IsCancellationRequested)
-                    {
-                        await Task.Delay(100, _cancellationTokenSource.Token);
-                    }
-
                     transfer.StartTime = DateTime.Now;
 
                     OperationResult result;
                     if (isCopy)
                     {
-                        result = await _fileManager.CopyAsync(source, target, overwrite, progress, _cancellationTokenSource.Token);
+                        result = await _fileManager.CopyAsync(source, target, overwrite, progress);
                     }
                     else
                     {
-                        result = await _fileManager.MoveAsync(source, target, overwrite, progress, _cancellationTokenSource.Token);
+                        result = await _fileManager.MoveAsync(source, target, overwrite, progress);
                     }
 
                     if (result.SuccessCount > 0)
@@ -277,15 +275,26 @@ namespace dCompare.FileOperation
                         LogTransfer(transfer);
                     });
                 }
-            }, _cancellationTokenSource.Token);
+            });
             return jobId;
         }
 
+        // A plain transfer ledger in Documents, deliberately beside (not through) the Serilog file sink so it
+        // stays readable after a restart. It must never fail the transfer it describes: this runs inside the
+        // messenger call on the worker thread, so an exception here (OneDrive-redirected Documents, an AV
+        // lock) would unwind into the worker's catch and book the same transfer as failed as well.
         private static void LogTransfer(FileTransfer transfer)
         {
-            string logPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "FileOperationLog.txt");
-            string logEntry = $"{DateTime.Now}: {transfer.Operation} - {transfer.Source} to {transfer.Target} - {transfer.Status.ToString()}\n";
-            File.AppendAllText(logPath, logEntry);
+            try
+            {
+                string logPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "FileOperationLog.txt");
+                string logEntry = $"{DateTime.Now}: {transfer.Operation} - {transfer.Source} to {transfer.Target} - {transfer.Status.ToString()}\n";
+                File.AppendAllText(logPath, logEntry);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Could not append the transfer record for {Source} to FileOperationLog.txt.", transfer.Source);
+            }
         }
 
         private bool FilterTransfers(object item)

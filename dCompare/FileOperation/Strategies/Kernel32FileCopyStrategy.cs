@@ -30,6 +30,8 @@ public class Kernel32FileCopyStrategy : IFileOperationStrategy
         nint hDestinationFile,
         nint lpData);
 
+    private const int ErrorFileExists = 80; // ERROR_FILE_EXISTS, what CopyFileEx reports for a refused overwrite.
+
     public Task CopyFileAsync(string sourceFile, string destFile, bool overwrite, CopyProgressCallback? progressCallback, CancellationToken cancellationToken)
     {
         return Task.Run(() =>
@@ -37,7 +39,17 @@ public class Kernel32FileCopyStrategy : IFileOperationStrategy
             bool cancel = false;
             using (cancellationToken.Register(() => cancel = true))
             {
-                CopyFileFlags flags = overwrite ? 0 : CopyFileFlags.COPY_FILE_FAIL_IF_EXISTS;
+                // CopyFileEx writes straight onto its target, so a cancel or a failure half way through left a
+                // truncated file where the user's version was (first-time copies had no temp file at all).
+                // Every copy is staged beside the destination and swapped, which is atomic on the same volume.
+                string tempFile = destFile + ".dCompare.tmp";
+
+                // Refused up front because staging into the temp file loses COPY_FILE_FAIL_IF_EXISTS, which is
+                // the only thing that used to protect an existing destination.
+                if (!overwrite && File.Exists(destFile))
+                {
+                    throw new Win32Exception(ErrorFileExists);
+                }
 
                 // Ensure destination directory exists
                 string? destDir = Path.GetDirectoryName(destFile);
@@ -58,9 +70,27 @@ public class Kernel32FileCopyStrategy : IFileOperationStrategy
                            ?? CopyProgressResult.PROGRESS_CONTINUE;
                 };
 
-                if (!CopyFileEx(sourceFile, destFile, routine, nint.Zero, ref cancel, flags))
+                try
                 {
-                    throw new Win32Exception(Marshal.GetLastWin32Error());
+                    FileOperationRetry.Run($"CopyFileEx {sourceFile} -> {tempFile}", () =>
+                    {
+                        // A retry cannot resume into the partial file the previous attempt left: the
+                        // COPY_FILE_FAIL_IF_EXISTS flag makes CopyFileEx refuse an existing target.
+                        FileOperationRetry.TryDelete(tempFile);
+
+                        // Read the code before anything else touches the thread's last error (File.Delete does).
+                        if (!CopyFileEx(sourceFile, tempFile, routine, nint.Zero, ref cancel, CopyFileFlags.COPY_FILE_FAIL_IF_EXISTS))
+                        {
+                            throw new Win32Exception(Marshal.GetLastWin32Error());
+                        }
+                    });
+
+                    FileOperationRetry.Run($"move {tempFile} -> {destFile}", () => File.Move(tempFile, destFile, true));
+                }
+                catch
+                {
+                    FileOperationRetry.TryDelete(tempFile);
+                    throw;
                 }
 
                 // Preserve metadata
@@ -77,16 +107,17 @@ public class Kernel32FileCopyStrategy : IFileOperationStrategy
 
     public void MoveFile(string sourceFile, string destFile, bool overwrite)
     {
-        File.Move(sourceFile, destFile, overwrite);  // File.Move preserves metadata on the same volume.
+        // File.Move preserves metadata on the same volume.
+        FileOperationRetry.Run($"move {sourceFile} -> {destFile}", () => File.Move(sourceFile, destFile, overwrite));
     }
 
     public void DeleteFile(string filePath)
     {
-        File.Delete(filePath);
+        FileOperationRetry.Run($"delete {filePath}", () => File.Delete(filePath));
     }
 
     public void DeleteDirectory(string dirPath)
     {
-        Directory.Delete(dirPath);
+        FileOperationRetry.Run($"delete directory {dirPath}", () => Directory.Delete(dirPath));
     }
 }

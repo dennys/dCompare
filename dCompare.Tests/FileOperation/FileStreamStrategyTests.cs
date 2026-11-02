@@ -2,6 +2,7 @@ using Xunit;
 using dCompare.FileOperation.Strategies;
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Threading;
 
@@ -71,6 +72,53 @@ namespace dCompare.Tests.FileOperation
             // Assert
             Assert.True(File.Exists(_destFile));
             Assert.Equal(File.ReadAllText(_sourceFile), File.ReadAllText(_destFile));
+        }
+
+        // Copy fills <dest>.dCompare.tmp and swaps it in; a leftover temp file means the swap or the
+        // failure cleanup was skipped, and the user's previous version must survive a refused overwrite.
+        [Fact]
+        public async Task CopyFileAsync_SuccessAndFailedCopies_LeaveNoTempFileBehind()
+        {
+            // Arrange
+            var strategy = new FileStreamStrategy();
+            var swappedDest = Path.Combine(_testRoot, "swap.txt");
+            File.WriteAllText(swappedDest, "old content");
+            var existingDest = Path.Combine(_testRoot, "existing.txt");
+            File.WriteAllText(existingDest, "existing content");
+            var missingSource = Path.Combine(_testRoot, "missing.txt");
+
+            // Act - successful overwrite, which is the case that goes through the temp file
+            bool sawTempDuringCopy = false;
+            CopyProgressCallback watchTemp = (long _, long _, long _, long _, uint _, CopyProgressCallbackReason _, IntPtr _, IntPtr _, IntPtr _) =>
+            {
+                sawTempDuringCopy = File.Exists(swappedDest + ".dCompare.tmp");
+                return CopyProgressResult.PROGRESS_CONTINUE;
+            };
+            await strategy.CopyFileAsync(_sourceFile, swappedDest, true, watchTemp, CancellationToken.None);
+
+            // Assert
+            Assert.Equal(File.ReadAllText(_sourceFile), File.ReadAllText(swappedDest));
+            Assert.True(sawTempDuringCopy, "copy did not stage the new version in <dest>.dCompare.tmp");
+            AssertNoTempFiles();
+
+            // Act & Assert - overwrite refused onto an existing destination
+            await Assert.ThrowsAsync<IOException>(() =>
+                strategy.CopyFileAsync(_sourceFile, existingDest, false, null, CancellationToken.None));
+            Assert.Equal("existing content", File.ReadAllText(existingDest));
+            AssertNoTempFiles();
+
+            // Act & Assert - missing source
+            await Assert.ThrowsAsync<FileNotFoundException>(() =>
+                strategy.CopyFileAsync(missingSource, Path.Combine(_testRoot, "never.txt"), false, null, CancellationToken.None));
+            AssertNoTempFiles();
+        }
+
+        private void AssertNoTempFiles()
+        {
+            string[] leftovers = Directory.GetFiles(_testRoot, "*", SearchOption.AllDirectories)
+                .Where(f => f.EndsWith(".dCompare.tmp", StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+            Assert.Empty(leftovers);
         }
 
         [Fact]
