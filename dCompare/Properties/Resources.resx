@@ -370,6 +370,30 @@ Right: {1}</value>
   <data name="ConfirmOperation" xml:space="preserve">
     <value>Confirm Operation</value>
   </data>
+  <data name="VerbCopy" xml:space="preserve">
+    <value>copy</value>
+  </data>
+  <data name="VerbMove" xml:space="preserve">
+    <value>move</value>
+  </data>
+  <data name="ConfirmTransferMessage" xml:space="preserve">
+    <value>Are you sure you want to {0} {1} item(s) to '{2}'?</value>
+  </data>
+  <data name="ConfirmTransferOverwriteWarning" xml:space="preserve">
+    <value>Existing files at the destination will be overwritten.</value>
+  </data>
+  <data name="StatusOperationCancelled" xml:space="preserve">
+    <value>Cancelled: {0} {1} item(s) to '{2}'. Nothing was changed.</value>
+  </data>
+  <data name="ConfirmDeleteItems" xml:space="preserve">
+    <value>Are you sure you want to delete these {0} item(s)?</value>
+  </data>
+  <data name="ConfirmDeleteMoreItems" xml:space="preserve">
+    <value>... and {0} more</value>
+  </data>
+  <data name="StatusDeleteCancelled" xml:space="preserve">
+    <value>Cancelled: delete {0} item(s). Nothing was deleted.</value>
+  </data>
   <data name="OperationFailed" xml:space="preserve">
     <value>Operation Failed</value>
   </data>
@@ -1221,5 +1245,14 @@ Right: {1}</value>
   </data>
   <data name="EXIFISO" xml:space="preserve">
     <value>ISO</value>
+  </data>
+  <data name="ErrorToolHandlerNotBuiltInTool" xml:space="preserve">
+    <value>Tool handler '{0}' is not a built-in dCompare tool type. Check the handler string in the configuration.</value>
+  </data>
+  <data name="TransferCanceled" xml:space="preserve">
+    <value>Transfer cancelled.</value>
+  </data>
+  <data name="ErrorFileTooLarge" xml:space="preserve">
+    <value>'{0}' is {1:N0} MB, above the {2:N0} MB limit of the built-in viewer. Open it with an external tool instead.</value>
   </data>
 </root>

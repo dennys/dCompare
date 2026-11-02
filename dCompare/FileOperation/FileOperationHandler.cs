@@ -1,8 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using dCompare.Common;
 using dCompare.Compare.Models;
+using dCompare.Configuration;
 using dCompare.FileOperation.Messages;
 using dCompare.FileOperation.Models;
+using Serilog;
 using System.IO;
 using System.Text;
 using System.Windows;
@@ -13,19 +15,72 @@ namespace dCompare.FileOperation
     {
         private readonly IFileManager _fileManager;
         private readonly IMessenger _messenger;
+        private readonly IConfigurationService? _configService;
+        private readonly IUserInteractionService? _userInteraction;
 
-        // Dictionary to track active jobs and their completion sources.
-        private readonly Dictionary<string, TaskCompletionSource<bool>> _activeJobs = new();
-
-        public FileOperationHandler(IFileManager fileManager)
+        // The two confirmation services are optional so the handler stays constructible without the
+        // container (unit tests); without them no prompt can be raised and the operation runs unconfirmed.
+        public FileOperationHandler(IFileManager fileManager, IConfigurationService? configService = null, IUserInteractionService? userInteraction = null)
         {
             _fileManager = fileManager;
             _messenger = CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default;
+            _configService = configService;
+            _userInteraction = userInteraction;
+        }
+
+        // One CTS covers a whole batch, so the operation panel's Cancel button stops a multi-GB transfer
+        // started from the results list. Concurrent batches share the live source; it is replaced, not
+        // reset, once cancelled, because CancellationTokenSource cannot be un-cancelled.
+        private readonly object _batchGate = new();
+        private CancellationTokenSource? _batchCts;
+        private int _activeBatches;
+
+        public void Cancel()
+        {
+            lock (_batchGate)
+            {
+                _batchCts?.Cancel();
+            }
+        }
+
+        private CancellationToken StartBatch()
+        {
+            lock (_batchGate)
+            {
+                _activeBatches++;
+                if (_batchCts == null || _batchCts.IsCancellationRequested)
+                {
+                    // The cancelled instance is left undisposed: a batch still winding down may hold a
+                    // registration on it, and it has already delivered its cancellation.
+                    _batchCts = new CancellationTokenSource();
+                }
+                return _batchCts.Token;
+            }
+        }
+
+        private void EndBatch()
+        {
+            lock (_batchGate)
+            {
+                if (--_activeBatches == 0 && _batchCts != null)
+                {
+                    _batchCts.Dispose();
+                    _batchCts = null;
+                }
+            }
         }
 
         public List<(string Source, string TargetPath, SourceType Type)> GetItemsForTransfer(List<TreeNode> selectedItems, bool toLeft, string targetRoot)
         {
             List<(string Source, string TargetPath, SourceType Type)> items = new();
+
+            // An empty or relative root turns Path.Combine into a path under the process working directory,
+            // which silently writes the user's files into the folder the exe happened to be launched from.
+            if (string.IsNullOrWhiteSpace(targetRoot) || !Path.IsPathRooted(targetRoot))
+            {
+                throw new ArgumentException($"'{targetRoot}' is not a valid destination folder.", nameof(targetRoot));
+            }
+
             foreach (var node in selectedItems)
             {
                 string? sourcePath = toLeft ? node.RightNode?.FullPath : node.LeftNode?.FullPath;
@@ -62,17 +117,32 @@ namespace dCompare.FileOperation
                 return;
             }
 
+            // Deleting is the one operation the app cannot undo from its own UI, so the user approves the
+            // exact targets here, on the UI thread, before any worker thread is started.
+            if (_configService != null && _userInteraction != null)
+            {
+                AppConfiguration config = await _configService.LoadConfigurationAsync();
+                bool confirmDelete = config.Options?.Confirmation.DeleteFile == true;
+                if (confirmDelete && !_userInteraction.ShowConfirmation(BuildDeleteMessage(items), Properties.Resources.ConfirmOperation))
+                {
+                    Log.Information("Delete of {Count} item(s) cancelled by the user.", items.Count);
+                    _userInteraction.ShowInformation(
+                        string.Format(Properties.Resources.StatusDeleteCancelled, items.Count),
+                        Properties.Resources.ConfirmOperation);
+                    return;
+                }
+            }
+
+            // The items themselves are deleted on worker threads below.
+            CancellationToken token = StartBatch();
             try
             {
-                var jobIds = new List<string>();
                 var tasks = new List<Task>();
 
                 foreach (var item in items)
                 {
                     string jobId = Guid.NewGuid().ToString();
-                    jobIds.Add(jobId);
                     var tcs = new TaskCompletionSource<bool>();
-                    _activeJobs[jobId] = tcs;
 
                     var transfer = new FileTransfer
                     {
@@ -98,7 +168,7 @@ namespace dCompare.FileOperation
                                 transfer.Status = FileOperationStatus.Transferring;
                             });
 
-                            OperationResult result = await _fileManager.DeleteAsync(item.Path, progress);
+                            OperationResult result = await _fileManager.DeleteAsync(item.Path, progress, token);
                             if (result.SuccessCount > 0)
                             {
                                 _messenger.Send(new CompleteTransferMessage(transfer, true, "Operation completed successfully."));
@@ -108,6 +178,12 @@ namespace dCompare.FileOperation
                             {
                                 throw new Exception(string.Join("; ", result.FailedItems));
                             }
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            // A cancelled item is a reported outcome, not a batch error: no error dialog afterwards.
+                            _messenger.Send(new CompleteTransferMessage(transfer, false, Properties.Resources.TransferCanceled, cancelled: true));
+                            tcs.TrySetResult(true);
                         }
                         catch (Exception ex)
                         {
@@ -123,10 +199,14 @@ namespace dCompare.FileOperation
             {
                 throw new Exception(string.Format(Properties.Resources.ErrorDeletingItems, ex.Message));
             }
+            finally
+            {
+                EndBatch();
+            }
         }
 
         // Common method to handle copy or move operations
-        private async Task ExecuteTransferAsync(List<(string Source, string TargetPath, SourceType Type)> items, FileOperationTypes operation, string errorMessage)
+        private async Task ExecuteTransferAsync(List<(string Source, string TargetPath, SourceType Type)> items, FileOperationTypes operation, string targetRoot, string errorMessage)
         {
             if (items.Count == 0)
             {
@@ -134,17 +214,29 @@ namespace dCompare.FileOperation
                 return;
             }
 
+            // Everything below this line runs on worker threads, so this is the only place a prompt is legal.
+            bool overwrites = items.Any(item => File.Exists(item.TargetPath) || Directory.Exists(item.TargetPath));
+            if (!await ConfirmTransferAsync(items, operation, targetRoot, overwrites))
+            {
+                string cancelledVerb = operation == FileOperationTypes.Copy
+                    ? Properties.Resources.VerbCopy
+                    : Properties.Resources.VerbMove;
+                Log.Information("{Operation} of {Count} item(s) to {Target} cancelled by the user.", operation, items.Count, targetRoot);
+                _userInteraction?.ShowInformation(
+                    string.Format(Properties.Resources.StatusOperationCancelled, cancelledVerb, items.Count, targetRoot),
+                    Properties.Resources.ConfirmOperation);
+                return;
+            }
+
+            CancellationToken token = StartBatch();
             try
             {
-                var jobIds = new List<string>();
                 var tasks = new List<Task>();
 
                 foreach (var item in items)
                 {
                     string jobId = Guid.NewGuid().ToString();
-                    jobIds.Add(jobId);
                     var tcs = new TaskCompletionSource<bool>();
-                    _activeJobs[jobId] = tcs;
 
                     var transfer = new FileTransfer
                     {
@@ -175,8 +267,8 @@ namespace dCompare.FileOperation
                             });
 
                             OperationResult result = operation == FileOperationTypes.Copy
-                                ? await _fileManager.CopyAsync(item.Source, item.TargetPath, true, progress)
-                                : await _fileManager.MoveAsync(item.Source, item.TargetPath, true, progress);
+                                ? await _fileManager.CopyAsync(item.Source, item.TargetPath, overwrites, progress, token)
+                                : await _fileManager.MoveAsync(item.Source, item.TargetPath, overwrites, progress, token);
 
                             if (result.SuccessCount > 0)
                             {
@@ -187,6 +279,12 @@ namespace dCompare.FileOperation
                             {
                                 throw new Exception(string.Join("; ", result.FailedItems));
                             }
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            // A cancelled item is a reported outcome, not a batch error: no error dialog afterwards.
+                            _messenger.Send(new CompleteTransferMessage(transfer, false, Properties.Resources.TransferCanceled, cancelled: true));
+                            tcs.TrySetResult(true);
                         }
                         catch (Exception ex)
                         {
@@ -202,30 +300,77 @@ namespace dCompare.FileOperation
             {
                 MessageBox.Show($"{errorMessage}: {ex.Message}", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
+            finally
+            {
+                EndBatch();
+            }
+        }
+
+        // The user is approving a destructive action, so the prompt names what actually goes: the item count
+        // and the paths, truncated so the dialog stays readable for large selections.
+        private static string BuildDeleteMessage(List<(string Path, SourceType Type)> items)
+        {
+            const int listedPaths = 5;
+            string paths = string.Join(Environment.NewLine, items.Take(listedPaths).Select(item => item.Path));
+            if (items.Count > listedPaths)
+            {
+                paths += Environment.NewLine + string.Format(Properties.Resources.ConfirmDeleteMoreItems, items.Count - listedPaths);
+            }
+            return string.Format(Properties.Resources.ConfirmDeleteItems, items.Count) + Environment.NewLine + paths;
+        }
+
+        // Options | Confirmation used to be write-only: the Options page stored Copy / Move / CopyOverwrite /
+        // MoveOverwrite and nothing read them. Copy and Move confirm every batch, CopyOverwrite and
+        // MoveOverwrite only when something at the destination would actually be replaced.
+        private async Task<bool> ConfirmTransferAsync(List<(string Source, string TargetPath, SourceType Type)> items, FileOperationTypes operation, string targetRoot, bool overwrites)
+        {
+            if (_configService == null || _userInteraction == null)
+            {
+                return true;
+            }
+
+            AppConfiguration config = await _configService.LoadConfigurationAsync();
+            ConfirmationOptions confirmation = config.Options?.Confirmation ?? new ConfirmationOptions();
+            bool isCopy = operation == FileOperationTypes.Copy;
+
+            if (!(isCopy ? confirmation.Copy : confirmation.Move) &&
+                !(overwrites && (isCopy ? confirmation.CopyOverwrite : confirmation.MoveOverwrite)))
+            {
+                return true;
+            }
+
+            string verb = isCopy ? Properties.Resources.VerbCopy : Properties.Resources.VerbMove;
+            string message = string.Format(Properties.Resources.ConfirmTransferMessage, verb, items.Count, targetRoot);
+            if (overwrites)
+            {
+                message += Environment.NewLine + Properties.Resources.ConfirmTransferOverwriteWarning;
+            }
+
+            return _userInteraction.ShowConfirmation(message, Properties.Resources.ConfirmOperation);
         }
 
         public async Task CopyToLeft(List<TreeNode> selectedItems, string destDir)
         {
             var items = GetItemsForTransfer(selectedItems, toLeft: true, destDir);
-            await ExecuteTransferAsync(items, FileOperationTypes.Copy, "Error copying items");
+            await ExecuteTransferAsync(items, FileOperationTypes.Copy, destDir, "Error copying items");
         }
 
         public async Task CopyToRight(List<TreeNode> selectedItems, string destDir)
         {
             var items = GetItemsForTransfer(selectedItems, toLeft: false, destDir);
-            await ExecuteTransferAsync(items, FileOperationTypes.Copy, "Error copying items");
+            await ExecuteTransferAsync(items, FileOperationTypes.Copy, destDir, "Error copying items");
         }
 
         public async Task MoveToLeft(List<TreeNode> selectedItems, string destDir)
         {
             var items = GetItemsForTransfer(selectedItems, toLeft: true, destDir);
-            await ExecuteTransferAsync(items, FileOperationTypes.Move, "Error moving items");
+            await ExecuteTransferAsync(items, FileOperationTypes.Move, destDir, "Error moving items");
         }
 
         public async Task MoveToRight(List<TreeNode> selectedItems, string destDir)
         {
             var items = GetItemsForTransfer(selectedItems, toLeft: false, destDir);
-            await ExecuteTransferAsync(items, FileOperationTypes.Move, "Error moving items");
+            await ExecuteTransferAsync(items, FileOperationTypes.Move, destDir, "Error moving items");
         }
 
         /// <summary>
