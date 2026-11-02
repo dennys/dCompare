@@ -9,7 +9,6 @@ using dCompare.Session;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Globalization;
-using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -107,8 +106,7 @@ namespace dCompare
                 {
                     try
                     {
-                        //await _sessionManager.LoadSessionAsync(config.Options.Session.DefaultSessionFile, config.Options.Session.AutoCompareAfterSessionLoad, UpdateStatus, ExecuteUcCompareMethod);
-                        _sessionManager.LoadSession(config.Options.Session.DefaultSessionFile, config.Options.Session.AutoCompareAfterSessionLoad, UpdateStatus, ExecuteUcCompareMethod);
+                        _sessionManager.LoadSession(config.Options.Session.DefaultSessionFile, config.Options.Session.AutoCompareAfterSessionLoad, UpdateStatus, ExecuteSessionCompare);
                     }
                     catch (System.IO.FileNotFoundException)
                     {
@@ -145,7 +143,8 @@ namespace dCompare
                     Content = new CompareControl(
                         _serviceProvider.GetRequiredService<IConfigurationService>(),
                         _serviceProvider.GetRequiredService<IFileManager>(),
-                        _serviceProvider.GetRequiredService<ILogger<CompareControl>>())
+                        _serviceProvider.GetRequiredService<ILogger<CompareControl>>(),
+                        _serviceProvider.GetRequiredService<IUserInteractionService>())
                 };
                 TabControl.Items.Add(newTab);
                 TabControl.SelectedItem = newTab;
@@ -234,7 +233,6 @@ namespace dCompare
         }
 
         public static (string filePath, bool autoCompare) LoadSessionArgs => (string.Empty, true);
-        //public async Task LoadSession(string file, bool executeCompare = false, Action<string>? updateStatus = null, Action<string>? executeCompareMethod = null)
         [RelayCommand]
         public void LoadSessionFile((string filePath, bool autoCompare) parameters)
         {
@@ -244,7 +242,7 @@ namespace dCompare
                 {
                     string filePath = parameters.filePath ?? string.Empty;
                     bool autoCompare = parameters.autoCompare;
-                    _sessionManager.LoadSession(filePath, autoCompare, UpdateStatus, ExecuteUcCompareMethod);
+                    _sessionManager.LoadSession(filePath, autoCompare, UpdateStatus, ExecuteSessionCompare);
                     StatusMessage = string.Format(Properties.Resources.StatusLoadedSession, filePath, autoCompare);
                 }
                 else
@@ -307,33 +305,31 @@ namespace dCompare
         private bool CanCompare() => TabControl?.SelectedItem is TabItem selectedTab && selectedTab.Content is IRefreshable;
 
         [RelayCommand]
-        private void CopyToLeft() => ExecuteUcCompareMethod("CopyToLeft_Click");
+        private void CopyToLeft() => ExecuteOnActiveCompare(nameof(CopyToLeft), c => c.CopyToLeft());
 
         [RelayCommand]
-        private void CopyToRight() => ExecuteUcCompareMethod("CopyToRight_Click");
+        private void CopyToRight() => ExecuteOnActiveCompare(nameof(CopyToRight), c => c.CopyToRight());
 
         [RelayCommand]
-        private void ExpandAll() => ExecuteUcCompareMethod("ExpandAll_Click");
+        private void ExpandAll() => ExecuteOnActiveCompare(nameof(ExpandAll), c => c.ExpandAll());
 
         [RelayCommand]
-        private void CollapseAll() => ExecuteUcCompareMethod("CollapseAll_Click");
+        private void CollapseAll() => ExecuteOnActiveCompare(nameof(CollapseAll), c => c.CollapseAll());
 
         [RelayCommand]
-        private void ShowAll() => ExecuteUcCompareMethod("ShowAll_Click");
+        private void ShowAll() => ExecuteOnActiveCompare(nameof(ShowAll), c => c.ShowAll());
 
         [RelayCommand]
-        private void ShowDifferent() => ExecuteUcCompareMethod("ShowDifferent_Click");
+        private void ShowDifferent() => ExecuteOnActiveCompare(nameof(ShowDifferent), c => c.ShowDifferent());
 
         [RelayCommand]
-        private void ShowIdentical() => ExecuteUcCompareMethod("ShowIdentical_Click");
+        private void ShowIdentical() => ExecuteOnActiveCompare(nameof(ShowIdentical), c => c.ShowIdentical());
 
         [RelayCommand]
-        private void ShowLeftUnique() => ExecuteUcCompareMethod("ShowLeftUnique_Click");
+        private void ShowLeftUnique() => ExecuteOnActiveCompare(nameof(ShowLeftUnique), c => c.ShowLeftUnique());
 
         [RelayCommand]
-        private void ShowRightUnique() => ExecuteUcCompareMethod("ShowRightUnique_Click");
-
-        private bool CanExecuteUcCompareMethod() => TabControl?.SelectedItem is TabItem selectedTab && selectedTab.Content is CompareControl;
+        private void ShowRightUnique() => ExecuteOnActiveCompare(nameof(ShowRightUnique), c => c.ShowRightUnique());
 
         [RelayCommand]
         private void RenameTab()
@@ -407,31 +403,31 @@ namespace dCompare
             }
         }
 
-        private void ExecuteUcCompareMethod(string methodName)
+        private void ExecuteOnActiveCompare(string actionName, Action<CompareControl> execute)
+        {
+            if (TabControl?.SelectedItem is TabItem { Content: CompareControl ucCompare })
+            {
+                ExecuteCompare(actionName, ucCompare, execute);
+            }
+            else
+            {
+                _userInteractionService.ShowError(Properties.Resources.ErrorNoActiveTabToExecuteAction, Properties.Resources.ErrorTitle);
+            }
+        }
+
+        // "Compare" keeps the status text the old name-based dispatch produced for the auto-compare-after-load path.
+        private void ExecuteSessionCompare(CompareControl ucCompare) => ExecuteCompare("Compare", ucCompare, c => c.Refresh());
+
+        private void ExecuteCompare(string actionName, CompareControl ucCompare, Action<CompareControl> execute)
         {
             try
             {
-                if (TabControl?.SelectedItem is TabItem selectedTab && selectedTab.Content is CompareControl ucCompare)
-                {
-                    MethodInfo? methodInfo = typeof(CompareControl).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
-                    if (methodInfo != null)
-                    {
-                        methodInfo.Invoke(ucCompare, new object[] { ucCompare, new RoutedEventArgs() });
-                        StatusMessage = string.Format(Properties.Resources.StatusActionExecuted, methodName.Replace("_Click", ""));
-                    }
-                    else
-                    {
-                        _userInteractionService.ShowError(string.Format(Properties.Resources.ErrorMethodNotFound, methodName), Properties.Resources.ErrorTitle);
-                    }
-                }
-                else
-                {
-                    _userInteractionService.ShowError(Properties.Resources.ErrorNoActiveTabToExecuteAction, Properties.Resources.ErrorTitle);
-                }
+                execute(ucCompare);
+                StatusMessage = string.Format(Properties.Resources.StatusActionExecuted, actionName);
             }
             catch (Exception ex)
             {
-                _userInteractionService.ShowError(string.Format(Properties.Resources.ErrorExecutingAction, methodName, ex.Message), Properties.Resources.ErrorTitle);
+                _userInteractionService.ShowError(string.Format(Properties.Resources.ErrorExecutingAction, actionName, ex.Message), Properties.Resources.ErrorTitle);
             }
         }
 

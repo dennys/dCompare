@@ -14,6 +14,11 @@ namespace dCompare.FileOperation
     {
         private readonly IFileOperationStrategy _strategy;
         private bool _isPaused;
+
+        // The Pause/Cancel buttons live on a different control from the one that starts most transfers, so the
+        // stop request is owned here: Cancel() stops every batch this manager is running, whoever started it.
+        private readonly object _cancelGate = new();
+        private CancellationTokenSource _cancelSource = new();
         public Guid InstanceId { get; } = Guid.NewGuid();
 
         public FileManager(IFileOperationStrategy? strategy = null)
@@ -24,6 +29,14 @@ namespace dCompare.FileOperation
 
         public void Pause() => _isPaused = true;
         public void Resume() => _isPaused = false;
+
+        public void Cancel()
+        {
+            lock (_cancelGate)
+            {
+                _cancelSource.Cancel();
+            }
+        }
 
         #region Public API Methods
         public void WhoAmI()
@@ -66,8 +79,13 @@ namespace dCompare.FileOperation
 
         #endregion
 
-        private async Task<OperationResult> ProcessItemsAsync(List<(string source, string target, SourceType type)> items, FileOperationTypes opType, bool overwrite, IProgress<OperationProgress>? progress, CancellationToken cancellationToken)
+        private async Task<OperationResult> ProcessItemsAsync(List<(string source, string target, SourceType type)> items, FileOperationTypes opType, bool overwrite, IProgress<OperationProgress>? progress, CancellationToken callerToken)
         {
+            // Both stop requests — the caller's token and the shared Pause/Cancel buttons — reach the loops
+            // below through this one token.
+            using CancellationTokenSource batchCts = CreateBatchTokenSource(callerToken);
+            CancellationToken cancellationToken = batchCts.Token;
+
             Stopwatch stopwatch = Stopwatch.StartNew();
             int successCount = 0;
             List<string> failedItems = new();
@@ -110,10 +128,12 @@ namespace dCompare.FileOperation
                     }
                     successCount++;
                 }
-                catch (Exception) when (cancellationToken.IsCancellationRequested)
+                catch (Exception ex) when (cancellationToken.IsCancellationRequested)
                 {
+                    // CopyFileEx answers a cancel with Win32 1235, not an OperationCanceledException; normalise
+                    // it so the caller books the item as cancelled instead of quietly as failed.
                     failedItems.Add(source);
-                    throw;
+                    throw new OperationCanceledException($"{source} was cancelled.", ex, cancellationToken);
                 }
                 catch (Exception ex)
                 {
@@ -132,6 +152,20 @@ namespace dCompare.FileOperation
             stopwatch.Stop();
             ReportProgress(100, string.Empty);
             return new OperationResult(successCount, failedItems.Count, failedItems, stopwatch.Elapsed);
+        }
+
+        // A cancelled source is never reused: CancellationTokenSource cannot be un-cancelled. The old instance
+        // is dropped without disposal because a batch that is still winding down may hold a registration on it.
+        private CancellationTokenSource CreateBatchTokenSource(CancellationToken callerToken)
+        {
+            lock (_cancelGate)
+            {
+                if (_cancelSource.IsCancellationRequested)
+                {
+                    _cancelSource = new CancellationTokenSource();
+                }
+                return CancellationTokenSource.CreateLinkedTokenSource(callerToken, _cancelSource.Token);
+            }
         }
 
         private async Task HandleCopyAsync(string source, string target, bool overwrite, int totalCount, int processedCount, Action<int, string> reportProgress, CancellationToken cancellationToken)
@@ -180,7 +214,7 @@ namespace dCompare.FileOperation
 
             // Get all files and subdirectories
             string[] files = Directory.GetFiles(sourceDir);
-            string[] subDirs = Directory.GetDirectories(sourceDir);
+            string[] subDirs = GetChildDirectories(sourceDir);
             int totalItems = files.Length + subDirs.Length;
             int processedItems = 0;
 
@@ -239,7 +273,7 @@ namespace dCompare.FileOperation
 
             // Get all files and subdirectories
             string[] files = Directory.GetFiles(sourceDir);
-            string[] subDirs = Directory.GetDirectories(sourceDir);
+            string[] subDirs = GetChildDirectories(sourceDir);
             int totalItems = files.Length + subDirs.Length;
             int processedItems = 0;
 
@@ -274,15 +308,27 @@ namespace dCompare.FileOperation
 
         private async Task HandleDeleteAsync(string path, int totalCount, int processedCount, Action<int, string> reportProgress, CancellationToken cancellationToken)
         {
-            bool isDirectory = Directory.Exists(path);
-            if (isDirectory)
+            cancellationToken.ThrowIfCancellationRequested();
+            int basePercentage = processedCount * 100 / totalCount;
+            reportProgress(basePercentage, path);
+
+            if (Directory.Exists(path))
             {
-                await DeleteDirectoryAsync(path, totalCount, processedCount, reportProgress, cancellationToken);
+                // One shell operation for the whole tree, so the folder lands in the Recycle Bin as a single
+                // restorable entry instead of one entry per child. A tree containing a junction or directory
+                // symlink keeps the walk below: the shell may follow the link and delete files that live
+                // outside the compared tree, and the walk refuses to delete a directory that still holds one.
+                if (ContainsReparsePoint(path) || !RecycleBin.TryDelete(path, isDirectory: true))
+                {
+                    await DeleteDirectoryAsync(path, totalCount, processedCount, reportProgress, cancellationToken);
+                }
             }
             else
             {
-                int basePercentage = processedCount * 100 / totalCount;
-                reportProgress(basePercentage, path);
+                // The Recycle Bin first so a mis-click stays undoable. The strategy delete stays unconditional:
+                // it is the permanent fallback for locations without a bin, and File.Delete on a path the shell
+                // already moved away is a documented no-op.
+                RecycleBin.TryDelete(path, isDirectory: false);
                 _strategy.DeleteFile(path);
             }
         }
@@ -291,7 +337,7 @@ namespace dCompare.FileOperation
         {
             // Get all files and subdirectories
             string[] files = Directory.GetFiles(dirPath);
-            string[] subDirs = Directory.GetDirectories(dirPath);
+            string[] subDirs = GetChildDirectories(dirPath);
             int totalItems = files.Length + subDirs.Length;
             int processedItems = 0;
 
@@ -315,6 +361,27 @@ namespace dCompare.FileOperation
 
             // Delete the directory itself
             _strategy.DeleteDirectory(dirPath);
+        }
+
+        // Junctions and directory symlinks are never walked: a link back to an ancestor overflows the stack
+        // (kills the process, uncatchable) and a link pointing outside the compared tree would be copied or
+        // deleted as if it belonged to it. A skipped link also keeps a moved source folder from being
+        // deleted, which is the safe outcome.
+        private static string[] GetChildDirectories(string dir) =>
+            Directory.GetDirectories(dir).Where(d => !FileExtensions.IsReparsePoint(d)).ToArray();
+
+        // An unreadable subtree counts as containing a reparse point: the conservative permanent walk is
+        // taken instead of handing the whole tree to the shell.
+        private static bool ContainsReparsePoint(string dir)
+        {
+            try
+            {
+                return Directory.GetDirectories(dir).Any(d => FileExtensions.IsReparsePoint(d) || ContainsReparsePoint(d));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                return true;
+            }
         }
     }
 }

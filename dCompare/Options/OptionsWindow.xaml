@@ -121,25 +121,7 @@
                 <TextBlock Text="{x:Static resx:Resources.CompareSettings}" FontSize="24" FontWeight="SemiBold" Margin="0,0,0,20"/>
                 <GroupBox Header="{x:Static resx:Resources.ScanOptions}" Margin="0,0,0,15">
                     <StackPanel Margin="10">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="150"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="{x:Static resx:Resources.ScanMethod}" VerticalAlignment="Center" Margin="0,5"/>
-                            <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,5"
-                              ItemsSource="{Binding AvailableScanMethods}"
-                              SelectedItem="{Binding ScanMethod}"/>
-
-                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Static resx:Resources.ScanMethodHint}"
-                               FontStyle="Italic" Foreground="Gray" Margin="0,0,0,5" TextWrapping="Wrap"/>
-                        </Grid>
-
+                        <!-- Scan method picker removed: FileSystemTreeBuilderFactory never returns an MFT builder, so "MFT" silently did nothing. -->
                         <CheckBox IsChecked="{Binding Parallel}" Content="{x:Static resx:Resources.EnableParallelScanning}" Margin="0,10,0,0"/>
                         <TextBlock Text="{x:Static resx:Resources.EnableParallelScanningHint}"
                            FontStyle="Italic" Foreground="Gray" Margin="20,0,0,10" TextWrapping="Wrap"/>
