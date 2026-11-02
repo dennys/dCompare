@@ -601,6 +601,78 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 copy 的當地語系化字串。
+        /// </summary>
+        public static string VerbCopy {
+            get {
+                return ResourceManager.GetString("VerbCopy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 move 的當地語系化字串。
+        /// </summary>
+        public static string VerbMove {
+            get {
+                return ResourceManager.GetString("VerbMove", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Are you sure you want to {0} {1} item(s) to &apos;{2}&apos;? 的當地語系化字串。
+        /// </summary>
+        public static string ConfirmTransferMessage {
+            get {
+                return ResourceManager.GetString("ConfirmTransferMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Existing files at the destination will be overwritten. 的當地語系化字串。
+        /// </summary>
+        public static string ConfirmTransferOverwriteWarning {
+            get {
+                return ResourceManager.GetString("ConfirmTransferOverwriteWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Cancelled: {0} {1} item(s) to &apos;{2}&apos;. Nothing was changed. 的當地語系化字串。
+        /// </summary>
+        public static string StatusOperationCancelled {
+            get {
+                return ResourceManager.GetString("StatusOperationCancelled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Are you sure you want to delete these {0} item(s)? 的當地語系化字串。
+        /// </summary>
+        public static string ConfirmDeleteItems {
+            get {
+                return ResourceManager.GetString("ConfirmDeleteItems", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 ... and {0} more 的當地語系化字串。
+        /// </summary>
+        public static string ConfirmDeleteMoreItems {
+            get {
+                return ResourceManager.GetString("ConfirmDeleteMoreItems", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Cancelled: delete {0} item(s). Nothing was deleted. 的當地語系化字串。
+        /// </summary>
+        public static string StatusDeleteCancelled {
+            get {
+                return ResourceManager.GetString("StatusDeleteCancelled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Copy Filename to Clipboard 的當地語系化字串。
         /// </summary>
         public static string CopyFilenameToClipboardMenu {
@@ -1281,6 +1353,15 @@ namespace dCompare.Properties {
         public static string ErrorToolHandlerNotSpecified {
             get {
                 return ResourceManager.GetString("ErrorToolHandlerNotSpecified", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Tool handler &apos;{0}&apos; is not a built-in dCompare tool type. Check the handler string in the configuration. 的當地語系化字串。
+        /// </summary>
+        public static string ErrorToolHandlerNotBuiltInTool {
+            get {
+                return ResourceManager.GetString("ErrorToolHandlerNotBuiltInTool", resourceCulture);
             }
         }
         
@@ -3370,6 +3451,24 @@ namespace dCompare.Properties {
         public static string ZoomOut {
             get {
                 return ResourceManager.GetString("ZoomOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Transfer cancelled. 的當地語系化字串。
+        /// </summary>
+        public static string TransferCanceled {
+            get {
+                return ResourceManager.GetString("TransferCanceled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 '{0}' is {1:N0} MB, above the {2:N0} MB limit of the built-in viewer. 的當地語系化字串。
+        /// </summary>
+        public static string ErrorFileTooLarge {
+            get {
+                return ResourceManager.GetString("ErrorFileTooLarge", resourceCulture);
             }
         }
     }

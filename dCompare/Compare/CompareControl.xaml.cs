@@ -55,7 +55,7 @@ namespace dCompare.Compare
 
         public CompareControlViewModel ViewModel { get; }
 
-        public CompareControl(IConfigurationService configService, IFileManager fileManager, ILogger<CompareControl> logger)
+        public CompareControl(IConfigurationService configService, IFileManager fileManager, ILogger<CompareControl> logger, IUserInteractionService userInteractionService)
         {
             InitializeComponent();
 
@@ -64,7 +64,7 @@ namespace dCompare.Compare
             _configService = configService;
             _toolHandler = new ToolHandler();
             _treeNodeManager = new TreeNodeManager(_treeNodes);
-            _fileOperationHandler = new FileOperationHandler(_fileManager);
+            _fileOperationHandler = new FileOperationHandler(_fileManager, _configService, userInteractionService);
 
             // Initialize ViewModel
             ViewModel = new CompareControlViewModel();
@@ -79,8 +79,8 @@ namespace dCompare.Compare
             SetFilter(null);
         }
 
-        public CompareControl(IConfigurationService configService, IFileManager fileManager, ILogger<CompareControl> logger, string leftPath, string rightPath)
-            : this(configService, fileManager, logger)
+        public CompareControl(IConfigurationService configService, IFileManager fileManager, ILogger<CompareControl> logger, IUserInteractionService userInteractionService, string leftPath, string rightPath)
+            : this(configService, fileManager, logger, userInteractionService)
         {
             // TODO This is for archive file only, may consider using other solution
             ViewModel.LeftPath = leftPath;
@@ -142,7 +142,6 @@ namespace dCompare.Compare
             string baseHeader = $"{leftName} - {rightName}";
             if (string.IsNullOrWhiteSpace(leftName) && string.IsNullOrWhiteSpace(rightName))
             {
-                //baseHeader = Properties.Resources.NewTabTitle;
                 baseHeader = "TODO";
             }
             else if (string.IsNullOrWhiteSpace(leftName))
@@ -159,15 +158,6 @@ namespace dCompare.Compare
                 tabItem.Header = ((CompareControlViewModel)DataContext).IsComparing ? string.Format(Properties.Resources.ComparingTabHeader, baseHeader) : baseHeader;
             }
         }
-
-        //public void ChangeTabHeader(string newHeader)
-        //{
-        //    TabItem? tabItem = WpfTreeHelperExtensions.FindParent<TabItem>(this);
-        //    if (tabItem != null && !IsComparing)
-        //    {
-        //        tabItem.Header = newHeader;
-        //    }
-        //}
 
         private void Browse_Click(object sender, RoutedEventArgs e)
         {
@@ -235,8 +225,8 @@ namespace dCompare.Compare
             try
             {
                 List<DirectoryComparer.ComparisonItem> comparisonResults = await Task.Run(() =>
-                    _comparer.Compare(leftDir, rightDir, _cancellationTokenSource.Token,
-                        progress => Dispatcher.Invoke(() => viewModel.ComparisonProgress = progress * 100),
+                    _comparer.CompareAsync(leftDir, rightDir, _cancellationTokenSource.Token,
+                        progress => Dispatcher.InvokeAsync(() => viewModel.ComparisonProgress = progress * 100),
                         viewModel.SelectedAlgorithm),
                     _cancellationTokenSource.Token);
 
@@ -315,8 +305,12 @@ namespace dCompare.Compare
 
                 // 2. Update the master cache (_cachedComparisonResults).
                 _cachedComparisonResults.RemoveAll(item =>
-                    _treeNodeManager.GetRelativePath(item, leftDirRoot, rightDirRoot)
-                                   .StartsWith(nodeToRefresh.RelativePath, StringComparison.OrdinalIgnoreCase));
+                {
+                    string relativePath = _treeNodeManager.GetRelativePath(item, leftDirRoot, rightDirRoot);
+                    // The separator matters: without it, refreshing "Data" also purged every cached row under "Database".
+                    return relativePath.Equals(nodeToRefresh.RelativePath, StringComparison.OrdinalIgnoreCase)
+                        || relativePath.StartsWith(nodeToRefresh.RelativePath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+                });
 
                 _cachedComparisonResults.AddRange(refreshedItems);
 
@@ -343,14 +337,14 @@ namespace dCompare.Compare
         }
 
         #region Filter
-        private void ExpandAll_Click(object sender, RoutedEventArgs e)
+        // Toolbar/menu entry points (MainWindowViewModel): no XAML binds these, so they take no event args.
+        public void ExpandAll()
         {
             if (_cachedComparisonResults == null) return;
 
             string leftDir = ViewModel.LeftPath?.Trim() ?? string.Empty;
             string rightDir = ViewModel.RightPath?.Trim() ?? string.Empty;
 
-            //var rootNodes = _treeNodes.Where(n => n.Depth == 0).ToList();
             _treeNodes.Clear();
 
             List<TreeNode> allNodes = _treeNodeManager.CreateFlatTreeStructure(_cachedComparisonResults, leftDir, rightDir);
@@ -363,7 +357,7 @@ namespace dCompare.Compare
             ApplyFilter();
         }
 
-        private void CollapseAll_Click(object sender, RoutedEventArgs e)
+        public void CollapseAll()
         {
             var rootNodes = _treeNodes.Where(n => n.Depth == 0).ToList();
             _treeNodes.Clear();
@@ -375,15 +369,21 @@ namespace dCompare.Compare
             ApplyFilter();
         }
 
-        private void ShowAll_Click(object sender, RoutedEventArgs e) => SetFilter(null);
-        private void ShowDifferent_Click(object sender, RoutedEventArgs e) =>
+        public void ShowAll() => SetFilter(null);
+        public void ShowDifferent() =>
             SetFilter(node => node.Status == ComparisonStatus.Modified ||
                             node.Status == ComparisonStatus.Conflict ||
                             node.Status == ComparisonStatus.LeftOnly ||
                             node.Status == ComparisonStatus.RightOnly);
-        private void ShowIdentical_Click(object sender, RoutedEventArgs e) => SetFilter(node => node.Status == ComparisonStatus.Identical);
-        private void ShowLeftUnique_Click(object sender, RoutedEventArgs e) => SetFilter(node => node.Status == ComparisonStatus.LeftOnly);
-        private void ShowRightUnique_Click(object sender, RoutedEventArgs e) => SetFilter(node => node.Status == ComparisonStatus.RightOnly);
+        public void ShowIdentical() => SetFilter(node => node.Status == ComparisonStatus.Identical);
+        public void ShowLeftUnique() => SetFilter(node => node.Status == ComparisonStatus.LeftOnly);
+        public void ShowRightUnique() => SetFilter(node => node.Status == ComparisonStatus.RightOnly);
+
+        // Same entry point as the context menu, so the batch confirmation and the empty-selection
+        // warning stay in one place (ProcessFileOperationsAsync / FileOperationHandler).
+        public void CopyToLeft() => ContextMenu_CopyToLeft_Click(this, new RoutedEventArgs());
+        public void CopyToRight() => ContextMenu_CopyToRight_Click(this, new RoutedEventArgs());
+
         private void SetFilter(Predicate<TreeNode>? filter)
         {
             _currentFilter = obj =>
@@ -618,37 +618,30 @@ namespace dCompare.Compare
 
             try
             {
-                if (operation == FileOperationType.DeleteLeft || operation == FileOperationType.DeleteRight)
+                // One call for the whole selection: the handler confirms copy/move/delete once per batch,
+                // on the UI thread, instead of prompting for every selected node.
+                switch (operation)
                 {
-                    var result = MessageBox.Show(Properties.Resources.ConfirmDelete, Properties.Resources.ConfirmOperation, MessageBoxButton.YesNo, MessageBoxImage.Warning);
-                    if (result != MessageBoxResult.Yes) { return; }
-                }
-                foreach (var node in selectedNodes)
-                {
-                    //await operationAction(new List<TreeNode> { node }, destDir);
-                    switch (operation)
-                    {
-                        case FileOperationType.CopyToLeft:
-                            await _fileOperationHandler.CopyToLeft(new List<TreeNode> { node }, destDir);
-                            break;
-                        case FileOperationType.CopyToRight:
-                            await _fileOperationHandler.CopyToRight(new List<TreeNode> { node }, destDir);
-                            break;
-                        case FileOperationType.MoveToLeft:
-                            await _fileOperationHandler.MoveToLeft(new List<TreeNode> { node }, destDir);
-                            break;
-                        case FileOperationType.MoveToRight:
-                            await _fileOperationHandler.MoveToRight(new List<TreeNode> { node }, destDir);
-                            break;
-                        case FileOperationType.DeleteLeft:
-                            var items = _fileOperationHandler.GetItemsForDeletion(new List<TreeNode> { node }, true);
-                            if (items.Count > 0) await _fileOperationHandler.DeleteAsync(items);
-                            break;
-                        case FileOperationType.DeleteRight:
-                            var items2 = _fileOperationHandler.GetItemsForDeletion(new List<TreeNode> { node }, false);
-                            if (items2.Count > 0) await _fileOperationHandler.DeleteAsync(items2);
-                            break;
-                    }
+                    case FileOperationType.CopyToLeft:
+                        await _fileOperationHandler.CopyToLeft(selectedNodes, destDir);
+                        break;
+                    case FileOperationType.CopyToRight:
+                        await _fileOperationHandler.CopyToRight(selectedNodes, destDir);
+                        break;
+                    case FileOperationType.MoveToLeft:
+                        await _fileOperationHandler.MoveToLeft(selectedNodes, destDir);
+                        break;
+                    case FileOperationType.MoveToRight:
+                        await _fileOperationHandler.MoveToRight(selectedNodes, destDir);
+                        break;
+                    case FileOperationType.DeleteLeft:
+                        var leftItems = _fileOperationHandler.GetItemsForDeletion(selectedNodes, true);
+                        if (leftItems.Count > 0) await _fileOperationHandler.DeleteAsync(leftItems);
+                        break;
+                    case FileOperationType.DeleteRight:
+                        var rightItems = _fileOperationHandler.GetItemsForDeletion(selectedNodes, false);
+                        if (rightItems.Count > 0) await _fileOperationHandler.DeleteAsync(rightItems);
+                        break;
                 }
 
                 var nodesToRefresh = new Dictionary<string, TreeNode>();

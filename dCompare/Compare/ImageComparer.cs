@@ -1,5 +1,4 @@
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using System.IO;
@@ -359,19 +358,24 @@ namespace dCompare.Compare
 
         private static Image<Rgba32> GenerateMaskImage(int width, int height, IReadOnlyList<Rectangle> differenceRegions)
         {
-            var maskImage = new Image<Rgba32>(width, height);
+            // ImageSharp v4 dropped Drawing's Clear/Fill (and the free rasterizer); solid-rect pixel writes are all the mask needs.
+            var red = new Rgba32(255, 0, 0, 128);
+            var maskImage = new Image<Rgba32>(width, height); // transparent by default, same as the old Clear(Transparent)
 
-            maskImage.Mutate(ctx =>
+            foreach (var region in differenceRegions)
             {
-                ctx.Clear(SixLabors.ImageSharp.Color.Transparent);
-                var redColor = SixLabors.ImageSharp.Color.FromRgba(255, 0, 0, 128);
-
-                foreach (var region in differenceRegions)
+                var left = Math.Max(0, region.X);
+                var right = Math.Min(width, region.X + region.Width);
+                var top = Math.Max(0, region.Y);
+                var bottom = Math.Min(height, region.Y + region.Height);
+                for (var y = top; y < bottom; y++)
                 {
-                    var rect = new RectangleF(region.X, region.Y, region.Width, region.Height);
-                    ctx.Fill(redColor, rect);
+                    for (var x = left; x < right; x++)
+                    {
+                        maskImage[x, y] = red;
+                    }
                 }
-            });
+            }
 
             return maskImage;
         }

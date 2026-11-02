@@ -29,13 +29,6 @@ namespace dCompare.Options
         }
 
 
-        //public SettingsViewModel()
-        //{
-        //    _filterText = "Filter...";
-        //    _appConfig = new AppConfiguration();
-        //    BuildMenu();
-        //}
-
         private async void LoadConfigurationAsync()
         {
             _appConfig = await _configService.LoadConfigurationAsync();
@@ -139,14 +132,6 @@ namespace dCompare.Options
             return false;
         }
 
-        //public override bool IsValid
-        //{
-        //    get
-        //    {
-        //        return MenuItems.SelectMany(m => m.Children)
-        //                        .All(c => c.ViewModel == null || c.ViewModel.IsValid);
-        //    }
-        //}
     }
 
     public partial class SettingsMenuItem : ObservableObject
@@ -290,35 +275,10 @@ namespace dCompare.Options
                 OnPropertyChanged();
             }
         }
-
-        //public string this[string columnName]
-        //{
-        //    get
-        //    {
-        //        string result = null;
-        //        if (columnName == nameof(ComparisonPercentage))
-        //        {
-        //            if (!string.IsNullOrWhiteSpace(ComparisonPercentage))
-        //            {
-        //                if (!int.TryParse(ComparisonPercentage, out int percentage))
-        //                {
-        //                    result = "Value must be a number.";
-        //                }
-        //                else if (percentage < 1 || percentage > 100)
-        //                {
-        //                    result = "Value must be between 1 and 100.";
-        //                }
-        //            }
-        //        }
-        //        return result;
-        //    }
-        //}
     }
 
     public partial class CompareOptionsViewModel : ObservableObject, IConfigurationUpdater
     {
-        public static List<string> AvailableScanMethods => new() { "General", "MFT" };
-
         private readonly CompareOptions _model;
         public virtual bool IsValid => true;
         public ObservableCollection<AlgorithmItemViewModel> AlgorithmItems { get; } = new();
@@ -329,16 +289,6 @@ namespace dCompare.Options
             foreach (var kvp in _model.Algorithms)
             {
                 AlgorithmItems.Add(new AlgorithmItemViewModel(kvp.Key, kvp.Value, this));
-            }
-        }
-
-        public string ScanMethod
-        {
-            get => _model.ScanMethod.MethodOptions;
-            set
-            {
-                _model.ScanMethod.MethodOptions = value;
-                OnPropertyChanged();
             }
         }
 
@@ -377,7 +327,6 @@ namespace dCompare.Options
 
         public void UpdateModel()
         {
-            _model.ScanMethod.MethodOptions = ScanMethod;
             _model.ScanMethod.ParallelOptions = Parallel;
 
             foreach (var item in AlgorithmItems)

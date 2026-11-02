@@ -26,7 +26,7 @@ namespace dCompare.DirTreeSystem
 
             try
             {
-                using (var archive = ArchiveFactory.Open(path))
+                using (var archive = ArchiveFactory.OpenArchive(path))
                 {
                     long totalSize = 0;
                     foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
@@ -66,7 +66,15 @@ namespace dCompare.DirTreeSystem
                             FullPath = Path.Combine(currentNode.FullPath, fileName),
                             IsDirectory = false,
                             Size = entry.Size,
-                            ModifiedTime = entry.LastModifiedTime ?? DateTime.Now,
+                            // ZIP stores 1980-based fields; reading both sides the same way (UTC) is what lets two
+                            // byte-identical archives agree. A missing stamp is MinValue, never Now: "now" differs
+                            // between the two scans and would report every entry as Modified.
+                            ModifiedTime = entry.LastModifiedTime ?? DateTime.MinValue,
+                            // FullPath above is archive file + entry key, a path nothing can open, so content
+                            // identity has to come from the entry metadata. SharpCompress reports 0 when the
+                            // format carries no CRC (tar, some 7z solid entries), which means "unknown".
+                            IsArchiveEntry = true,
+                            Crc = entry.Crc == 0 ? null : entry.Crc,
                             Depth = currentNode.Depth + 1
                         };
                         currentNode.Children.Add(fileNode);
