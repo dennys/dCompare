@@ -1,5 +1,6 @@
 using dCompare.Compare;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using System;
@@ -23,7 +24,7 @@ namespace dCompare.Compare.Tests
         public void CompareImages_IdenticalImages_ReturnsNoDifferences()
         {
             // Arrange
-            using var image = CreateSolidColorImage(100, 100, new Rgba32(255, 0, 0));
+            using var image = CreateSolidColorImage(100, 100, Rgba32.ParseHex("FF0000"));
             var source1 = new ImageSourceImageSource(image);
             var source2 = new ImageSourceImageSource(image);
             var options = new ImageComparisonOptions { BlockSize = 10, Threshold = 30 };
@@ -43,8 +44,8 @@ namespace dCompare.Compare.Tests
         public void CompareImages_DifferentImages_ReturnsDifferences()
         {
             // Arrange
-            using var image1 = CreateSolidColorImage(100, 100, new Rgba32(255, 0, 0));
-            using var image2 = CreateSolidColorImage(100, 100, new Rgba32(0, 255, 0));
+            using var image1 = CreateSolidColorImage(100, 100, Rgba32.ParseHex("FF0000"));
+            using var image2 = CreateSolidColorImage(100, 100, Rgba32.ParseHex("00FF00"));
             var source1 = new ImageSourceImageSource(image1);
             var source2 = new ImageSourceImageSource(image2);
             var options = new ImageComparisonOptions { BlockSize = 10, Threshold = 30 };
@@ -64,8 +65,8 @@ namespace dCompare.Compare.Tests
         public void CompareImages_DifferentDimensions_ThrowsArgumentException()
         {
             // Arrange
-            using var image1 = CreateSolidColorImage(100, 100, new Rgba32(255, 0, 0));
-            using var image2 = CreateSolidColorImage(50, 50, new Rgba32(255, 0, 0));
+            using var image1 = CreateSolidColorImage(100, 100, Rgba32.ParseHex("FF0000"));
+            using var image2 = CreateSolidColorImage(50, 50, Rgba32.ParseHex("FF0000"));
             var source1 = new ImageSourceImageSource(image1);
             var source2 = new ImageSourceImageSource(image2);
 
@@ -78,7 +79,7 @@ namespace dCompare.Compare.Tests
         public void CompareImages_NullSource_ThrowsArgumentNullException()
         {
             // Arrange
-            using var image = CreateSolidColorImage(100, 100, new Rgba32(255, 0, 0));
+            using var image = CreateSolidColorImage(100, 100, Rgba32.ParseHex("FF0000"));
             var source = new ImageSourceImageSource(image);
 
             // Act & Assert
@@ -90,8 +91,8 @@ namespace dCompare.Compare.Tests
         public void CompareImages_InvalidBlockSize_ThrowsArgumentException()
         {
             // Arrange
-            using var image1 = CreateSolidColorImage(100, 100, new Rgba32(255, 0, 0));
-            using var image2 = CreateSolidColorImage(100, 100, new Rgba32(255, 0, 0));
+            using var image1 = CreateSolidColorImage(100, 100, Rgba32.ParseHex("FF0000"));
+            using var image2 = CreateSolidColorImage(100, 100, Rgba32.ParseHex("FF0000"));
             var source1 = new ImageSourceImageSource(image1);
             var source2 = new ImageSourceImageSource(image2);
             var options = new ImageComparisonOptions { BlockSize = 0, Threshold = 30 };
@@ -105,8 +106,8 @@ namespace dCompare.Compare.Tests
         public void CompareImages_InvalidThreshold_ThrowsArgumentException()
         {
             // Arrange
-            using var image1 = CreateSolidColorImage(100, 100, new Rgba32(255, 0, 0));
-            using var image2 = CreateSolidColorImage(100, 100, new Rgba32(255, 0, 0));
+            using var image1 = CreateSolidColorImage(100, 100, Rgba32.ParseHex("FF0000"));
+            using var image2 = CreateSolidColorImage(100, 100, Rgba32.ParseHex("FF0000"));
             var source1 = new ImageSourceImageSource(image1);
             var source2 = new ImageSourceImageSource(image2);
             var options = new ImageComparisonOptions { BlockSize = 10, Threshold = 256 };
@@ -121,7 +122,7 @@ namespace dCompare.Compare.Tests
         {
             // Arrange
             using var image1 = CreateImageWithDifferenceBlock(100, 100);
-            using var image2 = CreateSolidColorImage(100, 100, new Rgba32(255, 0, 0));
+            using var image2 = CreateSolidColorImage(100, 100, Rgba32.ParseHex("FF0000"));
             var source1 = new ImageSourceImageSource(image1);
             var source2 = new ImageSourceImageSource(image2);
             var options = new ImageComparisonOptions { BlockSize = 10, Threshold = 30, MergeAdjacent = true };
@@ -141,7 +142,7 @@ namespace dCompare.Compare.Tests
         {
             // Arrange
             using var image1 = CreateImageWithDifferenceBlock(100, 100);
-            using var image2 = CreateSolidColorImage(100, 100, new Rgba32(255, 0, 0));
+            using var image2 = CreateSolidColorImage(100, 100, Rgba32.ParseHex("FF0000"));
             var source1 = new ImageSourceImageSource(image1);
             var source2 = new ImageSourceImageSource(image2);
             var options = new ImageComparisonOptions { BlockSize = 10, Threshold = 30, MergeAdjacent = false };
@@ -160,7 +161,7 @@ namespace dCompare.Compare.Tests
         {
             // Arrange
             using var image1 = CreateImageWithDifferenceBlock(100, 100);
-            using var image2 = CreateSolidColorImage(100, 100, new Rgba32(255, 0, 0));
+            using var image2 = CreateSolidColorImage(100, 100, Rgba32.ParseHex("FF0000"));
             var source1 = new ImageSourceImageSource(image1);
             var source2 = new ImageSourceImageSource(image2);
             var options = new ImageComparisonOptions { BlockSize = 10, Threshold = 30, MergeAdjacent = true };
@@ -180,10 +181,10 @@ namespace dCompare.Compare.Tests
         }
 
         [Fact]
-        public async Task CompareImagesAsync_IdenticalImages_ReturnsNoDifferences()
+        public async void CompareImagesAsync_IdenticalImages_ReturnsNoDifferences()
         {
             // Arrange
-            using var image = CreateSolidColorImage(100, 100, new Rgba32(255, 0, 0));
+            using var image = CreateSolidColorImage(100, 100, Rgba32.ParseHex("FF0000"));
             var source1 = new ImageSourceImageSource(image);
             var source2 = new ImageSourceImageSource(image);
             var options = new ImageComparisonOptions { BlockSize = 10, Threshold = 30 };
@@ -205,8 +206,8 @@ namespace dCompare.Compare.Tests
         public void CompareImages_DifferentAlgorithms_ReturnsConsistentResults(ImageComparisonAlgorithm algorithm)
         {
             // Arrange
-            using var image1 = CreateSolidColorImage(100, 100, new Rgba32(255, 0, 0));
-            using var image2 = CreateSolidColorImage(100, 100, new Rgba32(0, 255, 0));
+            using var image1 = CreateSolidColorImage(100, 100, Rgba32.ParseHex("FF0000"));
+            using var image2 = CreateSolidColorImage(100, 100, Rgba32.ParseHex("00FF00"));
             var source1 = new ImageSourceImageSource(image1);
             var source2 = new ImageSourceImageSource(image2);
             var options = new ImageComparisonOptions { BlockSize = 10, Threshold = 30, Algorithm = algorithm };
@@ -222,17 +223,20 @@ namespace dCompare.Compare.Tests
 
         private static Image<Rgba32> CreateSolidColorImage(int width, int height, Rgba32 color)
         {
-            var image = new Image<Rgba32>(width, height, color);
+            var image = new Image<Rgba32>(width, height);
+            image.Mutate(ctx => ctx.Clear(color));
             return image;
         }
 
         private static Image<Rgba32> CreateImageWithDifferenceBlock(int width, int height)
         {
-            var image = new Image<Rgba32>(width, height, new Rgba32(255, 0, 0));
-            // ImageSharp v4 dropped Drawing's Fill; write the diff block (2x2 blocks at 10x10 block size) directly.
-            for (var y = 20; y < 40; y++)
-                for (var x = 20; x < 40; x++)
-                    image[x, y] = new Rgba32(0, 255, 0);
+            var image = new Image<Rgba32>(width, height);
+            image.Mutate(ctx =>
+            {
+                ctx.Clear(Rgba32.ParseHex("FF0000"));
+                var diffRegion = new RectangleF(20, 20, 20, 20); // 2x2 blocks at 10x10 block size
+                ctx.Fill(Rgba32.ParseHex("00FF00"), diffRegion);
+            });
             return image;
         }
     }

@@ -91,14 +91,12 @@ namespace dCompare.Compare
         private readonly IFileSystem _fileSystem;
         private readonly IHashProvider _hashProvider;
         private readonly bool _parallel;
-        private readonly Dictionary<ComparisonAlgorithm, ComparisonAlgorithmInfo> _algorithms;
 
         public DirectoryComparer(AppConfiguration? config = null, IFileSystem? fileSystem = null, IHashProvider? hashProvider = null)
         {
             _fileSystem = fileSystem ?? new FileSystem();
             _hashProvider = hashProvider ?? new HashProvider();
             _parallel = config?.Options?.Compare?.ScanMethod?.ParallelOptions ?? true;
-            _algorithms = config?.Options?.Compare?.Algorithms ?? ComparisonAlgorithms.AlgorithmSettings;
         }
 
         public class ComparisonItem
@@ -107,6 +105,18 @@ namespace dCompare.Compare
             public string TreeIndent { get; set; } = "";
             public FileSystemNode? Left { get; set; }
             public FileSystemNode? Right { get; set; }
+        }
+
+        public List<ComparisonItem> Compare(
+            string leftPath,
+            string rightPath,
+            CancellationToken cancellationToken = default,
+            Action<double>? progressCallback = null,
+            ComparisonAlgorithm algorithm = ComparisonAlgorithm.ModifiedDateAndSize)
+        {
+            return CompareAsync(leftPath, rightPath, cancellationToken, progressCallback, algorithm)
+                   .GetAwaiter()
+                   .GetResult(); // ⚠️ Only for non UI thread (console or server background)
         }
 
         public async Task<List<ComparisonItem>> CompareAsync(
@@ -124,41 +134,36 @@ namespace dCompare.Compare
             {
                 totalDirs += CountDirectories(leftPath);
             }
-            if (!string.IsNullOrEmpty(rightPath) && (Directory.Exists(rightPath) || FileExtensions.IsArchiveFile(rightPath)))
+            if (!string.IsNullOrEmpty(rightPath) && (Directory.Exists(rightPath) || FileExtensions.IsArchiveFile(leftPath)))
             {
                 totalDirs += CountDirectories(rightPath);
             }
 
             int processedDirs = 0;
-            int lastReportedTenth = -1;
             double progressPerDir = totalDirs > 0 ? 1.0 / totalDirs : 1.0;
+            double lastReportedProgress = -0.1;
 
-            // Both tree builders report from their own worker thread, so the throttle state has to be shared atomically.
             Action updateProgress = () =>
             {
                 int currentCount = Interlocked.Increment(ref processedDirs);
-                int tenth = (int)Math.Floor(currentCount * progressPerDir * 10);
-                int seen = Volatile.Read(ref lastReportedTenth);
-                if (tenth > seen && Interlocked.CompareExchange(ref lastReportedTenth, tenth, seen) == seen)
+                double currentProgress = currentCount * progressPerDir;
+                if (currentProgress >= lastReportedProgress + 0.1)
                 {
-                    progressCallback?.Invoke(tenth / 10.0);
+                    progressCallback?.Invoke(currentProgress);
+                    lastReportedProgress = Math.Floor(currentProgress * 10) / 10;
                 }
             };
 
             if (_parallel)
             {
                 var tasks = new List<Task>();
-                // If one side throws, Task.WhenAll only surfaces that one exception and the sibling builder keeps
-                // walking the disk; the caller disposes its CTS in finally, so Cancel stops working. Linking lets
-                // us stop the sibling ourselves.
-                using CancellationTokenSource scanCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                 if (!string.IsNullOrEmpty(leftPath))
                 {
                     tasks.Add(Task.Run(() =>
                     {
                         var leftTreeBuilder = FileSystemTreeBuilderFactory.Create(leftPath, _fileSystem);
-                        leftRoot = leftTreeBuilder.BuildTreeRecursive(leftPath, 0, scanCts.Token, updateProgress);
-                    }, scanCts.Token));
+                        leftRoot = leftTreeBuilder.BuildTreeRecursive(leftPath, 0, cancellationToken, updateProgress);
+                    }, cancellationToken));
                 }
 
                 if (!string.IsNullOrEmpty(rightPath))
@@ -166,19 +171,10 @@ namespace dCompare.Compare
                     tasks.Add(Task.Run(() =>
                     {
                         var rightTreeBuilder = FileSystemTreeBuilderFactory.Create(rightPath, _fileSystem);
-                        rightRoot = rightTreeBuilder.BuildTreeRecursive(rightPath, 0, scanCts.Token, updateProgress);
-                    }, scanCts.Token));
+                        rightRoot = rightTreeBuilder.BuildTreeRecursive(rightPath, 0, cancellationToken, updateProgress);
+                    }, cancellationToken));
                 }
-
-                try
-                {
-                    await Task.WhenAll(tasks);
-                }
-                catch
-                {
-                    scanCts.Cancel();
-                    throw;
-                }
+                await Task.WhenAll(tasks);
             }
             else
             {
@@ -209,7 +205,12 @@ namespace dCompare.Compare
             result.Add(rootItem);
 
             Log.Information("Start to compare nodes.");
-            CompareNodes(leftRoot, rightRoot, result, "", cancellationToken, algorithm, rootItem);
+            bool hasDifferences = CompareNodes(leftRoot, rightRoot, result, "", cancellationToken, algorithm);
+
+            if (hasDifferences)
+            {
+                rootItem.Status = ComparisonStatus.Modified;
+            }
 
             progressCallback?.Invoke(1.0);
             Log.Information("End to compare.");
@@ -265,7 +266,11 @@ namespace dCompare.Compare
             // Compare children only if both paths are directories
             if (leftIsDir || rightIsDir)
             {
-                CompareNodes(leftSubRoot, rightSubRoot, result, "    ", cancellationToken, algorithm, subPathItem);
+                bool childHasDifferences = CompareNodes(leftSubRoot, rightSubRoot, result, "    ", cancellationToken, algorithm);
+                if (childHasDifferences)
+                {
+                    subPathItem.Status = ComparisonStatus.Modified;
+                }
             }
 
             return result;
@@ -284,7 +289,6 @@ namespace dCompare.Compare
             {
                 foreach (string dir in _fileSystem.GetDirectories(path))
                 {
-                    if (FileExtensions.IsReparsePoint(dir)) continue;
                     count++;
                     count += CountDirectories(dir);
                 }
@@ -310,7 +314,7 @@ namespace dCompare.Compare
         /// Thrown if the operation is canceled via the <paramref name="cancellationToken"/>.
         /// </exception>
         private bool CompareNodes(FileSystemNode? left, FileSystemNode? right, List<ComparisonItem> result,
-            string indent, CancellationToken cancellationToken, ComparisonAlgorithm algorithm, ComparisonItem? parentItem)
+            string indent, CancellationToken cancellationToken, ComparisonAlgorithm algorithm)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -330,8 +334,9 @@ namespace dCompare.Compare
 
             foreach (string name in names)
             {
-                // Must throw, not return: a half-scanned tree reported as "no differences" invites the user to delete good files.
-                cancellationToken.ThrowIfCancellationRequested();
+                //cancellationToken.ThrowIfCancellationRequested();
+                if (cancellationToken.IsCancellationRequested)
+                    return false;
 
                 FileSystemNode? leftNode = left?.Children.Find(n => n.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
                 FileSystemNode? rightNode = right?.Children.Find(n => n.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
@@ -359,7 +364,7 @@ namespace dCompare.Compare
 
                 if ((leftNode?.IsDirectory ?? false) || (rightNode?.IsDirectory ?? false))
                 {
-                    bool childHasDifferences = CompareNodes(leftNode, rightNode, result, indent + "    ", cancellationToken, algorithm, item);
+                    bool childHasDifferences = CompareNodes(leftNode, rightNode, result, indent + "    ", cancellationToken, algorithm);
                     if (childHasDifferences)
                     {
                         hasContentDifferences = true;
@@ -367,62 +372,21 @@ namespace dCompare.Compare
                 }
             }
 
-            // The parent is marked through the reference we already hold. The previous
-            // result.LastOrDefault(i => i.Left == left || i.Right == right) matched every RightOnly row whenever
-            // left was null, so it repainted the deepest descendant "Modified" and left the real parent untouched.
-            if (parentItem != null && hasContentDifferences &&
-                (parentItem.Status == ComparisonStatus.Identical || parentItem.Status == ComparisonStatus.Unknown))
+            if ((left?.IsDirectory ?? false) || (right?.IsDirectory ?? false))
             {
-                parentItem.Status = ComparisonStatus.Modified;
+                ComparisonItem? parentItem = result.LastOrDefault(i => i.Left == left || i.Right == right);
+                if (parentItem != null && hasContentDifferences)
+                {
+                    parentItem.Status = ComparisonStatus.Modified;
+                }
             }
 
             return hasContentDifferences;
         }
 
-        // Streamed so "byte-by-byte" works on files bigger than available RAM; File.ReadAllBytes did not.
-        private bool StreamsEqual(string leftPath, string rightPath)
-        {
-            const int bufferSize = 8192;
-            using Stream leftStream = _fileSystem.OpenRead(leftPath);
-            using Stream rightStream = _fileSystem.OpenRead(rightPath);
-            byte[] leftBuffer = new byte[bufferSize];
-            byte[] rightBuffer = new byte[bufferSize];
-
-            while (true)
-            {
-                int leftRead = ReadFull(leftStream, leftBuffer);
-                int rightRead = ReadFull(rightStream, rightBuffer);
-                if (leftRead != rightRead)
-                    return false;
-                if (leftRead == 0)
-                    return true;
-                if (!leftBuffer.AsSpan(0, leftRead).SequenceEqual(rightBuffer.AsSpan(0, rightRead)))
-                    return false;
-            }
-        }
-
-        private static int ReadFull(Stream stream, byte[] buffer)
-        {
-            int total = 0;
-            while (total < buffer.Length)
-            {
-                int read = stream.Read(buffer, total, buffer.Length - total);
-                if (read == 0)
-                    break;
-                total += read;
-            }
-            return total;
-        }
-
-        private ComparisonStatus DetermineStatus(FileSystemNode? left, FileSystemNode? right, ComparisonAlgorithm algorithm)
+        private ComparisonStatus DetermineStatus(FileSystemNode? left, FileSystemNode? right, ComparisonAlgorithm algorithm, double ratio = 1.0)
         {
             Log.Debug($"Use {algorithm} to compare {left?.FullPath} and {right?.FullPath}");
-
-            // "Partial" hashes only the configured fraction of each file; anything missing or out of range is a full read.
-            double ratio = _algorithms.TryGetValue(algorithm, out ComparisonAlgorithmInfo? info) && info?.ComparisonPercentage is > 0 and <= 100
-                ? info.ComparisonPercentage!.Value / 100.0
-                : 1.0;
-
             if (left == null && right != null)
                 return ComparisonStatus.RightOnly;
 
@@ -452,11 +416,12 @@ namespace dCompare.Compare
                         case ComparisonAlgorithm.FullContents:
                             try
                             {
-                                if (left.Size != right.Size)
+                                byte[] leftContent = File.ReadAllBytes(left.FullPath);
+                                byte[] rightContent = File.ReadAllBytes(right.FullPath);
+                                if (leftContent.SequenceEqual(rightContent))
+                                    return ComparisonStatus.Identical;
+                                else
                                     return ComparisonStatus.Modified;
-                                return StreamsEqual(left.FullPath, right.FullPath)
-                                    ? ComparisonStatus.Identical
-                                    : ComparisonStatus.Modified;
                             }
                             catch (Exception ex)
                             {
@@ -482,7 +447,6 @@ namespace dCompare.Compare
                                 return ComparisonStatus.Conflict;
                             }
                         case ComparisonAlgorithm.xxHash64_Full:
-                        case ComparisonAlgorithm.xxHash64_Partial:
                             try
                             {
                                 using Stream leftStream = _fileSystem.OpenRead(left.FullPath);

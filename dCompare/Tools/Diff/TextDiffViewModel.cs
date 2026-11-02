@@ -1,5 +1,4 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using dCompare.Common;
 using DiffPlex.DiffBuilder;
 using DiffPlex.DiffBuilder.Model;
 using System.Collections.ObjectModel;
@@ -106,17 +105,6 @@ namespace dCompare.Tools.Diff
             try
             {
                 // Read file contents
-                bool leftTooBig = FileExtensions.IsTooLargeToView(LeftPath, out long leftLength);
-                bool rightTooBig = FileExtensions.IsTooLargeToView(RightPath, out long rightLength);
-                if (leftTooBig || rightTooBig)
-                {
-                    MessageBox.Show(string.Format(Properties.Resources.ErrorFileTooLarge,
-                        leftTooBig ? LeftPath : RightPath,
-                        Math.Max(leftLength, rightLength) / (1024 * 1024), FileExtensions.MaxViewableFileBytes / (1024 * 1024)),
-                        Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
                 string leftText = File.ReadAllText(LeftPath);
                 string rightText = File.ReadAllText(RightPath);
 
