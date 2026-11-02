@@ -15,6 +15,7 @@ namespace dCompare.Session
         private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         private readonly List<string> _recentSessions = new();
         private readonly Dictionary<string, string> _tabIdMap = new();
+        private string _recentSessionsPath = string.Empty;
         private MenuItem? _recentSessionsMenu;
         private TabControl? _tabControl;
         private const int MaxRecentSessions = 5;
@@ -34,10 +35,10 @@ namespace dCompare.Session
         {
             try
             {
-                string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Constant.RecentSessionsFile);
-                if (File.Exists(configPath))
+                _recentSessionsPath = AppPaths.ResolveExisting(Constant.RecentSessionsFile);
+                if (File.Exists(_recentSessionsPath))
                 {
-                    string json = File.ReadAllText(configPath);
+                    string json = File.ReadAllText(_recentSessionsPath);
                     var sessions = JsonSerializer.Deserialize<List<string>>(json);
                     if (sessions != null)
                     {
@@ -56,10 +57,25 @@ namespace dCompare.Session
         {
             try
             {
-                string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Constant.RecentSessionsFile);
+                if (string.IsNullOrEmpty(_recentSessionsPath))
+                {
+                    _recentSessionsPath = AppPaths.Resolve(Constant.RecentSessionsFile);
+                }
                 var options = new JsonSerializerOptions { WriteIndented = true };
                 string json = JsonSerializer.Serialize(_recentSessions, options);
-                File.WriteAllText(configPath, json);
+                try
+                {
+                    File.WriteAllText(_recentSessionsPath, json);
+                }
+                catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
+                {
+                    // Read-only install folder: keep the recent list in %LOCALAPPDATA%\dCompare.
+                    string fallbackPath = AppPaths.GetFallbackPath(_recentSessionsPath);
+                    Log.Warning(ex, "Cannot write to '{Path}'; saving recent sessions to '{FallbackPath}' instead.", _recentSessionsPath, fallbackPath);
+                    _recentSessionsPath = fallbackPath;
+                    Directory.CreateDirectory(Path.GetDirectoryName(fallbackPath)!);
+                    File.WriteAllText(fallbackPath, json);
+                }
             }
             catch (Exception ex)
             {
@@ -133,7 +149,6 @@ namespace dCompare.Session
                     {
                         Header = $"{i + 1}. {filePath}\\{fileName}",
                         ToolTip = filePath,
-                        //Command = Application.Current.MainWindow?.DataContext is MainWindowViewModel viewModel ? viewModel.LoadSessionCommand("QQ") : null,
                         Command = Application.Current.MainWindow?.DataContext is MainWindowViewModel viewModel ? viewModel.LoadSessionFileCommand : null,
                         CommandParameter = (filePath, true)
                     };
@@ -199,7 +214,7 @@ namespace dCompare.Session
         }
 
         public bool CanLoadSession() => true;
-        public void LoadSession(string filePath, bool executeCompare = false, Action<string>? updateStatus = null, Action<string>? executeCompareMethod = null)
+        public void LoadSession(string filePath, bool executeCompare = false, Action<string>? updateStatus = null, Action<CompareControl>? executeCompareMethod = null)
         {
             if (_tabControl is null)
             {
@@ -278,7 +293,7 @@ namespace dCompare.Session
                         if (executeCompare && executeCompareMethod != null)
                         {
                             _tabControl.SelectedItem = newTab;
-                            executeCompareMethod("Compare_Click");
+                            executeCompareMethod(ucCompareInstance);
                         }
                     }
 

@@ -20,50 +20,63 @@ namespace dCompare.FileOperation.Strategies
                 Directory.CreateDirectory(destDirectory);
             }
 
-            using (var sourceStream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read))
-            using (var targetStream = new FileStream(destFile, overwrite ? FileMode.Create : FileMode.CreateNew, FileAccess.Write))
-            {
-                byte[] buffer = new byte[8192];
-                int bytesRead;
-                while ((bytesRead = await sourceStream.ReadAsync(buffer, 0, buffer.Length, cancellationToken)) > 0)
-                {
-                    await targetStream.WriteAsync(buffer, 0, bytesRead, cancellationToken);
-                    bytesTransferred += bytesRead;
+            // The destination is never opened for writing: a cancel, disk-full or exception half way through
+            // would leave a truncated file in place of the user's version. Fill a temp file, stamp it, swap it in.
+            string tempFile = destFile + ".dCompare.tmp";
+            FileOperationRetry.TryDelete(tempFile);
 
-                    if (progressCallback != null && totalBytes > 0)
+            try
+            {
+                using (var sourceStream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read))
+                using (var targetStream = new FileStream(tempFile, FileMode.CreateNew, FileAccess.Write))
+                {
+                    byte[] buffer = new byte[8192];
+                    int bytesRead;
+                    while ((bytesRead = await sourceStream.ReadAsync(buffer, 0, buffer.Length, cancellationToken)) > 0)
                     {
-                        var result = progressCallback(totalBytes, bytesTransferred, 0, 0, 0, CopyProgressCallbackReason.CALLBACK_CHUNK_FINISHED, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
-                        if (result == CopyProgressResult.PROGRESS_CANCEL)
+                        await targetStream.WriteAsync(buffer, 0, bytesRead, cancellationToken);
+                        bytesTransferred += bytesRead;
+
+                        if (progressCallback != null && totalBytes > 0)
                         {
-                            throw new OperationCanceledException();
+                            var result = progressCallback(totalBytes, bytesTransferred, 0, 0, 0, CopyProgressCallbackReason.CALLBACK_CHUNK_FINISHED, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+                            if (result == CopyProgressResult.PROGRESS_CANCEL)
+                            {
+                                throw new OperationCanceledException();
+                            }
                         }
                     }
                 }
-            }
 
-            // Preserve original file timestamps
-            File.SetCreationTime(destFile, sourceInfo.CreationTime);
-            File.SetLastAccessTime(destFile, sourceInfo.LastAccessTime);
-            File.SetLastWriteTime(destFile, sourceInfo.LastWriteTime);
+                // Preserve original file timestamps
+                File.SetCreationTime(tempFile, sourceInfo.CreationTime);
+                File.SetLastAccessTime(tempFile, sourceInfo.LastAccessTime);
+                File.SetLastWriteTime(tempFile, sourceInfo.LastWriteTime);
+
+                FileOperationRetry.Run($"move {tempFile} -> {destFile}", () => File.Move(tempFile, destFile, overwrite));
+            }
+            catch
+            {
+                FileOperationRetry.TryDelete(tempFile);
+                throw;
+            }
         }
 
         public void MoveFile(string sourceFile, string destFile, bool overwrite)
         {
-            if (overwrite && File.Exists(destFile))
-            {
-                File.Delete(destFile);
-            }
-            File.Move(sourceFile, destFile);
+            // File.Move(…, overwrite) replaces the target in one step; deleting the target first lost both
+            // copies whenever the move itself then failed (locked source, cross-volume hiccup, ACL).
+            FileOperationRetry.Run($"move {sourceFile} -> {destFile}", () => File.Move(sourceFile, destFile, overwrite));
         }
 
         public void DeleteFile(string filePath)
         {
-            File.Delete(filePath);
+            FileOperationRetry.Run($"delete {filePath}", () => File.Delete(filePath));
         }
 
         public void DeleteDirectory(string dirPath)
         {
-            Directory.Delete(dirPath);
+            FileOperationRetry.Run($"delete directory {dirPath}", () => Directory.Delete(dirPath));
         }
     }
 }
