@@ -9,9 +9,6 @@
         "Args": {
           "path": "logs/dCompare.log",
           "rollingInterval": "Day",
-          "fileSizeLimitBytes": 10485760,
-          "retainedFileCountLimit": 7,
-          "rollOnFileSizeLimit": true,
           "outputTemplate": "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] [T{ThreadId:00}] {Message:lj}{NewLine}{Exception}"
         }
       }

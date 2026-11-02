@@ -1,6 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using dCompare.Common;
 using dCompare.Configuration;
 using ICSharpCode.AvalonEdit.Highlighting;
 using Microsoft.Win32;
@@ -71,12 +70,6 @@ namespace dCompare.Tools.Viewer
 
         public async void LoadFile(string filePath)
         {
-            if (FileExtensions.IsTooLargeToView(filePath, out long length))
-            {
-                MessageBox.Show(string.Format(Properties.Resources.ErrorFileTooLarge, filePath, length / (1024 * 1024), FileExtensions.MaxViewableFileBytes / (1024 * 1024)), Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
             Text = File.ReadAllText(filePath);
             _currentFilePath = filePath;
             var config = await _configurationService.LoadConfigurationAsync();

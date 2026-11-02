@@ -68,7 +68,7 @@ namespace dCompare.Tests.FileOperation
             File.WriteAllText(sourceFile, "test");
 
             // Act
-            await fileManager.DeleteAsync(sourceFile, null, TestContext.Current.CancellationToken);
+            await fileManager.DeleteAsync(sourceFile);
 
             // Assert
             mockStrategy.Verify(s => s.DeleteFile(sourceFile), Times.Once);
@@ -82,10 +82,10 @@ namespace dCompare.Tests.FileOperation
             var fileManager = new FileManager(new FileStreamStrategy());
             var sourceFile = Path.Combine(_sourceDir, "file.txt");
             var destFile = Path.Combine(_destDir, "file.txt");
-            await File.WriteAllTextAsync(sourceFile, "content", TestContext.Current.CancellationToken);
+            await File.WriteAllTextAsync(sourceFile, "content");
 
             // Act
-            var result = await fileManager.CopyAsync(sourceFile, destFile, false, null, TestContext.Current.CancellationToken);
+            var result = await fileManager.CopyAsync(sourceFile, destFile);
 
             // Assert
             Assert.True(File.Exists(destFile));
@@ -116,15 +116,15 @@ namespace dCompare.Tests.FileOperation
             var fileManager = new FileManager(new FileStreamStrategy());
             var sourceFile = Path.Combine(_sourceDir, "file.txt");
             var destFile = Path.Combine(_destDir, "file.txt");
-            await File.WriteAllTextAsync(sourceFile, "new content", TestContext.Current.CancellationToken);
-            await File.WriteAllTextAsync(destFile, "old content", TestContext.Current.CancellationToken);
+            await File.WriteAllTextAsync(sourceFile, "new content");
+            await File.WriteAllTextAsync(destFile, "old content");
 
             // Act
-            var result = await fileManager.CopyAsync(sourceFile, destFile, true, null, TestContext.Current.CancellationToken);
+            var result = await fileManager.CopyAsync(sourceFile, destFile, true);
 
             // Assert
             Assert.True(File.Exists(destFile));
-            Assert.Equal("new content", await File.ReadAllTextAsync(destFile, TestContext.Current.CancellationToken));
+            Assert.Equal("new content", await File.ReadAllTextAsync(destFile));
             Assert.Equal(1, result.SuccessCount);
         }
 
@@ -135,10 +135,10 @@ namespace dCompare.Tests.FileOperation
             var fileManager = new FileManager(new FileStreamStrategy());
             var sourceFile = Path.Combine(_sourceDir, "move.txt");
             var destFile = Path.Combine(_destDir, "move.txt");
-            await File.WriteAllTextAsync(sourceFile, "content", TestContext.Current.CancellationToken);
+            await File.WriteAllTextAsync(sourceFile, "content");
 
             // Act
-            var result = await fileManager.MoveAsync(sourceFile, destFile, false, null, TestContext.Current.CancellationToken);
+            var result = await fileManager.MoveAsync(sourceFile, destFile);
 
             // Assert
             Assert.False(File.Exists(sourceFile));
@@ -152,10 +152,10 @@ namespace dCompare.Tests.FileOperation
             // Arrange
             var fileManager = new FileManager(new FileStreamStrategy());
             var sourceFile = Path.Combine(_sourceDir, "delete.txt");
-            await File.WriteAllTextAsync(sourceFile, "content", TestContext.Current.CancellationToken);
+            await File.WriteAllTextAsync(sourceFile, "content");
 
             // Act
-            var result = await fileManager.DeleteAsync(sourceFile, null, TestContext.Current.CancellationToken);
+            var result = await fileManager.DeleteAsync(sourceFile);
 
             // Assert
             Assert.False(File.Exists(sourceFile));
@@ -169,11 +169,11 @@ namespace dCompare.Tests.FileOperation
             var fileManager = new FileManager(new FileStreamStrategy());
             var subDir = Path.Combine(_sourceDir, "sub");
             Directory.CreateDirectory(subDir);
-            await File.WriteAllTextAsync(Path.Combine(_sourceDir, "root.txt"), "root", TestContext.Current.CancellationToken);
-            await File.WriteAllTextAsync(Path.Combine(subDir, "nested.txt"), "nested", TestContext.Current.CancellationToken);
+            await File.WriteAllTextAsync(Path.Combine(_sourceDir, "root.txt"), "root");
+            await File.WriteAllTextAsync(Path.Combine(subDir, "nested.txt"), "nested");
 
             // Act
-            var result = await fileManager.CopyAsync(_sourceDir, _destDir, false, null, TestContext.Current.CancellationToken);
+            var result = await fileManager.CopyAsync(_sourceDir, _destDir);
 
             // Assert
             Assert.True(File.Exists(Path.Combine(_destDir, "root.txt")));
@@ -188,7 +188,7 @@ namespace dCompare.Tests.FileOperation
             var fileManager = new FileManager(new FileStreamStrategy());
             var sourceFile = Path.Combine(_sourceDir, "largefile.bin");
             // Create a reasonably large file to ensure the copy takes some time
-            await File.WriteAllBytesAsync(sourceFile, new byte[10 * 1024 * 1024], TestContext.Current.CancellationToken);
+            await File.WriteAllBytesAsync(sourceFile, new byte[10 * 1024 * 1024]);
             var destFile = Path.Combine(_destDir, "largefile.bin");
             var cts = new CancellationTokenSource();
 
@@ -207,13 +207,13 @@ namespace dCompare.Tests.FileOperation
             var fileManager = new FileManager(new FileStreamStrategy());
             var sourceFile = Path.Combine(_sourceDir, "file.txt");
             var destFile = Path.Combine(_destDir, "file.txt");
-            await File.WriteAllTextAsync(sourceFile, "content", TestContext.Current.CancellationToken);
+            await File.WriteAllTextAsync(sourceFile, "content");
 
             // Act
-            var copyTask = fileManager.CopyAsync(sourceFile, destFile, false, null, TestContext.Current.CancellationToken);
+            var copyTask = fileManager.CopyAsync(sourceFile, destFile);
 
             fileManager.Pause();
-            await Task.Delay(200, TestContext.Current.CancellationToken); // Give it a moment to pause
+            await Task.Delay(200); // Give it a moment to pause
             fileManager.Resume();
 
             var result = await copyTask;

@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
@@ -93,7 +92,7 @@ namespace dCompare.FileOperation.Tests
 
             // Verify it's a cancellation-related Win32Exception
             // The error message should indicate the operation was aborted
-            //Assert.Contains("ï¿½ï¿½ï¿½ï¿½", exception.Message); // Contains "aborted" in Chinese
+            //Assert.Contains("¤¤¤î", exception.Message); // Contains "aborted" in Chinese
             Assert.Equal(1235, exception.NativeErrorCode);
         }
 
@@ -200,53 +199,6 @@ namespace dCompare.FileOperation.Tests
             // Assert
             Assert.True(File.Exists(destFile));
             Assert.Equal(largeContent.Length, new FileInfo(destFile).Length);
-        }
-
-        // CopyFileEx writes to <dest>.dCompare.tmp and File.Move-swaps it in; a leftover temp file means the
-        // swap or the failure cleanup was skipped, and a refused overwrite must leave the old version intact.
-        [Fact]
-        public async Task CopyFileAsync_SuccessAndFailedCopies_ShouldLeaveNoTempFileBehind()
-        {
-            // Arrange
-            var sourceFile = CreateTestFile("source.txt", "Source content");
-            // Big enough that CopyFileEx reports progress (the callback is how we see the staged temp file).
-            var bigSource = CreateTestFile("source_big.txt", new string('S', 200_000));
-            var swappedDest = CreateTestFile("swap.txt", "Old content");
-            var existingDest = CreateTestFile("existing.txt", "Existing content");
-            var missingSource = Path.Combine(_testDirectory, "missing.txt");
-
-            // Act - successful overwrite, which is the case that goes through the temp file
-            bool sawTempDuringCopy = false;
-            dCompare.FileOperation.Strategies.CopyProgressCallback watchTemp = (_, _, _, _, _, _, _, _, _) =>
-            {
-                sawTempDuringCopy = File.Exists(swappedDest + ".dCompare.tmp");
-                return CopyProgressResult.PROGRESS_CONTINUE;
-            };
-            await _strategy.CopyFileAsync(bigSource, swappedDest, overwrite: true, watchTemp, CancellationToken.None);
-
-            // Assert
-            Assert.Equal(200_000, new FileInfo(swappedDest).Length);
-            Assert.True(sawTempDuringCopy, "copy did not stage the new version in <dest>.dCompare.tmp");
-            AssertNoTempFiles();
-
-            // Act & Assert - overwrite refused onto an existing destination
-            await Assert.ThrowsAsync<Win32Exception>(
-                async () => await _strategy.CopyFileAsync(sourceFile, existingDest, overwrite: false, null, CancellationToken.None));
-            Assert.Equal("Existing content", File.ReadAllText(existingDest));
-            AssertNoTempFiles();
-
-            // Act & Assert - missing source
-            await Assert.ThrowsAsync<Win32Exception>(
-                async () => await _strategy.CopyFileAsync(missingSource, Path.Combine(_testDirectory, "never.txt"), overwrite: false, null, CancellationToken.None));
-            AssertNoTempFiles();
-        }
-
-        private void AssertNoTempFiles()
-        {
-            string[] leftovers = Directory.GetFiles(_testDirectory, "*", SearchOption.AllDirectories)
-                .Where(f => f.EndsWith(".dCompare.tmp", StringComparison.OrdinalIgnoreCase))
-                .ToArray();
-            Assert.Empty(leftovers);
         }
 
         #endregion

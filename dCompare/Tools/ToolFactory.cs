@@ -71,20 +71,7 @@ namespace dCompare.Tools
                     throw new ToolCreationException(Resources.ErrorToolHandlerNotSpecified);
                 }
 
-                Type? type = Type.GetType(handler);
-                if (type == null)
-                {
-                    throw new ToolCreationException(string.Format(Resources.ErrorToolTypeNotFound, handler));
-                }
-
-                // Only dCompare's own ITool implementations may be constructed: the handler string comes
-                // from a config file, and constructing an arbitrary type would run its constructor
-                // (StreamWriter truncating the user's file) before the ITool cast below could fail.
-                if (!typeof(ITool).IsAssignableFrom(type) || type.Assembly != typeof(ITool).Assembly)
-                {
-                    throw new ToolCreationException(string.Format(Resources.ErrorToolHandlerNotBuiltInTool, handler));
-                }
-
+                Type type = Type.GetType(handler) ?? throw new ToolCreationException(string.Format(Resources.ErrorToolTypeNotFound, handler));
                 ConstructorInfo[] constructors = type.GetConstructors();
                 Ioc serviceProvider = Ioc.Default;
 

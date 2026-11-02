@@ -45,30 +45,19 @@ namespace dCompare
         {
             this.Closing -= MainWindow_Closing;
             e.Cancel = true; // Allow async operations
-            try
-            {
-                var config = await _viewModel._configService.LoadConfigurationAsync();
-                // CloseApplication is the option the user actually ticks for "confirm before quitting";
-                // CloseTab is a different setting (and also names a hotkey).
-                bool showConfirmation = config.Options?.Confirmation.CloseApplication == true;
+            var config = await _viewModel._configService.LoadConfigurationAsync();
+            bool showConfirmation = config.Options?.Confirmation.CloseTab == true;
 
-                if (showConfirmation)
-                {
-                    bool confirmed = _viewModel._userInteractionService.ShowConfirmation(
-                        Properties.Resources.ConfirmExit,
-                        Properties.Resources.ConfirmExitTitle);
-                    if (!confirmed)
-                    {
-                        this.Closing += MainWindow_Closing;
-                        return;
-                    }
-                }
-            }
-            catch (Exception ex)
+            if (showConfirmation)
             {
-                // A corrupt dCompare.json must not leave the window un-closeable: e.Cancel is already true,
-                // so an exception escaping here (async void) would both crash and strand the app.
-                Serilog.Log.Error(ex, "Failed to read configuration while closing; continuing without confirmation.");
+                bool confirmed = _viewModel._userInteractionService.ShowConfirmation(
+                    Properties.Resources.ConfirmExit,
+                    Properties.Resources.ConfirmExitTitle);
+                if (!confirmed)
+                {
+                    this.Closing += MainWindow_Closing;
+                    return;
+                }
             }
             this.Close();
         }
