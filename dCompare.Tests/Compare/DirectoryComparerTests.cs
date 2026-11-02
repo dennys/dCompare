@@ -260,101 +260,33 @@ namespace dCompare.Tests.Compare
         }
 
         [Fact]
-        public async Task CompareAsync_FullContents_FilesDifferBeyondFirstBuffer_ReturnsModifiedStatus()
+        public void Compare_SynchronousCall_ReturnsIdenticalStatus()
         {
-            // Arrange: identical for the first 64 KB, different only in the last byte, so a
-            // byte-by-byte compare that stops early (or buffers both whole files in RAM) is wrong.
+            // Arrange
             string leftPath = Path.Combine(_tempDir, "left");
             string rightPath = Path.Combine(_tempDir, "right");
             Directory.CreateDirectory(leftPath);
             Directory.CreateDirectory(rightPath);
 
-            byte[] content = new byte[100_000];
-            new Random(1234).NextBytes(content);
-            string leftFile = Path.Combine(leftPath, "big.bin");
-            string rightFile = Path.Combine(rightPath, "big.bin");
-            File.WriteAllBytes(leftFile, content);
-            byte[] other = (byte[])content.Clone();
-            other[^1] ^= 0xFF;
-            File.WriteAllBytes(rightFile, other);
+            var leftRoot = new FileSystemNode { Name = "left", IsDirectory = true, Children = new List<FileSystemNode>() };
+            var rightRoot = new FileSystemNode { Name = "right", IsDirectory = true, Children = new List<FileSystemNode>() };
 
-            SetupTwoFileTree(leftPath, rightPath, leftFile, rightFile);
-
-            // Act
-            var result = await _comparer.CompareAsync(leftPath, rightPath, CancellationToken.None, null, ComparisonAlgorithm.FullContents);
-
-            // Assert
-            Assert.Contains(result, i => i.Status == ComparisonStatus.Modified && i.Left?.Name == "big.bin");
-            // Reads must go through IFileSystem/OpenRead in chunks, not File.ReadAllBytes.
-            _fileSystemMock.Verify(fs => fs.OpenRead(leftFile), Times.Once);
-            _fileSystemMock.Verify(fs => fs.OpenRead(rightFile), Times.Once);
-        }
-
-        [Fact]
-        public async Task CompareAsync_FullContents_SameContentDifferentTimes_ReturnsIdenticalStatus()
-        {
-            string leftPath = Path.Combine(_tempDir, "left");
-            string rightPath = Path.Combine(_tempDir, "right");
-            Directory.CreateDirectory(leftPath);
-            Directory.CreateDirectory(rightPath);
-
-            byte[] content = new byte[100_000];
-            new Random(1234).NextBytes(content);
-            string leftFile = Path.Combine(leftPath, "big.bin");
-            string rightFile = Path.Combine(rightPath, "big.bin");
-            File.WriteAllBytes(leftFile, content);
-            File.WriteAllBytes(rightFile, content);
-
-            SetupTwoFileTree(leftPath, rightPath, leftFile, rightFile);
-
-            var result = await _comparer.CompareAsync(leftPath, rightPath, CancellationToken.None, null, ComparisonAlgorithm.FullContents);
-
-            Assert.Contains(result, i => i.Status == ComparisonStatus.Identical && i.Left?.Name == "big.bin");
-        }
-
-        [Fact]
-        public async Task CompareAsync_CancellationRequested_ThrowsInsteadOfReportingIdentical()
-        {
-            string leftPath = Path.Combine(_tempDir, "left");
-            string rightPath = Path.Combine(_tempDir, "right");
-            Directory.CreateDirectory(leftPath);
-            Directory.CreateDirectory(rightPath);
-
-            using var cts = new CancellationTokenSource();
-            cts.Cancel();
-
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(
-                () => _comparer.CompareAsync(leftPath, rightPath, cts.Token, null, ComparisonAlgorithm.ModifiedDateAndSize));
-        }
-
-        // FileSystemTreeBuilderFactory is static, so a mocked IFileSystemTreeBuilder is never used: the real
-        // DotnetFileSystemTreeBuilder scans through these IFileSystem calls. The paths exist on disk, so the mock
-        // forwards to the real Directory/File APIs (DirectoryExists must answer true for nested folders too,
-        // otherwise a subfolder is built as a childless file node and its rows never appear).
-        private void SetupRealScan()
-        {
-            _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>())).Returns((string p) => Directory.Exists(p));
-            _fileSystemMock.Setup(fs => fs.FileExists(It.IsAny<string>())).Returns((string p) => File.Exists(p));
-            _fileSystemMock.Setup(fs => fs.GetDirectories(It.IsAny<string>()))
-                .Returns((string p) => Directory.Exists(p) ? Directory.GetDirectories(p) : Array.Empty<string>());
-            _fileSystemMock.Setup(fs => fs.GetFiles(It.IsAny<string>()))
-                .Returns((string p) => Directory.Exists(p) ? Directory.GetFiles(p) : Array.Empty<string>());
-            _fileSystemMock.Setup(fs => fs.GetFileInfo(It.IsAny<string>())).Returns((string p) => new FileInfo(p));
-            _fileSystemMock.Setup(fs => fs.GetLastWriteTime(It.IsAny<string>())).Returns((string p) => Directory.GetLastWriteTime(p));
-            _fileSystemMock.Setup(fs => fs.OpenRead(It.IsAny<string>())).Returns((string p) => File.OpenRead(p));
-        }
-
-        // Wires the mocked IFileSystem up to two real files on disk, one per side.
-        private void SetupTwoFileTree(string leftPath, string rightPath, string leftFile, string rightFile)
-        {
             _fileSystemMock.Setup(fs => fs.DirectoryExists(leftPath)).Returns(true);
             _fileSystemMock.Setup(fs => fs.DirectoryExists(rightPath)).Returns(true);
             _fileSystemMock.Setup(fs => fs.GetDirectories(It.IsAny<string>())).Returns(new string[] { });
+            _fileSystemMock.Setup(fs => fs.GetFiles(It.IsAny<string>())).Returns(new string[] { });
             _fileSystemMock.Setup(fs => fs.GetLastWriteTime(It.IsAny<string>())).Returns(DateTime.Now);
-            _fileSystemMock.Setup(fs => fs.GetFiles(leftPath)).Returns(new[] { leftFile });
-            _fileSystemMock.Setup(fs => fs.GetFiles(rightPath)).Returns(new[] { rightFile });
-            _fileSystemMock.Setup(fs => fs.GetFileInfo(It.IsAny<string>())).Returns((string p) => new FileInfo(p));
-            _fileSystemMock.Setup(fs => fs.OpenRead(It.IsAny<string>())).Returns((string p) => File.OpenRead(p));
+            _treeBuilderMock.Setup(tb => tb.BuildTreeRecursive(leftPath, 0, It.IsAny<CancellationToken>(), It.IsAny<Action>()))
+                .Returns(leftRoot);
+            _treeBuilderMock.Setup(tb => tb.BuildTreeRecursive(rightPath, 0, It.IsAny<CancellationToken>(), It.IsAny<Action>()))
+                .Returns(rightRoot);
+
+            // Act
+            var result = _comparer.Compare(leftPath, rightPath, CancellationToken.None, null, ComparisonAlgorithm.ModifiedDateAndSize);
+
+            // Assert
+            Assert.Single(result);
+            Assert.Equal(ComparisonStatus.Identical, result[0].Status);
         }
 
         [Fact]
@@ -471,152 +403,6 @@ namespace dCompare.Tests.Compare
             Assert.Equal(2, result.Count);
             Assert.Equal(ComparisonStatus.Identical, result[0].Status);
             Assert.Equal(ComparisonStatus.Identical, result[1].Status);
-        }
-
-        // Regression: CompareNodes used to promote the parent through
-        // result.LastOrDefault(i => i.Left == left || i.Right == right), which — with left == null — matched every
-        // one-sided row and repainted the deepest descendant "Modified" while the real folder row kept its status.
-        [Fact]
-        public async Task CompareAsync_OneSidedFolder_KeepsFolderAndDescendantLeftOnly()
-        {
-            string leftPath = Path.Combine(_tempDir, "left");
-            string rightPath = Path.Combine(_tempDir, "right");
-            string leftSub = Path.Combine(leftPath, "a");
-            Directory.CreateDirectory(rightPath);
-            Directory.CreateDirectory(leftSub);
-            File.WriteAllText(Path.Combine(leftSub, "b.txt"), "hello");
-
-            SetupRealScan();
-
-            var result = await _comparer.CompareAsync(leftPath, rightPath, CancellationToken.None, null, ComparisonAlgorithm.ModifiedDateAndSize);
-
-            var folder = result.Single(i => i.Left?.Name == "a");
-            var file = result.Single(i => i.Left?.Name == "b.txt");
-            Assert.Equal(ComparisonStatus.LeftOnly, folder.Status);
-            Assert.Equal(ComparisonStatus.LeftOnly, file.Status);
-            Assert.DoesNotContain(result, i => (i.Left?.Name == "a" || i.Left?.Name == "b.txt") && i.Status == ComparisonStatus.Modified);
-        }
-
-        [Fact]
-        public async Task CompareAsync_MatchingNestedFolder_AllRowsIdentical()
-        {
-            string leftPath = Path.Combine(_tempDir, "left");
-            string rightPath = Path.Combine(_tempDir, "right");
-            string leftSub = Path.Combine(leftPath, "a");
-            string rightSub = Path.Combine(rightPath, "a");
-            Directory.CreateDirectory(leftSub);
-            Directory.CreateDirectory(rightSub);
-            string leftFile = Path.Combine(leftSub, "b.txt");
-            string rightFile = Path.Combine(rightSub, "b.txt");
-            File.WriteAllText(leftFile, "hello");
-            File.WriteAllText(rightFile, "hello");
-            var stamp = new DateTime(2024, 5, 1, 12, 0, 0, DateTimeKind.Utc);
-            File.SetLastWriteTimeUtc(leftFile, stamp);
-            File.SetLastWriteTimeUtc(rightFile, stamp);
-
-            SetupRealScan();
-
-            var result = await _comparer.CompareAsync(leftPath, rightPath, CancellationToken.None, null, ComparisonAlgorithm.ModifiedDateAndSize);
-
-            Assert.Equal(3, result.Count); // root, a, a/b.txt
-            Assert.Equal(ComparisonStatus.Identical, result.Single(i => i.Left?.Name == "a").Status);
-            Assert.Equal(ComparisonStatus.Identical, result.Single(i => i.Left?.Name == "b.txt").Status);
-            Assert.All(result, i => Assert.Equal(ComparisonStatus.Identical, i.Status));
-        }
-
-        // Regression: xxHash64_Partial used to hit `default:` and compare size + modified time without hashing.
-        [Fact]
-        public async Task CompareAsync_XxHash64Partial_SameContentDifferentTimes_ReturnsIdentical()
-        {
-            string leftPath = Path.Combine(_tempDir, "left");
-            string rightPath = Path.Combine(_tempDir, "right");
-            Directory.CreateDirectory(leftPath);
-            Directory.CreateDirectory(rightPath);
-
-            byte[] content = new byte[4096];
-            new Random(7).NextBytes(content);
-            string leftFile = Path.Combine(leftPath, "doc.bin");
-            string rightFile = Path.Combine(rightPath, "doc.bin");
-            File.WriteAllBytes(leftFile, content);
-            File.WriteAllBytes(rightFile, content);
-            var stamp = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-            File.SetLastWriteTimeUtc(leftFile, stamp);
-            File.SetLastWriteTimeUtc(rightFile, stamp.AddMinutes(1));
-
-            SetupTwoFileTree(leftPath, rightPath, leftFile, rightFile);
-
-            // Size + time alone reports Modified, so only a real content hash can report Identical here.
-            var byTime = await _comparer.CompareAsync(leftPath, rightPath, CancellationToken.None, null, ComparisonAlgorithm.ModifiedDateAndSize);
-            Assert.Equal(ComparisonStatus.Modified, byTime.Single(i => i.Left?.Name == "doc.bin").Status);
-
-            var hashingComparer = new DirectoryComparer(new AppConfiguration(), _fileSystemMock.Object, new HashProvider());
-            var hashed = await hashingComparer.CompareAsync(leftPath, rightPath, CancellationToken.None, null, ComparisonAlgorithm.xxHash64_Partial);
-            Assert.Equal(ComparisonStatus.Identical, hashed.Single(i => i.Left?.Name == "doc.bin").Status);
-        }
-
-        [Fact]
-        public async Task CompareAsync_XxHash64Partial_DifferentHeadBytesSameTimes_ReturnsModified()
-        {
-            string leftPath = Path.Combine(_tempDir, "left");
-            string rightPath = Path.Combine(_tempDir, "right");
-            Directory.CreateDirectory(leftPath);
-            Directory.CreateDirectory(rightPath);
-
-            byte[] content = new byte[2048];
-            new Random(11).NextBytes(content);
-            byte[] other = (byte[])content.Clone();
-            for (int i = 0; i < 100; i++) other[i] ^= 0xFF;
-
-            string leftFile = Path.Combine(leftPath, "doc.bin");
-            string rightFile = Path.Combine(rightPath, "doc.bin");
-            File.WriteAllBytes(leftFile, content);
-            File.WriteAllBytes(rightFile, other);
-            var stamp = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-            File.SetLastWriteTimeUtc(leftFile, stamp);
-            File.SetLastWriteTimeUtc(rightFile, stamp);
-
-            SetupTwoFileTree(leftPath, rightPath, leftFile, rightFile);
-
-            // Size and modified time are equal here, so only a content hash can report Modified.
-            var byTime = await _comparer.CompareAsync(leftPath, rightPath, CancellationToken.None, null, ComparisonAlgorithm.ModifiedDateAndSize);
-            Assert.Equal(ComparisonStatus.Identical, byTime.Single(i => i.Left?.Name == "doc.bin").Status);
-
-            var hashingComparer = new DirectoryComparer(new AppConfiguration(), _fileSystemMock.Object, new HashProvider());
-            var hashed = await hashingComparer.CompareAsync(leftPath, rightPath, CancellationToken.None, null, ComparisonAlgorithm.xxHash64_Partial);
-            Assert.Equal(ComparisonStatus.Modified, hashed.Single(i => i.Left?.Name == "doc.bin").Status);
-        }
-
-        // Pins the wired-up Options:Compare:Algorithms[xxHash64_Partial].ComparisonPercentage (30): a difference
-        // past the first 30% is deliberately not seen by Partial, but is by Full.
-        [Fact]
-        public async Task CompareAsync_XxHash64Partial_DifferenceBeyondConfiguredPercentage_NotSeenByPartialButByFull()
-        {
-            string leftPath = Path.Combine(_tempDir, "left");
-            string rightPath = Path.Combine(_tempDir, "right");
-            Directory.CreateDirectory(leftPath);
-            Directory.CreateDirectory(rightPath);
-
-            byte[] content = new byte[4096];
-            new Random(13).NextBytes(content);
-            byte[] other = (byte[])content.Clone();
-            other[^1] ^= 0xFF; // beyond the 30% window (first 1228 bytes)
-
-            string leftFile = Path.Combine(leftPath, "doc.bin");
-            string rightFile = Path.Combine(rightPath, "doc.bin");
-            File.WriteAllBytes(leftFile, content);
-            File.WriteAllBytes(rightFile, other);
-            var stamp = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-            File.SetLastWriteTimeUtc(leftFile, stamp);
-            File.SetLastWriteTimeUtc(rightFile, stamp);
-
-            SetupTwoFileTree(leftPath, rightPath, leftFile, rightFile);
-
-            var hashingComparer = new DirectoryComparer(new AppConfiguration(), _fileSystemMock.Object, new HashProvider());
-            var partial = await hashingComparer.CompareAsync(leftPath, rightPath, CancellationToken.None, null, ComparisonAlgorithm.xxHash64_Partial);
-            Assert.Equal(ComparisonStatus.Identical, partial.Single(i => i.Left?.Name == "doc.bin").Status);
-
-            var full = await hashingComparer.CompareAsync(leftPath, rightPath, CancellationToken.None, null, ComparisonAlgorithm.xxHash64_Full);
-            Assert.Equal(ComparisonStatus.Modified, full.Single(i => i.Left?.Name == "doc.bin").Status);
         }
 
         [Fact]

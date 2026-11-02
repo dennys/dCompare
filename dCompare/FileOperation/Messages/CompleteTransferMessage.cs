@@ -8,15 +8,11 @@ namespace dCompare.FileOperation.Messages
         public bool Success { get; }
         public string Message { get; }
 
-        // Cancelled is neither of the two: a half-copied file must not be booked as a completed transfer.
-        public bool Cancelled { get; }
-
-        public CompleteTransferMessage(FileTransfer transfer, bool success, string message, bool cancelled = false)
+        public CompleteTransferMessage(FileTransfer transfer, bool success, string message)
         {
             Transfer = transfer;
             Success = success;
             Message = message;
-            Cancelled = cancelled;
         }
     }
 }

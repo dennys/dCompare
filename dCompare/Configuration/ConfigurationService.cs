@@ -1,6 +1,5 @@
 ﻿using dCompare.Common;
 using Microsoft.Extensions.Configuration;
-using Serilog;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -13,8 +12,8 @@ namespace dCompare.Configuration
     public class ConfigurationService : IConfigurationService
     {
         private const string jsonFileName = Constant.DefaultConfigurationFile;
-        private string _configPath;
-        private IConfigurationRoot _configuration;
+        private readonly string _configPath;
+        private readonly IConfigurationRoot _configuration;
         private static readonly JsonSerializerOptions _serializerOptions = new()
         {
             WriteIndented = true,
@@ -25,24 +24,15 @@ namespace dCompare.Configuration
         /// <summary>
         /// Initializes a new instance of the ConfigurationService.
         /// </summary>
-        /// <param name="configFileName">The name of the configuration file, e.g., "dCompare.json".
-        /// The default name resolves to the portable home next to the exe; any explicit path
-        /// (absolute or relative) is used as given.</param>
+        /// <param name="configFileName">The name of the configuration file, e.g., "dCompare.json".</param>
         public ConfigurationService(string configFileName = jsonFileName)
         {
-            _configPath = string.Equals(configFileName, jsonFileName, StringComparison.OrdinalIgnoreCase)
-                ? AppPaths.ResolveExisting(jsonFileName)
-                : Path.GetFullPath(configFileName);
-            _configuration = BuildConfiguration(_configPath);
+            _configPath = Path.Combine(Directory.GetCurrentDirectory(), configFileName);
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile(configFileName, optional: true, reloadOnChange: true);
+            _configuration = builder.Build();
         }
-
-        // Base path + file name (not one absolute path) so the reload watcher is scoped to the folder,
-        // not to the whole drive.
-        private static IConfigurationRoot BuildConfiguration(string configPath) =>
-            new ConfigurationBuilder()
-                .SetBasePath(Path.GetDirectoryName(configPath)!)
-                .AddJsonFile(Path.GetFileName(configPath), optional: true, reloadOnChange: true)
-                .Build();
 
         /// <summary>
         /// Loads the application configuration from the JSON file.
@@ -120,31 +110,9 @@ namespace dCompare.Configuration
         public async Task SaveConfigurationAsync(AppConfiguration config)
         {
             var jsonString = JsonSerializer.Serialize(config, _serializerOptions);
-            try
-            {
-                await WriteAtomicAsync(_configPath, jsonString);
-            }
-            catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
-            {
-                // Installed into a read-only folder (Program Files): retry once in %LOCALAPPDATA%\dCompare.
-                string fallbackPath = AppPaths.GetFallbackPath(_configPath);
-                Log.Warning(ex, "Cannot write configuration to '{ConfigPath}'; saving to '{FallbackPath}' instead.", _configPath, fallbackPath);
-                await WriteAtomicAsync(fallbackPath, jsonString);
-                _configPath = fallbackPath;
-            }
+            await File.WriteAllTextAsync(_configPath, jsonString);
             // Trigger reload to ensure configuration is updated
-            _configuration = BuildConfiguration(_configPath);
-        }
-
-        private static async Task WriteAtomicAsync(string path, string jsonString)
-        {
-            // Write-then-replace: a crash or power loss during the write would otherwise leave a truncated
-            // dCompare.json that LoadConfigurationAsync rejects on every later start, and the Options page
-            // (the thing that repairs it) could not open either.
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            string tempPath = path + ".tmp";
-            await File.WriteAllTextAsync(tempPath, jsonString);
-            File.Move(tempPath, path, true);
+            _configuration.Reload();
         }
 
         /// <summary>

@@ -1,4 +1,3 @@
-using dCompare.Common;
 using dCompare.Compare;
 using dCompare.DirTreeSystem.Models;
 using System.IO;
@@ -31,7 +30,6 @@ namespace dCompare.DirTreeSystem
                     foreach (string dir in _fileSystem.GetDirectories(path))
                     {
                         cancellationToken.ThrowIfCancellationRequested();
-                        if (FileExtensions.IsReparsePoint(dir)) continue;
                         FileSystemNode childDir = BuildTreeRecursive(dir, depth + 1, cancellationToken, onDirectoryProcessed);
                         root.Children.Add(childDir);
                         totalSize += childDir.Size;

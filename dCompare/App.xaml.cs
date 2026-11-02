@@ -21,27 +21,9 @@ namespace dCompare
 
         public App()
         {
-            // Configuration for the logger
-            IConfigurationRoot loggerConfiguration = new ConfigurationBuilder()
-                .SetBasePath(AppPaths.BaseDirectory)
-                .AddJsonFile("Serilog.json", optional: true, reloadOnChange: true)
-                // Added last so it wins over Serilog.json: the file sink must write under the exe folder,
-                // not relative to whatever the working directory happens to be.
-                .AddInMemoryCollection(new Dictionary<string, string?> { ["Serilog:WriteTo:0:Args:path"] = AppPaths.LogFile })
-                .Build();
-
-            // Configure the static logger
-            Log.Logger = new LoggerConfiguration()
-                .ReadFrom.Configuration(loggerConfiguration)
-                .Enrich.WithThreadId()
-                .CreateLogger();
-
-            // Older builds persisted next to the working directory; move those files to the portable home.
-            AppPaths.MigrateFromWorkingDirectory(Constant.DefaultConfigurationFile, Constant.RecentSessionsFile);
-
             // Configuration Setup
             IConfigurationRoot configuration = new ConfigurationBuilder()
-                .SetBasePath(AppPaths.BaseDirectory)
+                .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile(Constant.DefaultConfigurationFile, optional: true, reloadOnChange: true)
                 .Build();
 
@@ -63,7 +45,19 @@ namespace dCompare
                 }
             }
 
-            // --- Host Setup ---
+            // Configuration for the logger
+            IConfigurationRoot loggerConfiguration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("Serilog.json", optional: true, reloadOnChange: true)
+                .Build();
+
+            // Configure the static logger
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(loggerConfiguration)
+                .Enrich.WithThreadId()
+                .CreateLogger();
+
+            // --- Host Setup ---
             AppHost = Host.CreateDefaultBuilder()
                 .ConfigureAppConfiguration((context, configBuilder) =>
                 {
