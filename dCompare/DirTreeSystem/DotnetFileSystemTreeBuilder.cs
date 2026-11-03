@@ -1,6 +1,7 @@
 using dCompare.Common;
 using dCompare.Compare;
 using dCompare.DirTreeSystem.Models;
+using Serilog;
 using System.IO;
 
 namespace dCompare.DirTreeSystem
@@ -25,24 +26,35 @@ namespace dCompare.DirTreeSystem
                 root.ModifiedTime = _fileSystem.GetLastWriteTime(path);
                 long totalSize = 0;
 
-                try
+                // Each enumeration is listed and consumed separately, and every item is read on its own, so one
+                // locked or half-removed entry cannot silently drop the siblings after it. Whatever is lost is
+                // recorded on ScanIncomplete and the row is reported as Conflict instead of "missing on one side".
+                string[] subDirs = ListEntries(() => _fileSystem.GetDirectories(path), path, "directories", root);
+                foreach (string dir in subDirs)
                 {
-                    // Process directories
-                    foreach (string dir in _fileSystem.GetDirectories(path))
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (FileExtensions.IsReparsePoint(dir)) continue;
+                    try
                     {
-                        cancellationToken.ThrowIfCancellationRequested();
-                        if (FileExtensions.IsReparsePoint(dir)) continue;
                         FileSystemNode childDir = BuildTreeRecursive(dir, depth + 1, cancellationToken, onDirectoryProcessed);
                         root.Children.Add(childDir);
                         totalSize += childDir.Size;
-                        onDirectoryProcessed?.Invoke();
+                        if (childDir.ScanIncomplete) root.ScanIncomplete = true;
                     }
-
-                    // Process files
-                    foreach (string file in _fileSystem.GetFiles(path))
+                    catch (Exception ex) when (IsScanFailure(ex))
                     {
-                        cancellationToken.ThrowIfCancellationRequested();
-                        //FileSystemNode childFile = BuildTreeRecursive(file, depth + 1, cancellationToken, onDirectoryProcessed);
+                        root.ScanIncomplete = true;
+                        Log.Debug(ex, "Cannot scan directory '{Dir}'.", dir);
+                    }
+                    onDirectoryProcessed?.Invoke();
+                }
+
+                string[] files = ListEntries(() => _fileSystem.GetFiles(path), path, "files", root);
+                foreach (string file in files)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    try
+                    {
                         FileInfo fileInfo = _fileSystem.GetFileInfo(file);
                         FileSystemNode childFile = new()
                         {
@@ -56,10 +68,22 @@ namespace dCompare.DirTreeSystem
                         root.Children.Add(childFile);
                         totalSize += childFile.Size;
                     }
-                    root.Size = totalSize;
+                    catch (Exception ex) when (IsScanFailure(ex))
+                    {
+                        // The file existed a moment ago and cannot be read now (removed, locked, too long).
+                        // Still list it, with no size or date, so it is never mistaken for absent.
+                        root.Children.Add(new FileSystemNode
+                        {
+                            Name = Path.GetFileName(file),
+                            FullPath = file,
+                            IsDirectory = false,
+                            Depth = depth + 1
+                        });
+                        root.ScanIncomplete = true;
+                        Log.Debug(ex, "Cannot read file information for '{File}'.", file);
+                    }
                 }
-                catch (UnauthorizedAccessException) { }
-                catch (DirectoryNotFoundException) { }
+                root.Size = totalSize;
             }
             else if (_fileSystem.FileExists(path))
             {
@@ -69,6 +93,23 @@ namespace dCompare.DirTreeSystem
             }
 
             return root;
+        }
+
+        // Anything except cancellation is a read problem we can survive: the walk reports what it could read.
+        private static bool IsScanFailure(Exception ex) => ex is not OperationCanceledException;
+
+        private static string[] ListEntries(Func<IEnumerable<string>> list, string path, string what, FileSystemNode root)
+        {
+            try
+            {
+                return list().ToArray();
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                root.ScanIncomplete = true;
+                Log.Debug(ex, "Cannot list {What} of '{Path}'.", what, path);
+                return Array.Empty<string>();
+            }
         }
     }
 }

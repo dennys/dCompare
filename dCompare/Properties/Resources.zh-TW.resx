@@ -17,15 +17,6 @@
     <resheader name="version">2.0</resheader>
     <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
     <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
-    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
-    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
-    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
-        <value>[base64 mime encoded serialized .NET Framework object]</value>
-    </data>
-    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
-        <comment>This is a comment</comment>
-    </data>
                 
     There are any number of "resheader" rows that contain simple 
     name/value pairs.
@@ -175,7 +166,19 @@
     <value>關閉標籤</value>
   </data>
   <data name="AboutMessage" xml:space="preserve">
-    <value>dCompare - Chrome風格標籤介面\n\n功能:\n• Chrome風格標籤，帶懸停效果\n• 拖放標籤重新排序\n• 鍵盤快捷鍵 (Ctrl+N, Ctrl+W)\n• 標籤關閉確認\n• 統一配色方案\n• 多語言支持\n\n鍵盤快捷鍵:\nCtrl+N: 新增標籤\nCtrl+W: 關閉目前標籤</value>
+    <value>dCompare - Chrome風格標籤介面
+
+功能:
+• Chrome風格標籤，帶懸停效果
+• 拖放標籤重新排序
+• 鍵盤快捷鍵 (Ctrl+N, Ctrl+W)
+• 標籤關閉確認
+• 統一配色方案
+• 多語言支持
+
+鍵盤快捷鍵:
+Ctrl+N: 新增標籤
+Ctrl+W: 關閉目前標籤</value>
   </data>
   <data name="AboutTitle" xml:space="preserve">
     <value>關於 dCompare</value>
@@ -985,18 +988,6 @@
   <data name="HotkeyTooltip" xml:space="preserve">
     <value>按下您想要的組合鍵（例如，Ctrl+S）。</value>
   </data>
-  <data name="LogSettings" xml:space="preserve">
-    <value>日誌設定</value>
-  </data>
-  <data name="EnableLogging" xml:space="preserve">
-    <value>啟用日誌記錄</value>
-  </data>
-  <data name="LogLevel" xml:space="preserve">
-    <value>日誌級別：</value>
-  </data>
-  <data name="RetentionDays" xml:space="preserve">
-    <value>保留天數：</value>
-  </data>
   <data name="TextViewerSettings" xml:space="preserve">
     <value>文字檢視器設定</value>
   </data>
@@ -1254,5 +1245,38 @@
   </data>
   <data name="ErrorFileTooLarge" xml:space="preserve">
     <value>「{0}」有 {1:N0} MB，超過內建檢視器 {2:N0} MB 的上限。請改用外部工具開啟。</value>
+  </data>
+  <data name="SessionFileEmpty" xml:space="preserve">
+    <value>工作階段檔案為空或不含工作階段資料：{0}</value>
+  </data>
+  <data name="ErrorSessionPathRejected" xml:space="preserve">
+    <value>該工作階段路徑未載入，因為只允許本機路徑：{0}</value>
+  </data>
+  <data name="SessionNoValidEntries" xml:space="preserve">
+    <value>無法從 {0} 載入任何工作階段項目</value>
+  </data>
+  <data name="ErrorDefaultSessionFileNotLocal" xml:space="preserve">
+    <value>預設工作階段檔案必須是使用者目錄下的本機路徑，因此未載入：{0}</value>
+  </data>
+  <data name="ErrorCopyingItems" xml:space="preserve">
+    <value>複製檔案時發生錯誤</value>
+  </data>
+  <data name="ErrorMovingItems" xml:space="preserve">
+    <value>移動檔案時發生錯誤</value>
+  </data>
+  <data name="OperationCompletedSuccessfully" xml:space="preserve">
+    <value>操作已順利完成。</value>
+  </data>
+  <data name="ArchiveEntryOperationNotSupported" xml:space="preserve">
+    <value>壓縮檔內的檔案無法複製、移動、刪除或重新命名；只能變更壓縮檔本身。</value>
+  </data>
+  <data name="ErrorComparingImages" xml:space="preserve">
+    <value>比較圖片時發生錯誤：{0}</value>
+  </data>
+  <data name="ErrorCopyingToClipboard" xml:space="preserve">
+    <value>無法複製到剪貼簿：{0}</value>
+  </data>
+  <data name="WelcomeTabName" xml:space="preserve">
+    <value>歡迎</value>
   </data>
 </root>

@@ -30,6 +30,31 @@ namespace dCompare.Tests.Options
             Assert.Equal("Dark", model.Theme);
         }
 
+        /// <summary>
+        /// CompareOptions seeds its dictionary with a shallow copy of the static list in ComparisonAlgorithms, so
+        /// the entries start out as the very same objects. The Options page used to tick those directly, which
+        /// changed the live settings even when the user pressed Cancel.
+        /// </summary>
+        [Fact]
+        public void CompareOptionsViewModel_TogglingAnAlgorithmEditsNeitherTheSeedNorTheModel()
+        {
+            var model = new CompareOptions();
+            Assert.True(
+                ReferenceEquals(model.Algorithms[ComparisonAlgorithm.MD5], ComparisonAlgorithms.AlgorithmSettings[ComparisonAlgorithm.MD5]),
+                "CompareOptions is no longer seeded with shared entries, so this test no longer guards anything.");
+            bool seedWasEnabled = ComparisonAlgorithms.AlgorithmSettings[ComparisonAlgorithm.MD5].IsEnabled;
+
+            var viewModel = new CompareOptionsViewModel(model);
+            viewModel.AlgorithmItems.First(item => item.Algorithm == ComparisonAlgorithm.MD5).IsEnabled = !seedWasEnabled;
+
+            Assert.Equal(seedWasEnabled, ComparisonAlgorithms.AlgorithmSettings[ComparisonAlgorithm.MD5].IsEnabled);
+            Assert.Equal(seedWasEnabled, model.Algorithms[ComparisonAlgorithm.MD5].IsEnabled);
+
+            // Saving still has to land.
+            viewModel.UpdateModel();
+            Assert.Equal(!seedWasEnabled, model.Algorithms[ComparisonAlgorithm.MD5].IsEnabled);
+        }
+
         [Fact]
         public void HotKeysOptionsViewModel_UpdateModel_CorrectlyPersistsChanges()
         {

@@ -14,7 +14,7 @@ namespace dCompare.Options
             // Check if we are in design mode to avoid runtime errors in the designer
             if (!DesignerProperties.GetIsInDesignMode(this))
             {
-                this.DataContext = new SettingsViewModel(new ConfigurationService());
+                this.DataContext = new SettingsViewModel(new ConfigurationService(), new UserInteractionService());
             }
         }
 

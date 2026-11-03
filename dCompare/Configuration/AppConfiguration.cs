@@ -34,10 +34,10 @@ namespace dCompare.Configuration
         public ImageViewerOptions ImageViewer { get; set; } = new();
 
         [JsonPropertyName("Tools")]
-        public Dictionary<string, ToolOptions> Tools { get; set; } = new();
+        public Dictionary<string, ToolOptions> Tools { get; set; } = DefaultConfiguration.Tools();
 
         [JsonPropertyName("FileTypeMapping")]
-        public Dictionary<string, FileTypeMappingOptions> FileTypeMapping { get; set; } = new();
+        public Dictionary<string, FileTypeMappingOptions> FileTypeMapping { get; set; } = DefaultConfiguration.FileTypeMapping();
     }
 
     public class FontOptions
@@ -256,46 +256,6 @@ namespace dCompare.Configuration
 
         [JsonPropertyName("OpenOptions")]
         public string OpenOptions { get; set; } = "Ctrl+Shift+O";
-    }
-
-    public class LogOptions
-    {
-        [JsonPropertyName("Enabled")]
-        public bool Enabled { get; set; } = true;
-
-        [JsonPropertyName("Using")]
-        public List<string> Using { get; set; } = ["Serilog.Sinks.File"];
-
-        [JsonPropertyName("MinimumLevel")]
-        public string MinimumLevel { get; set; } = "Information";
-
-        [JsonPropertyName("Enrich")]
-        public List<string> Enrich { get; set; } = ["WithThreadId"];
-
-        [JsonPropertyName("WriteTo")]
-        public List<SerilogWriteToOption> WriteTo { get; set; } = new();
-    }
-
-    public class SerilogWriteToOption
-    {
-        [JsonPropertyName("Name")]
-        public string Name { get; set; } = string.Empty;
-
-        [JsonPropertyName("Args")]
-        public SerilogSinkArgs Args { get; set; } = new();
-    }
-
-    public class SerilogSinkArgs
-    {
-        [JsonPropertyName("path")]
-        public string Path { get; set; } = "logs/dCompare.log";
-
-        [JsonPropertyName("rollingInterval")]
-        public string RollingInterval { get; set; } = "Day";
-
-        [JsonPropertyName("outputTemplate")]
-        public string OutputTemplate { get; set; } =
-            "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff} {Level:u3}] [T{ThreadId:D2}] {Message:lj}{NewLine}{Exception}";
     }
 
 }

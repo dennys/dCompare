@@ -91,6 +91,8 @@ StyleCopReport.xml
 *.tmp_proj
 *_wpftmp.csproj
 *.log
+# Never commit archives: dCompare/dCompare.zip (23 MB x 3 revisions) is almost the entire .git packfile.
+*.zip
 *.vspscc
 *.vssscc
 .builds

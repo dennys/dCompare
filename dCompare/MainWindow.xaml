@@ -335,7 +335,7 @@
                         ItemContainerStyle="{StaticResource ChromeTabStyle}"
                         PreviewMouseMove="TabControl_PreviewMouseMove"
                         PreviewMouseLeftButtonUp="TabControl_PreviewMouseLeftButtonUp">
-                <TabItem Header="Welcome">
+                <TabItem Header="{x:Static resx:Resources.WelcomeTabName}">
                     <!-- <compare:UcCompareControl/> -->
                 </TabItem>
             </TabControl>

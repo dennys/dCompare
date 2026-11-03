@@ -5,7 +5,6 @@ namespace dCompare.FileOperation
 {
     public interface IFileManager
     {
-        void WhoAmI();
         void Pause();
         void Resume();
         // Stops every batch this manager is running, whichever caller started it.

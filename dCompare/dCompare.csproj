@@ -17,6 +17,10 @@
     <Content Include="*.resx" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="dCompare.Tests" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />

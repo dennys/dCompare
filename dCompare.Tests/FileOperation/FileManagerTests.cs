@@ -64,14 +64,16 @@ namespace dCompare.Tests.FileOperation
             var mockStrategy = new Mock<IFileOperationStrategy>();
             var fileManager = new FileManager(mockStrategy.Object);
 
-            var sourceFile = Path.Combine(_sourceDir, "test.txt");
-            File.WriteAllText(sourceFile, "test");
+            // A path the Recycle Bin declines (it does not exist), so the permanent strategy delete is the
+            // fallback that actually runs. A real file would be recycled successfully and the strategy
+            // would be bypassed, which is the intended new contract.
+            var missingFile = Path.Combine(_sourceDir, "missing.txt");
 
             // Act
-            await fileManager.DeleteAsync(sourceFile, null, TestContext.Current.CancellationToken);
+            await fileManager.DeleteAsync(missingFile, null, TestContext.Current.CancellationToken);
 
             // Assert
-            mockStrategy.Verify(s => s.DeleteFile(sourceFile), Times.Once);
+            mockStrategy.Verify(s => s.DeleteFile(missingFile), Times.Once);
         }
 
 

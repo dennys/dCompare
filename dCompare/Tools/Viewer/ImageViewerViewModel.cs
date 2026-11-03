@@ -103,7 +103,7 @@ namespace dCompare.Tools.Viewer
         private bool _isExifIsoVisible;
 
         private readonly Configuration.IConfigurationService _configService;
-        private Configuration.ImageViewerOptions _options;
+        private Configuration.ImageViewerOptions _options = null!;
 
         public ObservableCollection<System.Drawing.Rectangle> DifferenceRectangles { get; } = new();
 
@@ -207,7 +207,7 @@ namespace dCompare.Tools.Viewer
 
             try
             {
-                var comparer = ImageComparerFactory.CreateImageSharpComparer();
+                var comparer = new ImageSharpComparer();
                 var options = new ImageComparisonOptions
                 {
                     BlockSize = BlockSize,
@@ -234,7 +234,7 @@ namespace dCompare.Tools.Viewer
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"Error comparing images: {ex.Message}";
+                ErrorMessage = string.Format(Properties.Resources.ErrorComparingImages, ex.Message);
             }
             finally
             {

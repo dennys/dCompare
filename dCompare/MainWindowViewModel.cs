@@ -16,10 +16,10 @@ namespace dCompare
 {
     public partial class MainWindowViewModel : ObservableObject
     {
-        public readonly IConfigurationService _configService;
-        public readonly ISessionManager _sessionManager;
+        private readonly IConfigurationService _configService;
+        private readonly ISessionManager _sessionManager;
         private readonly IServiceProvider _serviceProvider;
-        public readonly IUserInteractionService _userInteractionService;
+        private readonly IUserInteractionService _userInteractionService;
         private readonly ILogger<MainWindowViewModel> _logger;
 
         [ObservableProperty]
@@ -89,6 +89,43 @@ namespace dCompare
             _logger = logger;
         }
 
+        /// <summary>
+        /// Hands the tab surface to the session manager. The View calls this once on load instead of reaching
+        /// into the services the ViewModel holds, so the services stay private and testable.
+        /// </summary>
+        public void Initialize(TabControl tabControl, MenuItem recentSessionsMenu)
+        {
+            TabControl = tabControl;
+            _sessionManager.Initialize(tabControl, recentSessionsMenu);
+        }
+
+        /// <summary>
+        /// Asks the user before quitting, when Options | Confirmation asks for it. A corrupt configuration must
+        /// not leave the window un-closeable, so a failure to read it continues without confirmation.
+        /// </summary>
+        public async Task<bool> ConfirmExitAsync()
+        {
+            try
+            {
+                AppConfiguration config = await _configService.LoadConfigurationAsync();
+                // CloseApplication is the option the user actually ticks for "confirm before quitting";
+                // CloseTab is a different setting (and also names a hotkey).
+                if (config.Options?.Confirmation.CloseApplication != true)
+                {
+                    return true;
+                }
+
+                return _userInteractionService.ShowConfirmation(
+                    Properties.Resources.ConfirmExit,
+                    Properties.Resources.ConfirmExitTitle);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to read configuration while closing; continuing without confirmation.");
+                return true;
+            }
+        }
+
         public async Task InitializeAsync()
         {
             try
@@ -104,16 +141,28 @@ namespace dCompare
 
                 if (config.Options?.Session.AutoLoadDefaultSession == true && !string.IsNullOrEmpty(config.Options.Session.DefaultSessionFile))
                 {
-                    try
+                    string defaultSessionFile = config.Options.Session.DefaultSessionFile;
+                    if (!SessionPathGuard.IsAllowedDefaultSessionFile(defaultSessionFile))
                     {
-                        _sessionManager.LoadSession(config.Options.Session.DefaultSessionFile, config.Options.Session.AutoCompareAfterSessionLoad, UpdateStatus, ExecuteSessionCompare);
-                    }
-                    catch (System.IO.FileNotFoundException)
-                    {
-                        _userInteractionService.ShowError(
-                            string.Format(Properties.Resources.ErrorDefaultSessionFileNotExist, config.Options.Session.DefaultSessionFile),
-                            Properties.Resources.ErrorTitle);
+                        // The default session file must live under the user profile: anything else
+                        // (UNC, another drive) would auto-compare paths the user did not choose.
+                        _logger.LogWarning("Default session file '{Path}' is not under the user profile; not loading it.", defaultSessionFile);
+                        _userInteractionService.ShowError(string.Format(Properties.Resources.ErrorDefaultSessionFileNotLocal, defaultSessionFile), Properties.Resources.ErrorTitle);
                         StatusMessage = Properties.Resources.StatusAppReady;
+                    }
+                    else
+                    {
+                        try
+                        {
+                            _sessionManager.LoadSession(defaultSessionFile, config.Options.Session.AutoCompareAfterSessionLoad, UpdateStatus, ExecuteSessionCompare);
+                        }
+                        catch (System.IO.FileNotFoundException)
+                        {
+                            _userInteractionService.ShowError(
+                                string.Format(Properties.Resources.ErrorDefaultSessionFileNotExist, defaultSessionFile),
+                                Properties.Resources.ErrorTitle);
+                            StatusMessage = Properties.Resources.StatusAppReady;
+                        }
                     }
                 }
                 else
@@ -140,15 +189,14 @@ namespace dCompare
                 var newTab = new TabItem
                 {
                     Header = $"Tab {_sessionManager.TabCounter}",
-                    Content = new CompareControl(
-                        _serviceProvider.GetRequiredService<IConfigurationService>(),
-                        _serviceProvider.GetRequiredService<IFileManager>(),
-                        _serviceProvider.GetRequiredService<ILogger<CompareControl>>(),
-                        _serviceProvider.GetRequiredService<IUserInteractionService>())
+                    // Resolved from the provider (registered Transient in App) so each tab gets a new
+                    // instance and tests can substitute their own CompareControl.
+                    Content = _serviceProvider.GetRequiredService<CompareControl>()
                 };
                 TabControl.Items.Add(newTab);
                 TabControl.SelectedItem = newTab;
-                _sessionManager.TabIdMap[newTab.Header.ToString()!] = tabId;
+                // Keyed by the TabItem instance (not the header): identical headers must not collide.
+                _sessionManager.TabIdMap[newTab] = tabId;
 
                 StatusMessage = string.Format(Properties.Resources.StatusAddedNewTab, $"Tab {_sessionManager.TabCounter}");
             }
@@ -176,7 +224,7 @@ namespace dCompare
                 AppConfiguration config = await _configService.LoadConfigurationAsync();
                 bool showConfirmation = config.Options?.Confirmation.CloseTab == true &&
                                        TabControl.Items.Count > 1 &&
-                                       !string.Equals(tabToClose.Header?.ToString(), "Welcome", StringComparison.OrdinalIgnoreCase);
+                                       !string.Equals(tabToClose.Header?.ToString(), Properties.Resources.WelcomeTabName, StringComparison.OrdinalIgnoreCase);
 
                 if (showConfirmation)
                 {
@@ -190,11 +238,7 @@ namespace dCompare
                 TabControl.Items.Remove(tabToClose);
                 try
                 {
-                    var headerString = tabToClose.Header?.ToString();
-                    if (headerString != null && _sessionManager.TabIdMap.TryGetValue(headerString, out string? tabId))
-                    {
-                        _sessionManager.TabIdMap.Remove(headerString);
-                    }
+                    _sessionManager.TabIdMap.Remove(tabToClose);
                 }
                 catch (Exception ex)
                 {
@@ -242,8 +286,12 @@ namespace dCompare
                 {
                     string filePath = parameters.filePath ?? string.Empty;
                     bool autoCompare = parameters.autoCompare;
-                    _sessionManager.LoadSession(filePath, autoCompare, UpdateStatus, ExecuteSessionCompare);
-                    StatusMessage = string.Format(Properties.Resources.StatusLoadedSession, filePath, autoCompare);
+                    // Only report success when the session was actually loaded; LoadSession has
+                    // already shown the specific error otherwise.
+                    if (_sessionManager.LoadSession(filePath, autoCompare, UpdateStatus, ExecuteSessionCompare))
+                    {
+                        StatusMessage = string.Format(Properties.Resources.StatusLoadedSession, filePath, autoCompare);
+                    }
                 }
                 else
                 {
@@ -343,13 +391,8 @@ namespace dCompare
 
                     if (!string.IsNullOrWhiteSpace(newName) && newName != currentName)
                     {
+                        // The TabIdMap is keyed by the TabItem instance, so renaming needs no key migration.
                         selectedTab.Header = newName;
-                        string oldName = currentName;
-                        if (_sessionManager.TabIdMap.TryGetValue(oldName, out string? tabId))
-                        {
-                            _sessionManager.TabIdMap.Remove(oldName);
-                            _sessionManager.TabIdMap[newName] = tabId;
-                        }
                         StatusMessage = string.Format(Properties.Resources.StatusRenamedTab, newName);
                     }
                 }
@@ -367,21 +410,7 @@ namespace dCompare
         {
             try
             {
-                _userInteractionService.ShowInformation(
-                    "dCompare - Chrome-style Tabbed Interface\n\n" +
-                    "Features:\n" +
-                    "• Chrome-style tabs with hover effects\n" +
-                    "• Drag and drop tab reordering\n" +
-                    "• Keyboard shortcuts (Ctrl+N, Ctrl+W)\n" +
-                    "• Tab close confirmation\n" +
-                    "• Unified color scheme\n" +
-                    "• Recent sessions history\n\n" +
-                    "Keyboard Shortcuts:\n" +
-                    "Ctrl+N: New Tab\n" +
-                    "Ctrl+W: Close Current Tab\n" +
-                    "Ctrl+S: Save Session\n" +
-                    "Ctrl+O: Load Session",
-                    "About dCompare");
+                _userInteractionService.ShowInformation(Properties.Resources.AboutMessage, Properties.Resources.AboutTitle);
                 StatusMessage = Properties.Resources.StatusAboutDialogOpened;
             }
             catch (Exception ex)

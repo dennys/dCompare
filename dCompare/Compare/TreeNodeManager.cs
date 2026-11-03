@@ -162,26 +162,6 @@ namespace dCompare.Compare
                 LoadChildren(nodeToRefresh, updatedCachedResults, leftRoot, rightRoot, previouslyExpandedPaths);
             }
         }
-        public TreeNode FindOrCreateNode(string relativePath, bool isDirectory)
-        {
-            var node = _treeNodes.FirstOrDefault(n => n.RelativePath == relativePath);
-            if (node == null)
-            {
-                node = new TreeNode
-                {
-                    RelativePath = relativePath,
-                    Name = Path.GetFileName(relativePath),
-                    IsDirectory = isDirectory,
-                    Depth = relativePath.Count(c => c == Path.DirectorySeparatorChar)
-                };
-                int insertIndex = _treeNodes.TakeWhile(n => string.Compare(n.LeftDisplayName, node.LeftDisplayName, StringComparison.OrdinalIgnoreCase) < 0).Count();
-                _treeNodes.Insert(insertIndex, node);
-            }
-            return node;
-        }
-
-
-
         public string GetRelativePath(DirectoryComparer.ComparisonItem item, string leftRoot, string rightRoot)
         {
             string path = "";

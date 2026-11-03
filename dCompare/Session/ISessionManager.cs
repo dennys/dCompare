@@ -8,12 +8,12 @@ namespace dCompare.Session
         void Initialize(TabControl tabControl, MenuItem recentSessionsMenu);
         void SaveSession(Action<string> updateStatus);
         bool CanSaveSession();
-        void LoadSession(string filePath, bool executeCompare = false, Action<string>? updateStatus = null, Action<CompareControl>? executeCompareMethod = null);
+        bool LoadSession(string filePath, bool executeCompare = false, Action<string>? updateStatus = null, Action<CompareControl>? executeCompareMethod = null);
         bool CanLoadSession();
         void AddRecentSession(string filePath);
         void ClearRecentSessions();
         bool CanClearRecentSessions();
         int TabCounter { get; set; }
-        Dictionary<string, string> TabIdMap { get; }
+        Dictionary<TabItem, string> TabIdMap { get; }
     }
 }

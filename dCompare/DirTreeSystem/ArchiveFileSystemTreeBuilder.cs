@@ -42,7 +42,12 @@ namespace dCompare.DirTreeSystem
                         for (int i = 0; i < pathParts.Length - 1; i++)
                         {
                             string dirName = pathParts[i];
-                            var existingDir = currentNode.Children.FirstOrDefault(c => c.Name == dirName && c.IsDirectory);
+                            // Case-insensitive, like the comparison itself: entry keys are not normalised, so a zip
+                            // made on Linux can hold both "Docs/" and "docs/". Matching case-sensitively built two
+                            // sibling nodes, and the comparer (which is case-insensitive) then visited only the first
+                            // one, so the files under the other never appeared in the results at all.
+                            var existingDir = currentNode.Children.FirstOrDefault(c => c.IsDirectory
+                                && c.Name.Equals(dirName, StringComparison.OrdinalIgnoreCase));
                             if (existingDir == null)
                             {
                                 existingDir = new FileSystemNode

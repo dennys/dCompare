@@ -28,7 +28,7 @@ namespace dCompare.Compare
         DeleteRight
     }
 
-    public partial class CompareControl : UserControl, INotifyPropertyChanged, IRefreshable, ITool
+    public partial class CompareControl : UserControl, INotifyPropertyChanged, IRefreshable
     {
         private readonly IConfigurationService _configService;
         private readonly ILogger<CompareControl> _logger;
@@ -36,12 +36,12 @@ namespace dCompare.Compare
         private readonly ToolHandler _toolHandler;
 
         private DirectoryComparer _comparer = new();
-        private List<DirectoryComparer.ComparisonItem> _cachedComparisonResults;
+        private List<DirectoryComparer.ComparisonItem> _cachedComparisonResults = null!;
         private ObservableCollection<TreeNode> _treeNodes = new();
         private ListSortDirection _lastSortDirection;
-        private GridViewColumnHeader _lastHeaderClicked;
+        private GridViewColumnHeader _lastHeaderClicked = null!;
         private Predicate<object>? _currentFilter = null;   // null for non-filter, means all data
-        private CancellationTokenSource _cancellationTokenSource;
+        private CancellationTokenSource _cancellationTokenSource = null!;
 
         private readonly TreeNodeManager _treeNodeManager;
         private readonly FileOperationHandler _fileOperationHandler;
@@ -51,7 +51,7 @@ namespace dCompare.Compare
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-        public string FullPathsTooltip { get; private set; }
+        public string FullPathsTooltip { get; private set; } = null!;
 
         public CompareControlViewModel ViewModel { get; }
 
@@ -74,7 +74,6 @@ namespace dCompare.Compare
             ViewModel.PropertyChanged += ViewModel_PropertyChanged;
 
             ResultListView.ItemsSource = _treeNodes;
-            ResultListView.AddHandler(GridViewColumnHeader.ClickEvent, new RoutedEventHandler(ColumnHeader_Click));
 
             SetFilter(null);
         }
@@ -91,20 +90,17 @@ namespace dCompare.Compare
         {
             try
             {
-                if (string.IsNullOrEmpty(ViewModel.LeftPath))
-                {
-                    var defaultAlgorithm = (await _configService.LoadConfigurationAsync())
-                        .Options.Compare.Algorithms
-                        .FirstOrDefault(a => a.Value.IsDefault && a.Value.IsEnabled)
-                        .Key;
-                    ((CompareControlViewModel)DataContext).SelectedAlgorithm = defaultAlgorithm;
-                }
+                // The dropdown list and its default both come from dCompare.json, so the Options page and the
+                // tab can no longer disagree about which algorithms exist.
+                var config = await _configService.LoadConfigurationAsync();
+                ViewModel.LoadAlgorithms(config.Options.Compare.Algorithms);
             }
             catch (Exception ex)
             {
                 _logger.LogError("Failed to load configuration: {Message}", ex.Message);
                 MessageBox.Show(string.Format(Properties.Resources.ErrorLoadingConfiguration, ex.Message), Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                ((CompareControlViewModel)DataContext).SelectedAlgorithm = ComparisonAlgorithm.ModifiedDateAndSize;
+                // Unreadable config still has to leave the tab able to compare something.
+                ViewModel.LoadAlgorithms(ComparisonAlgorithms.AlgorithmSettings);
             }
         }
 
@@ -142,7 +138,7 @@ namespace dCompare.Compare
             string baseHeader = $"{leftName} - {rightName}";
             if (string.IsNullOrWhiteSpace(leftName) && string.IsNullOrWhiteSpace(rightName))
             {
-                baseHeader = "TODO";
+                baseHeader = Properties.Resources.Untitled;
             }
             else if (string.IsNullOrWhiteSpace(leftName))
             {
@@ -159,6 +155,10 @@ namespace dCompare.Compare
             }
         }
 
+        // The file-dialog folder picker trick: a real file by this name would be taken as "the user chose the
+        // folder it sits in", so the two uses (seed the box, recognise the choice) must stay in step.
+        private const string FolderSelectionSentinel = "Folder Selection.";
+
         private void Browse_Click(object sender, RoutedEventArgs e)
         {
             var openFileDialog = new OpenFileDialog
@@ -168,14 +168,14 @@ namespace dCompare.Compare
                 ValidateNames = false,
                 CheckFileExists = false,
                 CheckPathExists = true,
-                FileName = "Folder Selection."
+                FileName = FolderSelectionSentinel
             };
 
             if (openFileDialog.ShowDialog() == true)
             {
                 string selectedPath = openFileDialog.FileName;
-                // If the user selected a directory, the file name will be "Folder Selection."
-                if (selectedPath.Contains("Folder Selection."))
+                // If the user selected a directory, the file name will be the sentinel above.
+                if (selectedPath.Contains(FolderSelectionSentinel, StringComparison.Ordinal))
                 {
             selectedPath = Path.GetDirectoryName(selectedPath) ?? selectedPath;
                 }
@@ -189,11 +189,6 @@ namespace dCompare.Compare
                     ViewModel.RightPath = selectedPath;
                 }
             }
-        }
-
-        private void Compare_Click(object sender, RoutedEventArgs e)
-        {
-            Refresh();
         }
 
         public async void Refresh()
@@ -256,33 +251,33 @@ namespace dCompare.Compare
 
         private void CancelCompare_Click(object sender, RoutedEventArgs e) => _cancellationTokenSource?.Cancel();
 
+        // Property to sort by, in the order the columns are declared in CompareControl.xaml: left name, left size,
+        // left date, status, right name, right size, right date. Keyed on the column index because the header text
+        // is localised, and switching on it meant that in zh-CN and zh-TW every header click sorted by left name.
+        private static readonly string[] ColumnSortProperties =
+        {
+            "LeftDisplayName", "LeftSize", "LeftDate", "StatusSymbol", "RightDisplayName", "RightSize", "RightDate"
+        };
+
         private void ColumnHeader_Click(object sender, RoutedEventArgs e)
         {
-            if (e.OriginalSource is GridViewColumnHeader headerClicked && headerClicked.Column?.Header is string sortBy)
-            {
-                ListSortDirection direction = _lastHeaderClicked == headerClicked && _lastSortDirection == ListSortDirection.Ascending
-                    ? ListSortDirection.Descending
-                    : ListSortDirection.Ascending;
+            if (e.OriginalSource is not GridViewColumnHeader headerClicked || headerClicked.Column is null) return;
 
-                ICollectionView view = CollectionViewSource.GetDefaultView(_treeNodes);
-                view.SortDescriptions.Clear();
+            int columnIndex = ((GridView)ResultListView.View).Columns.IndexOf(headerClicked.Column);
+            string propertyName = columnIndex >= 0 && columnIndex < ColumnSortProperties.Length
+                ? ColumnSortProperties[columnIndex]
+                : ColumnSortProperties[0];
 
-                string propertyName = sortBy switch
-                {
-                    "Left Name" => "LeftDisplayName",
-                    "Left Size" => "LeftSize",
-                    "Left Date" => "LeftDate",
-                    "Right Name" => "RightDisplayName",
-                    "Right Size" => "RightSize",
-                    "Right Date" => "RightDate",
-                    "Status" => "StatusSymbol",
-                    _ => "LeftDisplayName"
-                };
+            ListSortDirection direction = _lastHeaderClicked == headerClicked && _lastSortDirection == ListSortDirection.Ascending
+                ? ListSortDirection.Descending
+                : ListSortDirection.Ascending;
 
-                view.SortDescriptions.Add(new SortDescription(propertyName, direction));
-                _lastHeaderClicked = headerClicked;
-                _lastSortDirection = direction;
-            }
+            ICollectionView view = CollectionViewSource.GetDefaultView(_treeNodes);
+            view.SortDescriptions.Clear();
+            view.SortDescriptions.Add(new SortDescription(propertyName, direction));
+
+            _lastHeaderClicked = headerClicked;
+            _lastSortDirection = direction;
         }
 
         public async Task RefreshNodeAsync(TreeNode nodeToRefresh, HashSet<string> previouslyExpandedPaths = null)
@@ -611,6 +606,15 @@ namespace dCompare.Compare
                 return;
             }
 
+            // Rows read from inside an archive cannot be written back: their path is fabricated, so a delete
+            // there was a no-op the transfer panel still reported as completed.
+            if (FileOperationHandler.ContainsArchiveEntry(selectedNodes))
+            {
+                MessageBox.Show(Properties.Resources.ArchiveEntryOperationNotSupported,
+                    Properties.Resources.Warning, MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             HashSet<string> previouslyExpandedPaths = new(
                 _treeNodes.Where(n => n.IsDirectory && n.IsExpanded)
                           .Select(n => n.RelativePath)
@@ -719,6 +723,16 @@ namespace dCompare.Compare
             var contextMenu = menuItem?.Parent as ContextMenu;
             bool isLeft = contextMenu == FindResource("LeftContextMenu");
 
+            // Rename does not go through FileOperationHandler.GetItemsFor*, so it needs the archive guard the
+            // other operations get there: the path is fabricated, and without this the user typed a new name
+            // into the dialog only to be told "file not found" about a row they can see.
+            if (selectedItem.IsArchiveEntry)
+            {
+                MessageBox.Show(Properties.Resources.ArchiveEntryOperationNotSupported,
+                    Properties.Resources.Warning, MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             string? sourcePath = isLeft ? selectedItem.LeftNode?.FullPath : selectedItem.RightNode?.FullPath;
             if (string.IsNullOrEmpty(sourcePath))
             {
@@ -776,56 +790,58 @@ namespace dCompare.Compare
             }
             FileOperationHandler.ShowPropertiesDialog(selectedItem);
         }
-        private void ContextMenu_OpenLeftLocation_Click(object sender, RoutedEventArgs e)
+        private void ContextMenu_OpenLeftLocation_Click(object sender, RoutedEventArgs e) => OpenLocation(sender, isLeft: true);
+        private void ContextMenu_OpenRightLocation_Click(object sender, RoutedEventArgs e) => OpenLocation(sender, isLeft: false);
+
+        private void OpenLocation(object sender, bool isLeft)
         {
-            if (ResultListView.SelectedItem is TreeNode selectedNode && selectedNode.LeftNode != null)
+            if (ResultListView.SelectedItem is not TreeNode selectedNode) return;
+            var node = isLeft ? selectedNode.LeftNode : selectedNode.RightNode;
+            if (node is null) return;
+
+            // A row read from inside an archive has a fabricated path: Explorer can only be sent somewhere that
+            // does not exist, so it answered "path does not exist" for a row sitting in front of the user.
+            if (node.IsArchiveEntry)
             {
-                FileOperationHandler.OpenFileLocation(selectedNode.LeftNode.FullPath);
+                MessageBox.Show(Properties.Resources.ArchiveEntryOperationNotSupported,
+                    Properties.Resources.Warning, MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
             }
+
+            FileOperationHandler.OpenFileLocation(node.FullPath);
         }
-        private void ContextMenu_OpenRightLocation_Click(object sender, RoutedEventArgs e)
-        {
-            if (ResultListView.SelectedItem is TreeNode selectedNode && selectedNode.RightNode != null)
-            {
-                FileOperationHandler.OpenFileLocation(selectedNode.RightNode.FullPath);
-            }
-        }
-        private void ContextMenu_CopyPathnames_Click(object sender, RoutedEventArgs e)
+        private void ContextMenu_CopyPathnames_Click(object sender, RoutedEventArgs e) => CopySelectedPaths(sender, fileNameOnly: false);
+        private void ContextMenu_CopyFilenames_Click(object sender, RoutedEventArgs e) => CopySelectedPaths(sender, fileNameOnly: true);
+
+        private void CopySelectedPaths(object sender, bool fileNameOnly)
         {
             bool isLeft = sender is MenuItem { Parent: ContextMenu contextMenu } && contextMenu == FindResource("LeftContextMenu");
 
-            var paths = ResultListView.SelectedItems
+            var values = ResultListView.SelectedItems
                 .Cast<TreeNode>()
                 .Select(node => isLeft ? node.LeftNode?.FullPath : node.RightNode?.FullPath)
                 .Where(path => !string.IsNullOrEmpty(path))
+                .Select(path => fileNameOnly ? Path.GetFileName(path) : path)
                 .ToList();
 
-            if (paths.Count > 0)
+            if (values.Count == 0)
             {
-                Clipboard.SetText(string.Join("\n", paths));
+                MessageBox.Show(fileNameOnly ? Properties.Resources.NoValidFilesSelected : Properties.Resources.NoValidPathsSelected,
+                    Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
             }
-            else
-            {
-                MessageBox.Show(Properties.Resources.NoValidPathsSelected, Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-        private void ContextMenu_CopyFilenames_Click(object sender, RoutedEventArgs e)
-        {
-            bool isLeft = sender is MenuItem { Parent: ContextMenu contextMenu } && contextMenu == FindResource("LeftContextMenu");
-            var filenames = ResultListView.SelectedItems
-                .Cast<TreeNode>()
-                .Select(node => isLeft ? node.LeftNode?.FullPath : node.RightNode?.FullPath)
-                .Where(path => !string.IsNullOrEmpty(path))
-                .Select(Path.GetFileName)
-                .ToList();
 
-            if (filenames.Count > 0)
+            try
             {
-                Clipboard.SetText(string.Join("\n", filenames));
+                Clipboard.SetText(string.Join("\n", values));
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show(Properties.Resources.NoValidFilesSelected, Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                // The clipboard is a shared resource: another process holding it makes SetText throw
+                // (CLIPBRD_E_CANT_OPEN). Unhandled, it took the window down from a read-only menu item.
+                _logger.LogWarning(ex, "Could not copy {Count} value(s) to the clipboard.", values.Count);
+                MessageBox.Show(string.Format(Properties.Resources.ErrorCopyingToClipboard, ex.Message),
+                    Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
         #endregion
@@ -980,14 +996,5 @@ namespace dCompare.Compare
         }
         #endregion
 
-        void ITool.LoadFile(string filePath)
-        {
-            throw new NotImplementedException();
-        }
-
-        UserControl ITool.GetControl()
-        {
-            return this;
-        }
     }
 }

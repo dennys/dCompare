@@ -35,19 +35,22 @@ namespace dCompare.Compare
                 return null;
             }
 
+            // An archive entry's path is archive file + entry key: no reader can open it, so viewing or diffing
+            // one only ever ends in a load error a few frames later. Say so here, where it is understood.
+            if (selectedItem.IsArchiveEntry)
+            {
+                MessageBox.Show(
+                    Properties.Resources.ArchiveEntryOperationNotSupported,
+                    Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                return null;
+            }
+
             try
             {
                 // Determine the file path(s) based on operation
                 string? path = selectedItem.LeftNode?.FullPath ?? selectedItem.RightNode?.FullPath;
-                string? leftPath = operation == ToolOperationTypes.View ? path : (selectedItem.LeftNode?.FullPath ?? CreateTemporaryEmptyFile());
-                //string? leftPath = operation == Operations.View ? path : selectedItem.LeftNode?.FullPath;
-                string? rightPath = operation == ToolOperationTypes.View ? null : (selectedItem.RightNode?.FullPath ?? CreateTemporaryEmptyFile());
-
-                //if (string.IsNullOrEmpty(path) || string.IsNullOrEmpty(leftPath) || string.IsNullOrEmpty(rightPath))
-                //{
-                //	MessageBox.Show("No valid file path to open.", Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                //	return null;
-                //}
+                string? leftPath = operation == ToolOperationTypes.View ? path : (selectedItem.LeftNode?.FullPath ?? EmptyStandInFile.Value);
+                string? rightPath = operation == ToolOperationTypes.View ? null : (selectedItem.RightNode?.FullPath ?? EmptyStandInFile.Value);
 
                 if (toolConfig == null)
                 {
@@ -129,8 +132,12 @@ namespace dCompare.Compare
             {
                 // Batch scripts cannot be started directly without the shell; residual risk: cmd.exe still
                 // parses the argument string, so quoting is what keeps a crafted file name in one piece.
+                // cmd /c's documented quote handling strips one outer pair of quotes from the rest of the
+                // line, so the whole command carries its own pair: /c ""C:\t.bat" "arg"" -> "C:\t.bat" "arg".
+                // Without that, a script path containing spaces loses its quotes and fails to resolve.
                 fileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "cmd.exe");
-                arguments = $"/c \"{toolPath}\" {arguments}".TrimEnd();
+                string command = $"\"{toolPath}\" {arguments}".TrimEnd();
+                arguments = $"/c \"{command}\"";
             }
 
             Process.Start(new ProcessStartInfo
@@ -189,11 +196,18 @@ namespace dCompare.Compare
             .Concat((Environment.GetEnvironmentVariable("PATH") ?? string.Empty)
                 .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
             .Where(directory => !string.IsNullOrWhiteSpace(directory) && Path.IsPathRooted(directory));
-        private static string CreateTemporaryEmptyFile()
+        // One empty file per process stands in for the missing side of a one-sided diff. Nothing writes to it, so
+        // it is created once instead of a new GUID-named file per diff (those were never cleaned up). Named per
+        // process rather than fixed, so two tabs or two copies of the app diffing at once cannot lock each other
+        // out of the same file.
+        private static readonly Lazy<string> EmptyStandInFile = new(() =>
         {
-            string tempPath = Path.Combine(Path.GetTempPath(), $"dCompare_Empty_{Guid.NewGuid()}.txt");
-            File.WriteAllText(tempPath, string.Empty);
+            string tempPath = Path.Combine(Path.GetTempPath(), $"dCompare_Empty_{Environment.ProcessId}.txt");
+            if (!File.Exists(tempPath))
+            {
+                File.WriteAllText(tempPath, string.Empty);
+            }
             return tempPath;
-        }
+        });
     }
 }

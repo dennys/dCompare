@@ -37,7 +37,7 @@
     - ⬜ unchanged content
     - Scrollable view for easy navigation.
   - **Image Comparison**: Display two images side-by-side for visual comparison. Images are automatically scaled to fit the window while preserving their aspect ratio. Large images can be viewed using a ScrollViewer.
-  - **Archive File Support**: Supports comparison of archive files, including: .zip, .rar, .7z, .tar, .gz, .tar.gz, .bz2, .tar.bz2, .xz, .tar.xz, .lzma, .tar.lzma, .z, .iso, .deb, .ar, .cab (This feature is powered by [SharpCompress](https://github.com/adamhathcock/sharpcompress). The tool supports any archive formats that SharpCompress can read.)
+  - **Archive File Support**: Supports comparison of archive files, including: .zip, .rar, .7z, .tar (This feature is powered by [SharpCompress](https://github.com/adamhathcock/sharpcompress). Only these four extensions are recognized as archives by `FileExtensions.IsArchiveFile`; SharpCompress itself can read many more formats.)
 
 - **Context Menus**: Right-click context menus on comparison results provide actions like comparing contents, copying/moving files, deleting, renaming, opening file locations, copying paths/filenames, and viewing properties.
 - **Session Management**: Save and load comparison sessions, with recent sessions accessible via the File menu, and options to auto-load default sessions on startup.
@@ -71,7 +71,7 @@ Not implemented
 ## Known Issues
 
 - **Text Selection**: Partial text selection with the mouse is not supported in the text comparison view.
-- **Image Comparison**: No pixel-level difference highlighting in the image comparison view.
+- **Image Comparison**: Difference blocks are highlighted as rectangles in the image comparison view. `ImageComparer` also produces a pixel-level difference mask (`GenerateMaskImage`), but the mask is not rendered in the view yet.
 
 ## Viewing Files with Notepad++
 
@@ -126,11 +126,11 @@ This gives you full control over how Notepad++ behaves when viewing files from t
 - **[DiffPlex](https://github.com/mmanela/diffplex)**: Used for text file comparison.
 - **[SharpCompress](https://github.com/adamhathcock/sharpcompress)**: User for archive file view and comparison.
 - **[Serilog](https://github.com/serilog/serilog)**: Used for logging application events and debugging.
+- **[MetadataExtractor](https://github.com/drewnoakes/metadata-extractor-dotnet)**: Used for reading EXIF metadata (camera, lens) in the built-in image viewer.
 
 Not used yet
 
 - **[Dragablz](https://github.com/ButchersBoy/Dragablz)**
-- **[MetadataExtractor](https://github.com/drewnoakes/metadata-extractor-dotnet)**:
 - **[Google APIs client Library for .NET](https://github.com/googleapis/google-api-dotnet-client)**:
 - **[jsondiffpatch.net](https://github.com/wbish/jsondiffpatch.net)**:
 

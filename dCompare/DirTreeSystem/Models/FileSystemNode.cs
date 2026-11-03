@@ -14,6 +14,11 @@
         public bool IsArchiveEntry { get; set; }
         public long? Crc { get; set; }
 
+        // True when the folder could not be fully enumerated (access denied, folder removed mid-scan).
+        // A partial tree must never be compared as if it were complete: the missing children would show up
+        // as "only on the other side" and invite the user to delete files that are actually fine.
+        public bool ScanIncomplete { get; set; }
+
         public int Depth { get; set; } = 0;
         public List<FileSystemNode> Children { get; set; } = new List<FileSystemNode>();
 

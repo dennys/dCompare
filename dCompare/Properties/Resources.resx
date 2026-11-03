@@ -17,15 +17,6 @@
     <resheader name="version">2.0</resheader>
     <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
     <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
-    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
-    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
-    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
-        <value>[base64 mime encoded serialized .NET Framework object]</value>
-    </data>
-    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
-        <comment>This is a comment</comment>
-    </data>
                 
     There are any number of "resheader" rows that contain simple 
     name/value pairs.
@@ -175,7 +166,19 @@
     <value>Close tab</value>
   </data>
   <data name="AboutMessage" xml:space="preserve">
-    <value>dCompare - Chrome-style Tabbed Interface\n\nFeatures:\n• Chrome-style tabs with hover effects\n• Drag and drop tab reordering\n• Keyboard shortcuts (Ctrl+N, Ctrl+W)\n• Tab close confirmation\n• Unified color scheme\n• Multilingual support\n\nKeyboard Shortcuts:\nCtrl+N: New Tab\nCtrl+W: Close Current Tab</value>
+    <value>dCompare - Chrome-style Tabbed Interface
+
+Features:
+• Chrome-style tabs with hover effects
+• Drag and drop tab reordering
+• Keyboard shortcuts (Ctrl+N, Ctrl+W)
+• Tab close confirmation
+• Unified color scheme
+• Multilingual support
+
+Keyboard Shortcuts:
+Ctrl+N: New Tab
+Ctrl+W: Close Current Tab</value>
   </data>
   <data name="AboutTitle" xml:space="preserve">
     <value>About dCompare</value>
@@ -985,18 +988,6 @@ Right: {1}</value>
   <data name="HotkeyTooltip" xml:space="preserve">
     <value>Press your desired key combination (e.g., Ctrl+S).</value>
   </data>
-  <data name="LogSettings" xml:space="preserve">
-    <value>Log Settings</value>
-  </data>
-  <data name="EnableLogging" xml:space="preserve">
-    <value>Enable logging</value>
-  </data>
-  <data name="LogLevel" xml:space="preserve">
-    <value>Log Level:</value>
-  </data>
-  <data name="RetentionDays" xml:space="preserve">
-    <value>Retention (days):</value>
-  </data>
   <data name="TextViewerSettings" xml:space="preserve">
     <value>Text Viewer Settings</value>
   </data>
@@ -1254,5 +1245,38 @@ Right: {1}</value>
   </data>
   <data name="ErrorFileTooLarge" xml:space="preserve">
     <value>'{0}' is {1:N0} MB, above the {2:N0} MB limit of the built-in viewer. Open it with an external tool instead.</value>
+  </data>
+  <data name="SessionFileEmpty" xml:space="preserve">
+    <value>Session file is empty or contains no session data: {0}</value>
+  </data>
+  <data name="ErrorSessionPathRejected" xml:space="preserve">
+    <value>Session path was not loaded because only local paths are allowed: {0}</value>
+  </data>
+  <data name="SessionNoValidEntries" xml:space="preserve">
+    <value>No session entries could be loaded from {0}</value>
+  </data>
+  <data name="ErrorDefaultSessionFileNotLocal" xml:space="preserve">
+    <value>The default session file must be a local path under the user profile; it was not loaded: {0}</value>
+  </data>
+  <data name="ErrorCopyingItems" xml:space="preserve">
+    <value>Error copying items</value>
+  </data>
+  <data name="ErrorMovingItems" xml:space="preserve">
+    <value>Error moving items</value>
+  </data>
+  <data name="OperationCompletedSuccessfully" xml:space="preserve">
+    <value>Operation completed successfully.</value>
+  </data>
+  <data name="ArchiveEntryOperationNotSupported" xml:space="preserve">
+    <value>Files inside an archive cannot be copied, moved, deleted or renamed; only the archive files themselves can be changed.</value>
+  </data>
+  <data name="ErrorComparingImages" xml:space="preserve">
+    <value>Error comparing images: {0}</value>
+  </data>
+  <data name="ErrorCopyingToClipboard" xml:space="preserve">
+    <value>Could not copy to the clipboard: {0}</value>
+  </data>
+  <data name="WelcomeTabName" xml:space="preserve">
+    <value>Welcome</value>
   </data>
 </root>

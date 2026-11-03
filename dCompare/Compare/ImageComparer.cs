@@ -227,6 +227,7 @@ namespace dCompare.Compare
             int imageWidth, int imageHeight, int blockX, int blockY, int blockSize, int threshold, ImageComparisonAlgorithm algorithm)
         {
             double totalDifference = 0;
+            double maxPixelDifference = 0;
             int pixelCount = 0;
 
             int endX = Math.Min(blockX + blockSize, imageWidth);
@@ -240,19 +241,24 @@ namespace dCompare.Compare
                     var pixel1 = span1[index];
                     var pixel2 = span2[index];
 
-                    totalDifference += CalculatePixelDifference(pixel1, pixel2, algorithm);
+                    double pixelDifference = CalculatePixelDifference(pixel1, pixel2, algorithm);
+                    totalDifference += pixelDifference;
+                    if (pixelDifference > maxPixelDifference) maxPixelDifference = pixelDifference;
                     pixelCount++;
                 }
             }
 
             double averageDifference = pixelCount > 0 ? totalDifference / pixelCount : 0;
-            return averageDifference > threshold;
+            // A small change (one inverted pixel in a 16x16 block averages ~255/256) must not be hidden
+            // by the block average: a single pixel above the threshold marks the block as different too.
+            return averageDifference > threshold || maxPixelDifference > threshold;
         }
 
         private static bool IsBlockDifferentSafe(Image<Rgba32> image1, Image<Rgba32> image2,
             int blockX, int blockY, int blockSize, int threshold, ImageComparisonAlgorithm algorithm)
         {
             double totalDifference = 0;
+            double maxPixelDifference = 0;
             int pixelCount = 0;
 
             int endX = Math.Min(blockX + blockSize, image1.Width);
@@ -265,13 +271,15 @@ namespace dCompare.Compare
                     var pixel1 = image1[x, y];
                     var pixel2 = image2[x, y];
 
-                    totalDifference += CalculatePixelDifference(pixel1, pixel2, algorithm);
+                    double pixelDifference = CalculatePixelDifference(pixel1, pixel2, algorithm);
+                    totalDifference += pixelDifference;
+                    if (pixelDifference > maxPixelDifference) maxPixelDifference = pixelDifference;
                     pixelCount++;
                 }
             }
 
             double averageDifference = pixelCount > 0 ? totalDifference / pixelCount : 0;
-            return averageDifference > threshold;
+            return averageDifference > threshold || maxPixelDifference > threshold;
         }
 
         private static double CalculatePixelDifference(Rgba32 pixel1, Rgba32 pixel2, ImageComparisonAlgorithm algorithm)
@@ -310,45 +318,75 @@ namespace dCompare.Compare
         {
             if (blocks.Count == 0) return new List<Rectangle>();
 
-            var blockRects = blocks.Select(block => new Rectangle(block.X, block.Y, blockSize, blockSize)).ToList();
-            List<Rectangle> merged = new();
-            HashSet<int> processed = new();
+            // Union-find over grid cells: for grid-aligned blocks, two blocks merge iff their
+            // 1px-inflated rectangles intersect, which is exactly |dx| <= 1 && |dy| <= 1 in block
+            // coordinates. Single pass + union = O(n) instead of repeatedly re-scanning all blocks.
+            var parent = new int[blocks.Count];
+            for (int i = 0; i < parent.Length; i++) parent[i] = i;
 
-            for (int i = 0; i < blockRects.Count; i++)
+            var cellToIndex = new Dictionary<(int X, int Y), int>(blocks.Count);
+            int[] dx = { -1, 0, 0, 1, -1, 1, -1, 1 };
+            int[] dy = { 0, 0, 1, 0, -1, -1, 1, 1 };
+            for (int i = 0; i < blocks.Count; i++)
             {
-                if (processed.Contains(i)) continue;
-
-                var currentRegion = blockRects[i];
-                processed.Add(i);
-
-                bool foundAdjacent;
-                do
+                int gx = blocks[i].X / blockSize;
+                int gy = blocks[i].Y / blockSize;
+                cellToIndex[(gx, gy)] = i;
+                for (int d = 0; d < 8; d++)
                 {
-                    foundAdjacent = false;
-                    for (int j = 0; j < blockRects.Count; j++)
-                    {
-                        if (processed.Contains(j)) continue;
+                    if (cellToIndex.TryGetValue((gx + dx[d], gy + dy[d]), out int neighbor)) Union(parent, i, neighbor);
+                }
+            }
 
-                        var candidate = blockRects[j];
-                        if (AreRectanglesAdjacent(currentRegion, candidate))
-                        {
-                            currentRegion = Rectangle.Union(currentRegion, candidate);
-                            processed.Add(j);
-                            foundAdjacent = true;
-                        }
-                    }
-                } while (foundAdjacent);
+            // Group by root, keeping first-seen order (same order as the old implementation).
+            var regionOfRoot = new Dictionary<int, int>();
+            var regions = new List<List<(int X, int Y)>>();
+            for (int i = 0; i < blocks.Count; i++)
+            {
+                int root = Find(parent, i);
+                if (!regionOfRoot.TryGetValue(root, out int regionIndex))
+                {
+                    regionOfRoot[root] = regions.Count;
+                    regions.Add(new List<(int X, int Y)> { blocks[i] });
+                }
+                else
+                {
+                    regions[regionIndex].Add(blocks[i]);
+                }
+            }
 
-                merged.Add(currentRegion);
+            var merged = new List<Rectangle>(regions.Count);
+            foreach (var region in regions)
+            {
+                int minX = int.MaxValue, minY = int.MaxValue, maxX = int.MinValue, maxY = int.MinValue;
+                foreach (var (x, y) in region)
+                {
+                    if (x < minX) minX = x;
+                    if (y < minY) minY = y;
+                    if (x + blockSize > maxX) maxX = x + blockSize;
+                    if (y + blockSize > maxY) maxY = y + blockSize;
+                }
+                merged.Add(new Rectangle(minX, minY, maxX - minX, maxY - minY));
             }
 
             return merged;
         }
 
-        private static bool AreRectanglesAdjacent(Rectangle rect1, Rectangle rect2)
+        private static int Find(int[] parent, int i)
         {
-            var inflatedRect1 = new Rectangle(rect1.X - 1, rect1.Y - 1, rect1.Width + 2, rect1.Height + 2);
-            return inflatedRect1.IntersectsWith(rect2);
+            while (parent[i] != i)
+            {
+                parent[i] = parent[parent[i]];
+                i = parent[i];
+            }
+            return i;
+        }
+
+        private static void Union(int[] parent, int a, int b)
+        {
+            int rootA = Find(parent, a);
+            int rootB = Find(parent, b);
+            if (rootA != rootB) parent[rootB] = rootA;
         }
 
         private static List<Rectangle> ConvertBlocksToRegions(List<(int X, int Y)> blocks, int blockSize)
@@ -359,20 +397,42 @@ namespace dCompare.Compare
         private static Image<Rgba32> GenerateMaskImage(int width, int height, IReadOnlyList<Rectangle> differenceRegions)
         {
             // ImageSharp v4 dropped Drawing's Clear/Fill (and the free rasterizer); solid-rect pixel writes are all the mask needs.
+            // Rows are filled through the raw pixel memory (single pass, no per-pixel indexer dispatch).
+            // DangerousTryGetSinglePixelMemory exists in both v3 and v4 but can fail for large images
+            // (non-contiguous buffer); fall back to the per-pixel indexer in that case.
             var red = new Rgba32(255, 0, 0, 128);
             var maskImage = new Image<Rgba32>(width, height); // transparent by default, same as the old Clear(Transparent)
 
-            foreach (var region in differenceRegions)
+            if (maskImage.DangerousTryGetSinglePixelMemory(out Memory<Rgba32> memory))
             {
-                var left = Math.Max(0, region.X);
-                var right = Math.Min(width, region.X + region.Width);
-                var top = Math.Max(0, region.Y);
-                var bottom = Math.Min(height, region.Y + region.Height);
-                for (var y = top; y < bottom; y++)
+                var span = memory.Span;
+                foreach (var region in differenceRegions)
                 {
-                    for (var x = left; x < right; x++)
+                    var left = Math.Max(0, region.X);
+                    var right = Math.Min(width, region.X + region.Width);
+                    var top = Math.Max(0, region.Y);
+                    var bottom = Math.Min(height, region.Y + region.Height);
+                    if (left >= right || top >= bottom) continue;
+                    for (var y = top; y < bottom; y++)
                     {
-                        maskImage[x, y] = red;
+                        span.Slice(y * width + left, right - left).Fill(red);
+                    }
+                }
+            }
+            else
+            {
+                foreach (var region in differenceRegions)
+                {
+                    var left = Math.Max(0, region.X);
+                    var right = Math.Min(width, region.X + region.Width);
+                    var top = Math.Max(0, region.Y);
+                    var bottom = Math.Min(height, region.Y + region.Height);
+                    for (var y = top; y < bottom; y++)
+                    {
+                        for (var x = left; x < right; x++)
+                        {
+                            maskImage[x, y] = red;
+                        }
                     }
                 }
             }
@@ -391,11 +451,6 @@ namespace dCompare.Compare
             if (options.Threshold < 0 || options.Threshold > 255)
                 throw new ArgumentException("Threshold must be between 0 and 255", nameof(options.Threshold));
         }
-    }
-
-    public static class ImageComparerFactory
-    {
-        public static IImageComparer CreateImageSharpComparer() => new ImageSharpComparer();
     }
 
     public static class ImageComparisonExtensions

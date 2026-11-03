@@ -424,6 +424,39 @@ namespace dCompare.FileOperation.Tests
 
         #endregion
 
+        [Fact]
+        public async Task CopyFileAsync_PathLongerThanMaxPath_ShouldCopyFile()
+        {
+            // Arrange: source/destination beyond MAX_PATH (260). The raw CopyFileEx P/Invoke only
+            // handles those via the \\?\ prefix the strategy now adds.
+            string deepDir = _testDirectory;
+            for (int i = 0; i < 20; i++) deepDir = Path.Combine(deepDir, "0123456789");
+            string sourceFile = Path.Combine(deepDir, "source.txt");
+            string destDir = _testDirectory;
+            for (int i = 0; i < 20; i++) destDir = Path.Combine(destDir, "abcdefghij");
+            string destFile = Path.Combine(destDir, "dest.txt");
+
+            if (sourceFile.Length <= 260)
+                Assert.Skip($"Path too short ({sourceFile.Length}) to exercise the long-path case.");
+
+            try
+            {
+                Directory.CreateDirectory(deepDir);
+                File.WriteAllText(sourceFile, "long path content");
+            }
+            catch (Exception ex)
+            {
+                Assert.Skip($"This environment cannot create files beyond MAX_PATH: {ex.Message}");
+            }
+
+            // Act
+            await _strategy.CopyFileAsync(sourceFile, destFile, overwrite: false, null, CancellationToken.None);
+
+            // Assert
+            Assert.True(File.Exists(destFile));
+            Assert.Equal("long path content", File.ReadAllText(destFile));
+        }
+
         #region Helper Methods
 
         private string CreateTestFile(string fileName, string content)
@@ -439,19 +472,48 @@ namespace dCompare.FileOperation.Tests
         }
 
         #endregion
+
+        #region Long path handling
+
+        /// <summary>
+        /// CopyFileEx is raw P/Invoke, so MAX_PATH (260, counting the terminating null) applies to it. A path of
+        /// exactly 260 characters cannot be opened un-prefixed, and used to be handed over as-is: the copy then
+        /// failed with a bare Win32 "path not found" beside an identical file that copied fine.
+        /// </summary>
+        [Theory]
+        [InlineData(258, false)]
+        [InlineData(259, false)]
+        [InlineData(260, true)]
+        [InlineData(261, true)]
+        public void ToKernel32Path_PrefixedFromTheFirstLengthWin32CannotOpen(int targetLength, bool expectPrefix)
+        {
+            string dir = Path.GetFullPath(Path.Combine(_testDirectory, "pad"));
+            Directory.CreateDirectory(dir);
+            string extension = ".txt";
+            string fileName = new string('f', targetLength - dir.Length - 1 - extension.Length) + extension;
+            string path = Path.Combine(dir, fileName);
+            Assert.Equal(targetLength, path.Length);   // the arrangement is the point of the test
+
+            string result = Kernel32FileCopyStrategy.ToKernel32Path(path);
+
+            if (expectPrefix)
+            {
+                Assert.StartsWith(@"\\?\", result.Substring(0, 4));
+                Assert.Equal(@"\\?\" + path, result);
+            }
+            else
+            {
+                Assert.Equal(path, result);
+            }
+        }
+
+        [Fact]
+        public void ToKernel32Path_AlreadyPrefixedPath_IsLeftAlone()
+        {
+            string prefixed = @"\\?\C:\a\b.txt";
+            Assert.Equal(prefixed, Kernel32FileCopyStrategy.ToKernel32Path(prefixed));
+        }
+
+        #endregion
     }
-
-    #region Supporting Types (if not already defined in the main project)
-
-    // These would typically be defined in your main project
-    // Remove this section if these types are already available in your project
-    public interface IFileOperationStrategy
-    {
-        Task CopyFileAsync(string sourceFile, string destFile, bool overwrite, dCompare.FileOperation.Strategies.CopyProgressCallback? progressCallback, CancellationToken cancellationToken);
-        void MoveFile(string sourceFile, string destFile, bool overwrite);
-        void DeleteFile(string filePath);
-        void DeleteDirectory(string dirPath);
-    }
-
-    #endregion
 }

@@ -17,14 +17,14 @@ file-copy-method comparisons) that are **reference material, not spec**.
 Everything is verified to work from the repo root.
 
 ```powershell
-# Build (Debug) — ~54 nullable warnings are normal, 0 errors expected
+# Build (Debug) — ~68 nullable warnings are normal (CS8618 is at zero), 0 errors expected
 dotnet build dCompare.sln -c Debug
 
 # Run tests — IMPORTANT: this project uses xunit v3 + Microsoft.Testing.Platform (MTP)
 dotnet build dCompare.Tests -c Debug
 dCompare.Tests\bin\Debug\net8.0-windows\dCompare.Tests.exe
 
-# Tests + coverage (Cobertura). Current baseline: ~18.3% line coverage.
+# Tests + coverage (Cobertura). Current baseline: ~36.2% line coverage.
 dCompare.Tests\bin\Debug\net8.0-windows\dCompare.Tests.exe --coverage --coverage-output-format cobertura
 # report lands in dCompare.Tests\bin\Debug\net8.0-windows\TestResults\*.cobertura.xml
 ```
@@ -39,7 +39,7 @@ dCompare.Tests\bin\Debug\net8.0-windows\dCompare.Tests.exe --coverage --coverage
   `error: No Six Labors license found. Set $(SixLaborsLicenseKey)`. Debug builds fine.
   Unblock with `-p:SixLaborsLicenseKey=<KEY>` or a `sixlabors.lic` in `dCompare/` (gitignored).
   The key is assembly-scoped: it must be issued for `AssemblyName` = **`dCompare`**.
-- There is no lint/format config (no `.editorconfig`). Match the style of the file you edit.
+- There is a minimal `.editorconfig` (charset/CRLF/4 spaces/sorted usings only) — no analyser or style rules, so match the style of the file you edit.
 - `.vs/`, `bin/`, `obj/` are gitignored but present locally — never commit them, never edit files
   under them.
 
@@ -95,27 +95,122 @@ docs/                         README screenshots only
 
 ## Runtime facts agents must know
 
-- **Config location is the process working directory**, not the install folder:
-  `dCompare.json` is read from `Directory.GetCurrentDirectory()` (see `App.xaml.cs` and
-  `ConfigurationService`), and logs go to `./logs/dCompare.log`. Same for `recentSessions.json`
-  (`Constant` in `Common/Common.cs`). Behaviour differs depending on how the exe is launched —
-  assume nothing about cwd in new code.
+- **The app is portable: config and logs live next to the EXE**, resolved through
+  `Common/AppPaths.cs` (`BaseDirectory = AppContext.BaseDirectory`) — `dCompare.json`,
+  `recentSessions.json`, and `<exe dir>/logs/dCompare.log`. Never resolve user files from
+  `Directory.GetCurrentDirectory()`; that was a bug (settings vanished depending on how the exe was
+  launched, and a planted `dCompare.json` in a writable cwd hijacked the tool config). Reads prefer
+  the exe dir, then `%LOCALAPPDATA%\dCompare` (the write fallback used when the exe dir is not
+  writable, e.g. Program Files) — and deliberately never read the cwd. Startup does a one-time
+  copy-from-cwd migration for old installs (never overwrites, never deletes the original).
+  `ConfigurationService(path)` still honours an explicitly passed path (tests depend on that).
+  Serilog's file path comes from `Serilog.json` but is overridden to an absolute path by an
+  in-memory config source added last in `App.xaml.cs`.
 - A **corrupt `dCompare.json` throws** `InvalidDataException` out of `LoadConfigurationAsync`, and
   several callers are `async void` (unhandled → app crash). Config reads are also re-read from disk
   on almost every call site rather than cached.
-- **Comparison algorithm enum** (`Configuration/ComparisonAlgorithms.cs`):
-  `ModifiedDateAndSize` (default, size + mtime within 1s), `xxHash64_Full`, `MD5`, `FullContents`
-  (byte-by-byte — currently `File.ReadAllBytes` on both files, i.e. loads both into RAM).
-- **Archive comparison** goes through SharpCompress (`ArchiveFactory.OpenArchive` — the 0.50.x
-  name; `ArchiveFactory.Open` was the old 0.40.x name). `MftFileSystemTreeBuilder` is an empty
-  stub and is never returned by `FileSystemTreeBuilderFactory`.
+  `ModifiedDateAndSize` (default, size + mtime within 1s), `xxHash64_Full`, `xxHash64_Partial`
+  (hashes only `ComparisonPercentage` % of the file, default 30), `MD5`, `FullContents`
+  (streamed in 8 KB chunks by `DirectoryComparer.StreamsEqual` — do not reintroduce
+  `File.ReadAllBytes`, it OOM-killed the app on big files).
+  Note `ComparisonAlgorithms.AlgorithmSettings` is a **static mutable** dictionary that the Options
+  page edits in place.
+- **Archive comparison uses entry metadata, not file reads.** `FileSystemNode` carries
+  `IsArchiveEntry` + `Crc`; `DirectoryComparer.DetermineStatus` must consult them **before** any stream call,
+  because an entry's `FullPath` (`C:\a.zip\dir\file.txt`) is fabricated and cannot be opened — reading it threw
+  and every entry of two identical archives reported `Conflict`. Entries with no CRC (tar, solid 7z) fall back to
+  size + timestamp. `ArchiveFileSystemTreeBuilderTests` locks all of this (identical archives are `Identical` under
+  every algorithm; same-size/different-content pairs are `Modified`). Entry directory names are matched
+  **case-insensitively** — keys are not normalised, and a case-sensitive match left `Docs/` and `docs/` as two
+  nodes so the comparer showed only one side's files. Entry timestamps are
+  `entry.LastModifiedTime ?? DateTime.MinValue` — never `DateTime.Now`, which made every identical
+  archive pair report `Modified`. Archives are only ever READ, never extracted; do not add
+  extraction without a zip-slip guard. `SharpCompress` 0.50.x uses `ArchiveFactory.OpenArchive`.
+  `MftFileSystemTreeBuilder` and the Options "MFT" scan-method choice were deleted (they silently
+  did nothing).
+- **A folder that cannot be listed is not "identical" or "missing".** `DotnetFileSystemTreeBuilder` lists each
+  side separately and reads each entry on its own, setting `FileSystemNode.ScanIncomplete`; a directory with that
+  flag compares as `Conflict`. Never swallow a listing error around a whole loop again — the dropped children
+  read as one-sided files and invite the user to delete good ones.
+- **Rows read from inside an archive are read-only.** `TreeNode.IsArchiveEntry` gates copy/move/delete in
+  `FileOperationHandler.GetItemsFor*`, and View/Diff in `ToolHandler`. Rename and "Open in Explorer" bypass those
+  helpers (they call `RenameFileOrDirectory` / `OpenFileLocation` directly), so they are guarded in `CompareControl`
+  itself — do not remove those two guards on the theory that `GetItemsFor*` covers everything: their path cannot be
+  opened, so a delete was a silent no-op the transfer panel still reported as successful.
+- **Destructive operations are guarded** — do not undo these:
+  copies write `<dest>.dCompare.tmp` then `File.Move` (never truncate the destination in place);
+  deletes go to the **Recycle Bin** via `FileOperation/RecycleBin.cs` with a permanent-delete
+  fallback, and skip reparse points; `FileOperationHandler` prompts per batch according to
+  `Confirmation.Copy/Move/CopyOverwrite/MoveOverwrite/DeleteFile` (these settings are live — read
+  them, and fall back to `new ConfirmationOptions()` when `config.Options` is null);
+  `FileOperationRetry.Run` retries only Win32 32/33; `FileExtensions.IsReparsePoint` keeps the
+  walkers from following junctions (a link loop = uncatchable `StackOverflowException`, and a link
+  out of the compared root meant deletes destroying files elsewhere); transfers take a real
+  `CancellationToken` and a cancelled item is reported `Cancelled`, not successful; the folder delete fallback
+  recycles **each file** before deleting permanently (an unreadable subtree used to jump straight to permanent
+  deletion); and `FileOperationHandler._transferGate` caps concurrent transfers at 4 — a selection of thousands
+  must not start one task per file.
 - **File copies use Win32 `CopyFileEx`** by default (`Kernel32FileCopyStrategy`); `FileStreamStrategy`
   exists and is tested but is not what DI registers by default.
-- Comparison runs on a background thread: callers wrap `DirectoryComparer.Compare(...)` in
-  `Task.Run`. `Compare()` is a **sync-over-async wrapper** (`.GetAwaiter().GetResult()`) — calling it
-  from the UI thread deadlocks. Prefer `CompareAsync`.
+- Comparison runs on a background thread inside `Task.Run`; call `DirectoryComparer.CompareAsync`
+  directly (the old sync-over-async `Compare()` wrapper that deadlocked the UI thread was deleted).
+  The parallel scan uses a linked CTS so a failure on one side cancels the other.
+- **The progress denominator is published late — say nothing until it arrives.** `CountDirectories` is a second
+  walk of both trees that runs *beside* the parallel scan, so `totalDirs` is still 0 for the first part of every
+  compare. `DirectoryComparer.ProgressTenth` returns -1 there; clamping the denominator to the numerator instead
+  (the obvious `Math.Max(total, processed)` guard) makes the first folder report 100% and the bar sit there for
+  the rest of the scan. `DirectoryComparerProgressTests` locks this — the old assertion (`progress > 0`) passed
+  straight over the bug.
+- **A cancelled comparison must throw, never return.** `CancellationToken` reaches hashing and
+  `StreamsEqual`/`ReadFull` and is checked once per 8 KB chunk; returning `false` instead of throwing
+  used to report a half-built tree as `Identical` (which invites the user to delete good files). Keep
+  the check at chunk granularity — not per byte.
+- **Session loading rejects UNC paths before anything touches them** — `Common/SessionPathGuard.cs`
+  (`IsAllowedComparePath`, `IsAllowedDefaultSessionFile`). Auto-compare after session load would
+  SMB-authenticate against `\\attacker\share` (relayable Net-NTLM2) and hash files at an
+  attacker-chosen location. A rejected entry creates no tab and starts no compare; `LoadSession`
+  returns false when nothing loaded, so the UI cannot claim success. Do not route session paths to
+  the comparer without this guard. The test is deliberately **not** `Path.IsPathRooted`, which calls
+  `C:evil` rooted while Windows resolves it off that drive's working directory (`C:..\..\..\Windows` then
+  reaches anywhere on the drive): `IsRootedLocalPath` requires a real `X:\` root.
+- **The compare-tab algorithm list comes from `dCompare.json`, not from code** —
+  `CompareControlViewModel.LoadAlgorithms` builds it (and picks the default) from
+  `Options.Compare.Algorithms`; `ComparisonAlgorithms.EnabledAlgorithms` was deleted for exactly that reason.
+  Binding the ComboBox back to the static `AlgorithmSettings` seed makes the Options | Compare enable/disable
+  table lose its effect on the next start. `CompareOptionsViewModel` also **clones** each `ComparisonAlgorithmInfo`
+  instead of adopting it, because the seeded dictionary shares its value objects with that static seed — adopting
+  them meant ticking a box changed the live settings even when the user pressed Cancel.
+- **Config `Tools:*.Handler` is attacker-influenced text.** `ToolFactory` refuses any type that is not
+  an `ITool` in the dCompare assembly, *before* invoking a constructor. `ToolFactorySecurityTests`
+  locks this (including “the target file is not truncated”, which proves the constructor never ran).
+  The four real tools are `TextViewer`, `ImageViewer`, `TextDiff`, `TextDiffPlex`. `CompareControl` used to
+  advertise itself as an `ITool` with `LoadFile => throw new NotImplementedException()`; it is the compare tab
+  itself and is no longer an `ITool`.
+- **A first run gets a working tool set from code, not from a config file.** `Configuration/DefaultConfiguration.cs`
+  seeds `Options.Tools` and `Options.FileTypeMapping` (only the four built-in `ITool` types, assembly-qualified
+  handler strings); `AppConfiguration` defaults to it, and `DefaultConfigurationTests` asserts every handler
+  resolves to a real built-in `ITool` and every mapping names a defined tool. Empty dictionaries here meant View and
+  Diff both dead-ended at "no default tool", and the only working set lived in one developer's untracked
+  `dCompare.json`. Delete `<exe dir>\dCompare.json` to get the seeded set back.
+- **Column sorting is keyed on the column index, never the header text** — headers are localised
+  (`CompareControl.ColumnHeader_Click` + `ColumnSortProperties`). Switching on `"Left Name"` silently made every
+  header click sort by left name in zh-CN/zh-TW. `GridViewColumn` has **no** `SortMemberPath` (that is DataGrid).
+- **`dCompare.json` is read by `ConfigurationService.LoadConfigurationAsync`** (System.Text.Json) →
+  `AppConfiguration`. `App.xaml.cs` reads the same file a second time, for nothing but the startup culture
+  (`Options:UI:Language`), and must resolve it through `AppPaths.ResolveExisting` like every other read: the
+  Options page *saves* to `%LOCALAPPDATA%\dCompare` when the exe folder is read-only, so an exe-dir-only read
+  brings up the wrong language on a Program Files install. Nothing feeds it into the Host (`IConfiguration` is
+  injected nowhere). The old `IConfigurationRoot`/`GetSection("Tools")` query methods were dead duplicates of
+  `ToolConfigService` and let the context menus disagree with the default tool; do not add them back.
 - External tools are launched from `Options:Tools` config (exe path + arguments, `{file}`
-  placeholder) — see `ToolFactory` / `ToolService` / `ToolHandler`.
+  placeholder) — see `ToolFactory` / `ToolHandler`. Launch rules (do not weaken them):
+  `UseShellExecute = false`; every substituted placeholder path is quoted (without double-quoting a
+  template that already quotes it); a bare tool name is resolved against the app dir, System32,
+  Program Files(x86) and PATH; `.bat`/`.cmd` run via `cmd.exe /c "<script>"`; a missing tool fails
+  with a logged error instead of a raw Win32 exception. `ToolFactory` only accepts handler types
+  that implement `ITool` **in the dCompare assembly** — it instantiates before casting otherwise,
+  which was an arbitrary-type-execution hole from a tampered config. (`ToolService`/`IToolService`
+  and `ParentPathConverter` were dead and have been deleted.)
 
 ## CI
 
@@ -128,7 +223,7 @@ Release pipeline is currently broken**; see `TODO.md`.
 ## Before you finish
 
 1. `dotnet build dCompare.sln -c Debug` → 0 errors, and no *new* warnings.
-2. Run the test exe (above) → all green; current count 76.
+2. Run the test exe (above) → all green; current count 219.
 3. For new non-trivial logic (comparison, path handling, transfer, parsing) add a test in
    `dCompare.Tests/` mirroring the source path.
 4. User-visible strings go through resources, all three languages.

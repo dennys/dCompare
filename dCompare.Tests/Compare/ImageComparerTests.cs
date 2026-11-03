@@ -16,7 +16,7 @@ namespace dCompare.Compare.Tests
 
         public ImageComparerTests()
         {
-            _comparer = ImageComparerFactory.CreateImageSharpComparer();
+            _comparer = new ImageSharpComparer();
         }
 
         [Fact]
@@ -218,6 +218,133 @@ namespace dCompare.Compare.Tests
             Assert.True(result.HasDifferences);
             Assert.Equal(100, result.DifferenceBlocks.Count); // All blocks different
             Assert.True(result.SimilarityPercentage < 1.0); // Significant difference
+        }
+
+        [Fact]
+        public void CompareImages_SinglePixelDifference_IsDetected()
+        {
+            // Arrange: two images that differ in exactly one pixel (white -> black).
+            // The block average of one inverted pixel in a 16x16 block is ~255*sqrt(3)/256 < Threshold,
+            // so the max per-pixel difference must carry the detection.
+            using var image1 = CreateSolidColorImage(48, 48, new Rgba32(0, 0, 0));
+            using var image2 = CreateSolidColorImage(48, 48, new Rgba32(0, 0, 0));
+            image2[10, 10] = new Rgba32(255, 255, 255);
+            var source1 = new ImageSourceImageSource(image1);
+            var source2 = new ImageSourceImageSource(image2);
+            var options = new ImageComparisonOptions { BlockSize = 16, Threshold = 30 };
+
+            // Act
+            var result = _comparer.CompareImages(source1, source2, options);
+
+            // Assert
+            Assert.True(result.HasDifferences);
+            Assert.Single(result.DifferenceBlocks);
+            Assert.Equal((0, 0), result.DifferenceBlocks[0]);
+            Assert.True(result.SimilarityPercentage < 100.0);
+        }
+
+        [Fact]
+        public void CompareImages_SmallRegionDifference_IsDetected()
+        {
+            // Arrange: a 4x4 red patch on black — the block average is small, the per-pixel diff is not.
+            using var image1 = CreateSolidColorImage(32, 32, new Rgba32(0, 0, 0));
+            using var image2 = CreateSolidColorImage(32, 32, new Rgba32(0, 0, 0));
+            for (var y = 24; y < 28; y++)
+                for (var x = 24; x < 28; x++)
+                    image2[x, y] = new Rgba32(255, 0, 0);
+            var source1 = new ImageSourceImageSource(image1);
+            var source2 = new ImageSourceImageSource(image2);
+            var options = new ImageComparisonOptions { BlockSize = 16, Threshold = 30 };
+
+            // Act
+            var result = _comparer.CompareImages(source1, source2, options);
+
+            // Assert
+            Assert.True(result.HasDifferences);
+            Assert.NotEmpty(result.DifferenceBlocks);
+            Assert.True(result.SimilarityPercentage < 100.0);
+        }
+
+        [Fact]
+        public void CompareImages_TwoHorizontallyAdjacentBlocks_MergeIntoSingleRegion()
+        {
+            // Arrange: 32x16 image, block size 16; both blocks differ.
+            using var image1 = CreateSolidColorImage(32, 16, new Rgba32(0, 0, 0));
+            using var image2 = CreateSolidColorImage(32, 16, new Rgba32(0, 0, 0));
+            for (var y = 0; y < 16; y++)
+                for (var x = 4; x < 28; x++)
+                    image2[x, y] = new Rgba32(255, 255, 255);
+            var source1 = new ImageSourceImageSource(image1);
+            var source2 = new ImageSourceImageSource(image2);
+            var options = new ImageComparisonOptions { BlockSize = 16, Threshold = 30, MergeAdjacent = true };
+
+            // Act
+            var result = _comparer.CompareImages(source1, source2, options);
+
+            // Assert: the two adjacent difference blocks form one region.
+            Assert.Equal(2, result.DifferenceBlocks.Count);
+            Assert.Single(result.DifferenceRegions);
+            Assert.Equal(new Rectangle(0, 0, 32, 16), result.DifferenceRegions[0]);
+        }
+
+        [Fact]
+        public void CompareImages_LargeImageWithManyDifferences_CompletesQuickly()
+        {
+            // Arrange: half of a 2000x2000 image differs — one huge connected component,
+            // the worst case for the old O(n^2) re-scanning merge.
+            using var image1 = CreateSolidColorImage(2000, 2000, new Rgba32(0, 0, 0));
+            using var image2 = CreateSolidColorImage(2000, 2000, new Rgba32(0, 0, 0));
+            for (int y = 0; y < 2000; y++)
+                for (int x = 1000; x < 2000; x++)
+                    image2[x, y] = new Rgba32(255, 255, 255);
+            var source1 = new ImageSourceImageSource(image1);
+            var source2 = new ImageSourceImageSource(image2);
+            var options = new ImageComparisonOptions { BlockSize = 16, Threshold = 30, MergeAdjacent = true };
+
+            // Act (generous bound: the linear merge finishes well under a second; the old
+            // quadratic one took minutes, so this stays far from timing-sensitive).
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            var result = _comparer.CompareImages(source1, source2, options);
+            stopwatch.Stop();
+
+            // Assert
+            Assert.True(result.HasDifferences);
+            Assert.Single(result.DifferenceRegions);
+            Assert.True(stopwatch.Elapsed < TimeSpan.FromSeconds(30), $"Took {stopwatch.Elapsed}");
+        }
+
+        [Fact]
+        public void GetMaskImage_MaskBytesExact_ForFixedInput()
+        {
+            // Arrange: pins the mask output byte-for-byte (every pixel red or transparent),
+            // so the row-span rewrite cannot change the result.
+            using var image1 = CreateImageWithDifferenceBlock(100, 100);
+            using var image2 = CreateSolidColorImage(100, 100, new Rgba32(255, 0, 0));
+            var source1 = new ImageSourceImageSource(image1);
+            var source2 = new ImageSourceImageSource(image2);
+            var options = new ImageComparisonOptions { BlockSize = 10, Threshold = 30, MergeAdjacent = true };
+
+            // Act
+            var result = _comparer.CompareImages(source1, source2, options);
+            using var mask = result.GetMaskImage();
+
+            // Assert: exactly the merged region (20,20,20,20) is semi-transparent red, everything else transparent.
+            for (var y = 0; y < 100; y++)
+            {
+                for (var x = 0; x < 100; x++)
+                {
+                    var pixel = mask[x, y];
+                    bool inside = x >= 20 && x < 40 && y >= 20 && y < 40;
+                    if (inside)
+                    {
+                        Assert.Equal(new Rgba32(255, 0, 0, 128), pixel);
+                    }
+                    else
+                    {
+                        Assert.Equal(new Rgba32(0, 0, 0, 0), pixel);
+                    }
+                }
+            }
         }
 
         private static Image<Rgba32> CreateSolidColorImage(int width, int height, Rgba32 color)
