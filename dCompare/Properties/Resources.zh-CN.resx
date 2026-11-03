@@ -17,15 +17,6 @@
     <resheader name="version">2.0</resheader>
     <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
     <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
-    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
-    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
-    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
-        <value>[base64 mime encoded serialized .NET Framework object]</value>
-    </data>
-    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
-        <comment>This is a comment</comment>
-    </data>
                 
     There are any number of "resheader" rows that contain simple 
     name/value pairs.
@@ -175,7 +166,19 @@
     <value>关闭标签</value>
   </data>
   <data name="AboutMessage" xml:space="preserve">
-    <value>dCompare - Chrome风格标签界面\n\n功能:\n• Chrome风格标签，带悬停效果\n• 拖放标签重新排序\n• 键盘快捷键 (Ctrl+N, Ctrl+W)\n• 标签关闭确认\n• 统一配色方案\n• 多语言支持\n\n键盘快捷键:\nCtrl+N: 新增标签\nCtrl+W: 关闭目前标签</value>
+    <value>dCompare - Chrome风格标签界面
+
+功能:
+• Chrome风格标签，带悬停效果
+• 拖放标签重新排序
+• 键盘快捷键 (Ctrl+N, Ctrl+W)
+• 标签关闭确认
+• 统一配色方案
+• 多语言支持
+
+键盘快捷键:
+Ctrl+N: 新增标签
+Ctrl+W: 关闭目前标签</value>
   </data>
   <data name="AboutTitle" xml:space="preserve">
     <value>关于 dCompare</value>
@@ -985,18 +988,6 @@
   <data name="HotkeyTooltip" xml:space="preserve">
     <value>按下您想要的组合键（例如，Ctrl+S）。</value>
   </data>
-  <data name="LogSettings" xml:space="preserve">
-    <value>日志设定</value>
-  </data>
-  <data name="EnableLogging" xml:space="preserve">
-    <value>启用日志记录</value>
-  </data>
-  <data name="LogLevel" xml:space="preserve">
-    <value>日志级别：</value>
-  </data>
-  <data name="RetentionDays" xml:space="preserve">
-    <value>保留天数：</value>
-  </data>
   <data name="TextViewerSettings" xml:space="preserve">
     <value>文字检视器设定</value>
   </data>
@@ -1254,5 +1245,38 @@
   </data>
   <data name="ErrorFileTooLarge" xml:space="preserve">
     <value>“{0}”有 {1:N0} MB，超过内置查看器 {2:N0} MB 的上限。请改用外部工具打开。</value>
+  </data>
+  <data name="SessionFileEmpty" xml:space="preserve">
+    <value>工作阶段档案为空或不含工作阶段数据：{0}</value>
+  </data>
+  <data name="ErrorSessionPathRejected" xml:space="preserve">
+    <value>该工作阶段路径未加载，因为只允许本机路径：{0}</value>
+  </data>
+  <data name="SessionNoValidEntries" xml:space="preserve">
+    <value>无法从 {0} 加载任何工作阶段项目</value>
+  </data>
+  <data name="ErrorDefaultSessionFileNotLocal" xml:space="preserve">
+    <value>默认工作阶段档案必须是用户目录下的本机路径，因此未加载：{0}</value>
+  </data>
+  <data name="ErrorCopyingItems" xml:space="preserve">
+    <value>复制档案时发生错误</value>
+  </data>
+  <data name="ErrorMovingItems" xml:space="preserve">
+    <value>移动档案时发生错误</value>
+  </data>
+  <data name="OperationCompletedSuccessfully" xml:space="preserve">
+    <value>操作已顺利完成。</value>
+  </data>
+  <data name="ArchiveEntryOperationNotSupported" xml:space="preserve">
+    <value>压缩包内的档案无法复制、移动、删除或重新命名；只能变更压缩包文件本身。</value>
+  </data>
+  <data name="ErrorComparingImages" xml:space="preserve">
+    <value>比较图片时发生错误：{0}</value>
+  </data>
+  <data name="ErrorCopyingToClipboard" xml:space="preserve">
+    <value>无法复制到剪贴板：{0}</value>
+  </data>
+  <data name="WelcomeTabName" xml:space="preserve">
+    <value>欢迎</value>
   </data>
 </root>

@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using Serilog;
+using System.IO;
+using System.Security.AccessControl;
 
 namespace dCompare.FileOperation.Strategies
 {
@@ -53,7 +55,23 @@ namespace dCompare.FileOperation.Strategies
                 File.SetLastAccessTime(tempFile, sourceInfo.LastAccessTime);
                 File.SetLastWriteTime(tempFile, sourceInfo.LastWriteTime);
 
+                // A read-only destination would block MoveFileEx's replace (ERROR_ACCESS_DENIED on a
+                // second copy); the attribute is restored after the move.
+                if (overwrite && File.Exists(destFile))
+                {
+                    var destAttributes = File.GetAttributes(destFile);
+                    if ((destAttributes & FileAttributes.ReadOnly) != 0)
+                    {
+                        File.SetAttributes(destFile, destAttributes & ~FileAttributes.ReadOnly);
+                    }
+                }
+
                 FileOperationRetry.Run($"move {tempFile} -> {destFile}", () => File.Move(tempFile, destFile, overwrite));
+
+                // Attributes must land on the final file (the temp file is always Normal);
+                // without this a read-only source copies as a writable file.
+                File.SetAttributes(destFile, sourceInfo.Attributes);
+                CopyAccessControlBestEffort(sourceFile, destFile);
             }
             catch
             {
@@ -77,6 +95,21 @@ namespace dCompare.FileOperation.Strategies
         public void DeleteDirectory(string dirPath)
         {
             FileOperationRetry.Run($"delete directory {dirPath}", () => Directory.Delete(dirPath));
+        }
+
+        // ACLs are best-effort: GetAccessControl throws PlatformNotSupportedException on some file
+        // systems, and a copy must never fail because of them.
+        private static void CopyAccessControlBestEffort(string sourceFile, string destFile)
+        {
+            try
+            {
+                var accessRule = new FileInfo(sourceFile).GetAccessControl(AccessControlSections.Access);
+                new FileInfo(destFile).SetAccessControl(accessRule);
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, "Best-effort ACL copy skipped for '{DestFile}'.", destFile);
+            }
         }
     }
 }

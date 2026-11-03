@@ -34,8 +34,7 @@ namespace dCompare
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             // Initialize session manager
-            _viewModel.TabControl = tabControl;
-            _viewModel._sessionManager.Initialize(tabControl, RecentSessionsMenu);
+            _viewModel.Initialize(tabControl, RecentSessionsMenu);
             await _viewModel.InitializeAsync();
 
             // Load and apply hotkey bindings
@@ -45,32 +44,15 @@ namespace dCompare
         {
             this.Closing -= MainWindow_Closing;
             e.Cancel = true; // Allow async operations
-            try
-            {
-                var config = await _viewModel._configService.LoadConfigurationAsync();
-                // CloseApplication is the option the user actually ticks for "confirm before quitting";
-                // CloseTab is a different setting (and also names a hotkey).
-                bool showConfirmation = config.Options?.Confirmation.CloseApplication == true;
 
-                if (showConfirmation)
-                {
-                    bool confirmed = _viewModel._userInteractionService.ShowConfirmation(
-                        Properties.Resources.ConfirmExit,
-                        Properties.Resources.ConfirmExitTitle);
-                    if (!confirmed)
-                    {
-                        this.Closing += MainWindow_Closing;
-                        return;
-                    }
-                }
-            }
-            catch (Exception ex)
+            if (await _viewModel.ConfirmExitAsync())
             {
-                // A corrupt dCompare.json must not leave the window un-closeable: e.Cancel is already true,
-                // so an exception escaping here (async void) would both crash and strand the app.
-                Serilog.Log.Error(ex, "Failed to read configuration while closing; continuing without confirmation.");
+                this.Close();
+                return;
             }
-            this.Close();
+
+            // The user said "stay": re-arm the handler so the next attempt asks again.
+            this.Closing += MainWindow_Closing;
         }
         #region HotKey
         private async Task ApplyHotKeyBindingsAsync()

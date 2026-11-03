@@ -54,7 +54,10 @@ internal static class FileOperationRetry
     private static bool IsTemporaryLock(Exception ex) => ex switch
     {
         Win32Exception win32 => win32.NativeErrorCode is SharingViolation or LockViolation,
-        IOException or UnauthorizedAccessException => (ex.HResult & 0xFFFF) is SharingViolation or LockViolation,
+        // A Win32 error surfaces in HResult as 0x8007xxxx (facility 7 = FACILITY_WIN32). Without the facility
+        // check, a COM (0x8004xxxx) or CLR (0x8013xxxx) error whose low word happens to be 32/33 would be
+        // misread as a file lock and burn three needless retries.
+        IOException or UnauthorizedAccessException => ex.HResult is unchecked((int)0x8007_0020) or unchecked((int)0x8007_0021),
         _ => false
     };
 }

@@ -19,7 +19,6 @@ namespace dCompare.FileOperation
         // stop request is owned here: Cancel() stops every batch this manager is running, whoever started it.
         private readonly object _cancelGate = new();
         private CancellationTokenSource _cancelSource = new();
-        public Guid InstanceId { get; } = Guid.NewGuid();
 
         public FileManager(IFileOperationStrategy? strategy = null)
         {
@@ -39,10 +38,6 @@ namespace dCompare.FileOperation
         }
 
         #region Public API Methods
-        public void WhoAmI()
-        {
-            Log.Information($"FileManager ({InstanceId}) is performing an operation with data: ");
-        }
         public Task<OperationResult> CopyAsync(string source, string destination, bool overwrite = false, IProgress<OperationProgress>? progress = null, CancellationToken cancellationToken = default)
         {
             List<(string, string, SourceType)> items = [(source, destination, SourceType.Left)];
@@ -325,11 +320,12 @@ namespace dCompare.FileOperation
             }
             else
             {
-                // The Recycle Bin first so a mis-click stays undoable. The strategy delete stays unconditional:
-                // it is the permanent fallback for locations without a bin, and File.Delete on a path the shell
-                // already moved away is a documented no-op.
-                RecycleBin.TryDelete(path, isDirectory: false);
-                _strategy.DeleteFile(path);
+                // Recycle Bin first so a mis-click stays undoable; the permanent strategy delete only runs
+                // when the bin can't take the file (UNC share, missing path, fallback after an error).
+                if (!RecycleBin.TryDelete(path, isDirectory: false))
+                {
+                    _strategy.DeleteFile(path);
+                }
             }
         }
 
@@ -347,7 +343,14 @@ namespace dCompare.FileOperation
                 cancellationToken.ThrowIfCancellationRequested();
                 int overallPercentage = (int)(processedCount * 100 / totalCount + (processedItems * (1 / (float)totalCount) / totalItems));
                 reportProgress(overallPercentage, file);
-                _strategy.DeleteFile(file);
+                // Same order as the single-file path: the Recycle Bin first, permanent delete only where the bin
+                // cannot take it. This walk is reached when the whole-tree shell delete was refused (or when a
+                // subtree could not be read at all), so deleting here without asking the shell would destroy
+                // data that was only ever meant to become restorable.
+                if (!RecycleBin.TryDelete(file, isDirectory: false))
+                {
+                    _strategy.DeleteFile(file);
+                }
                 processedItems++;
             }
 

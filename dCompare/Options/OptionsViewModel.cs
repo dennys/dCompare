@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using dCompare.Common;
 using dCompare.Configuration;
+using Serilog;
 using Microsoft.VisualBasic;
 using Microsoft.Win32;
 using System.Collections.ObjectModel;
@@ -12,27 +13,49 @@ namespace dCompare.Options
     public partial class SettingsViewModel : ObservableObject
     {
         private readonly IConfigurationService _configService;
+        private readonly IUserInteractionService _userInteraction;
         private AppConfiguration _appConfig;
+        private Task? _loadTask;
 
         [ObservableProperty]
         private string _filterText = "Filter settings...";
 
         [ObservableProperty]
-        private ObservableObject _selectedViewModel;
+        private ObservableObject _selectedViewModel = null!;
 
         public ObservableCollection<SettingsMenuItem> MenuItems { get; } = new();
 
-        public SettingsViewModel(IConfigurationService configService)
+        public SettingsViewModel(IConfigurationService configService, IUserInteractionService userInteraction)
         {
             _configService = configService;
-            LoadConfigurationAsync();
+            _userInteraction = userInteraction;
+            _appConfig = new AppConfiguration();
+            _ = LoadConfigurationAsync();
         }
 
 
-        private async void LoadConfigurationAsync()
+        // Memoized so the constructor's fire-and-forget call and any later call share one load:
+        // two concurrent loads of a missing file would both write the default config to the same
+        // .tmp path, and the second File.Move would fail.
+        public Task LoadConfigurationAsync() => _loadTask ??= LoadConfigurationCore();
+
+        // Fire-and-forget from the constructor (a constructor cannot await); failures must surface here,
+        // not escape to the Dispatcher as an unhandled async-void exception.
+        private async Task LoadConfigurationCore()
         {
-            _appConfig = await _configService.LoadConfigurationAsync();
-            BuildMenu();
+            try
+            {
+                _appConfig = await _configService.LoadConfigurationAsync();
+                BuildMenu();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to load configuration in SettingsViewModel");
+                _userInteraction.ShowError(string.Format(Properties.Resources.ErrorLoadingConfiguration, ex.Message), Properties.Resources.ErrorTitle);
+                // Fall back to defaults so the Options page stays usable and can save a repaired config.
+                _appConfig = new AppConfiguration();
+                BuildMenu();
+            }
         }
 
         [RelayCommand]
@@ -209,17 +232,10 @@ namespace dCompare.Options
 
         public ComparisonAlgorithm Algorithm => _algorithm;
         public string Description => _info.Description;
-        public bool IsPercentageSettingEnabled
-        {
-            get
-            {
-                if (!_supportsPercentage || this.Description == "Quick (ModifiedDate and Size)")
-                {
-                    return false;
-                }
-                return true;
-            }
-        }
+        // The percentage box belongs to the hashing algorithms only. The name+size check that used to sit here
+        // compared an English literal ("Quick (ModifiedDate and Size)") that never matched the real description
+        // ("Quick (Modified Date and Size)"), and that algorithm has no ComparisonPercentage to begin with.
+        public bool IsPercentageSettingEnabled => _supportsPercentage;
         public bool IsEnabled
         {
             get => _info.IsEnabled;
@@ -288,7 +304,15 @@ namespace dCompare.Options
             _model = model;
             foreach (var kvp in _model.Algorithms)
             {
-                AlgorithmItems.Add(new AlgorithmItemViewModel(kvp.Key, kvp.Value, this));
+                // Copy, do not adopt. The entries start out shared with the static seed in ComparisonAlgorithms,
+                // so ticking a box here edited the live settings even when the user pressed Cancel.
+                AlgorithmItems.Add(new AlgorithmItemViewModel(kvp.Key, new ComparisonAlgorithmInfo
+                {
+                    Description = kvp.Value.Description,
+                    IsEnabled = kvp.Value.IsEnabled,
+                    IsDefault = kvp.Value.IsDefault,
+                    ComparisonPercentage = kvp.Value.ComparisonPercentage,
+                }, this));
             }
         }
 
@@ -583,10 +607,5 @@ namespace dCompare.Options
         {
             // Model is updated directly via property setters
         }
-    }
-
-    public class LogOptionsViewModel : ObservableObject
-    {
-        public virtual bool IsValid => true;
     }
 }

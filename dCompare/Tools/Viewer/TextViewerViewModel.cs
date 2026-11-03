@@ -4,6 +4,7 @@ using dCompare.Common;
 using dCompare.Configuration;
 using ICSharpCode.AvalonEdit.Highlighting;
 using Microsoft.Win32;
+using Serilog;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows;
@@ -15,6 +16,7 @@ namespace dCompare.Tools.Viewer
     {
         public event EventHandler<int>? GoToLineRequested;
         private readonly IConfigurationService _configurationService;
+        private readonly IUserInteractionService _userInteraction;
         private string? _currentFilePath;
         private bool _isReadOnly;
         private bool _showLineNumbers;
@@ -34,10 +36,11 @@ namespace dCompare.Tools.Viewer
         private int _charCount;
         private IHighlightingDefinition? _selectedSyntaxHighlighting;
 
-        public TextViewerViewModel(IConfigurationService configurationService)
+        public TextViewerViewModel(IConfigurationService configurationService, IUserInteractionService userInteractionService)
         {
             _configurationService = configurationService;
-            ApplySettings();
+            _userInteraction = userInteractionService;
+            _ = ApplySettings();
         }
 
         public string Text { get => _text; set { SetProperty(ref _text, value); UpdateWordCount(); } }
@@ -54,9 +57,21 @@ namespace dCompare.Tools.Viewer
 
         public ObservableCollection<IHighlightingDefinition> HighlightingDefinitions { get; } = new ObservableCollection<IHighlightingDefinition>(HighlightingManager.Instance.HighlightingDefinitions);
 
-        private async void ApplySettings()
+        // Fire-and-forget from the constructor (a constructor cannot await); failures must surface here,
+        // not escape to the Dispatcher as an unhandled async-void exception.
+        public async Task ApplySettings()
         {
-            TextViewerOptions settings = (await _configurationService.LoadConfigurationAsync()).Options.TextViewer;
+            TextViewerOptions settings;
+            try
+            {
+                settings = (await _configurationService.LoadConfigurationAsync()).Options.TextViewer;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to load configuration in TextViewerViewModel.ApplySettings");
+                _userInteraction.ShowError(string.Format(Properties.Resources.ErrorLoadingConfiguration, ex.Message), Properties.Resources.ErrorTitle);
+                return; // keep the built-in defaults
+            }
 
             IsReadOnly = settings.ReadOnly;
             ShowLineNumbers = settings.LineNumber;
@@ -69,7 +84,7 @@ namespace dCompare.Tools.Viewer
             ShowStatusBar = settings.ShowStatusBar;
         }
 
-        public async void LoadFile(string filePath)
+        public async Task LoadFile(string filePath)
         {
             if (FileExtensions.IsTooLargeToView(filePath, out long length))
             {
@@ -79,10 +94,18 @@ namespace dCompare.Tools.Viewer
 
             Text = File.ReadAllText(filePath);
             _currentFilePath = filePath;
-            var config = await _configurationService.LoadConfigurationAsync();
-            if (config.Options.TextViewer.SyntaxHighlight)
+            try
             {
-                SelectedSyntaxHighlighting = HighlightingManager.Instance.GetDefinitionByExtension(Path.GetExtension(filePath));
+                var config = await _configurationService.LoadConfigurationAsync();
+                if (config.Options.TextViewer.SyntaxHighlight)
+                {
+                    SelectedSyntaxHighlighting = HighlightingManager.Instance.GetDefinitionByExtension(Path.GetExtension(filePath));
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to load configuration in TextViewerViewModel.LoadFile");
+                _userInteraction.ShowError(string.Format(Properties.Resources.ErrorLoadingConfiguration, ex.Message), Properties.Resources.ErrorTitle);
             }
             UpdateWordCount();
         }
@@ -104,7 +127,7 @@ namespace dCompare.Tools.Viewer
             var dlg = new OpenFileDialog();
             if (dlg.ShowDialog() == true)
             {
-                LoadFile(dlg.FileName);
+                _ = LoadFile(dlg.FileName);
             }
         }
 

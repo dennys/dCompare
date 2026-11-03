@@ -17,7 +17,7 @@ namespace dCompare
 {
     public partial class App : Application
     {
-        public static IHost AppHost { get; private set; }
+        public static IHost AppHost { get; private set; } = null!;
 
         public App()
         {
@@ -40,10 +40,24 @@ namespace dCompare
             AppPaths.MigrateFromWorkingDirectory(Constant.DefaultConfigurationFile, Constant.RecentSessionsFile);
 
             // Configuration Setup
-            IConfigurationRoot configuration = new ConfigurationBuilder()
-                .SetBasePath(AppPaths.BaseDirectory)
-                .AddJsonFile(Constant.DefaultConfigurationFile, optional: true, reloadOnChange: true)
-                .Build();
+            // A corrupt dCompare.json must not prevent the app from starting (the Options page is the
+            // repair path); fall back to an empty configuration and let the first
+            // LoadConfigurationAsync surface the error to the user.
+            IConfigurationRoot configuration;
+            try
+            {
+                // Same file ConfigurationService reads: the exe folder first, then the %LOCALAPPDATA% copy it
+                // writes when the exe folder is read-only. Resolving this from the exe folder alone meant the
+                // language saved by the Options page was never the language applied at startup.
+                configuration = new ConfigurationBuilder()
+                    .AddJsonFile(AppPaths.ResolveExisting(Constant.DefaultConfigurationFile), optional: true, reloadOnChange: true)
+                    .Build();
+            }
+            catch (InvalidDataException ex)
+            {
+                Log.Error(ex, "Configuration file is corrupt; starting with an empty configuration.");
+                configuration = new ConfigurationBuilder().Build();
+            }
 
             // Configure Culture
             string languageCode = configuration["Options:UI:Language"] ?? Constant.DefaultLanguageCode;
@@ -64,12 +78,7 @@ namespace dCompare
             }
 
             // --- Host Setup ---
-            AppHost = Host.CreateDefaultBuilder()
-                .ConfigureAppConfiguration((context, configBuilder) =>
-                {
-                    // Add the same configuration to the host
-                    configBuilder.AddConfiguration(configuration);
-                })
+            AppHost = Host.CreateDefaultBuilder()
                 .ConfigureServices((hostContext, services) =>
                 {
                     // Register Window and UserControls
@@ -83,6 +92,7 @@ namespace dCompare
                     services.AddSingleton<IFileManager, FileManager>();
                     services.AddSingleton<IFileOperationStrategy, Kernel32FileCopyStrategy>();
                     services.AddSingleton<IFileSystem, FileSystem>();
+                    services.AddSingleton<IHashProvider, HashProvider>();
                     services.AddSingleton<IUserInteractionService, UserInteractionService>();
                 })
             // --- Integrate Serilog with the Host ---
@@ -114,11 +124,30 @@ namespace dCompare
 
         protected override async void OnExit(ExitEventArgs e)
         {
-            await AppHost.StopAsync();
-            AppHost.Dispose();
-            Log.Information("Application shutting down.");
-            Log.CloseAndFlush(); // Ensures all logs are written before the app closes
-            base.OnExit(e);
+            // async void at the framework boundary: swallow and log, never let an exception escape
+            // (an unhandled exit-time exception can crash the process after the window closed).
+            try
+            {
+                await AppHost.StopAsync();
+                AppHost.Dispose();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error while stopping the host on exit.");
+            }
+            finally
+            {
+                try
+                {
+                    Log.Information("Application shutting down.");
+                    Log.CloseAndFlush(); // Ensures all logs are written before the app closes
+                }
+                catch (Exception ex)
+                {
+                    Log.Debug(ex, "Error while closing the log on exit.");
+                }
+            }
+            base.OnExit(e);
         }
     }
 }

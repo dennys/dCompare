@@ -18,7 +18,6 @@ namespace dCompare.Tests.Compare
     {
         private readonly Mock<IFileSystem> _fileSystemMock;
         private readonly Mock<IHashProvider> _hashProviderMock;
-        private readonly Mock<IFileSystemTreeBuilder> _treeBuilderMock;
         private readonly DirectoryComparer _comparer;
         private readonly string _tempDir;
 
@@ -26,7 +25,6 @@ namespace dCompare.Tests.Compare
         {
             _fileSystemMock = new Mock<IFileSystem>();
             _hashProviderMock = new Mock<IHashProvider>();
-            _treeBuilderMock = new Mock<IFileSystemTreeBuilder>();
             _comparer = new DirectoryComparer(null, _fileSystemMock.Object, _hashProviderMock.Object);
 
             // Create a temporary directory for test files
@@ -52,18 +50,12 @@ namespace dCompare.Tests.Compare
             Directory.CreateDirectory(leftPath);
             Directory.CreateDirectory(rightPath);
 
-            var leftRoot = new FileSystemNode { Name = "left", IsDirectory = true, Children = new List<FileSystemNode>() };
-            var rightRoot = new FileSystemNode { Name = "right", IsDirectory = true, Children = new List<FileSystemNode>() };
 
             _fileSystemMock.Setup(fs => fs.DirectoryExists(leftPath)).Returns(true);
             _fileSystemMock.Setup(fs => fs.DirectoryExists(rightPath)).Returns(true);
             _fileSystemMock.Setup(fs => fs.GetDirectories(It.IsAny<string>())).Returns(new string[] { });
             _fileSystemMock.Setup(fs => fs.GetFiles(It.IsAny<string>())).Returns(new string[] { });
             _fileSystemMock.Setup(fs => fs.GetLastWriteTime(It.IsAny<string>())).Returns(DateTime.Now);
-            _treeBuilderMock.Setup(tb => tb.BuildTreeRecursive(leftPath, 0, It.IsAny<CancellationToken>(), It.IsAny<Action>()))
-                .Returns(leftRoot);
-            _treeBuilderMock.Setup(tb => tb.BuildTreeRecursive(rightPath, 0, It.IsAny<CancellationToken>(), It.IsAny<Action>()))
-                .Returns(rightRoot);
 
             // Act
             var result = await _comparer.CompareAsync(leftPath, rightPath, CancellationToken.None, null, ComparisonAlgorithm.ModifiedDateAndSize);
@@ -89,10 +81,6 @@ namespace dCompare.Tests.Compare
             File.WriteAllBytes(rightFilePath, new byte[200]); // 200 bytes
             File.SetLastWriteTime(rightFilePath, DateTime.Now.AddSeconds(2));
 
-            var leftFileNode = new FileSystemNode { Name = fileName, FullPath = leftFilePath, IsDirectory = false, Size = 100, ModifiedTime = DateTime.Now };
-            var rightFileNode = new FileSystemNode { Name = fileName, FullPath = rightFilePath, IsDirectory = false, Size = 200, ModifiedTime = DateTime.Now.AddSeconds(2) };
-            var leftRoot = new FileSystemNode { Name = "left", IsDirectory = true, Children = new List<FileSystemNode> { leftFileNode } };
-            var rightRoot = new FileSystemNode { Name = "right", IsDirectory = true, Children = new List<FileSystemNode> { rightFileNode } };
 
             _fileSystemMock.Setup(fs => fs.DirectoryExists(leftPath)).Returns(true);
             _fileSystemMock.Setup(fs => fs.DirectoryExists(rightPath)).Returns(true);
@@ -103,10 +91,6 @@ namespace dCompare.Tests.Compare
             _fileSystemMock.Setup(fs => fs.GetFileInfo(leftFilePath)).Returns(new FileInfo(leftFilePath));
             _fileSystemMock.Setup(fs => fs.GetFileInfo(rightFilePath)).Returns(new FileInfo(rightFilePath));
             _fileSystemMock.Setup(fs => fs.GetLastWriteTime(It.IsAny<string>())).Returns(DateTime.Now);
-            _treeBuilderMock.Setup(tb => tb.BuildTreeRecursive(leftPath, 0, It.IsAny<CancellationToken>(), It.IsAny<Action>()))
-                .Returns(leftRoot);
-            _treeBuilderMock.Setup(tb => tb.BuildTreeRecursive(rightPath, 0, It.IsAny<CancellationToken>(), It.IsAny<Action>()))
-                .Returns(rightRoot);
 
             // Act
             var result = await _comparer.CompareAsync(leftPath, rightPath, CancellationToken.None, null, ComparisonAlgorithm.ModifiedDateAndSize);
@@ -131,9 +115,6 @@ namespace dCompare.Tests.Compare
             Directory.CreateDirectory(rightPath);
             File.WriteAllBytes(leftFilePath, new byte[100]); // 100 bytes
 
-            var leftFileNode = new FileSystemNode { Name = fileName, FullPath = leftFilePath, IsDirectory = false, Size = 100, ModifiedTime = DateTime.Now };
-            var leftRoot = new FileSystemNode { Name = "left", IsDirectory = true, Children = new List<FileSystemNode> { leftFileNode } };
-            var rightRoot = new FileSystemNode { Name = "right", IsDirectory = true, Children = new List<FileSystemNode>() };
 
             _fileSystemMock.Setup(fs => fs.DirectoryExists(leftPath)).Returns(true);
             _fileSystemMock.Setup(fs => fs.DirectoryExists(rightPath)).Returns(true);
@@ -144,10 +125,6 @@ namespace dCompare.Tests.Compare
             _fileSystemMock.Setup(fs => fs.FileExists(Path.Combine(rightPath, fileName))).Returns(false);
             _fileSystemMock.Setup(fs => fs.GetFileInfo(leftFilePath)).Returns(new FileInfo(leftFilePath));
             _fileSystemMock.Setup(fs => fs.GetLastWriteTime(It.IsAny<string>())).Returns(DateTime.Now);
-            _treeBuilderMock.Setup(tb => tb.BuildTreeRecursive(leftPath, 0, It.IsAny<CancellationToken>(), It.IsAny<Action>()))
-                .Returns(leftRoot);
-            _treeBuilderMock.Setup(tb => tb.BuildTreeRecursive(rightPath, 0, It.IsAny<CancellationToken>(), It.IsAny<Action>()))
-                .Returns(rightRoot);
 
             // Act
             var result = await _comparer.CompareAsync(leftPath, rightPath, CancellationToken.None, null, ComparisonAlgorithm.ModifiedDateAndSize);
@@ -174,10 +151,6 @@ namespace dCompare.Tests.Compare
             File.WriteAllBytes(leftFilePath, new byte[] { 1, 2, 3 });
             File.WriteAllBytes(rightFilePath, new byte[] { 4, 5, 6 });
 
-            var leftFileNode = new FileSystemNode { Name = fileName, FullPath = leftFilePath, IsDirectory = false, Size = 3, ModifiedTime = DateTime.Now };
-            var rightFileNode = new FileSystemNode { Name = fileName, FullPath = rightFilePath, IsDirectory = false, Size = 3, ModifiedTime = DateTime.Now };
-            var leftRoot = new FileSystemNode { Name = "left", IsDirectory = true, Children = new List<FileSystemNode> { leftFileNode } };
-            var rightRoot = new FileSystemNode { Name = "right", IsDirectory = true, Children = new List<FileSystemNode> { rightFileNode } };
 
             _fileSystemMock.Setup(fs => fs.DirectoryExists(leftPath)).Returns(true);
             _fileSystemMock.Setup(fs => fs.DirectoryExists(rightPath)).Returns(true);
@@ -189,15 +162,11 @@ namespace dCompare.Tests.Compare
             _fileSystemMock.Setup(fs => fs.GetFileInfo(rightFilePath)).Returns(new FileInfo(rightFilePath));
             _fileSystemMock.Setup(fs => fs.OpenRead(leftFilePath)).Returns(new MemoryStream(new byte[] { 1, 2, 3 }));
             _fileSystemMock.Setup(fs => fs.OpenRead(rightFilePath)).Returns(new MemoryStream(new byte[] { 4, 5, 6 }));
-            _hashProviderMock.Setup(h => h.ComputeMD5(It.IsAny<Stream>(), 1.0)).Returns<Stream, double>((s, _) =>
+            _hashProviderMock.Setup(h => h.ComputeMD5(It.IsAny<Stream>(), 1.0, It.IsAny<CancellationToken>())).Returns<Stream, double, CancellationToken>((s, _, _) =>
             {
                 s.Position = 0;
                 return s.ReadByte() == 1 ? new byte[] { 1 } : new byte[] { 2 };
             });
-            _treeBuilderMock.Setup(tb => tb.BuildTreeRecursive(leftPath, 0, It.IsAny<CancellationToken>(), It.IsAny<Action>()))
-                .Returns(leftRoot);
-            _treeBuilderMock.Setup(tb => tb.BuildTreeRecursive(rightPath, 0, It.IsAny<CancellationToken>(), It.IsAny<Action>()))
-                .Returns(rightRoot);
 
             // Act
             var result = await _comparer.CompareAsync(leftPath, rightPath, CancellationToken.None, null, ComparisonAlgorithm.MD5);
@@ -239,16 +208,10 @@ namespace dCompare.Tests.Compare
             Directory.CreateDirectory(rightDirPath);
             File.WriteAllBytes(leftFilePath, new byte[100]);
 
-            var leftFileNode = new FileSystemNode { Name = "test", FullPath = leftFilePath, IsDirectory = false, Size = 100, ModifiedTime = DateTime.Now };
-            var rightDirNode = new FileSystemNode { Name = "test", FullPath = rightDirPath, IsDirectory = true, Children = new List<FileSystemNode>() };
 
             _fileSystemMock.Setup(fs => fs.FileExists(leftFilePath)).Returns(true);
             _fileSystemMock.Setup(fs => fs.DirectoryExists(rightDirPath)).Returns(true);
             _fileSystemMock.Setup(fs => fs.GetFileInfo(leftFilePath)).Returns(new FileInfo(leftFilePath));
-            _treeBuilderMock.Setup(tb => tb.BuildTreeRecursive(leftFilePath, 0, It.IsAny<CancellationToken>(), null))
-                .Returns(leftFileNode);
-            _treeBuilderMock.Setup(tb => tb.BuildTreeRecursive(rightDirPath, 0, It.IsAny<CancellationToken>(), null))
-                .Returns(rightDirNode);
 
             // Act
             var result = _comparer.CompareSubtree(leftPath, rightPath, subPath, CancellationToken.None, ComparisonAlgorithm.ModifiedDateAndSize);
@@ -366,18 +329,12 @@ namespace dCompare.Tests.Compare
             Directory.CreateDirectory(leftPath);
             Directory.CreateDirectory(rightPath);
 
-            var leftRoot = new FileSystemNode { Name = "left", IsDirectory = true, Children = new List<FileSystemNode>() };
-            var rightRoot = new FileSystemNode { Name = "right", IsDirectory = true, Children = new List<FileSystemNode>() };
 
             _fileSystemMock.Setup(fs => fs.DirectoryExists(leftPath)).Returns(true);
             _fileSystemMock.Setup(fs => fs.DirectoryExists(rightPath)).Returns(true);
             _fileSystemMock.Setup(fs => fs.GetDirectories(It.IsAny<string>())).Returns(new string[] { });
             _fileSystemMock.Setup(fs => fs.GetFiles(It.IsAny<string>())).Returns(new string[] { });
             _fileSystemMock.Setup(fs => fs.GetLastWriteTime(It.IsAny<string>())).Returns(DateTime.Now);
-            _treeBuilderMock.Setup(tb => tb.BuildTreeRecursive(leftPath, 0, It.IsAny<CancellationToken>(), It.IsAny<Action>()))
-                .Returns(leftRoot);
-            _treeBuilderMock.Setup(tb => tb.BuildTreeRecursive(rightPath, 0, It.IsAny<CancellationToken>(), It.IsAny<Action>()))
-                .Returns(rightRoot);
 
             // Act
             var result = await _comparer.CompareAsync(leftPath, rightPath, CancellationToken.None, null, ComparisonAlgorithm.ModifiedDateAndSize);
@@ -446,10 +403,6 @@ namespace dCompare.Tests.Compare
             Directory.CreateDirectory(leftSubPath);
             Directory.CreateDirectory(rightSubPath);
 
-            var leftSubNode = new FileSystemNode { Name = subDir, IsDirectory = true, Children = new List<FileSystemNode>() };
-            var rightSubNode = new FileSystemNode { Name = subDir, IsDirectory = true, Children = new List<FileSystemNode>() };
-            var leftRoot = new FileSystemNode { Name = "left", IsDirectory = true, Children = new List<FileSystemNode> { leftSubNode } };
-            var rightRoot = new FileSystemNode { Name = "right", IsDirectory = true, Children = new List<FileSystemNode> { rightSubNode } };
 
             _fileSystemMock.Setup(fs => fs.DirectoryExists(leftPath)).Returns(true);
             _fileSystemMock.Setup(fs => fs.DirectoryExists(rightPath)).Returns(true);
@@ -459,10 +412,6 @@ namespace dCompare.Tests.Compare
             _fileSystemMock.Setup(fs => fs.GetDirectories(rightPath)).Returns(new[] { rightSubPath });
             _fileSystemMock.Setup(fs => fs.GetFiles(It.IsAny<string>())).Returns(new string[] { });
             _fileSystemMock.Setup(fs => fs.GetLastWriteTime(It.IsAny<string>())).Returns(DateTime.Now);
-            _treeBuilderMock.Setup(tb => tb.BuildTreeRecursive(leftPath, 0, It.IsAny<CancellationToken>(), It.IsAny<Action>()))
-                .Returns(leftRoot);
-            _treeBuilderMock.Setup(tb => tb.BuildTreeRecursive(rightPath, 0, It.IsAny<CancellationToken>(), It.IsAny<Action>()))
-                .Returns(rightRoot);
 
             // Act
             var result = await _comparer.CompareAsync(leftPath, rightPath, CancellationToken.None, null, ComparisonAlgorithm.ModifiedDateAndSize);
@@ -629,7 +578,6 @@ namespace dCompare.Tests.Compare
 
             _fileSystemMock.Setup(fs => fs.FileExists(It.IsAny<string>())).Returns(false);
             _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>())).Returns(false);
-            //_treeBuilderMock.Setup(tb => tb.BuildTreeRecursive(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>(), null))
             //    .Returns((FileSystemNode?)null);
 
             // Act

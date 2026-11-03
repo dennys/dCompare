@@ -120,6 +120,13 @@ namespace dCompare.Compare.Models
         public string LeftDisplayName => LeftName ?? string.Empty;
         public string RightDisplayName => RightName ?? string.Empty;
 
+        /// <summary>
+        /// True when this row stands for a file inside an archive. Its path is fabricated (archive file + entry
+        /// key) and nothing can open it, so a transfer would fail and a delete would be a silent no-op that still
+        /// reported success. Those rows are read-only: only the archive files themselves can be changed.
+        /// </summary>
+        public bool IsArchiveEntry => LeftNode?.IsArchiveEntry == true || RightNode?.IsArchiveEntry == true;
+
         public event PropertyChangedEventHandler? PropertyChanged;
 
         protected void OnPropertyChanged(string propertyName)

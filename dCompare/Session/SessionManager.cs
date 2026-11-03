@@ -10,11 +10,12 @@ using System.Windows.Controls;
 
 namespace dCompare.Session
 {
-    public class SessionManager(IServiceProvider serviceProvider) : ISessionManager
+    public class SessionManager(IServiceProvider serviceProvider, IUserInteractionService? userInteraction = null) : ISessionManager
     {
         private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        private readonly IUserInteractionService _userInteraction = userInteraction ?? new UserInteractionService();
         private readonly List<string> _recentSessions = new();
-        private readonly Dictionary<string, string> _tabIdMap = new();
+        private readonly Dictionary<TabItem, string> _tabIdMap = new();
         private string _recentSessionsPath = string.Empty;
         private MenuItem? _recentSessionsMenu;
         private TabControl? _tabControl;
@@ -28,7 +29,7 @@ namespace dCompare.Session
             LoadRecentSessions();
         }
 
-        public Dictionary<string, string> TabIdMap => _tabIdMap;
+        public Dictionary<TabItem, string> TabIdMap => _tabIdMap;
         public int TabCounter { get => _tabCounter; set => _tabCounter = value; }
 
         private void LoadRecentSessions()
@@ -121,7 +122,8 @@ namespace dCompare.Session
         {
             if (_recentSessionsMenu is null)
             {
-                MessageBox.Show(Properties.Resources.CannotLocateParentTabControl, Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                // The menu is wired once at startup; its absence is a wiring bug, not something the user can act on.
+                Log.Warning("Recent-sessions menu is not available; the list was not refreshed.");
                 return;
             }
             try
@@ -144,10 +146,9 @@ namespace dCompare.Session
                 for (int i = 0; i < _recentSessions.Count; i++)
                 {
                     string filePath = _recentSessions[i];
-                    string fileName = Path.GetFileName(filePath);
                     MenuItem menuItem = new()
                     {
-                        Header = $"{i + 1}. {filePath}\\{fileName}",
+                        Header = $"{i + 1}. {filePath}",
                         ToolTip = filePath,
                         Command = Application.Current.MainWindow?.DataContext is MainWindowViewModel viewModel ? viewModel.LoadSessionFileCommand : null,
                         CommandParameter = (filePath, true)
@@ -178,8 +179,9 @@ namespace dCompare.Session
                     if (tab.Content is CompareControl ucCompare)
                     {
                         string tabName = tab.Header?.ToString() ?? Properties.Resources.Untitled;
-                        string tabId = _tabIdMap.TryGetValue(tabName, out string? id) ? id : Guid.NewGuid().ToString();
-                        _tabIdMap[tabName] = tabId;
+                        // Keyed by the TabItem instance (not the header): identical headers must not collide.
+                        string tabId = _tabIdMap.TryGetValue(tab, out string? id) ? id : Guid.NewGuid().ToString();
+                        _tabIdMap[tab] = tabId;
                         sessions[tabId] = new SessionConfig
                         {
                             TabName = tabName, // Save the tab header
@@ -214,12 +216,13 @@ namespace dCompare.Session
         }
 
         public bool CanLoadSession() => true;
-        public void LoadSession(string filePath, bool executeCompare = false, Action<string>? updateStatus = null, Action<CompareControl>? executeCompareMethod = null)
+        // Returns true only when the session was actually loaded; the caller must not report success otherwise.
+        public bool LoadSession(string filePath, bool executeCompare = false, Action<string>? updateStatus = null, Action<CompareControl>? executeCompareMethod = null)
         {
             if (_tabControl is null)
             {
                 MessageBox.Show(Properties.Resources.CannotLocateParentTabControl, Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
+                return false;
             }
             try
             {
@@ -235,7 +238,7 @@ namespace dCompare.Session
                     };
 
                     if (openFileDialog.ShowDialog() != true)
-                        return;
+                        return false;
 
                     json = File.ReadAllText(openFileDialog.FileName);
                     sessionFileName = openFileDialog.FileName;
@@ -253,58 +256,84 @@ namespace dCompare.Session
 
                 var sessions = JsonSerializer.Deserialize<Dictionary<string, SessionConfig>>(json);
 
-                if (sessions != null)
+                if (sessions == null)
                 {
-                    while (_tabControl.Items.Count > 1)
-                    {
-                        _tabControl.Items.RemoveAt(_tabControl.Items.Count - 1);
-                    }
-                    if (_tabControl.Items.Count == 1 && (_tabControl.Items[0] as TabItem)?.Header.ToString() == "Welcome")
-                    {
-                        _tabControl.Items.Clear();
-                    }
-
-                    _tabIdMap.Clear();
-                    _tabCounter = sessions.Count; // Set tab counter to the number of loaded tabs to avoid conflicts
-
-                    foreach (var session in sessions)
-                    {
-                        string tabName = session.Value.TabName ?? $"Tab {++_tabCounter}"; // Use saved tab name or generate a new one
-                        CompareControl ucCompareInstance = _serviceProvider.GetRequiredService<CompareControl>();
-                        TabItem newTab = new()
-                        {
-                            Header = tabName,
-                            Content = ucCompareInstance
-                        };
-                        // Use the new properties to set paths, which will update the ViewModels
-                        ucCompareInstance.ViewModel.SuppressLeftSuggestionsOnce();
-                        ucCompareInstance.ViewModel.LeftPath = session.Value.Left;
-                        ucCompareInstance.ViewModel.SuppressRightSuggestionsOnce();
-                        ucCompareInstance.ViewModel.RightPath = session.Value.Right;
-                        ucCompareInstance.ViewModel.SelectedAlgorithm = session.Value.Algorithm;
-
-                        // The logic to keep suggestions closed is now handled within PathInputViewModel
-                        // and CompareControl's LoadedLeftPath/LoadedRightPath setters via SuppressSuggestionsOnce().
-                        // Thus, the explicit setting of IsSuggestionsOpen to false here is no longer needed and is removed.
-
-                        _tabControl.Items.Add(newTab);
-                        _tabIdMap[tabName] = session.Key;
-
-                        if (executeCompare && executeCompareMethod != null)
-                        {
-                            _tabControl.SelectedItem = newTab;
-                            executeCompareMethod(ucCompareInstance);
-                        }
-                    }
-
-                    if (_tabControl.Items.Count > 0)
-                    {
-                        _tabControl.SelectedIndex = 0;
-                    }
-
-                    AddRecentSession(sessionFileName);
-                    updateStatus?.Invoke(string.Format(Properties.Resources.SessionLoaded, sessionFileName));
+                    updateStatus?.Invoke(string.Format(Properties.Resources.SessionFileEmpty, sessionFileName));
+                    return false;
                 }
+                while (_tabControl.Items.Count > 1)
+                {
+                    _tabControl.Items.RemoveAt(_tabControl.Items.Count - 1);
+                }
+                if (_tabControl.Items.Count == 1 && string.Equals((_tabControl.Items[0] as TabItem)?.Header?.ToString(), Properties.Resources.WelcomeTabName, StringComparison.OrdinalIgnoreCase))
+                {
+                    _tabControl.Items.Clear();
+                }
+
+                _tabIdMap.Clear();
+                _tabCounter = sessions.Count; // Set tab counter to the number of loaded tabs to avoid conflicts
+
+                int tabsCreated = 0;
+                foreach (var session in sessions)
+                {
+                    string leftPath = session.Value.Left ?? string.Empty;
+                    string rightPath = session.Value.Right ?? string.Empty;
+
+                    // Reject non-local (UNC) paths before anything touches them: auto-comparing a
+                    // session entry would SMB-authenticate against an attacker share (Net-NTLM2).
+                    string? rejectedPath = !SessionPathGuard.IsAllowedComparePath(leftPath) ? leftPath
+                        : !SessionPathGuard.IsAllowedComparePath(rightPath) ? rightPath : null;
+                    if (rejectedPath != null)
+                    {
+                        Log.Warning("Session entry '{TabName}' rejected: non-local path '{Path}'.", session.Value.TabName, rejectedPath);
+                        _userInteraction.ShowError(string.Format(Properties.Resources.ErrorSessionPathRejected, rejectedPath), Properties.Resources.ErrorTitle);
+                        updateStatus?.Invoke(string.Format(Properties.Resources.ErrorSessionPathRejected, rejectedPath));
+                        continue; // no tab, no auto-compare
+                    }
+
+                    string tabName = session.Value.TabName ?? $"Tab {++_tabCounter}"; // Use saved tab name or generate a new one
+                    CompareControl ucCompareInstance = _serviceProvider.GetRequiredService<CompareControl>();
+                    TabItem newTab = new()
+                    {
+                        Header = tabName,
+                        Content = ucCompareInstance
+                    };
+                    // Use the new properties to set paths, which will update the ViewModels
+                    ucCompareInstance.ViewModel.SuppressLeftSuggestionsOnce();
+                    ucCompareInstance.ViewModel.LeftPath = leftPath;
+                    ucCompareInstance.ViewModel.SuppressRightSuggestionsOnce();
+                    ucCompareInstance.ViewModel.RightPath = rightPath;
+                    ucCompareInstance.ViewModel.SelectedAlgorithm = session.Value.Algorithm;
+
+                    // The logic to keep suggestions closed is now handled within PathInputViewModel
+                    // and CompareControl's LoadedLeftPath/LoadedRightPath setters via SuppressSuggestionsOnce().
+                    // Thus, the explicit setting of IsSuggestionsOpen to false here is no longer needed and is removed.
+
+                    _tabControl.Items.Add(newTab);
+                    _tabIdMap[newTab] = session.Key;
+                    tabsCreated++;
+
+                    if (executeCompare && executeCompareMethod != null)
+                    {
+                        _tabControl.SelectedItem = newTab;
+                        executeCompareMethod(ucCompareInstance);
+                    }
+                }
+
+                if (_tabControl.Items.Count > 0)
+                {
+                    _tabControl.SelectedIndex = 0;
+                }
+
+                if (tabsCreated == 0)
+                {
+                    updateStatus?.Invoke(string.Format(Properties.Resources.SessionNoValidEntries, sessionFileName));
+                    return false;
+                }
+
+                AddRecentSession(sessionFileName);
+                updateStatus?.Invoke(string.Format(Properties.Resources.SessionLoaded, sessionFileName));
+                return true;
             }
             catch (FileNotFoundException)
             {
@@ -314,6 +343,7 @@ namespace dCompare.Session
             {
                 MessageBox.Show(string.Format(Properties.Resources.ErrorLoadingSession, ex.Message), Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 updateStatus?.Invoke(string.Format(Properties.Resources.ErrorLoadingSession, ex.Message));
+                return false;
             }
         }
     }

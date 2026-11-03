@@ -1,5 +1,6 @@
 using dCompare.Common;
 using System.ComponentModel;
+using System.Threading;
 
 namespace dCompare.FileOperation.Models
 {
@@ -16,6 +17,22 @@ namespace dCompare.FileOperation.Models
         public long FileSize { get; set; }
         public DateTime StartTime { get; set; }
         public SourceType SourceType { get; set; }
+
+        // The token that stops exactly this transfer. Set by whoever starts the work (linked to the batch
+        // token, so a batch/global cancel still wins) and read by the operation panel's per-row Cancel.
+        public CancellationTokenSource? Cancellation { get; set; }
+
+        public void CancelTransfer()
+        {
+            try
+            {
+                Cancellation?.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+                // The transfer already finished and disposed its token; nothing left to cancel.
+            }
+        }
 
         public FileOperationStatus Status
         {

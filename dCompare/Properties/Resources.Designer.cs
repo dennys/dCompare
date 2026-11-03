@@ -888,14 +888,6 @@ namespace dCompare.Properties {
             }
         }
         
-        /// <summary>
-        ///   查詢類似 Enable logging 的當地語系化字串。
-        /// </summary>
-        public static string EnableLogging {
-            get {
-                return ResourceManager.GetString("EnableLogging", resourceCulture);
-            }
-        }
         
         /// <summary>
         ///   查詢類似 Enable Parallel Scanning 的當地語系化字串。
@@ -1968,23 +1960,7 @@ namespace dCompare.Properties {
             }
         }
         
-        /// <summary>
-        ///   查詢類似 Log Level: 的當地語系化字串。
-        /// </summary>
-        public static string LogLevel {
-            get {
-                return ResourceManager.GetString("LogLevel", resourceCulture);
-            }
-        }
         
-        /// <summary>
-        ///   查詢類似 Log Settings 的當地語系化字串。
-        /// </summary>
-        public static string LogSettings {
-            get {
-                return ResourceManager.GetString("LogSettings", resourceCulture);
-            }
-        }
         
         /// <summary>
         ///   查詢類似 Match case 的當地語系化字串。
@@ -2490,14 +2466,6 @@ namespace dCompare.Properties {
             }
         }
         
-        /// <summary>
-        ///   查詢類似 Retention (days): 的當地語系化字串。
-        /// </summary>
-        public static string RetentionDays {
-            get {
-                return ResourceManager.GetString("RetentionDays", resourceCulture);
-            }
-        }
         
         /// <summary>
         ///   查詢類似 Retry 的當地語系化字串。
@@ -3469,6 +3437,105 @@ namespace dCompare.Properties {
         public static string ErrorFileTooLarge {
             get {
                 return ResourceManager.GetString("ErrorFileTooLarge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Session file is empty or contains no session data: {0} 的當地語系化字串。
+        /// </summary>
+        public static string SessionFileEmpty {
+            get {
+                return ResourceManager.GetString("SessionFileEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Session path was not loaded because only local paths are allowed: {0} 的當地語系化字串。
+        /// </summary>
+        public static string ErrorSessionPathRejected {
+            get {
+                return ResourceManager.GetString("ErrorSessionPathRejected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 No session entries could be loaded from {0} 的當地語系化字串。
+        /// </summary>
+        public static string SessionNoValidEntries {
+            get {
+                return ResourceManager.GetString("SessionNoValidEntries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 The default session file must be a local path under the user profile; it was not loaded: {0} 的當地語系化字串。
+        /// </summary>
+        public static string ErrorDefaultSessionFileNotLocal {
+            get {
+                return ResourceManager.GetString("ErrorDefaultSessionFileNotLocal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Error copying items 的當地語系化字串。
+        /// </summary>
+        public static string ErrorCopyingItems {
+            get {
+                return ResourceManager.GetString("ErrorCopyingItems", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Error moving items 的當地語系化字串。
+        /// </summary>
+        public static string ErrorMovingItems {
+            get {
+                return ResourceManager.GetString("ErrorMovingItems", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Operation completed successfully. 的當地語系化字串。
+        /// </summary>
+        public static string OperationCompletedSuccessfully {
+            get {
+                return ResourceManager.GetString("OperationCompletedSuccessfully", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Files inside an archive cannot be copied, moved, deleted or renamed; only the archive files themselves can be changed. 的當地語系化字串。
+        /// </summary>
+        public static string ArchiveEntryOperationNotSupported {
+            get {
+                return ResourceManager.GetString("ArchiveEntryOperationNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Error comparing images: {0} 的當地語系化字串。
+        /// </summary>
+        public static string ErrorComparingImages {
+            get {
+                return ResourceManager.GetString("ErrorComparingImages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Could not copy to the clipboard: {0} 的當地語系化字串。
+        /// </summary>
+        public static string ErrorCopyingToClipboard {
+            get {
+                return ResourceManager.GetString("ErrorCopyingToClipboard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Welcome 的當地語系化字串。
+        /// </summary>
+        public static string WelcomeTabName {
+            get {
+                return ResourceManager.GetString("WelcomeTabName", resourceCulture);
             }
         }
     }

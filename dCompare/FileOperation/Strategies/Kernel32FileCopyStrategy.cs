@@ -32,6 +32,18 @@ public class Kernel32FileCopyStrategy : IFileOperationStrategy
 
     private const int ErrorFileExists = 80; // ERROR_FILE_EXISTS, what CopyFileEx reports for a refused overwrite.
 
+    // CopyFileEx is raw P/Invoke (no longPathAware manifest), so MAX_PATH (260) applies to it even
+    // though the .NET File APIs used elsewhere handle long paths automatically. `\\?\\` disables
+    // normalization, so the path must first be made absolute, qualified, and backslash-form.
+    // The cut-off is 259, not 260: MAX_PATH counts the terminating null, so a path of exactly 260
+    // characters cannot be opened and has to take the prefixed branch too.
+    internal static string ToKernel32Path(string path)
+    {
+        if (path.Length < 260 || path.StartsWith(@"\\?\\")) return path;
+        string full = Path.GetFullPath(path).Replace('/', '\\');
+        return full.StartsWith(@"\\") ? $"\\\\?\\UNC{full[1..]}" : $"\\\\?\\{full}";
+    }
+
     public Task CopyFileAsync(string sourceFile, string destFile, bool overwrite, CopyProgressCallback? progressCallback, CancellationToken cancellationToken)
     {
         return Task.Run(() =>
@@ -79,7 +91,7 @@ public class Kernel32FileCopyStrategy : IFileOperationStrategy
                         FileOperationRetry.TryDelete(tempFile);
 
                         // Read the code before anything else touches the thread's last error (File.Delete does).
-                        if (!CopyFileEx(sourceFile, tempFile, routine, nint.Zero, ref cancel, CopyFileFlags.COPY_FILE_FAIL_IF_EXISTS))
+                        if (!CopyFileEx(ToKernel32Path(sourceFile), ToKernel32Path(tempFile), routine, nint.Zero, ref cancel, CopyFileFlags.COPY_FILE_FAIL_IF_EXISTS))
                         {
                             throw new Win32Exception(Marshal.GetLastWin32Error());
                         }

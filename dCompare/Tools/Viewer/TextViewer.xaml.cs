@@ -14,10 +14,10 @@ namespace dCompare.Tools.Viewer
         private readonly TextViewerViewModel _viewModel;
         private readonly SearchPanel? searchPanel;
 
-        public TextViewer(IConfigurationService configurationService)
+        public TextViewer(IConfigurationService configurationService, IUserInteractionService userInteractionService)
         {
             InitializeComponent();
-            _viewModel = new TextViewerViewModel(configurationService);
+            _viewModel = new TextViewerViewModel(configurationService, userInteractionService);
             DataContext = _viewModel;
             _viewModel.GoToLineRequested += (s, line) => HighlightLine(line);
             _viewModel.PropertyChanged += ViewModel_PropertyChanged;
@@ -46,7 +46,7 @@ namespace dCompare.Tools.Viewer
 
         public void LoadFile(string filePath)
         {
-            _viewModel.LoadFile(filePath);
+            _ = _viewModel.LoadFile(filePath);
             textEditor.Load(filePath);
         }
 

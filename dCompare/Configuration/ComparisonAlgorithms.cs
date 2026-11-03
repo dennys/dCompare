@@ -58,12 +58,5 @@
                     ComparisonPercentage = 100
                 }
             };
-
-        // Expose enabled algorithms for ComboBox binding
-        public static List<KeyValuePair<string, ComparisonAlgorithm>> EnabledAlgorithms =>
-            AlgorithmSettings
-                .Where(kvp => kvp.Value.IsEnabled)
-                .Select(kvp => new KeyValuePair<string, ComparisonAlgorithm>(kvp.Value.Description, kvp.Key))
-                .ToList();
     }
 }

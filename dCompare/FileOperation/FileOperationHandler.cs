@@ -35,6 +35,11 @@ namespace dCompare.FileOperation
         private CancellationTokenSource? _batchCts;
         private int _activeBatches;
 
+        // A selection can hold thousands of rows and every one of them used to start its own task, so a large
+        // batch opened thousands of file handles at once and starved the thread pool. The rows still all queue
+        // up front for the transfer panel; only the actual I/O is throttled.
+        private readonly SemaphoreSlim _transferGate = new(4, 4);
+
         public void Cancel()
         {
             lock (_batchGate)
@@ -83,6 +88,8 @@ namespace dCompare.FileOperation
 
             foreach (var node in selectedItems)
             {
+                if (node.IsArchiveEntry) continue;
+
                 string? sourcePath = toLeft ? node.RightNode?.FullPath : node.LeftNode?.FullPath;
                 if (string.IsNullOrEmpty(sourcePath)) continue;
 
@@ -101,6 +108,8 @@ namespace dCompare.FileOperation
             List<(string Path, SourceType Type)> paths = new();
             foreach (var node in selectedItems)
             {
+                if (node.IsArchiveEntry) continue;
+
                 string? path = isLeft ? node.LeftNode?.FullPath : node.RightNode?.FullPath;
                 if (!string.IsNullOrEmpty(path))
                 {
@@ -109,6 +118,8 @@ namespace dCompare.FileOperation
             }
             return paths;
         }
+
+        public static bool ContainsArchiveEntry(IEnumerable<TreeNode> selectedItems) => selectedItems.Any(node => node.IsArchiveEntry);
 
         public async Task DeleteAsync(List<(string Path, SourceType Type)> items)
         {
@@ -122,7 +133,9 @@ namespace dCompare.FileOperation
             if (_configService != null && _userInteraction != null)
             {
                 AppConfiguration config = await _configService.LoadConfigurationAsync();
-                bool confirmDelete = config.Options?.Confirmation.DeleteFile == true;
+                // Same null fallback as the copy/move gate: DeleteFile defaults to true, so a config without an
+                // Options section must still prompt rather than delete silently.
+                bool confirmDelete = (config.Options?.Confirmation ?? new ConfirmationOptions()).DeleteFile;
                 if (confirmDelete && !_userInteraction.ShowConfirmation(BuildDeleteMessage(items), Properties.Resources.ConfirmOperation))
                 {
                     Log.Information("Delete of {Count} item(s) cancelled by the user.", items.Count);
@@ -142,7 +155,9 @@ namespace dCompare.FileOperation
                 foreach (var item in items)
                 {
                     string jobId = Guid.NewGuid().ToString();
-                    var tcs = new TaskCompletionSource<bool>();
+                    // One token per row (linked to the batch token), so the panel's per-row Cancel stops
+                    // exactly this transfer while the rest of the batch keeps running.
+                    var itemCts = CancellationTokenSource.CreateLinkedTokenSource(token);
 
                     var transfer = new FileTransfer
                     {
@@ -153,26 +168,30 @@ namespace dCompare.FileOperation
                         Status = FileOperationStatus.Queued,
                         FileSize = 0,
                         SourceType = item.Type,
-                        StartTime = DateTime.Now
+                        StartTime = DateTime.Now,
+                        Cancellation = itemCts
                     };
 
                     _messenger.Send(new QueueTransferMessage(transfer));
 
                     tasks.Add(Task.Run(async () =>
                     {
+                        bool holdingSlot = false;
                         try
                         {
+                            await _transferGate.WaitAsync(itemCts.Token);
+                            holdingSlot = true;
+
                             var progress = new Progress<OperationProgress>(p =>
                             {
                                 transfer.Progress = p.Percentage / 100.0;
                                 transfer.Status = FileOperationStatus.Transferring;
                             });
 
-                            OperationResult result = await _fileManager.DeleteAsync(item.Path, progress, token);
+                            OperationResult result = await _fileManager.DeleteAsync(item.Path, progress, itemCts.Token);
                             if (result.SuccessCount > 0)
                             {
-                                _messenger.Send(new CompleteTransferMessage(transfer, true, "Operation completed successfully."));
-                                tcs.TrySetResult(true);
+                                _messenger.Send(new CompleteTransferMessage(transfer, true, Properties.Resources.OperationCompletedSuccessfully));
                             }
                             else
                             {
@@ -183,12 +202,16 @@ namespace dCompare.FileOperation
                         {
                             // A cancelled item is a reported outcome, not a batch error: no error dialog afterwards.
                             _messenger.Send(new CompleteTransferMessage(transfer, false, Properties.Resources.TransferCanceled, cancelled: true));
-                            tcs.TrySetResult(true);
                         }
                         catch (Exception ex)
                         {
                             _messenger.Send(new CompleteTransferMessage(transfer, false, ex.Message));
-                            tcs.TrySetException(ex);
+                            throw;
+                        }
+                        finally
+                        {
+                            if (holdingSlot) _transferGate.Release();
+                            itemCts.Dispose();
                         }
                     }));
                 }
@@ -236,7 +259,9 @@ namespace dCompare.FileOperation
                 foreach (var item in items)
                 {
                     string jobId = Guid.NewGuid().ToString();
-                    var tcs = new TaskCompletionSource<bool>();
+                    // One token per row (linked to the batch token), so the panel's per-row Cancel stops
+                    // exactly this transfer while the rest of the batch keeps running.
+                    var itemCts = CancellationTokenSource.CreateLinkedTokenSource(token);
 
                     var transfer = new FileTransfer
                     {
@@ -247,15 +272,20 @@ namespace dCompare.FileOperation
                         Status = FileOperationStatus.Queued,
                         FileSize = Directory.Exists(item.Source) ? 0 : new FileInfo(item.Source).Length,
                         SourceType = item.Type,
-                        StartTime = DateTime.Now
+                        StartTime = DateTime.Now,
+                        Cancellation = itemCts
                     };
 
                     _messenger.Send(new QueueTransferMessage(transfer));
 
                     tasks.Add(Task.Run(async () =>
                     {
+                        bool holdingSlot = false;
                         try
                         {
+                            await _transferGate.WaitAsync(itemCts.Token);
+                            holdingSlot = true;
+
                             var progress = new Progress<OperationProgress>(p =>
                             {
                                 transfer.Progress = p.Percentage / 100.0;
@@ -267,13 +297,12 @@ namespace dCompare.FileOperation
                             });
 
                             OperationResult result = operation == FileOperationTypes.Copy
-                                ? await _fileManager.CopyAsync(item.Source, item.TargetPath, overwrites, progress, token)
-                                : await _fileManager.MoveAsync(item.Source, item.TargetPath, overwrites, progress, token);
+                                ? await _fileManager.CopyAsync(item.Source, item.TargetPath, overwrites, progress, itemCts.Token)
+                                : await _fileManager.MoveAsync(item.Source, item.TargetPath, overwrites, progress, itemCts.Token);
 
                             if (result.SuccessCount > 0)
                             {
-                                _messenger.Send(new CompleteTransferMessage(transfer, true, "Operation completed successfully."));
-                                tcs.TrySetResult(true);
+                                _messenger.Send(new CompleteTransferMessage(transfer, true, Properties.Resources.OperationCompletedSuccessfully));
                             }
                             else
                             {
@@ -284,12 +313,16 @@ namespace dCompare.FileOperation
                         {
                             // A cancelled item is a reported outcome, not a batch error: no error dialog afterwards.
                             _messenger.Send(new CompleteTransferMessage(transfer, false, Properties.Resources.TransferCanceled, cancelled: true));
-                            tcs.TrySetResult(true);
                         }
                         catch (Exception ex)
                         {
                             _messenger.Send(new CompleteTransferMessage(transfer, false, ex.Message));
-                            tcs.TrySetException(ex);
+                            throw;
+                        }
+                        finally
+                        {
+                            if (holdingSlot) _transferGate.Release();
+                            itemCts.Dispose();
                         }
                     }));
                 }
@@ -352,25 +385,25 @@ namespace dCompare.FileOperation
         public async Task CopyToLeft(List<TreeNode> selectedItems, string destDir)
         {
             var items = GetItemsForTransfer(selectedItems, toLeft: true, destDir);
-            await ExecuteTransferAsync(items, FileOperationTypes.Copy, destDir, "Error copying items");
+            await ExecuteTransferAsync(items, FileOperationTypes.Copy, destDir, Properties.Resources.ErrorCopyingItems);
         }
 
         public async Task CopyToRight(List<TreeNode> selectedItems, string destDir)
         {
             var items = GetItemsForTransfer(selectedItems, toLeft: false, destDir);
-            await ExecuteTransferAsync(items, FileOperationTypes.Copy, destDir, "Error copying items");
+            await ExecuteTransferAsync(items, FileOperationTypes.Copy, destDir, Properties.Resources.ErrorCopyingItems);
         }
 
         public async Task MoveToLeft(List<TreeNode> selectedItems, string destDir)
         {
             var items = GetItemsForTransfer(selectedItems, toLeft: true, destDir);
-            await ExecuteTransferAsync(items, FileOperationTypes.Move, destDir, "Error moving items");
+            await ExecuteTransferAsync(items, FileOperationTypes.Move, destDir, Properties.Resources.ErrorMovingItems);
         }
 
         public async Task MoveToRight(List<TreeNode> selectedItems, string destDir)
         {
             var items = GetItemsForTransfer(selectedItems, toLeft: false, destDir);
-            await ExecuteTransferAsync(items, FileOperationTypes.Move, destDir, "Error moving items");
+            await ExecuteTransferAsync(items, FileOperationTypes.Move, destDir, Properties.Resources.ErrorMovingItems);
         }
 
         /// <summary>

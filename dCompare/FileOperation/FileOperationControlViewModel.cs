@@ -77,12 +77,21 @@ namespace dCompare.FileOperation
         [RelayCommand(CanExecute = nameof(CanCancelTransfer))]
         private void OnCancelTransfer(object parameter)
         {
-            // shortcut: the manager owns one stop request for all queued work, so right-clicking one row
-            // cancels the whole queue. Upgrade when each transfer gets its own token.
-            if (parameter is FileTransfer)
+            // Per-row cancel stops exactly this transfer (its own token, linked to the batch). Falling back
+            // to the global _fileManager.Cancel() would be the bug: a single-row right-click aborting the
+            // whole queue. The global stop stays on the big Cancel button, where it is what the user asked for.
+            if (parameter is not FileTransfer transfer)
             {
-                _fileManager.Cancel();
+                return;
             }
+
+            if (transfer.Cancellation == null)
+            {
+                Log.Warning("Transfer {JobId} has no cancellation token; ignoring the per-row cancel.", transfer.JobId);
+                return;
+            }
+
+            transfer.CancelTransfer();
         }
 
         private bool CanCancelTransfer(object parameter) => parameter is FileTransfer;
@@ -196,6 +205,8 @@ namespace dCompare.FileOperation
         {
             Log.Information($"Start to cp/mv {source} to {target}");
             string jobId = Guid.NewGuid().ToString();
+            // Own token per row so the panel's per-row Cancel stops exactly this transfer, not the queue.
+            var transferCts = new CancellationTokenSource();
             var transfer = new FileTransfer
             {
                 JobId = jobId,
@@ -204,7 +215,8 @@ namespace dCompare.FileOperation
                 Target = target,
                 Status = FileOperationStatus.Queued,
                 FileSize = GetItemSize(source),
-                SourceType = sourceType
+                SourceType = sourceType,
+                Cancellation = transferCts
             };
 
             App.Current.Dispatcher.Invoke(() => QueuedTransfers.Add(transfer));
@@ -231,11 +243,11 @@ namespace dCompare.FileOperation
                     OperationResult result;
                     if (isCopy)
                     {
-                        result = await _fileManager.CopyAsync(source, target, overwrite, progress);
+                        result = await _fileManager.CopyAsync(source, target, overwrite, progress, transferCts.Token);
                     }
                     else
                     {
-                        result = await _fileManager.MoveAsync(source, target, overwrite, progress);
+                        result = await _fileManager.MoveAsync(source, target, overwrite, progress, transferCts.Token);
                     }
 
                     if (result.SuccessCount > 0)
@@ -274,6 +286,10 @@ namespace dCompare.FileOperation
                         FailedTransfers.Add(transfer);
                         LogTransfer(transfer);
                     });
+                }
+                finally
+                {
+                    transferCts.Dispose();
                 }
             });
             return jobId;

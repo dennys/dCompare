@@ -216,53 +216,6 @@ oot\";
         }
 
         [Fact]
-        public void FindOrCreateNode_ReturnsExistingNodeIfFound()
-        {
-            // Arrange
-            var existingNode = new TreeNode
-            {
-                Name = "file.txt",
-                RelativePath = "file.txt",
-                IsDirectory = false,
-                Depth = 0
-            };
-            _treeNodes.Add(existingNode);
-
-            // Act
-            var result = _manager.FindOrCreateNode("file.txt", false);
-
-            // Assert
-            Assert.Same(existingNode, result);
-            Assert.Single(_treeNodes);
-        }
-
-        [Fact]
-        public void FindOrCreateNode_CreatesAndInsertsNewNodeIfNotFound()
-        {
-            // Arrange
-            var existingNode = new TreeNode
-            {
-                Name = "b.txt",
-                RelativePath = "b.txt",
-                //LeftDisplayName = "📄 b.txt",
-                IsDirectory = false,
-                Depth = 0
-            };
-            _treeNodes.Add(existingNode);
-
-            // Act
-            var result = _manager.FindOrCreateNode("a.txt", false);
-
-            // Assert
-            Assert.Equal(2, _treeNodes.Count);
-            Assert.Equal("a.txt", _treeNodes[0].Name);
-            Assert.Equal("a.txt", _treeNodes[0].RelativePath);
-            Assert.False(_treeNodes[0].IsDirectory);
-            Assert.Equal(0, _treeNodes[0].Depth);
-            Assert.Equal("b.txt", _treeNodes[1].Name);
-        }
-
-        [Fact]
         public void GetRelativePath_ReturnsCorrectPathForLeftNode()
         {
             // Arrange

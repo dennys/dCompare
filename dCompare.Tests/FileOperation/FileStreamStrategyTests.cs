@@ -29,6 +29,9 @@ namespace dCompare.Tests.FileOperation
         {
             if (Directory.Exists(_testRoot))
             {
+                // Recursive delete cannot remove read-only files (the attribute tests leave some).
+                foreach (var file in Directory.GetFiles(_testRoot, "*", SearchOption.AllDirectories))
+                    File.SetAttributes(file, FileAttributes.Normal);
                 Directory.Delete(_testRoot, true);
             }
         }
@@ -162,6 +165,38 @@ namespace dCompare.Tests.FileOperation
 
             // Assert
             Assert.False(Directory.Exists(dirToDelete));
+        }
+
+        [Fact]
+        public async Task CopyFileAsync_ReadOnlySource_DestinationKeepsReadOnlyAttribute()
+        {
+            // Arrange
+            File.SetAttributes(_sourceFile, FileAttributes.ReadOnly);
+            var strategy = new FileStreamStrategy();
+
+            // Act
+            await strategy.CopyFileAsync(_sourceFile, _destFile, false, null, CancellationToken.None);
+
+            // Assert
+            Assert.True((File.GetAttributes(_destFile) & FileAttributes.ReadOnly) != 0);
+        }
+
+        [Fact]
+        public async Task CopyFileAsync_SecondCopyOverReadOnlyDestination_Succeeds()
+        {
+            // Arrange: first copy makes the destination read-only (source is read-only);
+            // a second copy to the same path must not fail with ERROR_ACCESS_DENIED.
+            File.SetAttributes(_sourceFile, FileAttributes.ReadOnly);
+            var strategy = new FileStreamStrategy();
+            await strategy.CopyFileAsync(_sourceFile, _destFile, false, null, CancellationToken.None);
+            Assert.True((File.GetAttributes(_destFile) & FileAttributes.ReadOnly) != 0);
+
+            string secondSource = Path.Combine(_testRoot, "second.txt");
+            File.WriteAllText(secondSource, "second content");
+
+            // Act & Assert
+            await strategy.CopyFileAsync(secondSource, _destFile, true, null, CancellationToken.None);
+            Assert.Equal("second content", File.ReadAllText(_destFile));
         }
     }
 

@@ -1,5 +1,4 @@
 ﻿using dCompare.Common;
-using Microsoft.Extensions.Configuration;
 using Serilog;
 using System.IO;
 using System.Text.Json;
@@ -14,7 +13,6 @@ namespace dCompare.Configuration
     {
         private const string jsonFileName = Constant.DefaultConfigurationFile;
         private string _configPath;
-        private IConfigurationRoot _configuration;
         private static readonly JsonSerializerOptions _serializerOptions = new()
         {
             WriteIndented = true,
@@ -33,16 +31,7 @@ namespace dCompare.Configuration
             _configPath = string.Equals(configFileName, jsonFileName, StringComparison.OrdinalIgnoreCase)
                 ? AppPaths.ResolveExisting(jsonFileName)
                 : Path.GetFullPath(configFileName);
-            _configuration = BuildConfiguration(_configPath);
         }
-
-        // Base path + file name (not one absolute path) so the reload watcher is scoped to the folder,
-        // not to the whole drive.
-        private static IConfigurationRoot BuildConfiguration(string configPath) =>
-            new ConfigurationBuilder()
-                .SetBasePath(Path.GetDirectoryName(configPath)!)
-                .AddJsonFile(Path.GetFileName(configPath), optional: true, reloadOnChange: true)
-                .Build();
 
         /// <summary>
         /// Loads the application configuration from the JSON file.
@@ -132,8 +121,6 @@ namespace dCompare.Configuration
                 await WriteAtomicAsync(fallbackPath, jsonString);
                 _configPath = fallbackPath;
             }
-            // Trigger reload to ensure configuration is updated
-            _configuration = BuildConfiguration(_configPath);
         }
 
         private static async Task WriteAtomicAsync(string path, string jsonString)
@@ -145,120 +132,6 @@ namespace dCompare.Configuration
             string tempPath = path + ".tmp";
             await File.WriteAllTextAsync(tempPath, jsonString);
             File.Move(tempPath, path, true);
-        }
-
-        /// <summary>
-        /// Gets all enabled tools that support the given operation and extension.
-        /// </summary>
-        /// <param name="operation">The operation to check (e.g., "view" or "diff").</param>
-        /// <param name="extension">The file extension to check (e.g., ".txt" or ".png").</param>
-        /// <returns>An enumerable of supported ToolConfiguration objects.</returns>
-        public IEnumerable<ToolOptions> GetSupportedTools(ToolOperationTypes operation, string extension)
-        {
-            return _configuration.GetSection("Tools").Get<Dictionary<string, ToolOptions>>()?.Values
-                .Where(tool => tool.Enabled &&
-                              tool.SupportsOperation(operation) &&
-                              tool.SupportsExtension(extension)) ?? Enumerable.Empty<ToolOptions>();
-        }
-
-        /// <summary>
-        /// Gets the file type mapping for the given extension.
-        /// </summary>
-        /// <param name="extension">The file extension to check (e.g., ".txt" or ".png").</param>
-        /// <returns>The FileTypeMappingConfiguration for the extension, or null if not found.</returns>
-        public FileTypeMappingOptions? GetFileTypeMapping(string extension)
-        {
-            return _configuration.GetSection("FileTypeMapping").Get<Dictionary<string, FileTypeMappingOptions>>()?.Values
-                .FirstOrDefault(mapping => mapping.Extensions.Contains(extension, StringComparer.OrdinalIgnoreCase));
-        }
-
-        /// <summary>
-        /// Gets the default tool for the given operation and extension.
-        /// </summary>
-        /// <param name="operation">The operation to check (e.g., "view" or "diff").</param>
-        /// <param name="extension">The file extension to check (e.g., ".txt" or ".png").</param>
-        /// <returns>The default ToolConfiguration, or null if not found.</returns>
-        public ToolOptions? GetDefaultTool(ToolOperationTypes operation, string extension)
-        {
-            var fileMapping = GetFileTypeMapping(extension);
-            if (fileMapping == null) return null;
-
-            var toolName = operation switch
-            {
-                ToolOperationTypes.Diff => fileMapping.DefaultDiffTool,
-                ToolOperationTypes.View => fileMapping.DefaultViewTool,
-                _ => null
-            };
-
-            var tools = _configuration.GetSection("Tools").Get<Dictionary<string, ToolOptions>>();
-            return toolName != null && tools != null && tools.TryGetValue(toolName, out var tool) ? tool : null;
-        }
-
-        /// <summary>
-        /// Gets preferred tools for the given operation and extension (in priority order).
-        /// </summary>
-        /// <param name="operation">The operation to check (e.g., "view" or "diff").</param>
-        /// <param name="extension">The file extension to check (e.g., ".txt" or ".png").</param>
-        /// <returns>An enumerable of preferred ToolConfiguration objects in priority order.</returns>
-        public IEnumerable<ToolOptions> GetPreferredTools(ToolOperationTypes operation, string extension)
-        {
-            var fileMapping = GetFileTypeMapping(extension);
-            if (fileMapping == null) yield break;
-
-            List<string> preferredToolNames;
-            if (operation == ToolOperationTypes.Diff)
-            {
-                preferredToolNames = fileMapping.PreferredTools.Diff;
-            }
-            else if (operation == ToolOperationTypes.View)
-            {
-                preferredToolNames = fileMapping.PreferredTools.View;
-            }
-            else
-            {
-                preferredToolNames = Array.Empty<string>().ToList();
-            }
-
-            var tools = _configuration.GetSection("Tools").Get<Dictionary<string, ToolOptions>>();
-            if (tools == null) yield break;
-
-            foreach (var toolName in preferredToolNames)
-            {
-                if (tools.TryGetValue(toolName, out var tool) &&
-                    tool.Enabled &&
-                    tool.SupportsOperation(operation) &&
-                    tool.SupportsExtension(extension))
-                {
-                    yield return tool;
-                }
-            }
-        }
-        public IEnumerable<ToolOptions> GetAllToolsForOperation(ToolOperationTypes operation)
-        {
-            var tools = _configuration.GetSection("Tools").Get<Dictionary<string, ToolOptions>>();
-            return tools?.Values
-                .Where(tool => tool.Enabled && tool.SupportsOperation(operation))
-                ?? Enumerable.Empty<ToolOptions>();
-        }
-        public IEnumerable<string> GetSupportedExtensions(string? toolName = null, ToolOperationTypes? operation = null)
-        {
-            var tools = _configuration.GetSection("Tools").Get<Dictionary<string, ToolOptions>>();
-            if (tools == null) yield break;
-
-            foreach (var tool in tools.Values)
-            {
-                if (toolName != null && tool.Name != toolName) continue;
-                if (operation != null && !tool.SupportsOperation((ToolOperationTypes)operation)) continue;
-                foreach (var ext in tool.SupportedExtensions)
-                {
-                    yield return ext;
-                }
-            }
-        }
-
-        public IConfiguration GetConfiguration()
-        {
-            return _configuration;
         }
     }
 }
