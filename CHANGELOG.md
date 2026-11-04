@@ -157,6 +157,27 @@ DiffPlex 1.8.0→1.9.0、DiffPlex.Wpf 1.4.0→1.9.1、CommunityToolkit.Mvvm 8.4.
 ### 精簡
 `FileOperations.cs` 78 行、記錄設定頁與三個設定類別約 80 行、死的 Host 設定來源 4 行、死的 `EnabledAlgorithms` 6 行、`Name1`/`Color1`/`Bitmap1`/`Icon1` 死資源鍵 × 3 語言、測試檔內重複宣告的 `IFileOperationStrategy`（`FileManagerTests` 用的是正牌那個）；`DefaultConfiguration` 註解「five」改 four。資源鍵 394 → 386（三種語言一致，Designer 同步）。
 
+## 第六輪（2026-11-04）：覆核外部 LLM review，修 3 項（品質優先，未上線）
+
+> 基線：build **0 error**、測試 **219 → 230 全綠**。外部 review 提的 6 項中，#2（`AvailableAlgorithms` 整包 new 導致 UI 不重整）、#4（`ImageComparer` 單像素觸發）、#6（計數與掃描平行造成磁碟抖動）經查**不成立或影響被誇大**，未照其建議改；真正該修的 3 項是它沒找到的（見下）。
+
+### 必須修
+- **預設複製路徑覆寫唯讀目標直接失敗**（review 只看到已經修好的那個死類別）：正式 DI 註冊的是 `Kernel32FileCopyStrategy`（`App.xaml.cs`），它 `File.Move(temp, dest, true)` 完全沒處理唯讀；`FileStreamStrategy`（有處理，但**全庫只有測試會建**）才有那段剝 `ReadOnly` 的程式。**實測**（.NET 8 最小重現）：`MOVE FAILED: UnauthorizedAccessException`，目標内容与屬性不變。同一根因也打在兩個 `MoveFile`（共 4 個呼叫點）。改：抽出 `FileOperationRetry.MoveWithOverwrite()` 為唯一替換入口 — 為 `MoveFileEx` 暫時剝 `ReadOnly`，**move 沒發生就用 `try/catch` 還原**（實測：檔被 `FileShare.None` 鎖住時 `SetAttributes` 仍可用，故還原可行），四個呼叫點全改走它。
+- **唯讀來源讓整個資料夾的後續複製永久壞掉**：`CopyFileEx` 把來源的 `ReadOnly` 一起蓋到暫存檔，而 `File.Delete` 拒絕唯讀檔（實測 `UnauthorizedAccessException`）→ `TryDelete` 靜默留下它、而暫存檔名固定 → 之後同一對複製全部死在 `ERROR_FILE_EXISTS`。改：`TryDelete` 先清屬性再刪（只用在我們自己的 `.dCompare.tmp`）。
+- **切換分頁會偷偷改回使用者選的演算法**（review #2 指到同一個方法卻判錯方向）：`CompareControl_Loaded` 是唯一載入點，而 MainWindow 的 TabControl 樣板用 `<ContentPresenter ContentSource="SelectedContent"/>` → 未選取的分頁不在視覺樹裡，切回來就再觸發 `Loaded` → 多讀一次 `dCompare.json`、`SelectedAlgorithm` 無條件重置，設定檔損毀時每次切換再彈一次 MessageBox。 reviewer 建議的 `Clear()+Add()` 對這些無效（WPF 在 `PropertyChanged` 時會自己換掉 `ItemsSource` 的訂閱，整包換掉是合法慣用法）。改：`InitializeAsync()` 由**建構子**讀一次設定，設定變更改由 `SettingsViewModel` 存檔後發 `OptionsSavedMessage` 通知（`WeakReferenceMessenger`，既有房屋慣例）；`LoadAlgorithms()` 重新整理時**保留使用者仍可用的選擇**，只有被停用/從未選過才退回預設。順帶：`_comparer` 原本是 `new DirectoryComparer()`，所以 Options | Compare 的 `ParallelOptions` 與 `ComparisonPercentage` 對實際比對**完全沒效果**，現在同一份設定也拿來建 comparer。
+
+### 品質（未上線，一次做到好）
+- **進度條在大樹前半段完全靜止**：`totalDirs` 只在計數走查結尾用一次 `Interlocked.Add` 發佈，而計數與掃描平行 → 使用者看著確定態的 0% 像當機。不是 review 說的磁碟抖動問題（同三棵樹，大部分命中快取；而且「非 SSD 就循序計數」會把 `DirectoryComparerProgressTests` 剛鎖住的 bug 帶回來）。改：回報型別換成 `DirectoryComparer.CompareProgress(double? Fraction, int DirectoriesFound)` —`Fraction == null` 代表「老實說還沒有百分比」，ViewModel 對應 `IsCountingDirectories`（ProgressBar `IsIndeterminate`）+「掃描中…已發現 N 個資料夾」；真實分數一旦抵達就不會退回不確定態（計數較晚抵達也不會把進度條降級）。計數另用獨立暫存計數器每 64 個資料夾發佈一次，**不碰 `totalDirs`**（否則分母變部分值又會觸發 100% 那個 bug）。自我驗證：新測試第一次跑就抓到我把子目錄計了兩次（父層 + 遞迴總數），修正為「誰列出誰發佈」。
+- 新資源鍵 `ComparingProgressFormat`／`ComparingCountingFormat` × 3 語言（原進度文字是 XAML 裡的硬編碼英文）。`AvailableAlgorithms` 改 `[ObservableProperty]`（刪掉手動 `OnPropertyChanged`）。
+
+### 測試
++11 支：`FileOperationRetryTests`（唯讀目標可替換、move 失敗屬性還原且暫存檔不被吃掉、唯讀暫存檔可清）、`Kernel32FileCopyStrategyTests`（覆寫唯讀目標、唯讀來源+鎖住目標不留暫存檔、move 覆寫唯讀目標）、`CompareControlViewModelTests`（重新整理保留/退回使用者選擇 ×2、null 分數維持不確定態、分數抵達後不被降級）、`DirectoryComparerProgressTests`（計數階段回報確切總數 80 且單調不減）。`Kernel32FileCopyStrategyTests.Dispose` 補先清屬性（遞迴刪除拒絕唯讀檔）。
+
+### 本輪刻意未做
+- `ImageComparer` 區塊內單點觸發加「> N 個像素」閥值：它只喂 ImageViewer 的差異覆蓋層（不進 `DetermineStatus`），誤判的代價是多個紅框；新參數無人要求、UI 也沒有暴露。
+- 「非 SSD 路徑循序計數」：需要 per-volume 的 `IOCTL_STORAGE_QUERY_PROPERTY` 外加 SMB/ReFS/虛擬磁碟特例，只為了進度條；而且會回復成修正前的行為。既有退路是 `ScanMethod.ParallelOptions`。
+- commit 顆粒度：原 commit 已是歷史，重寫 4,582 行的 commit 風險大於價值（`b9a8c10` 也是同一形況）。
+
 ## 已知取捨（刻意保留，非欠账）
 - 覆寫複製的暫存檔 `<dest>.dCompare.tmp` 與目標**同目錄**：跨磁區 `File.Move` 非原子（更危險）；`+13` 字元會把 `CopyFileEx`（無 long-path）可用路徑窗口縮短 13 字元（併入 todo 長路徑項）。
 - 外部工具啟動改 `UseShellExecute = false`：只寫 `notepad++.exe` 這類靠登錄解析的名字，現在必須在 app 目錄/System32/Program Files/PATH 找得到。

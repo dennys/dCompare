@@ -325,6 +325,12 @@ Ctrl+W: 關閉目前標籤</value>
   <data name="ComparingTabHeader" xml:space="preserve">
     <value>(比較中...) {0}</value>
   </data>
+  <data name="ComparingProgressFormat" xml:space="preserve">
+    <value>比較中：{0:F0}%</value>
+  </data>
+  <data name="ComparingCountingFormat" xml:space="preserve">
+    <value>掃描中...已發現 {0} 個資料夾</value>
+  </data>
   <data name="SelectFolderOrArchiveTitle" xml:space="preserve">
     <value>選取資料夾或封存檔案</value>
   </data>

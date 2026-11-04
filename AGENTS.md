@@ -138,7 +138,13 @@ docs/                         README screenshots only
   itself — do not remove those two guards on the theory that `GetItemsFor*` covers everything: their path cannot be
   opened, so a delete was a silent no-op the transfer panel still reported as successful.
 - **Destructive operations are guarded** — do not undo these:
-  copies write `<dest>.dCompare.tmp` then `File.Move` (never truncate the destination in place);
+  copies write `<dest>.dCompare.tmp` then `FileOperationRetry.MoveWithOverwrite` (never truncate the destination in
+  place). That helper is the only legal replacement call: `MoveFileEx` refuses a read-only target (`ERROR_ACCESS_DENIED`,
+  which is why "copy over a read-only file" failed outright), so it lifts `ReadOnly` for the move and puts the bit
+  **back when the move did not happen** — a failed copy must not leave the user's file writable. `TryDelete` clears
+  the staging file's attributes first, because `File.Delete` refuses a read-only file, `CopyFileEx` stamps the staging
+  file with the source's attributes, and the staging name is fixed: one leftover poisoned every later copy into that
+  folder with `ERROR_FILE_EXISTS`;
   deletes go to the **Recycle Bin** via `FileOperation/RecycleBin.cs` with a permanent-delete
   fallback, and skip reparse points; `FileOperationHandler` prompts per batch according to
   `Confirmation.Copy/Move/CopyOverwrite/MoveOverwrite/DeleteFile` (these settings are live — read
@@ -161,6 +167,14 @@ docs/                         README screenshots only
   (the obvious `Math.Max(total, processed)` guard) makes the first folder report 100% and the bar sit there for
   the rest of the scan. `DirectoryComparerProgressTests` locks this — the old assertion (`progress > 0`) passed
   straight over the bug.
+  Reports are `DirectoryComparer.CompareProgress(double? Fraction, int DirectoriesFound)`. A **null fraction means
+  "no honest percentage yet"**, and the ViewModel answers it with an indeterminate bar plus a live folder counter
+  (`IsCountingDirectories` / `ComparisonProgressText`) — a determinate bar parked on 0% reads as a hang. Once a real
+  fraction has arrived the bar never goes back to indeterminate, so a late count cannot demote it. The running count
+  is a *separate* counter from `totalDirs` and is published in batches of `CountBatch` (64); each walk publishes only
+  the directories it lists itself, because reporting a child in the parent **and** its subtree total from the
+  recursion double-counts it (`CompareAsync_WhileTheTotalIsUnknown_ReportsTheRunningFolderCount` asserts the exact
+  total, which is what caught that).
 - **A cancelled comparison must throw, never return.** `CancellationToken` reaches hashing and
   `StreamsEqual`/`ReadFull` and is checked once per 8 KB chunk; returning `false` instead of throwing
   used to report a half-built tree as `Identical` (which invites the user to delete good files). Keep
@@ -180,6 +194,15 @@ docs/                         README screenshots only
   table lose its effect on the next start. `CompareOptionsViewModel` also **clones** each `ComparisonAlgorithmInfo`
   instead of adopting it, because the seeded dictionary shares its value objects with that static seed — adopting
   them meant ticking a box changed the live settings even when the user pressed Cancel.
+  `CompareControl.InitializeAsync` reads that config **once from the constructor** and reloads on
+  `OptionsSavedMessage` (sent by Settings | Save). It used to sit in the control's `Loaded` handler, but the
+  TabControl hosts only the selected tab (`ContentPresenter ContentSource="SelectedContent"`), so `Loaded` fired on
+  every tab switch — re-reading the file and resetting the algorithm the user had just picked. Do not move it back,
+  and do not "simplify" it to a flag alone: the message is what keeps an open tab in step with the Options page.
+  A refresh **keeps the user's current choice** when the new list still offers it (only a switched-off or never-made
+  choice falls back), and the same config now also builds the `DirectoryComparer` itself — its
+  `ScanMethod.ParallelOptions` and per-algorithm `ComparisonPercentage` were silently ignored while `_comparer` was
+  `new DirectoryComparer()`.
 - **Config `Tools:*.Handler` is attacker-influenced text.** `ToolFactory` refuses any type that is not
   an `ITool` in the dCompare assembly, *before* invoking a constructor. `ToolFactorySecurityTests`
   locks this (including “the target file is not truncated”, which proves the constructor never ran).
@@ -223,7 +246,7 @@ Release pipeline is currently broken**; see `TODO.md`.
 ## Before you finish
 
 1. `dotnet build dCompare.sln -c Debug` → 0 errors, and no *new* warnings.
-2. Run the test exe (above) → all green; current count 219.
+2. Run the test exe (above) → all green; current count 230.
 3. For new non-trivial logic (comparison, path handling, transfer, parsing) add a test in
    `dCompare.Tests/` mirroring the source path.
 4. User-visible strings go through resources, all three languages.

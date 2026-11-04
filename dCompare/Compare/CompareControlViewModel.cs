@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using dCompare.Configuration;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 
 namespace dCompare.Compare
@@ -43,6 +44,16 @@ namespace dCompare.Compare
         [ObservableProperty]
         private double _comparisonProgress;
 
+        // True while the directory total is still unknown: the bar runs indeterminate instead of pretending 0%.
+        [ObservableProperty]
+        private bool _isCountingDirectories;
+
+        [ObservableProperty]
+        private string _comparisonProgressText = string.Empty;
+
+        [ObservableProperty]
+        private int _directoriesFound;
+
         [ObservableProperty]
         private ComparisonAlgorithm _selectedAlgorithm;
 
@@ -50,7 +61,12 @@ namespace dCompare.Compare
         /// Items for the algorithm dropdown: display text and the algorithm it stands for, the shape the
         /// ComboBox's DisplayMemberPath / SelectedValuePath expect. Filled by <see cref="LoadAlgorithms"/>.
         /// </summary>
-        public ObservableCollection<KeyValuePair<string, ComparisonAlgorithm>> AvailableAlgorithms { get; private set; } = new();
+        [ObservableProperty]
+        private ObservableCollection<KeyValuePair<string, ComparisonAlgorithm>> _availableAlgorithms = new();
+
+        // Whether the dropdown was filled once already. A refresh keeps the user's own choice; the first load
+        // must not, because SelectedAlgorithm still holds default(enum) there, which is a real algorithm.
+        private bool _algorithmsLoaded;
 
         /// <summary>
         /// Fills the dropdown and picks the default from dCompare.json. The list used to be bound to the static
@@ -64,16 +80,52 @@ namespace dCompare.Compare
 
             AvailableAlgorithms = new ObservableCollection<KeyValuePair<string, ComparisonAlgorithm>>(
                 enabled.Select(algorithm => new KeyValuePair<string, ComparisonAlgorithm>(algorithm.Value.Description, algorithm.Key)));
-            OnPropertyChanged(nameof(AvailableAlgorithms));
 
-            // The configured default wins; a default the user has switched off (or never set) falls back to the
-            // first enabled algorithm, so the box is never left showing a choice that is not in the list.
-            ComparisonAlgorithm selected = enabled.FirstOrDefault(algorithm => algorithm.Value.IsDefault).Key;
-            if (!enabled.Any(algorithm => algorithm.Key == selected))
+            // A user who already picked one keeps it as long as the Options page still offers it: refreshing the
+            // list after Settings | Save must not quietly move the dropdown somewhere else. Only a choice that has
+            // been switched off (or was never made) falls back to the configured default, then to the first enabled.
+            ComparisonAlgorithm selected = SelectedAlgorithm;
+            if (!_algorithmsLoaded || !enabled.Any(algorithm => algorithm.Key == selected))
             {
-                selected = enabled.Count > 0 ? enabled[0].Key : ComparisonAlgorithm.ModifiedDateAndSize;
+                selected = enabled.FirstOrDefault(algorithm => algorithm.Value.IsDefault).Key;
+                if (!enabled.Any(algorithm => algorithm.Key == selected))
+                {
+                    selected = enabled.Count > 0 ? enabled[0].Key : ComparisonAlgorithm.ModifiedDateAndSize;
+                }
             }
             SelectedAlgorithm = selected;
+            _algorithmsLoaded = true;
+        }
+
+        /// <summary>
+        /// Called before a compare starts: the bar restarts indeterminate and the counter restarts, because 0%
+        /// of an unknown total is not a fact and a frozen determinate bar reads as a hang.
+        /// </summary>
+        public void BeginCompare()
+        {
+            ComparisonProgress = 0;
+            DirectoriesFound = 0;
+            IsCountingDirectories = true;
+            ComparisonProgressText = string.Format(CultureInfo.CurrentCulture, Properties.Resources.ComparingCountingFormat, 0);
+        }
+
+        /// <summary>
+        /// Applies one progress report. A report without a fraction only moves the folder counter, and only while
+        /// the total is still unknown: once a real percentage has arrived the bar never goes back to being unsure.
+        /// </summary>
+        public void ReportProgress(DirectoryComparer.CompareProgress progress)
+        {
+            DirectoriesFound = progress.DirectoriesFound;
+            if (progress.Fraction is double fraction)
+            {
+                IsCountingDirectories = false;
+                ComparisonProgress = fraction * 100.0;
+                ComparisonProgressText = string.Format(CultureInfo.CurrentCulture, Properties.Resources.ComparingProgressFormat, ComparisonProgress);
+            }
+            else if (IsCountingDirectories)
+            {
+                ComparisonProgressText = string.Format(CultureInfo.CurrentCulture, Properties.Resources.ComparingCountingFormat, progress.DirectoriesFound);
+            }
         }
 
         partial void OnLeftPathChanged(string value)

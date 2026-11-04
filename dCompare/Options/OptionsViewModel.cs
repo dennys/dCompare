@@ -1,7 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using dCompare.Common;
 using dCompare.Configuration;
+using dCompare.Messages;
 using Serilog;
 using Microsoft.VisualBasic;
 using Microsoft.Win32;
@@ -82,6 +84,10 @@ namespace dCompare.Options
             }
 
             await _configService.SaveConfigurationAsync(_appConfig);
+
+            // The tabs that are already open cannot see the file they were configured from; tell them to re-read it.
+            WeakReferenceMessenger.Default.Send(new OptionsSavedMessage());
+
             MessageBox.Show(Properties.Resources.SettingsSaved, Properties.Resources.Success, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 

@@ -25,6 +25,12 @@ namespace dCompare.FileOperation.Tests
         {
             if (Directory.Exists(_testDirectory))
             {
+                // Recursive delete refuses read-only files, which the read-only destination tests create.
+                foreach (string file in Directory.GetFiles(_testDirectory, "*", SearchOption.AllDirectories))
+                {
+                    File.SetAttributes(file, FileAttributes.Normal);
+                }
+
                 Directory.Delete(_testDirectory, recursive: true);
             }
         }
@@ -241,6 +247,43 @@ namespace dCompare.FileOperation.Tests
             AssertNoTempFiles();
         }
 
+        [Fact]
+        public async Task CopyFileAsync_OverReadOnlyDestination_Copies()
+        {
+            // The shipped strategy stages into a temp file and swaps it in with File.Move, which MoveFileEx
+            // refuses to do onto a read-only target. Read-only destinations are ordinary: files copied off a
+            // disc, marked read-only by hand, or pinned by a tool.
+            var sourceFile = CreateTestFile("source.txt", "new content");
+            var destFile = Path.Combine(_testDirectory, "dest.txt");
+            File.WriteAllText(destFile, "old content");
+            File.SetAttributes(destFile, FileAttributes.ReadOnly);
+
+            await _strategy.CopyFileAsync(sourceFile, destFile, overwrite: true, null, TestContext.Current.CancellationToken);
+
+            Assert.Equal("new content", File.ReadAllText(destFile));
+            AssertNoTempFiles();
+        }
+
+        [Fact]
+        public async Task CopyFileAsync_ReadOnlySourceAndLockedDestination_LeavesNoStagingFileBehind()
+        {
+            var sourceFile = CreateTestFile("source.txt", "new content");
+            // CopyFileEx gives the staging file the source's attributes, so the leftover we are about to create
+            // is read-only, and the staging name is fixed: a file left here poisons every later copy of this pair.
+            File.SetAttributes(sourceFile, FileAttributes.ReadOnly);
+            var destFile = Path.Combine(_testDirectory, "dest.txt");
+            File.WriteAllText(destFile, "old content");
+
+            using (File.Open(destFile, FileMode.Open, FileAccess.Read, FileShare.None))
+            {
+                await Assert.ThrowsAnyAsync<Exception>(() =>
+                    _strategy.CopyFileAsync(sourceFile, destFile, overwrite: true, null, TestContext.Current.CancellationToken));
+            }
+
+            Assert.Equal("old content", File.ReadAllText(destFile));
+            AssertNoTempFiles();
+        }
+
         private void AssertNoTempFiles()
         {
             string[] leftovers = Directory.GetFiles(_testDirectory, "*", SearchOption.AllDirectories)
@@ -305,6 +348,23 @@ namespace dCompare.FileOperation.Tests
 
             // Act & Assert
             Assert.Throws<FileNotFoundException>(() => _strategy.MoveFile(sourceFile, destFile, overwrite: false));
+        }
+
+        [Fact]
+        public void MoveFile_OverReadOnlyDestination_Moves()
+        {
+            // Arrange
+            var sourceFile = CreateTestFile("source.txt", "new content");
+            var destFile = Path.Combine(_testDirectory, "dest.txt");
+            File.WriteAllText(destFile, "old content");
+            File.SetAttributes(destFile, FileAttributes.ReadOnly);
+
+            // Act
+            _strategy.MoveFile(sourceFile, destFile, overwrite: true);
+
+            // Assert
+            Assert.Equal("new content", File.ReadAllText(destFile));
+            Assert.False(File.Exists(sourceFile));
         }
 
         #endregion

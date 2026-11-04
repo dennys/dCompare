@@ -359,8 +359,8 @@ namespace dCompare.Tests.Compare
             var fileSystem = new FileSystem();
             var hashProvider = new HashProvider();
             var comparer = new DirectoryComparer(null, fileSystem, hashProvider);
-            double progress = 0;
-            var progressCallback = new Action<double>(p => progress = p);
+            double? progress = null;
+            var progressCallback = new Action<DirectoryComparer.CompareProgress>(p => progress = p.Fraction);
 
             // Act
             var result = await comparer.CompareAsync(leftPath, rightPath, CancellationToken.None, progressCallback, ComparisonAlgorithm.ModifiedDateAndSize);

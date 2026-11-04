@@ -325,6 +325,12 @@ Right: {1}</value>
   <data name="ComparingTabHeader" xml:space="preserve">
     <value>(Comparing...) {0}</value>
   </data>
+  <data name="ComparingProgressFormat" xml:space="preserve">
+    <value>Comparing: {0:F0}%</value>
+  </data>
+  <data name="ComparingCountingFormat" xml:space="preserve">
+    <value>Scanning... {0} folders found</value>
+  </data>
   <data name="SelectFolderOrArchiveTitle" xml:space="preserve">
     <value>Select Folder or Archive File</value>
   </data>

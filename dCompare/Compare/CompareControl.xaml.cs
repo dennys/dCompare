@@ -2,7 +2,9 @@ using dCompare.Common;
 using dCompare.Compare.Models;
 using dCompare.Configuration;
 using dCompare.FileOperation;
+using dCompare.Messages;
 using dCompare.Tools;
+using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
 using Microsoft.Win32;
@@ -76,6 +78,12 @@ namespace dCompare.Compare
             ResultListView.ItemsSource = _treeNodes;
 
             SetFilter(null);
+
+            // Settings | Save changes which algorithms exist and how the scan runs, so the open tab has to hear
+            // about it. Loaded was the old trigger and it fires on every tab switch (the TabControl hosts only
+            // the selected tab), which re-read the file and reset the algorithm the user had just chosen.
+            WeakReferenceMessenger.Default.Register<OptionsSavedMessage>(this, (_, _) => _ = InitializeAsync());
+            _ = InitializeAsync();
         }
 
         public CompareControl(IConfigurationService configService, IFileManager fileManager, ILogger<CompareControl> logger, IUserInteractionService userInteractionService, string leftPath, string rightPath)
@@ -86,22 +94,27 @@ namespace dCompare.Compare
             ViewModel.RightPath = rightPath;
             this.Refresh();
         }
-        private async void CompareControl_Loaded(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// Reads dCompare.json once and configures the tab from it: the algorithm dropdown and its default, and the
+        /// comparer itself (its scan settings and per-algorithm hash ratio come from the same file). A corrupt or
+        /// unreadable config still leaves the tab able to compare, on the built-in seed.
+        /// </summary>
+        private async Task InitializeAsync()
         {
+            AppConfiguration config;
             try
             {
-                // The dropdown list and its default both come from dCompare.json, so the Options page and the
-                // tab can no longer disagree about which algorithms exist.
-                var config = await _configService.LoadConfigurationAsync();
-                ViewModel.LoadAlgorithms(config.Options.Compare.Algorithms);
+                config = await _configService.LoadConfigurationAsync();
             }
             catch (Exception ex)
             {
                 _logger.LogError("Failed to load configuration: {Message}", ex.Message);
                 MessageBox.Show(string.Format(Properties.Resources.ErrorLoadingConfiguration, ex.Message), Properties.Resources.ErrorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                // Unreadable config still has to leave the tab able to compare something.
-                ViewModel.LoadAlgorithms(ComparisonAlgorithms.AlgorithmSettings);
+                config = new AppConfiguration();
             }
+
+            ViewModel.LoadAlgorithms(config.Options.Compare.Algorithms);
+            _comparer = new DirectoryComparer(config);
         }
 
         private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -216,12 +229,12 @@ namespace dCompare.Compare
             }
 
             viewModel.IsComparing = true;
-            viewModel.ComparisonProgress = 0;
+            viewModel.BeginCompare();
             try
             {
                 List<DirectoryComparer.ComparisonItem> comparisonResults = await Task.Run(() =>
                     _comparer.CompareAsync(leftDir, rightDir, _cancellationTokenSource.Token,
-                        progress => Dispatcher.InvokeAsync(() => viewModel.ComparisonProgress = progress * 100),
+                        progress => Dispatcher.InvokeAsync(() => viewModel.ReportProgress(progress)),
                         viewModel.SelectedAlgorithm),
                     _cancellationTokenSource.Token);
 

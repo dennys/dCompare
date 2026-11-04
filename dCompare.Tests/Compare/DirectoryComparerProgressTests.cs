@@ -84,8 +84,7 @@ namespace dCompare.Tests.Compare
             config.Options.Compare.ScanMethod.ParallelOptions = false;
             var comparer = new DirectoryComparer(config, new FileSystem(), new HashProvider());
 
-            var reported = new List<double>();
-            await comparer.CompareAsync(left, right, CancellationToken.None, p => reported.Add(p), ComparisonAlgorithm.ModifiedDateAndSize);
+            var reported = Fractions(await CollectAsync(comparer, left, right));
 
             Assert.NotEmpty(reported);
             Assert.Equal(1.0, reported[^1]);
@@ -106,12 +105,53 @@ namespace dCompare.Tests.Compare
 
             var comparer = new DirectoryComparer(new AppConfiguration(), new FileSystem(), new HashProvider());
 
-            var reported = new List<double>();
-            await comparer.CompareAsync(left, right, CancellationToken.None, p => reported.Add(p), ComparisonAlgorithm.ModifiedDateAndSize);
+            var reported = Fractions(await CollectAsync(comparer, left, right));
 
             Assert.Equal(1.0, reported[^1]);
             Assert.True(reported.Count(p => p >= 1.0) == 1,
                 $"Only the completion may report 100%, but got [{string.Join(", ", reported)}].");
         }
+
+        /// <summary>
+        /// While the count walk is still running the bar has nothing honest to express as a percentage, but the
+        /// wait must not be silent either: the folders found so far are published as they are discovered, so the
+        /// UI can say "scanning, N folders" instead of sitting on a determinate 0% that reads as a hang.
+        /// Sequential mode counts first, which makes the ordering deterministic.
+        /// </summary>
+        [Fact]
+        public async Task CompareAsync_WhileTheTotalIsUnknown_ReportsTheRunningFolderCount()
+        {
+            string left = BuildTree("left", perLevel: 3, depth: 3);
+            string right = BuildTree("right", perLevel: 3, depth: 3);
+
+            var config = new AppConfiguration();
+            config.Options.Compare.ScanMethod.ParallelOptions = false;
+            var comparer = new DirectoryComparer(config, new FileSystem(), new HashProvider());
+
+            var reports = await CollectAsync(comparer, left, right);
+
+            // 40 directories per side (root + 3 + 9 + 27), and the count runs before the scan in this mode.
+            Assert.Null(reports[0].Fraction);
+            Assert.Contains(reports, report => report.Fraction == null && report.DirectoriesFound > 0);
+
+            var counts = reports.Select(report => report.DirectoriesFound).ToList();
+            Assert.Equal(80, counts[^1]);
+            for (int i = 1; i < counts.Count; i++)
+            {
+                Assert.True(counts[i] >= counts[i - 1],
+                    $"The folder counter went backwards at {i}: [{string.Join(", ", counts)}].");
+            }
+        }
+
+        private static async Task<List<DirectoryComparer.CompareProgress>> CollectAsync(
+            DirectoryComparer comparer, string left, string right)
+        {
+            var reports = new List<DirectoryComparer.CompareProgress>();
+            await comparer.CompareAsync(left, right, CancellationToken.None, reports.Add, ComparisonAlgorithm.ModifiedDateAndSize);
+            return reports;
+        }
+
+        private static List<double> Fractions(List<DirectoryComparer.CompareProgress> reports) =>
+            reports.Where(report => report.Fraction.HasValue).Select(report => report.Fraction!.Value).ToList();
     }
 }

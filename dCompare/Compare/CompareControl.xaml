@@ -7,7 +7,7 @@
              xmlns:infra="clr-namespace:dCompare.Infrastructure"
              mc:Ignorable="d" 
              xmlns:resx="clr-namespace:dCompare.Properties"
-             d:DesignHeight="450" d:DesignWidth="800" Loaded="CompareControl_Loaded">
+             d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <infra:TextToForegroundConverter x:Key="TextToForegroundConverter"/>
         <infra:DepthToMarginConverter x:Key="DepthToMarginConverter"/>
@@ -274,8 +274,10 @@
         <!-- Progress Overlay -->
         <Grid Grid.Row="1" Background="#80FFFFFF" Visibility="{Binding IsComparing, Converter={StaticResource BooleanToVisibilityConverter}}">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Width="300">
-                <ProgressBar Value="{Binding ComparisonProgress}" Minimum="0" Maximum="100" Height="20" Margin="10"/>
-                <TextBlock Text="{Binding ComparisonProgress, StringFormat='Comparing: {0:F0}%'}" 
+                <!-- Indeterminate while the folder total is still being counted: 0% of an unknown total is not a fact. -->
+                <ProgressBar Value="{Binding ComparisonProgress}" Minimum="0" Maximum="100" Height="20" Margin="10"
+                             IsIndeterminate="{Binding IsCountingDirectories}"/>
+                <TextBlock Text="{Binding ComparisonProgressText}" 
                            HorizontalAlignment="Center" Margin="0,0,0,10"/>
                 <Button Content="Cancel" Click="CancelCompare_Click" Width="100" Height="30"/>
             </StackPanel>

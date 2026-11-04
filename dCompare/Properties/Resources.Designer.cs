@@ -430,6 +430,24 @@ namespace dCompare.Properties {
         }
         
         /// <summary>
+        ///   查詢類似 Comparing: {0:F0}% 的當地語系化字串。
+        /// </summary>
+        public static string ComparingProgressFormat {
+            get {
+                return ResourceManager.GetString("ComparingProgressFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類似 Scanning... {0} folders found 的當地語系化字串。
+        /// </summary>
+        public static string ComparingCountingFormat {
+            get {
+                return ResourceManager.GetString("ComparingCountingFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 Comparison Algorithms 的當地語系化字串。
         /// </summary>
         public static string ComparisonAlgorithms {

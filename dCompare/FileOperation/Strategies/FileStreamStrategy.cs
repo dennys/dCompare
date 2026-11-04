@@ -56,17 +56,8 @@ namespace dCompare.FileOperation.Strategies
                 File.SetLastWriteTime(tempFile, sourceInfo.LastWriteTime);
 
                 // A read-only destination would block MoveFileEx's replace (ERROR_ACCESS_DENIED on a
-                // second copy); the attribute is restored after the move.
-                if (overwrite && File.Exists(destFile))
-                {
-                    var destAttributes = File.GetAttributes(destFile);
-                    if ((destAttributes & FileAttributes.ReadOnly) != 0)
-                    {
-                        File.SetAttributes(destFile, destAttributes & ~FileAttributes.ReadOnly);
-                    }
-                }
-
-                FileOperationRetry.Run($"move {tempFile} -> {destFile}", () => File.Move(tempFile, destFile, overwrite));
+                // second copy); MoveWithOverwrite lifts the attribute for the move and puts it back if it fails.
+                FileOperationRetry.MoveWithOverwrite(tempFile, destFile, overwrite);
 
                 // Attributes must land on the final file (the temp file is always Normal);
                 // without this a read-only source copies as a writable file.
@@ -84,7 +75,7 @@ namespace dCompare.FileOperation.Strategies
         {
             // File.Move(…, overwrite) replaces the target in one step; deleting the target first lost both
             // copies whenever the move itself then failed (locked source, cross-volume hiccup, ACL).
-            FileOperationRetry.Run($"move {sourceFile} -> {destFile}", () => File.Move(sourceFile, destFile, overwrite));
+            FileOperationRetry.MoveWithOverwrite(sourceFile, destFile, overwrite);
         }
 
         public void DeleteFile(string filePath)

@@ -97,7 +97,9 @@ public class Kernel32FileCopyStrategy : IFileOperationStrategy
                         }
                     });
 
-                    FileOperationRetry.Run($"move {tempFile} -> {destFile}", () => File.Move(tempFile, destFile, true));
+                    // A read-only destination blocks MoveFileEx's replace, so the attribute is handled in one
+                    // place with every other replacement (see MoveWithOverwrite).
+                    FileOperationRetry.MoveWithOverwrite(tempFile, destFile, true);
                 }
                 catch
                 {
@@ -120,7 +122,7 @@ public class Kernel32FileCopyStrategy : IFileOperationStrategy
     public void MoveFile(string sourceFile, string destFile, bool overwrite)
     {
         // File.Move preserves metadata on the same volume.
-        FileOperationRetry.Run($"move {sourceFile} -> {destFile}", () => File.Move(sourceFile, destFile, overwrite));
+        FileOperationRetry.MoveWithOverwrite(sourceFile, destFile, overwrite);
     }
 
     public void DeleteFile(string filePath)

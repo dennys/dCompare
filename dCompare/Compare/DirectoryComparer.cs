@@ -111,17 +111,26 @@ namespace dCompare.Compare
             public FileSystemNode? Right { get; set; }
         }
 
+        /// <summary>
+        /// One progress report for the compare. <see cref="Fraction"/> is null while the directory total is
+        /// still being counted, because there is nothing honest to express as a percentage yet: a determinate
+        /// bar parked on 0% reads as a hang, so the caller is told to show an indeterminate "scanning" state.
+        /// <see cref="DirectoriesFound"/> climbs from the first folder onwards, so the wait is never silent.
+        /// </summary>
+        public sealed record CompareProgress(double? Fraction, int DirectoriesFound);
+
         public async Task<List<ComparisonItem>> CompareAsync(
             string leftPath,
             string rightPath,
             CancellationToken cancellationToken = default,
-            Action<double>? progressCallback = null,
+            Action<CompareProgress>? progressCallback = null,
             ComparisonAlgorithm algorithm = ComparisonAlgorithm.ModifiedDateAndSize)
         {
             FileSystemNode? leftRoot = null;
             FileSystemNode? rightRoot = null;
 
             int totalDirs = 0;
+            int countedDirs = 0;
             int processedDirs = 0;
             int lastReportedTenth = -1;
 
@@ -134,17 +143,30 @@ namespace dCompare.Compare
                 int seen = Volatile.Read(ref lastReportedTenth);
                 if (tenth > seen && Interlocked.CompareExchange(ref lastReportedTenth, tenth, seen) == seen)
                 {
-                    progressCallback?.Invoke(tenth / 10.0);
+                    progressCallback?.Invoke(new CompareProgress(tenth / 10.0, Volatile.Read(ref countedDirs)));
                 }
             };
 
             // Counts both trees once, from whichever thread runs it, and publishes the total for the bar above.
             void CountBothSides(CancellationToken token)
             {
-                int counted = 0;
-                if (ShouldCountDirectories(leftPath)) counted += CountDirectories(leftPath, token);
-                if (ShouldCountDirectories(rightPath)) counted += CountDirectories(rightPath, token);
-                Interlocked.Add(ref totalDirs, counted);
+                // Published as the walk goes: the total only arrives at the end of this second walk, and the
+                // running count is the one number the UI can show while there is no honest percentage yet.
+                void Publish(int delta)
+                {
+                    int seen = Interlocked.Add(ref countedDirs, delta);
+                    progressCallback?.Invoke(new CompareProgress(null, seen));
+                }
+
+                int CountSide(string path)
+                {
+                    if (!ShouldCountDirectories(path)) return 0;
+                    int counted = CountDirectories(path, token, Publish);
+                    if (counted > 0) Publish(1);   // the root: the walk itself only ever reports what it lists
+                    return counted;
+                }
+
+                Interlocked.Add(ref totalDirs, CountSide(leftPath) + CountSide(rightPath));
             }
 
             if (_parallel)
@@ -219,7 +241,7 @@ namespace dCompare.Compare
             Log.Information("Start to compare nodes.");
             CompareNodes(leftRoot, rightRoot, result, "", cancellationToken, algorithm, rootItem);
 
-            progressCallback?.Invoke(1.0);
+            progressCallback?.Invoke(new CompareProgress(1.0, Volatile.Read(ref countedDirs)));
             Log.Information("End to compare.");
             return result;
         }
@@ -295,7 +317,12 @@ namespace dCompare.Compare
         private static bool ShouldCountDirectories(string path) =>
             !string.IsNullOrEmpty(path) && (Directory.Exists(path) || FileExtensions.IsArchiveFile(path));
 
-        private int CountDirectories(string path, CancellationToken cancellationToken)
+        // How many directories the count walk accumulates before it tells the UI about them.
+        private const int CountBatch = 64;
+
+        // Each walk reports the directories it lists itself, so every one of them is published exactly once:
+        // reporting a child here and its own subtree count from the recursion would count them twice.
+        private int CountDirectories(string path, CancellationToken cancellationToken, Action<int> publish)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -306,13 +333,18 @@ namespace dCompare.Compare
 
             if (!_fileSystem.DirectoryExists(path)) return 0;
             int count = 1;
+            // Published in batches rather than per folder: the number is there to be watched, not to be exact at
+            // every instant, and a callback per directory would swamp the dispatcher on a deep tree.
+            int unpublished = 0;
             try
             {
                 foreach (string dir in _fileSystem.GetDirectories(path))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     if (FileExtensions.IsReparsePoint(dir)) continue;
-                    count += CountDirectories(dir, cancellationToken);
+                    unpublished++;
+                    count += CountDirectories(dir, cancellationToken, publish);
+                    if (unpublished >= CountBatch) { publish(unpublished); unpublished = 0; }
                 }
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
@@ -320,6 +352,8 @@ namespace dCompare.Compare
                 // Access denied, folder gone mid-walk, path too long: only the progress denominator suffers.
                 Log.Debug(ex, "Directory count stopped at '{Path}'.", path);
             }
+
+            if (unpublished > 0) publish(unpublished);
             return count;
         }
 

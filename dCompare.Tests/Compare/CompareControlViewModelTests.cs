@@ -91,5 +91,73 @@ namespace dCompare.Tests.Compare
             Assert.Empty(viewModel.AvailableAlgorithms);
             Assert.Equal(ComparisonAlgorithm.ModifiedDateAndSize, viewModel.SelectedAlgorithm);
         }
+
+        [Fact]
+        public void LoadAlgorithms_RefreshFromSettings_KeepsWhatTheUserPicked()
+        {
+            var viewModel = new CompareControlViewModel();
+            viewModel.LoadAlgorithms(Settings(
+                (ComparisonAlgorithm.ModifiedDateAndSize, true, true),
+                (ComparisonAlgorithm.MD5, true, false)));
+            viewModel.SelectedAlgorithm = ComparisonAlgorithm.MD5;
+
+            // Settings | Save re-sends the list to every open tab. Moving the dropdown back to the configured
+            // default behind the user's back is the bug this locks out.
+            viewModel.LoadAlgorithms(Settings(
+                (ComparisonAlgorithm.ModifiedDateAndSize, true, true),
+                (ComparisonAlgorithm.MD5, true, false),
+                (ComparisonAlgorithm.xxHash64_Full, true, false)));
+
+            Assert.Equal(ComparisonAlgorithm.MD5, viewModel.SelectedAlgorithm);
+        }
+
+        [Fact]
+        public void LoadAlgorithms_RefreshFromSettings_WhenTheUsersChoiceWasSwitchedOff_FallsBackToTheDefault()
+        {
+            var viewModel = new CompareControlViewModel();
+            viewModel.LoadAlgorithms(Settings(
+                (ComparisonAlgorithm.ModifiedDateAndSize, true, true),
+                (ComparisonAlgorithm.MD5, true, false)));
+            viewModel.SelectedAlgorithm = ComparisonAlgorithm.MD5;
+
+            viewModel.LoadAlgorithms(Settings(
+                (ComparisonAlgorithm.ModifiedDateAndSize, true, true),
+                (ComparisonAlgorithm.MD5, false, false)));
+
+            Assert.DoesNotContain(ComparisonAlgorithm.MD5, viewModel.AvailableAlgorithms.Select(a => a.Value));
+            Assert.Equal(ComparisonAlgorithm.ModifiedDateAndSize, viewModel.SelectedAlgorithm);
+        }
+
+        [Fact]
+        public void ReportProgress_WhileTheTotalIsUnknown_KeepsTheBarIndeterminateAndCountsFolders()
+        {
+            var viewModel = new CompareControlViewModel();
+            viewModel.BeginCompare();
+
+            viewModel.ReportProgress(new DirectoryComparer.CompareProgress(null, 64));
+
+            Assert.True(viewModel.IsCountingDirectories);
+            Assert.Equal(64, viewModel.DirectoriesFound);
+            Assert.Equal(0, viewModel.ComparisonProgress);
+            Assert.Contains("64", viewModel.ComparisonProgressText);
+        }
+
+        [Fact]
+        public void ReportProgress_OnceAFractionArrives_TheBarNeverGoesBackToBeingUnsure()
+        {
+            var viewModel = new CompareControlViewModel();
+            viewModel.BeginCompare();
+            viewModel.ReportProgress(new DirectoryComparer.CompareProgress(0.5, 40));
+
+            Assert.False(viewModel.IsCountingDirectories);
+            Assert.Equal(50, viewModel.ComparisonProgress);
+
+            // The count walk can still be in flight behind the scan; a late count must not demote the bar.
+            viewModel.ReportProgress(new DirectoryComparer.CompareProgress(null, 80));
+
+            Assert.False(viewModel.IsCountingDirectories);
+            Assert.Equal(50, viewModel.ComparisonProgress);
+            Assert.Contains("50", viewModel.ComparisonProgressText);
+        }
     }
 }
